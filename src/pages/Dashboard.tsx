@@ -503,19 +503,13 @@ const Dashboard = () => {
                 Quick Actions
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {/* NSAT Prep Widget - Hot/Trending */}
-                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-teal-500 overflow-hidden bg-gradient-to-br from-teal-50/50 to-sky-50/50 dark:from-teal-950/10 dark:to-sky-950/10" onClick={() => navigate("/nsat-prep")}>
-                  {/* Hot Badge */}
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-teal-400 to-sky-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg shadow-md z-10 flex items-center gap-1 animate-pulse">
-                    <Flame className="w-3 h-3 fill-white" />
-                    Hot
-                  </div>
+                <Card className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-amber-500" onClick={() => navigate("/job-recommendations")}>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                    <div className="w-14 h-14 rounded-full bg-white dark:bg-white/10 shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform p-1 border-2 border-teal-100 dark:border-teal-900">
-                      <img src="/images/nsat_logo.jpg" alt="NSAT" className="w-full h-full rounded-full object-cover" />
+                    <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <Briefcase className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                     </div>
-                    <h4 className="font-semibold text-sm bg-gradient-to-r from-teal-600 to-sky-600 dark:from-teal-400 dark:to-sky-400 bg-clip-text text-transparent">NSAT Prep</h4>
-                    <p className="text-xs text-muted-foreground mt-1 font-medium">Exam Ready</p>
+                    <h4 className="font-semibold text-sm">Job Matches</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Find Your Role</p>
                   </CardContent>
                 </Card>
 

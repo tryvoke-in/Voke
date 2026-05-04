@@ -226,11 +226,39 @@ const VoiceAssistant: React.FC = () => {
 
             toast.loading("Analyzing session...", { id: toastId });
 
-            // Trigger analysis (Assuming there is an Edge Function for this)
+            // Trigger analysis
             try {
-                await supabase.functions.invoke('evaluate-interview', {
-                    body: { session_id: data.id }
+                const formattedMessages = logs.map(log => ({
+                    role: log.role,
+                    content: log.text
+                }));
+
+                const { data: evaluation, error: evalError } = await supabase.functions.invoke('evaluate-interview', {
+                    body: { 
+                        messages: formattedMessages,
+                        interview_type: "Voice Interview"
+                    }
                 });
+
+                if (evalError) throw evalError;
+
+                if (evaluation) {
+                    // Update the session with the evaluation results
+                    await supabase
+                        .from('interview_sessions')
+                        .update({
+                            overall_score: evaluation.score || 0,
+                            delivery_score: evaluation.metrics?.communication || 0,
+                            confidence_score: evaluation.metrics?.problem_solving || 0,
+                            feedback_summary: evaluation.feedback || "",
+                            whats_good: evaluation.strengths || [],
+                            whats_wrong: evaluation.weaknesses || [],
+                            six_q_score: evaluation.six_q_score || null,
+                            personality_cluster: evaluation.personality_cluster || null,
+                            analysis_result: evaluation
+                        } as any)
+                        .eq('id', data.id);
+                }
             } catch (evalError) {
                 console.error("Evaluation trigger failed:", evalError);
                 // Continue anyway so user can see what IS there

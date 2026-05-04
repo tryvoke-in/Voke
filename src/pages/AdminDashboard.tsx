@@ -30,6 +30,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
+const formatDate = (dateString: string) => {
+  if (!dateString) return "N/A";
+  const d = new Date(dateString);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
@@ -56,18 +65,59 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const filteredUsers = users.filter(user => {
     const searchLower = searchQuery.toLowerCase();
     const nameMatch = (user.full_name || "").toLowerCase().includes(searchLower);
     const emailMatch = (user.email || "").toLowerCase().includes(searchLower);
-    const dateMatch = new Date(user.created_at).toLocaleDateString().toLowerCase().includes(searchLower);
+    const dateMatch = formatDate(user.created_at).toLowerCase().includes(searchLower);
     return nameMatch || emailMatch || dateMatch;
   });
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    if (!sortConfig) return 0;
+    
+    let aVal = a[sortConfig.key];
+    let bVal = b[sortConfig.key];
+    
+    if (sortConfig.key === 'created_at') {
+        aVal = new Date(aVal).getTime();
+        bVal = new Date(bVal).getTime();
+    } else {
+        aVal = (aVal || '').toLowerCase();
+        bVal = (bVal || '').toLowerCase();
+    }
+
+    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   useEffect(() => {
     fetchUsers();
     fetchBlogs();
+
+    // Subscribe to new users in real-time
+    const channel = supabase
+      .channel('public:profiles')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, payload => {
+        setUsers(current => [payload.new, ...current]);
+        toast.info(`New user registered: ${payload.new.full_name || payload.new.email || 'Unknown'}`);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchBlogs = async () => {
@@ -536,7 +586,7 @@ const AdminDashboard = () => {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-gray-400">User</TableCell>
-                            <TableCell className="text-gray-400">{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell className="text-gray-400">{formatDate(user.created_at)}</TableCell>
                             <TableCell className="text-right">
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
                                 <MoreVertical className="h-4 w-4" />
@@ -568,18 +618,47 @@ const AdminDashboard = () => {
                         {users.length}
                       </span>
                     </CardTitle>
-                    <Button variant="outline" size="sm" onClick={fetchUsers} className="border-white/10 hover:bg-white/5">
-                      Refresh List
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Select 
+                        value={sortConfig ? `${sortConfig.key}-${sortConfig.direction}` : "none"}
+                        onValueChange={(val) => {
+                          if (val === "none") setSortConfig(null);
+                          else {
+                            const [key, direction] = val.split('-');
+                            setSortConfig({ key, direction: direction as 'asc' | 'desc' });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-[160px] bg-white/5 border-white/10 text-white h-9 text-xs">
+                          <SelectValue placeholder="Sort By..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Default</SelectItem>
+                          <SelectItem value="full_name-asc">Name (A-Z)</SelectItem>
+                          <SelectItem value="full_name-desc">Name (Z-A)</SelectItem>
+                          <SelectItem value="created_at-desc">Newest First</SelectItem>
+                          <SelectItem value="created_at-asc">Oldest First</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="sm" onClick={fetchUsers} className="border-white/10 hover:bg-white/5">
+                        Refresh List
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="rounded-md border border-white/10 overflow-hidden">
                       <Table>
                         <TableHeader className="bg-white/5">
                           <TableRow className="border-white/10 hover:bg-white/5">
-                            <TableHead className="text-gray-300">Name</TableHead>
-                            <TableHead className="text-gray-300">Email</TableHead>
-                            <TableHead className="text-gray-300">Joined Date</TableHead>
+                            <TableHead className="text-gray-300 cursor-pointer hover:text-white" onClick={() => requestSort('full_name')}>
+                              Name {sortConfig?.key === 'full_name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
+                            </TableHead>
+                            <TableHead className="text-gray-300 cursor-pointer hover:text-white" onClick={() => requestSort('email')}>
+                              Email {sortConfig?.key === 'email' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
+                            </TableHead>
+                            <TableHead className="text-gray-300 cursor-pointer hover:text-white" onClick={() => requestSort('created_at')}>
+                              Joined Date {sortConfig?.key === 'created_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
+                            </TableHead>
                             <TableHead className="text-gray-300">Status</TableHead>
                             <TableHead className="text-right text-gray-300">Actions</TableHead>
                           </TableRow>
@@ -591,14 +670,14 @@ const AdminDashboard = () => {
                                 Loading users...
                               </TableCell>
                             </TableRow>
-                          ) : filteredUsers.length === 0 ? (
+                          ) : sortedUsers.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={5} className="text-center py-8 text-gray-400">
                                 {searchQuery ? "No matching users found" : "No users found"}
                               </TableCell>
                             </TableRow>
                           ) : (
-                            filteredUsers.map((user) => (
+                            sortedUsers.map((user) => (
                               <TableRow 
                                 key={user.id} 
                                 className="border-white/10 hover:bg-white/5 cursor-pointer transition-colors"
@@ -609,7 +688,7 @@ const AdminDashboard = () => {
                                 </TableCell>
                                 <TableCell className="text-gray-400">{user.email || "N/A"}</TableCell>
                                 <TableCell className="text-gray-400">
-                                  {new Date(user.created_at).toLocaleDateString()}
+                                  {formatDate(user.created_at)}
                                 </TableCell>
                                 <TableCell>
                                   <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-0">
