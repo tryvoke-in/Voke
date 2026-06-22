@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -7,9 +7,125 @@ import { motion } from "framer-motion";
 import { Check, Zap, Star, Shield, HelpCircle, ArrowRight, Building, GraduationCap, Sparkles } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Footer } from "@/components/Footer";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import ReactConfetti from "react-confetti";
 
 const Pricing = () => {
     const [isAnnual, setIsAnnual] = useState(true);
+    const navigate = useNavigate();
+    const [isPaying, setIsPaying] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [isPremium, setIsPremium] = useState(false);
+
+    useEffect(() => {
+        const checkPremiumStatus = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setIsPremium(!!user.user_metadata?.is_premium);
+            }
+        };
+        checkPremiumStatus();
+    }, []);
+
+    const ensureRazorpay = (): Promise<boolean> => {
+        return new Promise((resolve) => {
+            // Already loaded
+            if ((window as any).Razorpay) {
+                resolve(true);
+                return;
+            }
+            // Check if script tag already exists but hasn't loaded yet
+            const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
+            if (existing) {
+                existing.addEventListener('load', () => resolve(true));
+                existing.addEventListener('error', () => resolve(false));
+                // In case it already loaded between our check
+                setTimeout(() => {
+                    if ((window as any).Razorpay) resolve(true);
+                }, 500);
+                return;
+            }
+            // Dynamically inject
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.async = true;
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.head.appendChild(script);
+        });
+    };
+
+    const handleUpgrade = async () => {
+        setIsPaying(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                toast.error("Please login to upgrade your plan.");
+                navigate("/auth");
+                setIsPaying(false);
+                return;
+            }
+
+            const loaded = await ensureRazorpay();
+            if (!loaded || !(window as any).Razorpay) {
+                toast.error("Payment gateway could not be loaded. Please disable adblocker and try again.");
+                setIsPaying(false);
+                return;
+            }
+
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY || "",
+                amount: 100, // ₹1 for testing (100 paise)
+                currency: "INR",
+                name: "Voke Elite",
+                description: "Upgrade to Voke Elite Pro Plan",
+                image: "/images/voke_logo.png",
+                handler: async function (response: any) {
+                    toast.success("Payment successful! Upgrading to Voke Elite Pro...");
+                    console.log("Payment response:", response);
+                    
+                    const { error } = await supabase.auth.updateUser({
+                        data: { is_premium: true }
+                    });
+
+                    if (error) {
+                        console.error("Error updating user premium status:", error);
+                        toast.error("Payment recorded, but profile update failed. Please refresh.");
+                    } else {
+                        setShowConfetti(true);
+                        toast.success("Welcome to Voke Elite Pro! Payment successful.");
+                        setTimeout(() => {
+                            setShowConfetti(false);
+                            navigate("/dashboard");
+                        }, 3000);
+                    }
+                    setIsPaying(false);
+                },
+                prefill: {
+                    name: user.user_metadata?.full_name || "",
+                    email: user.email || "",
+                },
+                theme: {
+                    color: "#7c3aed",
+                },
+                modal: {
+                    ondismiss: function() {
+                        setIsPaying(false);
+                        toast.info("Payment cancelled.");
+                    }
+                }
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+        } catch (e: any) {
+            console.error("Razorpay payment initialization error:", e);
+            toast.error("Payment initialization failed: " + e.message);
+            setIsPaying(false);
+        }
+    };
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -33,7 +149,8 @@ const Pricing = () => {
         {
             name: "Basic",
             description: "Essential practice for casual learners.",
-            price: "0",
+            price: "Free",
+            priceLabel: "",
             features: [
                 "Access to Basic Question Bank",
                 "Community Discussion Access",
@@ -48,19 +165,21 @@ const Pricing = () => {
             highlight: false
         },
         {
-            name: "Pro",
+            name: "Voke Elite",
             description: "Complete power for serious job hunters.",
-            price: isAnnual ? "12" : "15",
+            price: "₹1",
+            priceLabel: "one-time (testing)",
+            originalPrice: "₹50",
             features: [
                 "Everything in Basic",
                 "Unlimited AI Mock Interviews",
-                "Advanced System Design Paths",
+                "Elite Mock with Code IDE",
                 "Resume Analysis & Optimization",
                 "Priority Community Support",
                 "Verified Skills Certificate",
                 "Ad-free Experience"
             ],
-            cta: "Upgrade to Pro",
+            cta: "Upgrade to Elite",
             variant: "default" as const,
             popular: true,
             icon: Sparkles,
@@ -70,8 +189,9 @@ const Pricing = () => {
             name: "Enterprise",
             description: "For universities and coding bootcamps.",
             price: "Custom",
+            priceLabel: "",
             features: [
-                "Everything in Pro",
+                "Everything in Elite",
                 "Bulk Seat Management",
                 "Custom Interview Flows",
                 "Admin Analytics Dashboard",
@@ -89,6 +209,7 @@ const Pricing = () => {
 
     return (
         <div className="min-h-screen bg-background font-sans selection:bg-violet-500/30 flex flex-col overflow-x-hidden">
+            {showConfetti && <ReactConfetti width={window.innerWidth} height={window.innerHeight} style={{ zIndex: 100 }} />}
             <Navbar />
             
             {/* Ambient Background */}
@@ -126,29 +247,6 @@ const Pricing = () => {
                         <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
                             From first interview to offer letter, we have the tools you need. Choose the plan that fits your goals.
                         </p>
-                    </motion.div>
-
-                    {/* Pricing Toggle */}
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex items-center justify-center gap-6 pt-6"
-                    >
-                        <span className={`text-sm font-medium transition-colors ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>Monthly</span>
-                        <div className="relative flex items-center">
-                            <Switch 
-                                checked={isAnnual} 
-                                onCheckedChange={setIsAnnual} 
-                                className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-violet-600 data-[state=checked]:to-fuchsia-600"
-                            />
-                        </div>
-                        <span className={`text-sm font-medium transition-colors ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-                            Yearly 
-                            <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold border border-emerald-500/20">
-                                Save 20%
-                            </span>
-                        </span>
                     </motion.div>
                 </section>
 
@@ -194,32 +292,50 @@ const Pricing = () => {
                                         </div>
 
                                         <div className="mb-8">
-                                            <div className="flex items-baseline gap-1">
+                                            <div className="flex items-baseline gap-2">
                                                 {plan.price === "Custom" ? (
                                                      <span className="text-4xl font-bold tracking-tight">Custom</span>
+                                                ) : plan.price === "Free" ? (
+                                                     <span className="text-5xl font-bold tracking-tight">Free</span>
                                                 ) : (
                                                     <>
-                                                        <span className="text-5xl font-bold tracking-tight">${plan.price}</span>
-                                                        <span className="text-muted-foreground font-medium">/mo</span>
+                                                        <span className="text-5xl font-bold tracking-tight">{plan.price}</span>
+                                                        {(plan as any).originalPrice && (
+                                                            <span className="text-lg text-muted-foreground line-through">{(plan as any).originalPrice}</span>
+                                                        )}
                                                     </>
                                                 )}
                                             </div>
-                                            {plan.price !== "Custom" && (
+                                            {(plan as any).priceLabel && (
                                                  <p className="text-xs text-muted-foreground mt-2 font-medium">
-                                                    {isAnnual ? 'Billed annually ($'+(parseInt(plan.price)*12)+'/yr)' : 'Billed monthly'}
+                                                    {(plan as any).priceLabel}
                                                 </p>
                                             )}
                                         </div>
 
                                          <Button 
+                                            onClick={() => {
+                                                if (plan.name === "Basic") {
+                                                    navigate("/dashboard");
+                                                } else if (plan.name === "Voke Elite") {
+                                                    if (isPremium) {
+                                                        navigate("/dashboard");
+                                                        return;
+                                                    }
+                                                    handleUpgrade();
+                                                } else {
+                                                    toast.info("For Enterprise custom plans, contact: sales@voke.ai");
+                                                }
+                                            }}
+                                            disabled={isPaying}
                                             className={`w-full h-12 rounded-xl text-sm font-bold transition-all duration-300 mb-8
                                             ${plan.popular 
                                                 ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02]' 
                                                 : 'hover:bg-secondary/80'}`}
                                             variant={plan.variant}
                                         >
-                                            {plan.cta}
-                                            {plan.popular && <ArrowRight className="w-4 h-4 ml-2" />}
+                                            {isPremium && plan.name === "Voke Elite" ? "Already Premium" : isPaying && plan.name === "Voke Elite" ? "Opening checkout..." : plan.cta}
+                                            {plan.popular && !isPaying && !isPremium && <ArrowRight className="w-4 h-4 ml-2" />}
                                         </Button>
 
                                         <div className="space-y-4 mt-auto">

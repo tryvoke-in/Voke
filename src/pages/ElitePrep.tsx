@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { LiveStatus } from '@/types/voice';
-import { Mic, X, MessageSquare, Sparkles, Video, VideoOff, MicOff, Play, Send, LogOut, Layout, Code as CodeIcon, Monitor, User, CheckCircle2, XCircle } from 'lucide-react';
+import { Mic, X, MessageSquare, Sparkles, Video, VideoOff, MicOff, Play, Send, LogOut, Layout, Code as CodeIcon, Monitor, User, CheckCircle2, XCircle, Crown, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,35 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Badge } from "@/components/ui/badge";
 import { loadUserProfileContext, ProfileContext } from "@/utils/profileContext";
+import ReactConfetti from 'react-confetti';
+
+const ensureRazorpay = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+        // Already loaded
+        if ((window as any).Razorpay) {
+            resolve(true);
+            return;
+        }
+        // Check if script tag already exists but hasn't loaded yet
+        const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
+        if (existing) {
+            existing.addEventListener('load', () => resolve(true));
+            existing.addEventListener('error', () => resolve(false));
+            // In case it already loaded between our check
+            setTimeout(() => {
+                if ((window as any).Razorpay) resolve(true);
+            }, 500);
+            return;
+        }
+        // Dynamically inject
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+    });
+};
 
 const ElitePrep: React.FC = () => {
     const navigate = useNavigate();
@@ -36,6 +65,13 @@ const ElitePrep: React.FC = () => {
     // Profile Context State
     const [profileContext, setProfileContext] = useState<ProfileContext | null>(null);
     const [loadingProfile, setLoadingProfile] = useState(true);
+
+    // Premium Status State
+    const [isPremium, setIsPremium] = useState(false);
+    const [checkingPremium, setCheckingPremium] = useState(true);
+    const [isPaying, setIsPaying] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [hasStartedInterview, setHasStartedInterview] = useState(false);
 
     // Verdict State
     const [showVerdict, setShowVerdict] = useState(false);
@@ -69,11 +105,17 @@ const ElitePrep: React.FC = () => {
                 const context = await loadUserProfileContext();
                 setProfileContext(context);
                 console.log('[ElitePrep] Profile context loaded:', context.fullName);
+
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    setIsPremium(!!user.user_metadata?.is_premium);
+                }
             } catch (error) {
                 console.error('[ElitePrep] Failed to load profile context:', error);
                 toast.error('Failed to load profile. Interview will proceed without personalization.');
             } finally {
                 setLoadingProfile(false);
+                setCheckingPremium(false);
             }
         };
         loadProfile();
@@ -81,11 +123,86 @@ const ElitePrep: React.FC = () => {
 
     // Initial Setup
     useEffect(() => {
-        startCamera();
+        if (isPremium && hasStartedInterview) {
+            startCamera();
+        }
         return () => {
             stopCamera();
         };
-    }, []);
+    }, [isPremium, hasStartedInterview]);
+
+    const handlePayAndUnlock = async () => {
+        setIsPaying(true);
+        try {
+            const loaded = await ensureRazorpay();
+            if (!loaded || !(window as any).Razorpay) {
+                toast.error("Payment gateway could not be loaded. Please disable adblocker and try again.");
+                setIsPaying(false);
+                return;
+            }
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                toast.error("You must be logged in to proceed.");
+                setIsPaying(false);
+                return;
+            }
+
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY || "",
+                amount: 100, // Amount in paise (₹1 for testing)
+                currency: "INR",
+                name: "Voke Elite",
+                description: "Unlock Voke Elite Mock Interview Features",
+                image: "/images/voke_logo.png",
+                handler: async function (response: any) {
+                    toast.success("Payment successful! Unlocking Voke Elite...");
+                    console.log("Payment response:", response);
+                    
+                    // Update user metadata in Supabase
+                    const { error } = await supabase.auth.updateUser({
+                        data: { is_premium: true }
+                    });
+
+                    if (error) {
+                        console.error("Error updating user premium status:", error);
+                        toast.error("Payment recorded, but profile update failed. Please refresh.");
+                    } else {
+                        // Play confetti
+                        setShowConfetti(true);
+                        setIsPremium(true);
+                        toast.success("Welcome to Voke Elite! Redirecting to homepage...");
+                        setTimeout(() => {
+                            setShowConfetti(false);
+                            navigate("/dashboard");
+                        }, 3000);
+                    }
+                    setIsPaying(false);
+                },
+                prefill: {
+                    name: user.user_metadata?.full_name || profileContext?.fullName || "",
+                    email: user.email || "",
+                },
+                theme: {
+                    color: "#7c3aed", // violet-600
+                },
+                modal: {
+                    ondismiss: function() {
+                        setIsPaying(false);
+                        toast.info("Payment cancelled.");
+                    }
+                }
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+        } catch (e: any) {
+            console.error("Razorpay payment initialization error:", e);
+            toast.error("Payment initialization failed: " + e.message);
+            setIsPaying(false);
+        }
+    };
+
 
     // Timer
     useEffect(() => {
@@ -310,8 +427,187 @@ REMEMBER: This is an ELITE interview. The bar is high. No feedback. strict time 
         navigate('/dashboard');
     };
 
+    if (checkingPremium) {
+        return (
+            <div className="h-screen w-screen bg-[#0a0a0a] flex items-center justify-center flex-col gap-4">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-violet-500/25 blur-xl rounded-full animate-pulse"></div>
+                    <Crown className="w-12 h-12 text-violet-500 relative z-10 animate-bounce" />
+                </div>
+                <p className="text-sm font-mono text-gray-400">VERIFYING ELITE MEMBERSHIP...</p>
+            </div>
+        );
+    }
+
+    if (!isPremium) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans">
+                {/* Background Ambience */}
+                <div className="fixed inset-0 pointer-events-none z-0">
+                    <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-violet-600/10 rounded-full blur-[120px] mix-blend-screen" />
+                    <div className="absolute top-[40%] left-[-20%] w-[600px] h-[600px] bg-fuchsia-600/10 rounded-full blur-[120px] mix-blend-screen" />
+                    <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
+                </div>
+
+                {/* Navbar */}
+                <header className="h-16 border-b border-white/5 bg-black/40 backdrop-blur-md flex items-center justify-between px-6 z-20">
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
+                        <img src="/images/voke_logo.png" className="w-9 h-9" alt="Voke Logo" />
+                        <span className="font-bold text-lg bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Voke Elite</span>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="text-gray-400 hover:text-white">
+                        Exit to Dashboard
+                    </Button>
+                </header>
+
+                {/* Premium Lock Screen */}
+                <main className="flex-1 flex items-center justify-center p-6 relative z-10">
+                    <div className="max-w-md w-full bg-zinc-900/60 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 text-center shadow-2xl relative overflow-hidden group">
+                        {/* Glow effect */}
+                        <div className="absolute -top-40 -left-40 w-80 h-80 bg-violet-600/20 rounded-full blur-[80px] pointer-events-none transition-all group-hover:bg-violet-600/30" />
+                        
+                        <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-xl shadow-violet-500/20 mb-6">
+                            <Crown className="w-10 h-10 text-white fill-white/10" />
+                        </div>
+
+                        <h2 className="text-3xl font-extrabold tracking-tight mb-2">Voke Elite Mock</h2>
+                        <p className="text-sm text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
+                            Take unlimited real-time AI mock interviews with code execution, and get detailed evaluation reports to land your dream tech job.
+                        </p>
+
+                        <div className="space-y-4 mb-8 text-left max-w-xs mx-auto">
+                            {[
+                                "Unlimited AI-powered mock interviews",
+                                "Monaco Editor code execution (Python)",
+                                "Zero-feedback policy evaluation system",
+                                "Detailed verdict dashboard with reports"
+                            ].map((feat, index) => (
+                                <div key={index} className="flex items-center gap-3 text-sm text-gray-300">
+                                    <div className="w-5 h-5 rounded-full bg-violet-500/20 flex items-center justify-center border border-violet-500/30 shrink-0">
+                                        <Check className="w-3 h-3 text-violet-400" />
+                                    </div>
+                                    <span>{feat}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-8 flex justify-between items-center">
+                            <div className="text-left">
+                                <div className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Testing Subscription</div>
+                                <div className="flex items-baseline gap-1.5 mt-0.5">
+                                    <span className="text-2xl font-bold text-white">₹1</span>
+                                    <span className="text-sm text-gray-500 line-through">₹50</span>
+                                </div>
+                            </div>
+                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-medium">98% OFF</Badge>
+                        </div>
+
+                        <Button
+                            size="lg"
+                            disabled={isPaying}
+                            onClick={handlePayAndUnlock}
+                            className="w-full h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            {isPaying ? "Opening Payment..." : "Unlock Elite for ₹1"}
+                        </Button>
+                        <p className="text-[10px] text-gray-500 mt-3">Secure payment via Razorpay. Instantly activated.</p>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    if (!hasStartedInterview) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans">
+                {/* Background Ambience */}
+                <div className="fixed inset-0 pointer-events-none z-0">
+                    <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-amber-500/5 rounded-full blur-[120px] mix-blend-screen" />
+                    <div className="absolute top-[40%] left-[-20%] w-[600px] h-[600px] bg-yellow-600/5 rounded-full blur-[120px] mix-blend-screen" />
+                    <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
+                </div>
+
+                {/* Navbar */}
+                <header className="h-16 border-b border-white/5 bg-black/40 backdrop-blur-md flex items-center justify-between px-6 z-20">
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
+                        <img src="/images/voke_logo.png" className="w-9 h-9" alt="Voke Logo" />
+                        <span className="font-bold text-lg bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">Voke Elite</span>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="text-gray-400 hover:text-white">
+                        Exit to Dashboard
+                    </Button>
+                </header>
+
+                {/* Premium Welcome Screen */}
+                <main className="flex-1 flex items-center justify-center p-6 relative z-10">
+                    <div className="max-w-md w-full bg-zinc-900/60 backdrop-blur-2xl border border-amber-500/20 rounded-[2.5rem] p-8 text-center shadow-2xl relative overflow-hidden group">
+                        {/* Glow effect */}
+                        <div className="absolute -top-40 -left-40 w-80 h-80 bg-amber-500/10 rounded-full blur-[80px] pointer-events-none transition-all group-hover:bg-amber-500/20" />
+                        
+                        <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center shadow-xl shadow-amber-500/20 mb-6 relative">
+                            <div className="absolute inset-0 bg-amber-400/25 blur-lg rounded-3xl animate-pulse"></div>
+                            <Crown className="w-10 h-10 text-white fill-white/10 relative z-10" />
+                        </div>
+
+                        <h2 className="text-3xl font-extrabold tracking-tight mb-2 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">You are already a premium user</h2>
+                        <p className="text-sm text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
+                            Welcome back to Voke Elite! Your premium interview practice tools are fully unlocked. Start a real-time mock session when you are ready.
+                        </p>
+
+                        <div className="space-y-4 mb-8 text-left max-w-xs mx-auto">
+                            {[
+                                "Unlimited AI-powered mock interviews",
+                                "Monaco Editor code execution (Python)",
+                                "Zero-feedback policy evaluation system",
+                                "Detailed verdict dashboard with reports"
+                            ].map((feat, index) => (
+                                <div key={index} className="flex items-center gap-3 text-sm text-gray-300">
+                                    <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 shrink-0">
+                                        <Check className="w-3 h-3 text-amber-400" />
+                                    </div>
+                                    <span>{feat}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-8 flex justify-between items-center">
+                            <div className="text-left">
+                                <div className="text-xs text-amber-400 uppercase tracking-widest font-semibold">Elite Membership</div>
+                                <div className="text-base font-bold text-white mt-0.5">Active & Unlimited</div>
+                            </div>
+                            <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 font-medium flex items-center gap-1">
+                                <Crown className="w-3 h-3 fill-amber-400" />
+                                Pro Plan
+                            </Badge>
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                            <Button
+                                size="lg"
+                                onClick={() => setHasStartedInterview(true)}
+                                className="w-full h-12 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            >
+                                Start AI Mock Interview
+                            </Button>
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                onClick={() => navigate('/dashboard')}
+                                className="w-full h-12 border-white/10 hover:bg-white/5 text-white rounded-xl font-bold text-sm"
+                            >
+                                Back to Dashboard
+                            </Button>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
     return (
         <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden font-sans">
+            {showConfetti && <ReactConfetti width={window.innerWidth} height={window.innerHeight} style={{ zIndex: 100 }} />}
+
 
             {/* Verdict Overlay */}
             {showVerdict && (

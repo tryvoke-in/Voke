@@ -1,10 +1,47 @@
 import { Button } from "@/components/ui/button";
-import { Zap } from "lucide-react";
+import { Zap, Crown } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const UpgradeButton = () => {
     const navigate = useNavigate();
+    const [isPremium, setIsPremium] = useState(false);
+
+    useEffect(() => {
+        const updatePremiumStatus = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setIsPremium(!!user?.user_metadata?.is_premium);
+        };
+
+        updatePremiumStatus();
+
+        // Listen for auth state changes to dynamically update status
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            // Fetch fresh user data to avoid stale session cache overrides
+            const { data: { user } } = await supabase.auth.getUser();
+            setIsPremium(!!user?.user_metadata?.is_premium);
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, []);
+
+    if (isPremium) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white text-xs font-bold shadow-[0_0_15px_rgba(245,158,11,0.4)] border border-amber-400/30"
+            >
+                <Crown className="w-3.5 h-3.5 fill-white animate-pulse" />
+                <span>Voke Elite</span>
+            </motion.div>
+        );
+    }
+
     return (
         <Button 
             size="sm" 
