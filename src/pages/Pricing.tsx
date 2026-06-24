@@ -130,6 +130,8 @@ const Pricing = () => {
                         console.error("Error updating user premium status:", error);
                         toast.error("Payment recorded, but profile update failed. Please refresh.");
                     } else {
+                        // Refresh the session immediately so the new user metadata is available in the local session
+                        await supabase.auth.refreshSession();
                         setShowConfetti(true);
                         toast.success("Welcome to Voke Elite Pro! Payment successful.");
                         setTimeout(() => {
@@ -354,30 +356,63 @@ const Pricing = () => {
                                             )}
                                         </div>
 
-                                         <Button 
-                                            onClick={() => {
-                                                if (plan.name === "Basic") {
-                                                    navigate("/dashboard");
-                                                } else if (plan.name === "Voke Elite") {
-                                                    if (isPremium) {
-                                                        navigate("/dashboard");
-                                                        return;
-                                                    }
-                                                    handleUpgrade();
-                                                } else {
-                                                    toast.info("For Enterprise custom plans, contact: sales@voke.ai");
-                                                }
-                                            }}
-                                            disabled={isPaying}
-                                            className={`w-full h-12 rounded-xl text-sm font-bold transition-all duration-300 mb-8
-                                            ${plan.popular 
-                                                ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02]' 
-                                                : 'hover:bg-secondary/80'}`}
-                                            variant={plan.variant}
-                                        >
-                                            {isPremium && plan.name === "Voke Elite" ? "Already Premium" : isPaying && plan.name === "Voke Elite" ? "Opening checkout..." : plan.cta}
-                                            {plan.popular && !isPaying && !isPremium && <ArrowRight className="w-4 h-4 ml-2" />}
-                                        </Button>
+                                         {isPremium && plan.name === "Voke Elite" ? (
+                                             <div className="space-y-2 mb-8">
+                                                 <Button 
+                                                     onClick={() => navigate("/dashboard")}
+                                                     className="w-full h-12 rounded-xl text-sm font-bold bg-muted hover:bg-muted/80 text-foreground"
+                                                 >
+                                                     Already Premium
+                                                 </Button>
+                                                 <Button 
+                                                     variant="outline"
+                                                     onClick={async () => {
+                                                         setIsPaying(true);
+                                                         const { error } = await supabase.auth.updateUser({
+                                                             data: { is_premium: false }
+                                                         });
+                                                         if (error) {
+                                                             console.error("Error updating user premium status:", error);
+                                                             toast.error("Failed to downgrade: " + error.message);
+                                                         } else {
+                                                             await supabase.auth.refreshSession();
+                                                             setIsPremium(false);
+                                                             toast.success("Downgraded to Free tier for testing!");
+                                                         }
+                                                         setIsPaying(false);
+                                                     }}
+                                                     disabled={isPaying}
+                                                     className="w-full h-10 rounded-xl text-xs font-semibold border-red-500/30 text-red-500 hover:bg-red-500/10 hover:text-red-600 transition-all duration-300"
+                                                 >
+                                                     Revert to Free (Testing Only)
+                                                 </Button>
+                                             </div>
+                                         ) : (
+                                             <Button 
+                                                 onClick={() => {
+                                                     if (plan.name === "Basic") {
+                                                         navigate("/dashboard");
+                                                     } else if (plan.name === "Voke Elite") {
+                                                         if (isPremium) {
+                                                             navigate("/dashboard");
+                                                             return;
+                                                         }
+                                                         handleUpgrade();
+                                                     } else {
+                                                         toast.info("For Enterprise custom plans, contact: sales@voke.ai");
+                                                     }
+                                                 }}
+                                                 disabled={isPaying}
+                                                 className={`w-full h-12 rounded-xl text-sm font-bold transition-all duration-300 mb-8
+                                                 ${plan.popular 
+                                                     ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02]' 
+                                                     : 'hover:bg-secondary/80'}`}
+                                                 variant={plan.variant}
+                                             >
+                                                 {isPremium && plan.name === "Voke Elite" ? "Already Premium" : isPaying && plan.name === "Voke Elite" ? "Opening checkout..." : plan.cta}
+                                                 {plan.popular && !isPaying && !isPremium && <ArrowRight className="w-4 h-4 ml-2" />}
+                                             </Button>
+                                         )}
 
                                         <div className="space-y-4 mt-auto">
                                             <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">

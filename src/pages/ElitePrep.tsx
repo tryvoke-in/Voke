@@ -155,7 +155,7 @@ const ElitePrep: React.FC = () => {
                 name: "Voke Elite",
                 description: "Unlock Voke Elite Mock Interview Features",
                 image: "/images/voke_logo.png",
-                handler: async function (response: any) {
+                 handler: async function (response: any) {
                     toast.success("Payment successful! Unlocking Voke Elite...");
                     console.log("Payment response:", response);
                     
@@ -168,6 +168,8 @@ const ElitePrep: React.FC = () => {
                         console.error("Error updating user premium status:", error);
                         toast.error("Payment recorded, but profile update failed. Please refresh.");
                     } else {
+                        // Refresh the session immediately so the new user metadata is available in the local session
+                        await supabase.auth.refreshSession();
                         // Play confetti
                         setShowConfetti(true);
                         setIsPremium(true);
