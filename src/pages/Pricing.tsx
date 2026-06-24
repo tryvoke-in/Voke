@@ -68,6 +68,13 @@ const Pricing = () => {
                 return;
             }
 
+            const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY;
+            if (!razorpayKey) {
+                toast.error("Payment gateway is not configured. Please contact support.");
+                setIsPaying(false);
+                return;
+            }
+
             const loaded = await ensureRazorpay();
             if (!loaded || !(window as any).Razorpay) {
                 toast.error("Payment gateway could not be loaded. Please disable adblocker and try again.");
@@ -75,17 +82,46 @@ const Pricing = () => {
                 return;
             }
 
+            // Create a Razorpay order on the server to get a valid order_id
+            const { data: orderData, error: orderError } = await supabase.functions.invoke("create-razorpay-order", {
+                body: {
+                    amount: 100, // ₹1 in paise
+                    currency: "INR",
+                    receipt: `rcpt_${user.id.slice(0, 8)}_${Date.now()}`, // max 40 chars
+                },
+            });
+
+            if (orderError || !orderData?.id) {
+                // Try to extract the real error from the FunctionsHttpError context
+                let errMsg = "Unknown error";
+                if (orderError) {
+                    const ctx = (orderError as any).context;
+                    if (ctx && typeof ctx.text === "function") {
+                        try { errMsg = await ctx.text(); } catch { errMsg = orderError.message; }
+                    } else {
+                        errMsg = orderError.message;
+                    }
+                } else if (orderData) {
+                    errMsg = orderData?.error || JSON.stringify(orderData);
+                }
+                console.error("Order creation error detail:", errMsg, orderError, orderData);
+                toast.error(`Payment failed: ${errMsg}`);
+                setIsPaying(false);
+                return;
+            }
+
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY || "",
-                amount: 100, // ₹1 for testing (100 paise)
-                currency: "INR",
+                key: razorpayKey,
+                amount: orderData.amount,
+                currency: orderData.currency,
+                order_id: orderData.id,
                 name: "Voke Elite",
                 description: "Upgrade to Voke Elite Pro Plan",
                 image: "/images/voke_logo.png",
                 handler: async function (response: any) {
-                    toast.success("Payment successful! Upgrading to Voke Elite Pro...");
                     console.log("Payment response:", response);
-                    
+                    toast.success("Payment successful! Upgrading to Voke Elite Pro...");
+
                     const { error } = await supabase.auth.updateUser({
                         data: { is_premium: true }
                     });
@@ -119,6 +155,11 @@ const Pricing = () => {
             };
 
             const rzp = new (window as any).Razorpay(options);
+            rzp.on("payment.failed", function (response: any) {
+                console.error("Payment failed:", response.error);
+                toast.error(`Payment failed: ${response.error.description}`);
+                setIsPaying(false);
+            });
             rzp.open();
         } catch (e: any) {
             console.error("Razorpay payment initialization error:", e);
