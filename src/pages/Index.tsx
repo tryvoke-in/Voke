@@ -8,11 +8,21 @@ import {
 import { useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { WAITLIST_CONFIG } from "@/config/waitlist";
 
 const Index = () => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleAuthNavigation = () => {
+    const isBypassed = localStorage.getItem("voke_waitlist_bypass") === "true";
+    if (WAITLIST_CONFIG.enabled && !isBypassed) {
+      navigate("/waitlist");
+    } else {
+      navigate("/auth");
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,13 +73,13 @@ const Index = () => {
             <div className="hidden md:flex items-center gap-4">
               <Button 
                 variant="ghost" 
-                onClick={() => navigate("/auth")}
+                onClick={handleAuthNavigation}
                 className="text-gray-300 hover:text-white hover:bg-white/10"
               >
                 Sign In
               </Button>
               <Button
-                onClick={() => navigate("/auth")}
+                onClick={handleAuthNavigation}
                 className="bg-white text-black hover:bg-gray-200 rounded-full px-6 font-medium transition-all duration-300 hover:scale-105"
               >
                 Get Started
@@ -111,14 +121,14 @@ const Index = () => {
                 <Button 
                   size="lg"
                   variant="outline" 
-                  onClick={() => navigate("/auth")}
+                  onClick={handleAuthNavigation}
                   className="w-full border-white/20 text-white hover:bg-white/10"
                 >
                   Sign In
                 </Button>
                 <Button
                   size="lg"
-                  onClick={() => navigate("/auth")}
+                  onClick={handleAuthNavigation}
                   className="w-full bg-violet-600 hover:bg-violet-700 text-white"
                 >
                   Get Started
@@ -179,7 +189,7 @@ const Index = () => {
             >
               <Button
                 size="lg"
-                onClick={() => navigate("/auth")}
+                onClick={handleAuthNavigation}
                 className="w-full sm:w-auto bg-white text-black hover:bg-gray-200 text-lg px-8 py-6 rounded-full font-semibold shadow-xl shadow-white/10 hover:scale-105 transition-all duration-300"
               >
                 Start Practicing Free
@@ -522,7 +532,7 @@ const Index = () => {
                       ? "bg-white text-black hover:bg-gray-200" 
                       : "bg-white/10 hover:bg-white/20 text-white"
                   }`}
-                  onClick={() => navigate("/auth")}
+                  onClick={handleAuthNavigation}
                 >
                   {plan.cta}
                 </Button>
@@ -549,7 +559,7 @@ const Index = () => {
             </p>
             <Button
               size="lg"
-              onClick={() => navigate("/auth")}
+              onClick={handleAuthNavigation}
               className="bg-white text-violet-600 hover:bg-gray-100 text-lg px-10 py-8 rounded-full font-bold shadow-2xl hover:shadow-white/20 transition-all duration-300 hover:scale-105"
             >
               Get Started for Free

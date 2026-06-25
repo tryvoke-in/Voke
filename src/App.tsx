@@ -52,6 +52,8 @@ import GlobalAIChatbot from "./components/GlobalAIChatbot";
 import { OnlinePresenceProvider } from "./components/OnlinePresenceProvider";
 import { SessionRequestNotifier } from "./components/SessionRequestNotifier";
 import { ProfileCompletionGuard } from "./components/ProfileCompletionGuard";
+import Waitlist from "./pages/Waitlist";
+import { WaitlistGuard } from "./components/WaitlistGuard";
 
 const queryClient = new QueryClient();
 
@@ -62,10 +64,12 @@ const App = () => (
       <Sonner />
       <OnlinePresenceProvider>
         <BrowserRouter>
-          <ProfileCompletionGuard>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
+          <WaitlistGuard>
+            <ProfileCompletionGuard>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/waitlist" element={<Waitlist />} />
+                <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/users/:userId" element={<AdminUserDetails />} />
@@ -112,9 +116,10 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </ProfileCompletionGuard>
-          <GlobalAIChatbot />
-          <SessionRequestNotifier />
-        </BrowserRouter>
+        </WaitlistGuard>
+        <GlobalAIChatbot />
+        <SessionRequestNotifier />
+      </BrowserRouter>
       </OnlinePresenceProvider>
     </TooltipProvider>
   </QueryClientProvider >
