@@ -105,6 +105,7 @@ const App = () => (
               <Route path="/companies/:slug" element={<CompanyDetail />} />
               <Route path="/playground" element={<Playground />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/dashboard/pricing" element={<Pricing />} />
               <Route path="/elite-prep" element={<ElitePrep />} />
               <Route path="/resume-builder" element={<ResumeBuilder />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

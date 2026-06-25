@@ -85,7 +85,7 @@ const Pricing = () => {
             // Create a Razorpay order on the server to get a valid order_id
             const { data: orderData, error: orderError } = await supabase.functions.invoke("create-razorpay-order", {
                 body: {
-                    amount: 100, // ₹1 in paise
+                    amount: 9900, // ₹99 in paise
                     currency: "INR",
                     receipt: `rcpt_${user.id.slice(0, 8)}_${Date.now()}`, // max 40 chars
                 },
@@ -210,9 +210,9 @@ const Pricing = () => {
         {
             name: "Voke Elite",
             description: "Complete power for serious job hunters.",
-            price: "₹1",
+            price: "₹99",
             priceLabel: "one-time (testing)",
-            originalPrice: "₹50",
+            originalPrice: "₹199",
             features: [
                 "Everything in Basic",
                 "Unlimited AI Mock Interviews",

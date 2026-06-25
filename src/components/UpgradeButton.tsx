@@ -28,20 +28,19 @@ export const UpgradeButton = () => {
             subscription.unsubscribe();
         };
     }, []);
-
     if (isPremium) {
         return (
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white text-xs font-bold shadow-[0_0_15px_rgba(245,158,11,0.4)] border border-amber-400/30"
+                onClick={() => navigate('/pricing')}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white text-xs font-bold shadow-[0_0_15px_rgba(245,158,11,0.4)] border border-amber-400/30 cursor-pointer hover:opacity-90 transition-all"
             >
                 <Crown className="w-3.5 h-3.5 fill-white animate-pulse" />
                 <span>Voke Elite</span>
             </motion.div>
         );
     }
-
     return (
         <Button 
             size="sm" 

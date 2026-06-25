@@ -30,7 +30,7 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        amount,          // in paise (e.g. 100 = ₹1)
+        amount,          // in paise (e.g. 9900 = ₹99)
         currency,
         receipt: receipt || `receipt_${Date.now()}`,
       }),

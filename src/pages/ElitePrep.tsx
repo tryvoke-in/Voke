@@ -150,7 +150,7 @@ const ElitePrep: React.FC = () => {
 
             const options = {
                 key: import.meta.env.VITE_RAZORPAY_KEY || "",
-                amount: 100, // Amount in paise (₹1 for testing)
+                amount: 9900, // Amount in paise (₹99 for testing)
                 currency: "INR",
                 name: "Voke Elite",
                 description: "Unlock Voke Elite Mock Interview Features",
@@ -497,11 +497,11 @@ REMEMBER: This is an ELITE interview. The bar is high. No feedback. strict time 
                             <div className="text-left">
                                 <div className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Testing Subscription</div>
                                 <div className="flex items-baseline gap-1.5 mt-0.5">
-                                    <span className="text-2xl font-bold text-white">₹1</span>
-                                    <span className="text-sm text-gray-500 line-through">₹50</span>
+                                    <span className="text-2xl font-bold text-white">₹99</span>
+                                    <span className="text-sm text-gray-500 line-through">₹199</span>
                                 </div>
                             </div>
-                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-medium">98% OFF</Badge>
+                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-medium">50% OFF</Badge>
                         </div>
 
                         <Button
@@ -510,7 +510,7 @@ REMEMBER: This is an ELITE interview. The bar is high. No feedback. strict time 
                             onClick={handlePayAndUnlock}
                             className="w-full h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
                         >
-                            {isPaying ? "Opening Payment..." : "Unlock Elite for ₹1"}
+                            {isPaying ? "Opening Payment..." : "Unlock Elite for ₹99"}
                         </Button>
                         <p className="text-[10px] text-gray-500 mt-3">Secure payment via Razorpay. Instantly activated.</p>
                     </div>
