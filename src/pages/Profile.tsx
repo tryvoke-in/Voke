@@ -1059,7 +1059,18 @@ const Profile = () => {
                     toast.error("Please upload a resume");
                     return;
                   }
+                  
+                  // If a resume file was selected but not uploaded yet, upload it first
+                  if (resumeFile && !profile?.resume_url) {
+                    await handleResumeUpload();
+                  }
+
                   await handleSave();
+                  
+                  // Optimistically close modal if we have all fields locally
+                  if (formData.github_url && formData.leetcode_id && formData.codeforces_id && (profile?.resume_url || resumeFile)) {
+                    setShowMandatoryModal(false);
+                  }
                 }}
                 disabled={saving}
                 className="bg-violet-600 hover:bg-violet-500 text-white"
