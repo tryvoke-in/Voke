@@ -54,6 +54,13 @@ const VoiceAssistant: React.FC = () => {
         scrollToBottom();
     }, [logs]);
 
+    // Cleanup on unmount (e.g. browser back button)
+    useEffect(() => {
+        return () => {
+            disconnect();
+        };
+    }, [disconnect]);
+
     // Monitor logs for transition tokens and feedback
     useEffect(() => {
         if (logs.length > 0) {
