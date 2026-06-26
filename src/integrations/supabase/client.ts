@@ -15,3 +15,29 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// Wrap signOut to ensure local session is always cleared even if server-side sign out fails
+const originalSignOut = supabase.auth.signOut.bind(supabase.auth);
+supabase.auth.signOut = async (...args) => {
+  try {
+    const result = await originalSignOut(...args);
+    return result;
+  } catch (error: any) {
+    console.warn("Server-side sign out error, forcing local cleanup:", error);
+    return { data: null, error };
+  } finally {
+    // Clear all Supabase auth keys from localStorage
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('sb-') || key.includes('supabase.auth'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch (e) {
+      console.error("Failed to clear localStorage keys:", e);
+    }
+  }
+};

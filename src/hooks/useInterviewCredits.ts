@@ -28,6 +28,43 @@ export const useInterviewCredits = (type: PrepType = 'elite') => {
     creditsVideo: 1,
   });
 
+  const handleAuthError = (err: any, fallbackTitle: string, fallbackDescription: string) => {
+    console.error(`${fallbackTitle}:`, err);
+    
+    if (err?.message?.includes("Auth session missing") || err?.message?.includes("JWT") || err?.message?.includes("session_not_found")) {
+      toast({
+        title: "Session Expired",
+        description: "Your authentication session is missing or expired. Redirecting to sign in...",
+        variant: "destructive",
+      });
+      // Clear localStorage auth keys
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('sb-') || key.includes('supabase.auth'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+      } catch (e) {
+        console.error("Failed to clear localStorage:", e);
+      }
+      
+      // Delay redirect slightly so the toast is readable
+      setTimeout(() => {
+        window.location.href = "/auth";
+      }, 1500);
+      return;
+    }
+
+    toast({
+      title: fallbackTitle,
+      description: err?.message || fallbackDescription,
+      variant: "destructive",
+    });
+  };
+
   const fetchCredits = async (passedSession?: any) => {
     try {
       let session = passedSession;
@@ -146,12 +183,7 @@ export const useInterviewCredits = (type: PrepType = 'elite') => {
       await fetchCredits();
       return true;
     } catch (err: any) {
-      console.error("Error consuming credit:", err);
-      toast({
-        title: "Action Failed",
-        description: "Could not update interview credits. Please try again.",
-        variant: "destructive",
-      });
+      handleAuthError(err, "Action Failed", "Could not update interview credits. Please try again.");
       return false;
     }
   };
@@ -179,12 +211,7 @@ export const useInterviewCredits = (type: PrepType = 'elite') => {
       await fetchCredits();
       return true;
     } catch (err: any) {
-      console.error("Error granting feedback credits:", err);
-      toast({
-        title: "Action Failed",
-        description: "Could not grant bonus credits. Please contact support.",
-        variant: "destructive",
-      });
+      handleAuthError(err, "Action Failed", "Could not grant bonus credits. Please contact support.");
       return false;
     }
   };
@@ -212,12 +239,7 @@ export const useInterviewCredits = (type: PrepType = 'elite') => {
       });
       return true;
     } catch (err: any) {
-      console.error("Error resetting credits:", err);
-      toast({
-        title: "Reset Failed",
-        description: err.message || "Could not reset credits.",
-        variant: "destructive",
-      });
+      handleAuthError(err, "Reset Failed", "Could not reset credits.");
       return false;
     }
   };
@@ -245,12 +267,7 @@ export const useInterviewCredits = (type: PrepType = 'elite') => {
       });
       return true;
     } catch (err: any) {
-      console.error("Error setting testing credits:", err);
-      toast({
-        title: "Update Failed",
-        description: err.message || "Could not update credits.",
-        variant: "destructive",
-      });
+      handleAuthError(err, "Update Failed", "Could not update credits.");
       return false;
     }
   };
