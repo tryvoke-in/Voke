@@ -93,24 +93,24 @@ const VideoInterviewResults = () => {
       {/* Header */}
       <header className="bg-background/80 backdrop-blur-md border-b border-border/40 sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
+          <div className="flex items-center gap-1.5 sm:gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
             <img
               src="/images/voke_logo.png"
               alt="Voke Logo"
-              className="w-8 h-8 object-contain"
+              className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
             />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+            <h1 className="text-base sm:text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
               Interview Analysis
             </h1>
           </div>
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-1 sm:gap-2">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="px-2 sm:px-3 text-xs sm:text-sm">
               Dashboard
             </Button>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+            <Button variant="outline" size="sm" onClick={handleLogout} className="px-2 sm:px-3 text-xs sm:text-sm">
+              <LogOut className="w-3.5 h-3.5 sm:mr-2" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
           </nav>
         </div>
@@ -289,7 +289,7 @@ const VideoInterviewResults = () => {
                         </li>
                       ))}
                     </ul>
-                  ) : session.analysis_result?.strengths ? (
+                  ) : session.analysis_result?.strengths && Array.isArray(session.analysis_result.strengths) ? (
                     <ul className="space-y-3">
                       {session.analysis_result.strengths.map((strength: string, idx: number) => (
                         <li key={idx} className="flex gap-3 text-sm">
@@ -322,7 +322,7 @@ const VideoInterviewResults = () => {
                         </li>
                       ))}
                     </ul>
-                  ) : session.analysis_result?.improvements ? (
+                  ) : session.analysis_result?.improvements && Array.isArray(session.analysis_result.improvements) ? (
                     <ul className="space-y-3">
                       {session.analysis_result.improvements.map((improvement: string, idx: number) => (
                         <li key={idx} className="flex gap-3 text-sm">

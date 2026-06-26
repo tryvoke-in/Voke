@@ -13,7 +13,14 @@ import { format, subDays } from "date-fns";
 // Reusing streak logic from Dashboard (simplified adaption)
 const calculateStreak = (dates: string[]) => {
   if (dates.length === 0) return 0;
-  const uniqueDates = Array.from(new Set(dates.map(d => new Date(d).toISOString().split('T')[0])))
+  
+  // Unique sorted dates YYYY-MM-DD (filtering out any invalid/null dates to prevent RangeErrors)
+  const validDates = dates.filter(Boolean).map(d => {
+    const date = new Date(d);
+    return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : null;
+  }).filter(Boolean) as string[];
+
+  const uniqueDates = Array.from(new Set(validDates))
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()); 
 
   const today = new Date().toISOString().split('T')[0];
@@ -76,8 +83,12 @@ const DailyChallengeLanding = () => {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       // Fetch all user activity for streak calculation
       const { data: textSessions } = await supabase.from("interview_sessions").select("created_at").eq("user_id", user.id);

@@ -11,6 +11,9 @@ import { motion } from "motion/react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useInterviewCredits } from "@/hooks/useInterviewCredits";
+import { InterviewGate } from "@/components/InterviewGate";
+import { Loader2 } from "lucide-react";
 
 // Mock Data for Recommendations
 const RECOMMENDED_SESSIONS = [
@@ -54,6 +57,8 @@ export default function AdaptiveInterview() {
     duration: "15",
     mode: "voice"
   });
+
+  const { credits, hasGivenFeedback, isPremium, canTakeInterview, loading: creditsLoading, refreshCredits, grantFeedbackCredits } = useInterviewCredits('elite');
 
   useEffect(() => {
     checkAuth();
@@ -137,8 +142,21 @@ export default function AdaptiveInterview() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 pt-32 pb-16 max-w-6xl flex-1">
-        <div className="grid lg:grid-cols-12 gap-8">
+      <main className="container mx-auto px-4 pt-32 pb-16 max-w-6xl flex-1 flex items-center justify-center">
+        {creditsLoading ? (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="w-12 h-12 animate-spin text-violet-500" />
+          </div>
+        ) : !canTakeInterview ? (
+          <InterviewGate
+            credits={credits}
+            hasGivenFeedback={hasGivenFeedback}
+            isPremium={isPremium}
+            onFeedbackSuccess={refreshCredits}
+            grantFeedbackCredits={grantFeedbackCredits}
+          />
+        ) : (
+          <div className="grid lg:grid-cols-12 gap-8 w-full">
           
           {/* Left Column: Hero & Quick Start */}
           <div className="lg:col-span-7 space-y-8">
@@ -333,7 +351,8 @@ export default function AdaptiveInterview() {
               </Card>
             </motion.div>
           </div>
-        </div>
+          </div>
+        )}
       </main>
     </div>
   );

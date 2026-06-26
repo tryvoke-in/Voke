@@ -267,7 +267,13 @@ Tell me about a time you had to learn something quickly in order to deliver on a
 
         <div className="flex-1 p-6 flex flex-col justify-end">
           <div className="space-y-3">
-            <Button onClick={() => setShowResults(true)} variant="destructive" className="w-full justify-start h-12 bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0">
+            <Button 
+              onClick={() => {
+                setShowResults(true);
+              }} 
+              variant="destructive" 
+              className="w-full justify-start h-12 bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0"
+            >
               <StopCircle className="w-5 h-5 mr-3" />
               End Session
             </Button>

@@ -49,6 +49,7 @@ import ResumeBuilder from "./pages/ResumeBuilder";
 import NotFound from "./pages/NotFound";
 import { Footer } from "./components/Footer";
 import GlobalAIChatbot from "./components/GlobalAIChatbot";
+import { DevResetWidget } from "./components/DevResetWidget";
 import { OnlinePresenceProvider } from "./components/OnlinePresenceProvider";
 import { SessionRequestNotifier } from "./components/SessionRequestNotifier";
 import { ProfileCompletionGuard } from "./components/ProfileCompletionGuard";
@@ -118,6 +119,7 @@ const App = () => (
           </ProfileCompletionGuard>
         </WaitlistGuard>
         <GlobalAIChatbot />
+        <DevResetWidget />
         <SessionRequestNotifier />
       </BrowserRouter>
       </OnlinePresenceProvider>

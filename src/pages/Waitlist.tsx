@@ -36,14 +36,26 @@ const Waitlist = () => {
   useEffect(() => {
     if (isBypassed) {
       const checkSessionAndRedirect = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          if (session.user.email === ADMIN_EMAIL) {
-            navigate("/admin");
+        try {
+          // Guarantee resolution within 800ms to prevent hanging on page load
+          const { data, error } = await Promise.race([
+            supabase.auth.getSession(),
+            new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 800))
+          ]);
+
+          if (error) throw error;
+
+          if (data?.session) {
+            if (data.session.user.email === ADMIN_EMAIL) {
+              navigate("/admin");
+            } else {
+              navigate("/dashboard");
+            }
           } else {
-            navigate("/dashboard");
+            navigate("/auth");
           }
-        } else {
+        } catch (err) {
+          console.warn("[Waitlist Bypasser] Session check failed/timed out, redirecting to /auth:", err);
           navigate("/auth");
         }
       };
@@ -107,7 +119,7 @@ const Waitlist = () => {
     }
   };
 
-  const handleBypassSubmit = (e: React.FormEvent) => {
+  const handleBypassSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (bypassCode === WAITLIST_CONFIG.bypassCode) {
       localStorage.setItem("voke_waitlist_bypass", "true");
@@ -117,6 +129,28 @@ const Waitlist = () => {
         description: "Checking session and redirecting...",
       });
       setShowBypassDialog(false);
+
+      // Perform immediate redirect to bypass React hook state change lag
+      try {
+        const { data, error } = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 800))
+        ]);
+
+        if (error) throw error;
+
+        if (data?.session) {
+          if (data.session.user.email === ADMIN_EMAIL) {
+            navigate("/admin");
+          } else {
+            navigate("/dashboard");
+          }
+        } else {
+          navigate("/auth");
+        }
+      } catch (err) {
+        navigate("/auth");
+      }
     } else {
       setBypassError(true);
       toast({

@@ -26,6 +26,15 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [authUser, setAuthUser] = useState<any>(null);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [diagLog, setDiagLog] = useState<string[]>([]);
+  
+  const logDiag = (msg: string) => {
+    setDiagLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
+  };
   const [formData, setFormData] = useState({
     full_name: "",
     codeforces_id: "",
@@ -46,78 +55,161 @@ const Profile = () => {
   const [showMandatoryModal, setShowMandatoryModal] = useState(false);
 
   useEffect(() => {
-    checkAuth();
-    loadProfile();
-    loadStats();
-    loadRecentActivity();
-    loadSkillGaps();
+    // Safety watchdog: force-disable loading screen after 1.5 seconds if auth or query hangs
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
+    const initialize = async () => {
+      try {
+        logDiag("Starting init...");
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!session) {
+          logDiag("No session found, redirecting to /auth...");
+          navigate("/auth");
+          return;
+        }
+        
+        const userId = session.user.id;
+        logDiag(`Session verified for user ID: ${userId}`);
+
+        logDiag("Loading profile...");
+        await loadProfile(userId, session.user);
+        logDiag("Profile loaded successfully!");
+
+        logDiag("Loading stats...");
+        await loadStats(userId);
+        logDiag("Stats loaded successfully!");
+
+        logDiag("Loading recent activity...");
+        await loadRecentActivity(userId);
+        logDiag("Recent activity loaded successfully!");
+
+        logDiag("Loading skill gaps...");
+        await loadSkillGaps(userId);
+        logDiag("Skill gaps loaded successfully!");
+
+      } catch (err: any) {
+        logDiag(`Init error: ${err.message || String(err)}`);
+        console.error("[Profile Init] Error initializing profile page:", err);
+        setInitError(err.message || String(err));
+      } finally {
+        logDiag("Init finished!");
+        setLoading(false);
+      }
+    };
+
+    initialize();
+
+    return () => clearTimeout(timer);
   }, []);
 
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-    }
-  };
-
-  const loadProfile = async () => {
+  const loadProfile = async (userId?: string, user?: any) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      let activeUserId = userId;
+      let activeUser = user;
+
+      if (!activeUserId || !activeUser) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          activeUserId = session.user.id;
+          activeUser = session.user;
+        }
+      }
+
+      if (!activeUserId) {
+        console.warn("[loadProfile] No active user ID found, aborting load.");
+        return;
+      }
 
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
-        .single();
+        .eq("id", activeUserId)
+        .maybeSingle();
+
+      let loadedProfile: any = null;
+      const userMetadata = activeUser?.user_metadata || {};
 
       if (profileData) {
-        const profile = profileData as any;
-        // Fallback to Google Avatar if not set in profile
-        if (!profile.avatar_url && user.user_metadata?.avatar_url) {
-          profile.avatar_url = user.user_metadata.avatar_url;
-        }
-        setProfile(profile);
-        setFormData({
-          full_name: profile.full_name || "",
-          codeforces_id: profile.codeforces_id || "",
-          leetcode_id: profile.leetcode_id || "",
-          github_url: profile.github_url || "",
-        });
-        if (profile.coding_stats) {
-          setCodingStats(profile.coding_stats);
-        }
-
-        const hasResume = profile.resume_url;
-        setShowMandatoryModal(!profile.github_url || !profile.resume_url || !profile.leetcode_id || !profile.codeforces_id);
+        loadedProfile = { ...profileData };
+      } else {
+        // Fallback: create profile locally from userMetadata
+        loadedProfile = {
+          id: activeUserId,
+          full_name: "",
+          avatar_url: null,
+          created_at: new Date().toISOString()
+        };
       }
-    } catch (error) {
+
+      // Populate email
+      if (!loadedProfile.email && activeUser?.email) {
+        loadedProfile.email = activeUser.email;
+      }
+
+      // Fallback to Google Avatar/Name if not set in profile
+      if (!loadedProfile.avatar_url && userMetadata?.avatar_url) {
+        loadedProfile.avatar_url = userMetadata.avatar_url;
+      }
+      if ((!loadedProfile.full_name || loadedProfile.full_name === "Anonymous User") && (userMetadata?.full_name || userMetadata?.name)) {
+        loadedProfile.full_name = userMetadata.full_name || userMetadata.name;
+      }
+
+      // If full_name is still empty or "Anonymous User", let's use email prefix
+      if (!loadedProfile.full_name || loadedProfile.full_name === "Anonymous User") {
+        loadedProfile.full_name = activeUser?.email?.split('@')[0] || "Anonymous User";
+      }
+
+      setProfile(loadedProfile);
+      setAuthUser(activeUser);
+      setFormData({
+        full_name: loadedProfile.full_name || "",
+        codeforces_id: loadedProfile.codeforces_id || "",
+        leetcode_id: loadedProfile.leetcode_id || "",
+        github_url: loadedProfile.github_url || "",
+      });
+      if (loadedProfile.coding_stats) {
+        setCodingStats(loadedProfile.coding_stats);
+      }
+
+      setShowMandatoryModal(!loadedProfile.github_url || !loadedProfile.resume_url || !loadedProfile.leetcode_id || !loadedProfile.codeforces_id);
+
+      // If the row was missing in the database, attempt to create it on the fly so it persists
+      if (!profileData) {
+        await supabase
+          .from("profiles")
+          .insert([{
+            id: activeUserId,
+            email: loadedProfile.email,
+            full_name: loadedProfile.full_name,
+            avatar_url: loadedProfile.avatar_url
+          }]);
+      }
+    } catch (error: any) {
       console.error("Error loading profile:", error);
-    } finally {
-      setLoading(false);
+      setProfileError(error.message || String(error));
     }
   };
 
-  const loadStats = async () => {
+  const loadStats = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data: sessions } = await supabase
         .from("interview_sessions")
         .select("*")
-        .eq("user_id", user.id);
+        .eq("user_id", userId);
 
       const { data: videoSessions } = await supabase
         .from("video_interview_sessions")
         .select("overall_score")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .not("overall_score", "is", null);
 
       const { data: peerSessions } = await supabase
         .from("peer_interview_sessions")
         .select("*")
-        .or(`host_user_id.eq.${user.id},guest_user_id.eq.${user.id}`);
+        .or(`host_user_id.eq.${userId},guest_user_id.eq.${userId}`);
 
       const totalInterviews = (sessions?.length || 0) + (videoSessions?.length || 0) + (peerSessions?.filter((p: any) => p.status === 'completed').length || 0);
       const completedSessions = sessions?.filter(s => s.status === "completed").length || 0;
@@ -131,20 +223,18 @@ const Profile = () => {
         averageScore: Math.round(avgScore),
         peerSessions: peerSessions?.length || 0,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading stats:", error);
+      setStatsError(error.message || String(error));
     }
   };
 
-  const loadRecentActivity = async () => {
+  const loadRecentActivity = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data: sessions } = await supabase
         .from("interview_sessions")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(5);
 
@@ -154,15 +244,12 @@ const Profile = () => {
     }
   };
 
-  const loadSkillGaps = async () => {
+  const loadSkillGaps = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data: recommendations } = await supabase
         .from("user_career_recommendations")
         .select("skill_gaps")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .single();
 
       if (recommendations?.skill_gaps) {
@@ -211,7 +298,7 @@ const Profile = () => {
       if (error) throw error;
 
       toast.success("Profile updated successfully!");
-      loadProfile();
+      loadProfile(user.id, user);
     } catch (error) {
       console.error("Error saving profile:", error);
       toast.error("Failed to save profile");
@@ -362,7 +449,7 @@ const Profile = () => {
       if (updateError) throw updateError;
 
       toast.success("Resume uploaded successfully!");
-      loadProfile();
+      loadProfile(user.id, user);
       setResumeFile(null);
     } catch (error) {
       console.error("Error uploading resume:", error);

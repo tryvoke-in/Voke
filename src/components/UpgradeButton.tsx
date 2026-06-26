@@ -11,17 +11,15 @@ export const UpgradeButton = () => {
 
     useEffect(() => {
         const updatePremiumStatus = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setIsPremium(!!user?.user_metadata?.is_premium);
+            const { data: { session } } = await supabase.auth.getSession();
+            setIsPremium(!!session?.user?.user_metadata?.is_premium);
         };
 
         updatePremiumStatus();
 
         // Listen for auth state changes to dynamically update status
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            // Fetch fresh user data to avoid stale session cache overrides
-            const { data: { user } } = await supabase.auth.getUser();
-            setIsPremium(!!user?.user_metadata?.is_premium);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            setIsPremium(!!session?.user?.user_metadata?.is_premium);
         });
 
         return () => {

@@ -12,6 +12,8 @@ import { executeCode } from "@/utils/codeExecutor";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import ReactMarkdown from 'react-markdown';
+import { useInterviewCredits } from "@/hooks/useInterviewCredits";
+import { InterviewGate } from "@/components/InterviewGate";
 
 const VoiceAssistant: React.FC = () => {
     const navigate = useNavigate();
@@ -28,6 +30,7 @@ const VoiceAssistant: React.FC = () => {
     } = useGroqVoice();
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { credits, hasGivenFeedback, isPremium, canTakeInterview, loading: creditsLoading, consumeCredit, refreshCredits, grantFeedbackCredits } = useInterviewCredits('voice');
     const [userContext, setUserContext] = useState<string>('');
     const [loadingContext, setLoadingContext] = useState(true);
     const [interviewMode, setInterviewMode] = useState<'voice' | 'coding'>('voice');
@@ -38,6 +41,7 @@ const VoiceAssistant: React.FC = () => {
     const [isRunning, setIsRunning] = useState(false);
     const [problemStatement, setProblemStatement] = useState<string>("Waiting for problem statement...");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Detailed Feedback State
     const [feedback, setFeedback] = useState<string | null>(null);
@@ -159,12 +163,20 @@ const VoiceAssistant: React.FC = () => {
                                 'Accept': 'application/vnd.github.v3+json',
                                 'User-Agent': 'Voke-Interview-App'
                             };
-                            if (githubToken) headers['Authorization'] = `token ${githubToken}`;
 
-                            const reposResponse = await fetch(
+                            let reposResponse = await fetch(
                                 `https://api.github.com/users/${username}/repos?sort=updated&per_page=3`,
                                 { headers }
                             );
+
+                            if ((reposResponse.status === 401 || reposResponse.status === 403) && githubToken) {
+                                console.warn('[VoiceAssistant] Public request failed or token required. Retrying with token...');
+                                const authHeaders = { ...headers, 'Authorization': `token ${githubToken}` };
+                                reposResponse = await fetch(
+                                    `https://api.github.com/users/${username}/repos?sort=updated&per_page=3`,
+                                    { headers: authHeaders }
+                                );
+                            }
 
                             if (reposResponse.ok) {
                                 const repos = await reposResponse.json();
@@ -201,6 +213,7 @@ const VoiceAssistant: React.FC = () => {
 
         disconnect();
         const toastId = toast.loading("Saving session...");
+        setIsSaving(true);
 
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -228,19 +241,43 @@ const VoiceAssistant: React.FC = () => {
 
             // Trigger analysis
             try {
-                const formattedMessages = logs.map(log => ({
-                    role: log.role,
-                    content: log.text
-                }));
+                const userLogs = logs.filter(log => log.role === 'user');
+                const userSpeechLength = userLogs.reduce((sum, log) => sum + (log.text || '').trim().length, 0);
 
-                const { data: evaluation, error: evalError } = await supabase.functions.invoke('evaluate-interview', {
-                    body: { 
-                        messages: formattedMessages,
-                        interview_type: "Voice Interview"
-                    }
-                });
+                let evaluation;
 
-                if (evalError) throw evalError;
+                if (userLogs.length === 0 || userSpeechLength === 0) {
+                    console.log('[VoiceAssistant] No candidate speech detected, returning default invalid attempt metrics.');
+                    evaluation = {
+                        score: 0,
+                        feedback: "Interview attempt invalid as the candidate did not speak or participate in the conversation.",
+                        strengths: ["None (No candidate responses recorded)"],
+                        weaknesses: ["No response provided during the session"],
+                        metrics: {
+                            communication: 0,
+                            problem_solving: 0
+                        },
+                        six_q_score: {
+                            iq: 0, eq: 0, cq: 0, aq: 0, sq: 0, mq: 0
+                        },
+                        personality_cluster: "None"
+                    };
+                } else {
+                    const formattedMessages = logs.map(log => ({
+                        role: log.role,
+                        content: log.text
+                    }));
+
+                    const { data: remoteEval, error: evalError } = await supabase.functions.invoke('evaluate-interview', {
+                        body: { 
+                            messages: formattedMessages,
+                            interview_type: "Voice Interview"
+                        }
+                    });
+
+                    if (evalError) throw evalError;
+                    evaluation = remoteEval;
+                }
 
                 if (evaluation) {
                     // Update the session with the evaluation results
@@ -266,12 +303,17 @@ const VoiceAssistant: React.FC = () => {
 
             toast.dismiss(toastId);
             toast.success("Session saved!");
+            
+            // Navigate first so we don't display the InterviewGate lock screen prematurely
             navigate(`/voice-interview/results/${data.id}`);
+            await consumeCredit();
 
         } catch (error: any) {
             console.error("Error saving session:", error);
             toast.dismiss(toastId);
             toast.error(`Failed to save session: ${error.message}`);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -332,7 +374,23 @@ const VoiceAssistant: React.FC = () => {
             {/* MAIN CONTENT AREA */}
             <div className="z-10 flex-1 flex flex-col">
 
-                {interviewMode === 'voice' ? (
+                {creditsLoading ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    </div>
+                ) : !canTakeInterview && !isSaving ? (
+                    <div className="flex-1 flex items-center justify-center p-4 md:p-8">
+                        <InterviewGate
+                            credits={credits}
+                            hasGivenFeedback={hasGivenFeedback}
+                            isPremium={isPremium}
+                            onFeedbackSuccess={refreshCredits}
+                            grantFeedbackCredits={grantFeedbackCredits}
+                        />
+                    </div>
+                ) : (
+                    <>
+                        {interviewMode === 'voice' ? (
                     // === VOICE MODE LAYOUT ===
                     <div className="flex-1 flex flex-col items-center justify-center p-4">
                         <div className="w-full max-w-md flex flex-col gap-6">
@@ -558,6 +616,8 @@ const VoiceAssistant: React.FC = () => {
                             </div>
                         </div>
                     </div>
+                )}
+                    </>
                 )}
             </div>
         </div>

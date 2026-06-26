@@ -18,6 +18,8 @@ import {
   InterviewState,
 } from "@/utils/interviewHelpers";
 import { loadUserProfileContext, ProfileContext } from "@/utils/profileContext";
+import { useInterviewCredits } from "@/hooks/useInterviewCredits";
+import { InterviewGate } from "@/components/InterviewGate";
 
 const getGroqClient = () => {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY;
@@ -98,6 +100,8 @@ const TimedVideoInterview = () => {
   // Session state
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<string[]>([]);
+
+  const { credits, hasGivenFeedback, isPremium, canTakeInterview, loading: creditsLoading, consumeCredit, refreshCredits, grantFeedbackCredits } = useInterviewCredits('video');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
 
@@ -532,6 +536,9 @@ Respond with ONLY the question text, nothing else.`;
           body: { sessionId }
         });
 
+        // Consume credit
+        await consumeCredit();
+
         // Navigate to results
         navigate(`/timed-interview/results/${sessionId}`);
       } catch (error) {
@@ -643,7 +650,20 @@ Respond with ONLY the question text, nothing else.`;
           </motion.header>
 
           <main className="relative z-10 container mx-auto px-4 pt-32 pb-20 max-w-5xl">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {creditsLoading ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="w-12 h-12 animate-spin text-violet-500" />
+              </div>
+            ) : !canTakeInterview ? (
+              <InterviewGate
+                credits={credits}
+                hasGivenFeedback={hasGivenFeedback}
+                isPremium={isPremium}
+                onFeedbackSuccess={refreshCredits}
+                grantFeedbackCredits={grantFeedbackCredits}
+              />
+            ) : (
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -749,6 +769,7 @@ Respond with ONLY the question text, nothing else.`;
                     </Card>
                 </motion.div>
             </div>
+            )}
           </main>
         </>
       ) : (

@@ -14,6 +14,8 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { loadUserProfileContext, ProfileContext } from "@/utils/profileContext";
 import ReactConfetti from 'react-confetti';
+import { useInterviewCredits } from "@/hooks/useInterviewCredits";
+import { InterviewGate } from "@/components/InterviewGate";
 
 const ensureRazorpay = (): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -45,6 +47,7 @@ const ensureRazorpay = (): Promise<boolean> => {
 
 const ElitePrep: React.FC = () => {
     const navigate = useNavigate();
+    const { credits, hasGivenFeedback, canTakeInterview, loading: creditsLoading, consumeCredit, refreshCredits, grantFeedbackCredits } = useInterviewCredits('elite');
     
     const {
         status,
@@ -400,10 +403,13 @@ REMEMBER: This is an ELITE interview. The bar is high. No feedback. strict time 
 
     const handleEndInterview = async () => {
         setIsGettingVerdict(true);
-
+ 
         // Stop everything immediately
         disconnect();
         stopCamera();
+        
+        // Consume credit
+        await consumeCredit();
         window.speechSynthesis.cancel();
 
         // Determine verdict based on interview duration and log count
@@ -429,7 +435,7 @@ REMEMBER: This is an ELITE interview. The bar is high. No feedback. strict time 
         navigate('/dashboard');
     };
 
-    if (checkingPremium) {
+    if (checkingPremium || creditsLoading) {
         return (
             <div className="h-screen w-screen bg-[#0a0a0a] flex items-center justify-center flex-col gap-4">
                 <div className="relative">
@@ -440,17 +446,10 @@ REMEMBER: This is an ELITE interview. The bar is high. No feedback. strict time 
             </div>
         );
     }
-
-    if (!isPremium) {
+ 
+    if (!isPremium && credits === 0 && !hasStartedInterview) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans">
-                {/* Background Ambience */}
-                <div className="fixed inset-0 pointer-events-none z-0">
-                    <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-violet-600/10 rounded-full blur-[120px] mix-blend-screen" />
-                    <div className="absolute top-[40%] left-[-20%] w-[600px] h-[600px] bg-fuchsia-600/10 rounded-full blur-[120px] mix-blend-screen" />
-                    <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
-                </div>
-
                 {/* Navbar */}
                 <header className="h-16 border-b border-white/5 bg-black/40 backdrop-blur-md flex items-center justify-between px-6 z-20">
                     <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
@@ -462,58 +461,14 @@ REMEMBER: This is an ELITE interview. The bar is high. No feedback. strict time 
                     </Button>
                 </header>
 
-                {/* Premium Lock Screen */}
                 <main className="flex-1 flex items-center justify-center p-6 relative z-10">
-                    <div className="max-w-md w-full bg-zinc-900/60 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 text-center shadow-2xl relative overflow-hidden group">
-                        {/* Glow effect */}
-                        <div className="absolute -top-40 -left-40 w-80 h-80 bg-violet-600/20 rounded-full blur-[80px] pointer-events-none transition-all group-hover:bg-violet-600/30" />
-                        
-                        <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-xl shadow-violet-500/20 mb-6">
-                            <Crown className="w-10 h-10 text-white fill-white/10" />
-                        </div>
-
-                        <h2 className="text-3xl font-extrabold tracking-tight mb-2">Voke Elite Mock</h2>
-                        <p className="text-sm text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
-                            Take unlimited real-time AI mock interviews with code execution, and get detailed evaluation reports to land your dream tech job.
-                        </p>
-
-                        <div className="space-y-4 mb-8 text-left max-w-xs mx-auto">
-                            {[
-                                "Unlimited AI-powered mock interviews",
-                                "Monaco Editor code execution (Python)",
-                                "Zero-feedback policy evaluation system",
-                                "Detailed verdict dashboard with reports"
-                            ].map((feat, index) => (
-                                <div key={index} className="flex items-center gap-3 text-sm text-gray-300">
-                                    <div className="w-5 h-5 rounded-full bg-violet-500/20 flex items-center justify-center border border-violet-500/30 shrink-0">
-                                        <Check className="w-3 h-3 text-violet-400" />
-                                    </div>
-                                    <span>{feat}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-8 flex justify-between items-center">
-                            <div className="text-left">
-                                <div className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Testing Subscription</div>
-                                <div className="flex items-baseline gap-1.5 mt-0.5">
-                                    <span className="text-2xl font-bold text-white">₹99</span>
-                                    <span className="text-sm text-gray-500 line-through">₹199</span>
-                                </div>
-                            </div>
-                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-medium">50% OFF</Badge>
-                        </div>
-
-                        <Button
-                            size="lg"
-                            disabled={isPaying}
-                            onClick={handlePayAndUnlock}
-                            className="w-full h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                        >
-                            {isPaying ? "Opening Payment..." : "Unlock Elite for ₹99"}
-                        </Button>
-                        <p className="text-[10px] text-gray-500 mt-3">Secure payment via Razorpay. Instantly activated.</p>
-                    </div>
+                    <InterviewGate
+                        credits={credits}
+                        hasGivenFeedback={hasGivenFeedback}
+                        isPremium={isPremium}
+                        onFeedbackSuccess={refreshCredits}
+                        grantFeedbackCredits={grantFeedbackCredits}
+                    />
                 </main>
             </div>
         );

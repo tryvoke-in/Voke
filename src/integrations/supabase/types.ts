@@ -149,11 +149,15 @@ export type Database = {
       }
       interview_sessions: {
         Row: {
+          analysis_result: Json | null
           body_language_summary: string | null
           completed_at: string | null
+          confidence_score: number | null
           confidence_summary: string | null
           created_at: string | null
+          delivery_score: number | null
           eye_contact_summary: string | null
+          feedback_summary: string | null
           id: string
           interview_type: string
           job_profile_id: string | null
@@ -164,13 +168,19 @@ export type Database = {
           time_limit_minutes: number | null
           total_duration_seconds: number | null
           user_id: string
+          whats_good: Json | null
+          whats_wrong: Json | null
         }
         Insert: {
+          analysis_result?: Json | null
           body_language_summary?: string | null
           completed_at?: string | null
+          confidence_score?: number | null
           confidence_summary?: string | null
           created_at?: string | null
+          delivery_score?: number | null
           eye_contact_summary?: string | null
+          feedback_summary?: string | null
           id?: string
           interview_type: string
           job_profile_id?: string | null
@@ -181,13 +191,19 @@ export type Database = {
           time_limit_minutes?: number | null
           total_duration_seconds?: number | null
           user_id: string
+          whats_good?: Json | null
+          whats_wrong?: Json | null
         }
         Update: {
+          analysis_result?: Json | null
           body_language_summary?: string | null
           completed_at?: string | null
+          confidence_score?: number | null
           confidence_summary?: string | null
           created_at?: string | null
+          delivery_score?: number | null
           eye_contact_summary?: string | null
+          feedback_summary?: string | null
           id?: string
           interview_type?: string
           job_profile_id?: string | null
@@ -198,6 +214,8 @@ export type Database = {
           time_limit_minutes?: number | null
           total_duration_seconds?: number | null
           user_id?: string
+          whats_good?: Json | null
+          whats_wrong?: Json | null
         }
         Relationships: [
           {

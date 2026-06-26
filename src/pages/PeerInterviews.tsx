@@ -8,6 +8,8 @@ import { Users, Calendar, Clock, Target, Plus, Loader2, Video, Search, Star, Zap
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion, AnimatePresence, Variants } from "motion/react";
+import { useInterviewCredits } from "@/hooks/useInterviewCredits";
+import { InterviewGate } from "@/components/InterviewGate";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,6 +44,8 @@ const PeerInterviews = () => {
   const [sessions, setSessions] = useState<PeerSession[]>([]);
   const [userSessions, setUserSessions] = useState<PeerSession[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const { credits, hasGivenFeedback, isPremium, canTakeInterview, loading: creditsLoading, refreshCredits, grantFeedbackCredits } = useInterviewCredits('elite');
 
   useEffect(() => {
     checkAuth();
@@ -283,12 +287,28 @@ const PeerInterviews = () => {
       </header>
 
       <main className="container mx-auto px-4 pt-28 pb-12 relative z-10">
-        <motion.div
-           initial="hidden"
-           animate="visible"
-           variants={containerVariants}
-           className="grid lg:grid-cols-12 gap-8 mb-12"
-        >
+        {creditsLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : !canTakeInterview ? (
+          <div className="max-w-2xl mx-auto py-8">
+            <InterviewGate
+              credits={credits}
+              hasGivenFeedback={hasGivenFeedback}
+              isPremium={isPremium}
+              onFeedbackSuccess={refreshCredits}
+              grantFeedbackCredits={grantFeedbackCredits}
+            />
+          </div>
+        ) : (
+          <>
+            <motion.div
+               initial="hidden"
+               animate="visible"
+               variants={containerVariants}
+               className="grid lg:grid-cols-12 gap-8 mb-12"
+            >
            {/* Left Column: Hero & Search */}
            <motion.div variants={itemVariants} className="lg:col-span-8 flex flex-col justify-center">
               <Badge variant="outline" className="w-fit mb-4 border-violet-500/30 bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 transition-colors uppercase tracking-widest text-[10px]">
@@ -553,6 +573,8 @@ const PeerInterviews = () => {
                </TabsContent>
            </AnimatePresence>
         </Tabs>
+          </>
+        )}
       </main>
     </div>
   );

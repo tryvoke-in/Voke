@@ -15,6 +15,32 @@ Deno.serve(async (req: Request) => {
   try {
     const { messages, interview_type } = await req.json();
 
+    // Check if there are any user messages
+    const userMessages = (messages || []).filter((m: any) => m.role === "user");
+    const totalUserTextLength = userMessages.reduce((sum: number, m: any) => sum + (m.content || "").trim().length, 0);
+
+    if (userMessages.length === 0 || totalUserTextLength === 0) {
+      console.log("No user responses detected. Returning invalid attempt response.");
+      return new Response(
+        JSON.stringify({
+          score: 0,
+          feedback: "Interview attempt invalid as the candidate did not speak or participate in the conversation.",
+          strengths: ["None (No candidate responses recorded)"],
+          weaknesses: ["No response provided during the session"],
+          metrics: {
+            technical_accuracy: 0,
+            communication: 0,
+            problem_solving: 0
+          },
+          six_q_score: {
+            iq: 0, eq: 0, cq: 0, aq: 0, sq: 0, mq: 0
+          },
+          personality_cluster: "None"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
     if (!GROQ_API_KEY) {
       throw new Error("GROQ_API_KEY is not configured");

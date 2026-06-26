@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Users } from "lucide-react";
+import { CalendarIcon, Users, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useInterviewCredits } from "@/hooks/useInterviewCredits";
+import { InterviewGate } from "@/components/InterviewGate";
 
 const CreatePeerSession = () => {
   const navigate = useNavigate();
@@ -21,6 +23,8 @@ const CreatePeerSession = () => {
     scheduled_at: "",
     meeting_notes: "",
   });
+
+  const { credits, hasGivenFeedback, isPremium, canTakeInterview, loading: creditsLoading, consumeCredit, refreshCredits, grantFeedbackCredits } = useInterviewCredits('elite');
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,9 +57,12 @@ const CreatePeerSession = () => {
         });
 
       if (error) throw error;
-
+ 
       toast.success("Session created successfully!");
       navigate("/peer-interviews");
+
+      // Consume credit after initiating navigation to prevent showing the lock screen prematurely
+      await consumeCredit();
     } catch (error) {
       console.error("Error creating session:", error);
       toast.error("Failed to create session");
@@ -82,7 +89,20 @@ const CreatePeerSession = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
+        {creditsLoading ? (
+          <div className="flex items-center justify-center min-h-[200px]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : !canTakeInterview && !loading ? (
+          <InterviewGate
+            credits={credits}
+            hasGivenFeedback={hasGivenFeedback}
+            isPremium={isPremium}
+            onFeedbackSuccess={refreshCredits}
+            grantFeedbackCredits={grantFeedbackCredits}
+          />
+        ) : (
+          <Card>
           <CardHeader>
             <CardTitle>New Mock Interview Session</CardTitle>
             <CardDescription>
@@ -177,7 +197,8 @@ const CreatePeerSession = () => {
               </div>
             </form>
           </CardContent>
-        </Card>
+          </Card>
+        )}
       </div>
     </div>
   );

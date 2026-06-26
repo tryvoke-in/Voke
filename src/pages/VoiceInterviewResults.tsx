@@ -3,42 +3,101 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, ArrowLeft, TrendingUp, MessageSquare, Award, Mic, CheckCircle2, AlertCircle } from "lucide-react";
+import { LogOut, ArrowLeft, TrendingUp, MessageSquare, Award, Mic, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import SixQAnalysis from "@/components/SixQAnalysis";
+import { motion } from "framer-motion";
 
 const VoiceInterviewResults = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<any>(null);
+  
+  // Diagnostic state to catch and display any hidden crashes
+  const [diagnosticError, setDiagnosticError] = useState<string | null>(null);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [queryLogs, setQueryLogs] = useState<string[]>([]);
+
+  const logMessage = (msg: string) => {
+    console.log(`[VoiceResultsDiag] ${msg}`);
+    setQueryLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
+  };
 
   useEffect(() => {
+    // Setup window-level error handlers to catch React render crashes or unhandled promise rejections
+    const handleWindowError = (event: ErrorEvent) => {
+      console.error("Caught window error in results page:", event);
+      setDiagnosticError(`Runtime Error: ${event.message || 'Unknown render error'}`);
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error("Caught unhandled rejection in results page:", event);
+      const reason = event.reason;
+      const errorMsg = reason?.message || reason?.details || JSON.stringify(reason) || "Unknown promise rejection";
+      setDiagnosticError(`Unhandled Promise Rejection: ${errorMsg}`);
+    };
+
+    window.addEventListener("error", handleWindowError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+
+    // Timeout to show manual bypass if page takes too long to load
+    const timer = setTimeout(() => {
+      setLoadingTimeout(true);
+      logMessage("Loading took more than 4 seconds. Showing bypass option.");
+    }, 4000);
+
+    // Start loading results
     checkAuth();
     loadResults();
+
+    return () => {
+      window.removeEventListener("error", handleWindowError);
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+      clearTimeout(timer);
+    };
   }, [id]);
 
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
+    try {
+      logMessage("Checking auth session...");
+      const { data: { session: authSession }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      if (!authSession) {
+        logMessage("No active auth session found, redirecting to /auth");
+        navigate("/auth");
+      } else {
+        logMessage(`Authenticated as user: ${authSession.user?.email}`);
+      }
+    } catch (error: any) {
+      logMessage(`Auth check failed: ${error.message}`);
+      setDiagnosticError(`Authentication Error: ${error.message}`);
     }
   };
 
   const loadResults = async () => {
     try {
+      logMessage(`Starting supabase select query for session id: ${id}`);
       const { data, error } = await supabase
         .from("interview_sessions")
         .select("*")
         .eq("id", id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logMessage(`Query returned error: ${error.message} (${error.code})`);
+        throw error;
+      }
+      
+      logMessage(`Query success! Session retrieved: ${data ? 'Yes' : 'No'}`);
       setSession(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading results:", error);
+      logMessage(`Query catch error: ${error.message}`);
+      setDiagnosticError(`Database Query Error: ${error.message || JSON.stringify(error)}`);
     } finally {
+      logMessage("Query finally block reached. Setting loading to false.");
       setLoading(false);
     }
   };
@@ -60,12 +119,85 @@ const VoiceInterviewResults = () => {
     return "from-red-500 to-pink-500";
   };
 
+  // If a diagnostic error is detected, display it
+  if (diagnosticError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-xl w-full bg-card border-destructive/30 shadow-2xl">
+          <CardHeader className="bg-destructive/10 border-b border-destructive/20 pb-4">
+            <CardTitle className="text-destructive flex items-center gap-2">
+              <AlertCircle className="w-6 h-6 animate-pulse" />
+              Interview Results Loader Error
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-4">
+            <div className="p-4 bg-muted/50 rounded-2xl border border-border space-y-2">
+              <h4 className="text-sm font-semibold text-foreground">Error Details:</h4>
+              <p className="text-sm font-mono text-destructive bg-background p-3 rounded border border-destructive/10 overflow-x-auto whitespace-pre-wrap">
+                {diagnosticError}
+              </p>
+            </div>
+            
+            <div className="p-4 bg-muted/20 rounded-2xl border border-border/50 space-y-2">
+              <h4 className="text-xs font-semibold text-muted-foreground">Internal Logs:</h4>
+              <div className="max-h-40 overflow-y-auto text-xs font-mono space-y-1 text-muted-foreground bg-background/30 p-2.5 rounded">
+                {queryLogs.map((log, idx) => (
+                  <div key={idx}>{log}</div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button className="flex-1" onClick={() => window.location.reload()}>
+                <RefreshCw className="w-4 h-4 mr-2" /> Retry
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => {
+                setDiagnosticError(null);
+                setLoading(false);
+              }}>
+                Ignore Error & Attempt Render
+              </Button>
+              <Button variant="ghost" className="flex-1" onClick={() => navigate("/dashboard")}>
+                Return to Dashboard
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-4 text-center max-w-md">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
-          <p className="text-muted-foreground animate-pulse">Analyzing your conversation...</p>
+          <p className="text-muted-foreground animate-pulse font-medium">Analyzing your conversation...</p>
+          
+          {loadingTimeout && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 p-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl w-full"
+            >
+              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                Loading is taking longer than expected. You can check the current query status or force the page to render.
+              </p>
+              <div className="flex flex-col gap-2">
+                <Button size="sm" variant="outline" className="text-xs font-semibold rounded-xl" onClick={() => {
+                  setDiagnosticError(`Loading timed out. Session state: ${session ? 'Loaded' : 'Null'}`);
+                }}>
+                  Show Load Logs & Diagnostics
+                </Button>
+                <Button size="sm" variant="ghost" className="text-xs font-semibold rounded-xl text-violet-500 hover:bg-violet-500/10" onClick={() => {
+                  logMessage("Bypassing load screen manually.");
+                  setLoading(false);
+                }}>
+                  Force Try Render
+                </Button>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     );
@@ -73,7 +205,7 @@ const VoiceInterviewResults = () => {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-md bg-card/50 backdrop-blur-xl border-border/50">
           <CardHeader>
             <CardTitle>Session Not Found</CardTitle>
@@ -88,28 +220,28 @@ const VoiceInterviewResults = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background overflow-x-hidden font-sans">
       {/* Header */}
       <header className="bg-background/80 backdrop-blur-md border-b border-border/40 sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
+          <div className="flex items-center gap-1.5 sm:gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
             <img
               src="/images/voke_logo.png"
               alt="Voke Logo"
-              className="w-8 h-8 object-contain"
+              className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
             />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+            <h1 className="text-base sm:text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
               Voice Analysis
             </h1>
           </div>
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-1 sm:gap-2">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="px-2 sm:px-3 text-xs sm:text-sm">
               Dashboard
             </Button>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+            <Button variant="outline" size="sm" onClick={handleLogout} className="px-2 sm:px-3 text-xs sm:text-sm">
+              <LogOut className="w-3.5 h-3.5 sm:mr-2" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
           </nav>
         </div>
@@ -158,7 +290,7 @@ const VoiceInterviewResults = () => {
                     AI Analyzed
                   </span>
                   <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-500 text-xs font-medium border border-purple-500/20">
-                    {new Date(session.created_at).toLocaleDateString()}
+                    {session.created_at ? new Date(session.created_at).toLocaleDateString() : "Today"}
                   </span>
                 </div>
               </CardContent>
@@ -241,7 +373,11 @@ const VoiceInterviewResults = () => {
                 </CardHeader>
                 <CardContent>
                    <div className="prose prose-sm max-w-none dark:prose-invert text-muted-foreground leading-relaxed">
-                    <div dangerouslySetInnerHTML={{ __html: session.feedback_summary.replace(/\n/g, "<br>") }} />
+                    <div dangerouslySetInnerHTML={{ 
+                      __html: typeof session.feedback_summary === 'string'
+                        ? session.feedback_summary.replace(/\n/g, "<br>")
+                        : JSON.stringify(session.feedback_summary)
+                    }} />
                   </div>
                 </CardContent>
               </Card>
@@ -267,7 +403,7 @@ const VoiceInterviewResults = () => {
                         </li>
                       ))}
                     </ul>
-                  ) : session.analysis_result?.strengths ? (
+                  ) : session.analysis_result?.strengths && Array.isArray(session.analysis_result.strengths) ? (
                     <ul className="space-y-3">
                       {session.analysis_result.strengths.map((strength: string, idx: number) => (
                         <li key={idx} className="flex gap-3 text-sm">
@@ -300,7 +436,7 @@ const VoiceInterviewResults = () => {
                         </li>
                       ))}
                     </ul>
-                  ) : session.analysis_result?.improvements ? (
+                  ) : session.analysis_result?.improvements && Array.isArray(session.analysis_result.improvements) ? (
                     <ul className="space-y-3">
                       {session.analysis_result.improvements.map((improvement: string, idx: number) => (
                         <li key={idx} className="flex gap-3 text-sm">

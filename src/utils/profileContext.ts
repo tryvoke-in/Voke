@@ -24,12 +24,44 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
             .from('profiles')
             .select('*')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
 
-        const userProfile = profile as any;
+        let userProfile = profile as any;
 
         if (profileError || !userProfile) {
-            throw new Error('Failed to load profile');
+            console.warn('[ProfileContext] Profile not found in database, creating fallback context.');
+            const userMetadata = user.user_metadata || {};
+            const fallbackFullName = userMetadata.full_name || userMetadata.name || user.email?.split('@')[0] || 'Candidate';
+            
+            try {
+                const { data: newProfile, error: insertError } = await supabase
+                    .from('profiles')
+                    .insert([{
+                        id: user.id,
+                        email: user.email,
+                        full_name: fallbackFullName
+                    }])
+                    .select()
+                    .maybeSingle();
+                
+                if (!insertError && newProfile) {
+                    userProfile = newProfile;
+                } else {
+                    userProfile = {
+                        id: user.id,
+                        email: user.email,
+                        full_name: fallbackFullName,
+                        created_at: new Date().toISOString()
+                    };
+                }
+            } catch (err) {
+                userProfile = {
+                    id: user.id,
+                    email: user.email,
+                    full_name: fallbackFullName,
+                    created_at: new Date().toISOString()
+                };
+            }
         }
 
         console.log('[ProfileContext] Profile loaded:', {
@@ -54,14 +86,19 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
                         'User-Agent': 'Voke-Interview-App'
                     };
 
-                    if (githubToken) {
-                        headers['Authorization'] = `token ${githubToken}`;
-                    }
-
-                    const reposResponse = await fetch(
+                    let reposResponse = await fetch(
                         `https://api.github.com/users/${username}/repos?sort=updated&per_page=5`,
                         { headers }
                     );
+
+                    if ((reposResponse.status === 401 || reposResponse.status === 403) && githubToken) {
+                        console.warn('[ProfileContext] Public request failed or token required. Retrying with token...');
+                        const authHeaders = { ...headers, 'Authorization': `token ${githubToken}` };
+                        reposResponse = await fetch(
+                            `https://api.github.com/users/${username}/repos?sort=updated&per_page=5`,
+                            { headers: authHeaders }
+                        );
+                    }
 
                     if (reposResponse.ok) {
                         const repos = await reposResponse.json();
@@ -72,10 +109,18 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
                                 let readmeSummary = 'No README available';
 
                                 try {
-                                    const readmeResponse = await fetch(
+                                    let readmeResponse = await fetch(
                                         `https://api.github.com/repos/${username}/${repo.name}/readme`,
                                         { headers }
                                     );
+
+                                    if ((readmeResponse.status === 401 || readmeResponse.status === 403) && githubToken) {
+                                        const authHeaders = { ...headers, 'Authorization': `token ${githubToken}` };
+                                        readmeResponse = await fetch(
+                                            `https://api.github.com/repos/${username}/${repo.name}/readme`,
+                                            { headers: authHeaders }
+                                        );
+                                    }
 
                                     if (readmeResponse.ok) {
                                         const readmeData = await readmeResponse.json();

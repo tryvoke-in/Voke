@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   FileText, LogOut, TrendingUp, Upload, Play, Target, Users, Mic, Settings,
   Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search,
-  Globe, BookOpen, Briefcase, FileQuestion, ChevronRight, Sparkles
+  Globe, BookOpen, Briefcase, FileQuestion, ChevronRight, Sparkles, Lock
 } from "lucide-react";
 import { SkillRadar } from "@/components/dashboard/SkillRadar";
 import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
@@ -28,6 +28,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Footer } from "@/components/Footer";
 import { getDailyQuestion } from "@/data/questions";
+import { useInterviewCredits } from "@/hooks/useInterviewCredits";
+import { FeedbackFormDialog } from "@/components/FeedbackFormDialog";
 
 interface Notification {
   id: string;
@@ -46,14 +48,34 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const { 
+    isPremium, 
+    refreshCredits, 
+    grantFeedbackCredits, 
+    creditsElite, 
+    creditsVoice, 
+    creditsVideo,
+    hasGivenFeedback
+  } = useInterviewCredits();
+  const totalCredits = creditsElite + creditsVoice + creditsVideo;
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+
   useEffect(() => {
+    // Safety fallback to release loading screen after 1.5 seconds if query or auth hangs
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
     checkAuth();
     loadData();
     setupNotifications();
+
+    return () => clearTimeout(timer);
   }, []);
 
   const setupNotifications = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return;
 
     fetchNotifications(user.id);
@@ -94,7 +116,8 @@ const Dashboard = () => {
   };
 
   const handleMarkAllAsRead = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return;
 
     await supabase
@@ -133,16 +156,43 @@ const Dashboard = () => {
   const loadData = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       // 1. Fetch Profile
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
-      setProfile(profileData);
+        .maybeSingle();
+
+      if (profileData) {
+        const profile = { ...profileData } as any;
+        const userMetadata = user.user_metadata || {};
+        if (!profile.avatar_url && userMetadata?.avatar_url) {
+          profile.avatar_url = userMetadata.avatar_url;
+        }
+        if (
+          (!profile.full_name || profile.full_name === "Anonymous User") &&
+          (userMetadata?.full_name || userMetadata?.name)
+        ) {
+          profile.full_name = userMetadata.full_name || userMetadata.name;
+        }
+        if (!profile.full_name || profile.full_name === "Anonymous User") {
+          profile.full_name = user.email?.split('@')[0] || "Anonymous User";
+        }
+        setProfile(profile);
+      } else {
+        const userMetadata = user.user_metadata || {};
+        setProfile({
+          full_name: userMetadata.full_name || userMetadata.name || user.email?.split('@')[0] || "Anonymous User",
+          avatar_url: userMetadata.avatar_url || null
+        });
+      }
 
       // 2. Fetch Text Interviews
       const { data: textSessions } = await supabase
@@ -189,8 +239,13 @@ const Dashboard = () => {
   const calculateStreak = (dates: string[]) => {
     if (dates.length === 0) return 0;
 
-    // Unique sorted dates YYYY-MM-DD
-    const uniqueDates = Array.from(new Set(dates.map(d => new Date(d).toISOString().split('T')[0])))
+    // Unique sorted dates YYYY-MM-DD (filtering out any invalid/null dates to prevent RangeErrors)
+    const validDates = dates.filter(Boolean).map(d => {
+      const date = new Date(d);
+      return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : null;
+    }).filter(Boolean) as string[];
+
+    const uniqueDates = Array.from(new Set(validDates))
       .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()); // Descending
 
     const today = new Date().toISOString().split('T')[0];
@@ -460,9 +515,28 @@ const Dashboard = () => {
                       "Success is where preparation and opportunity meet." You're on a {realStats[3].value} streak! Keep it up.
                     </p>
                   </div>
-                  <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 border border-white/10">
-                    <Flame className="w-5 h-5 text-orange-300 fill-orange-300" />
-                    <span className="font-bold">{realStats[3].value} Streak</span>
+                  <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                    <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 border border-white/10">
+                      <Flame className="w-5 h-5 text-orange-300 fill-orange-300" />
+                      <span className="font-bold">{realStats[3].value} Streak</span>
+                    </div>
+                    <div 
+                      onClick={() => {
+                        if (!isPremium && totalCredits === 0 && !hasGivenFeedback) {
+                          setShowFeedbackModal(true);
+                        } else if (!isPremium && totalCredits === 0 && hasGivenFeedback) {
+                          navigate("/pricing");
+                        }
+                      }}
+                      className={`bg-white/20 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 border border-white/10 select-none ${
+                        (!isPremium && totalCredits === 0) ? 'cursor-pointer hover:bg-white/30 border-amber-500/30' : ''
+                      }`}
+                    >
+                      <span className="text-sm">🎫</span>
+                      <span className="font-bold text-sm">
+                        {isPremium ? "Unlimited Credits" : `${totalCredits} ${totalCredits === 1 ? 'Credit' : 'Credits'}`}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -496,6 +570,45 @@ const Dashboard = () => {
               </div>
             </motion.div>
 
+            {!isPremium && totalCredits === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-3xl bg-card border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left shadow-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                    <Lock className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">Mock Interviews Locked</h4>
+                    <p className="text-xs text-muted-foreground">
+                      {!hasGivenFeedback 
+                        ? "Give feedback to unlock 2 more free mock interviews." 
+                        : "Upgrade to Voke Elite for unlimited premium practice."}
+                    </p>
+                  </div>
+                </div>
+                {!hasGivenFeedback ? (
+                  <Button 
+                    size="sm" 
+                    onClick={() => setShowFeedbackModal(true)}
+                    className="bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl"
+                  >
+                    Give Feedback (+2 Credits)
+                  </Button>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    onClick={() => navigate("/pricing")}
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-xl"
+                  >
+                    Upgrade for ₹99
+                  </Button>
+                )}
+              </motion.div>
+            )}
+
             {/* Quick Actions Grid */}
             <div>
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -514,7 +627,10 @@ const Dashboard = () => {
                 </Card>
 
 
-                <Card className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-violet-500" onClick={() => navigate("/interview/new")}>
+                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-violet-500" onClick={() => navigate("/interview/new")}>
+                  <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 z-10">
+                    Unlimited
+                  </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                     <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <MessageSquare className="w-6 h-6 text-violet-600 dark:text-violet-400" />
@@ -524,7 +640,20 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/voice-assistant")}>
+                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/voice-assistant")}>
+                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${
+                    isPremium 
+                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
+                      : creditsVoice > 0 
+                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25' 
+                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                  }`}>
+                    {isPremium 
+                      ? 'Unlimited' 
+                      : creditsVoice > 0 
+                        ? `${creditsVoice} ${creditsVoice === 1 ? 'Credit' : 'Credits'}` 
+                        : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
+                  </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                     <div className="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <Mic className="w-6 h-6 text-pink-600 dark:text-pink-400" />
@@ -534,7 +663,20 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/peer-interviews")}>
+                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/peer-interviews")}>
+                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${
+                    isPremium 
+                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
+                      : creditsElite > 0 
+                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25' 
+                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                  }`}>
+                    {isPremium 
+                      ? 'Unlimited' 
+                      : creditsElite > 0 
+                        ? `${creditsElite} ${creditsElite === 1 ? 'Credit' : 'Credits'}` 
+                        : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
+                  </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                     <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
@@ -545,11 +687,19 @@ const Dashboard = () => {
                 </Card>
 
                 <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-blue-500 overflow-hidden" onClick={() => navigate("/elite-prep")}>
-                  {/* Pro Sticker */}
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg shadow-[0_0_12px_rgba(245,158,11,0.8)] z-10 flex items-center gap-1 animate-pulse">
-                    <Zap className="w-3 h-3 fill-white" />
-                    Elite
-                  </div>
+                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${
+                    isPremium 
+                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
+                      : creditsElite > 0 
+                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25' 
+                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                  }`}>
+                    {isPremium 
+                      ? 'Unlimited' 
+                      : creditsElite > 0 
+                        ? `${creditsElite} ${creditsElite === 1 ? 'Credit' : 'Credits'}` 
+                        : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
+                  </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                     <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -559,7 +709,20 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-fuchsia-500" onClick={() => navigate("/video-interview")}>
+                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-fuchsia-500" onClick={() => navigate("/video-interview")}>
+                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${
+                    isPremium 
+                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
+                      : creditsVideo > 0 
+                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25' 
+                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                  }`}>
+                    {isPremium 
+                      ? 'Unlimited' 
+                      : creditsVideo > 0 
+                        ? `${creditsVideo} ${creditsVideo === 1 ? 'Credit' : 'Credits'}` 
+                        : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
+                  </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                     <div className="w-12 h-12 rounded-full bg-fuchsia-100 dark:bg-fuchsia-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <Play className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-400" />
@@ -731,6 +894,12 @@ const Dashboard = () => {
         </div>
       </main>
       <Footer />
+      <FeedbackFormDialog 
+        open={showFeedbackModal} 
+        onOpenChange={setShowFeedbackModal} 
+        onSuccess={refreshCredits}
+        grantFeedbackCredits={grantFeedbackCredits}
+      />
     </div>
   );
 };

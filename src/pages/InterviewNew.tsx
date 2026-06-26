@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import { useVoiceChat } from "@/hooks/useVoiceChat";
 import { loadUserProfileContext, ProfileContext } from "@/utils/profileContext";
+import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 
 // Interview Categories
 const CATEGORIES = [
@@ -44,6 +45,9 @@ const InterviewNew = () => {
   const [profileContext, setProfileContext] = useState<ProfileContext | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const { loading: creditsLoading } = useInterviewCredits('elite');
+  const sessionInitializedRef = useRef(false);
+
   // Voice Chat Hook
   const { isListening, speak, stopListening, stopSpeaking } = useVoiceChat({
     onTranscript: (text, isFinal) => {
@@ -61,9 +65,14 @@ const InterviewNew = () => {
     checkAuth();
     loadCodingStats();
     loadContext();
-    // Initialize with the first message of the active category
-    startSession(activeCategory);
   }, []);
+
+  useEffect(() => {
+    if (!sessionInitializedRef.current) {
+      sessionInitializedRef.current = true;
+      startSession(activeCategory);
+    }
+  }, [activeCategory]);
 
   const loadContext = async () => {
     try {
@@ -231,13 +240,14 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
             score: finalScore,
             evaluation: evaluation // Pass full evaluation object
           }
-        });
+        });        // Text interviews are unlimited, so no credit is consumed.
       }
     } catch (error: any) {
       console.error("Error saving session:", error);
       toast.error(error.message || "Could not save session");
-      setIsCompleting(false);
       setSessionActive(true);
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -364,8 +374,16 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
           </div>
         </header>
 
-        {/* Chat Area */}
-        <ScrollArea className="flex-1 p-4 md:p-8">
+        {creditsLoading ? (
+          <div className="flex-1 flex items-center justify-center bg-background">
+            <div className="relative w-12 h-12">
+              <div className="absolute inset-0 border-t-2 border-violet-500 rounded-full animate-spin"></div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Chat Area */}
+            <ScrollArea className="flex-1 p-4 md:p-8">
           <div className="max-w-3xl mx-auto space-y-6 pb-4">
             {messages.map((message, index) => (
               <motion.div
@@ -479,6 +497,8 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
             )}
           </div>
         </div>
+          </>
+        )}
       </main>
     </div>
   );
