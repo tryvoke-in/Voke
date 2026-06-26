@@ -86,14 +86,68 @@ export const FeedbackFormDialog = ({
   };
 
   const nextStep = () => {
-    if (step === 1 && rating === 0) {
-      toast({
-        title: "Rating required",
-        description: "Please select a star rating before proceeding.",
-        variant: "destructive",
-      });
-      return;
+    if (step === 1) {
+      if (rating === 0) {
+        toast({
+          title: "Rating required",
+          description: "Please select a star rating before proceeding.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!technicalPerformance) {
+        toast({
+          title: "Technical performance required",
+          description: "Please select a technical performance rating before proceeding.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!difficultyLevel) {
+        toast({
+          title: "Difficulty level required",
+          description: "Please select a difficulty level before proceeding.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!recommended) {
+        toast({
+          title: "Recommendation required",
+          description: "Please indicate if you would recommend Voke to a friend.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
+
+    if (step === 2) {
+      if (modesPracticed.length === 0) {
+        toast({
+          title: "Interview modes required",
+          description: "Please select at least one interview mode you practiced.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!feedbackHelpfulness) {
+        toast({
+          title: "Feedback helpfulness required",
+          description: "Please select how helpful the AI feedback was.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!valuableFeedbackPart) {
+        toast({
+          title: "Valuable feedback part required",
+          description: "Please select which part of the feedback was most valuable.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setStep((prev) => prev + 1);
   };
 
@@ -103,6 +157,40 @@ export const FeedbackFormDialog = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!liked.trim()) {
+      toast({
+        title: "Feedback required",
+        description: "Please share what you liked most about Voke.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!improvements.trim()) {
+      toast({
+        title: "Feedback required",
+        description: "Please share what features or improvements we can make.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!inputIssues.trim()) {
+      toast({
+        title: "Feedback required",
+        description: "Please let us know if you faced any input issues (mic, video, etc.). Use 'None' if none.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!bugsFaced.trim()) {
+      toast({
+        title: "Feedback required",
+        description: "Please let us know if you encountered any bugs. Use 'None' if none.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -255,7 +343,7 @@ export const FeedbackFormDialog = ({
                     {/* Technical Performance */}
                     <div className="space-y-1.5">
                       <Label className="text-zinc-300 text-xs font-semibold">
-                        Overall Technical Performance of the Platform
+                        Overall Technical Performance of the Platform *
                       </Label>
                       <Select value={technicalPerformance} onValueChange={setTechnicalPerformance}>
                         <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-violet-500 h-10 text-sm">
@@ -273,7 +361,7 @@ export const FeedbackFormDialog = ({
                     {/* Difficulty Level */}
                     <div className="space-y-1.5">
                       <Label className="text-zinc-300 text-xs font-semibold">
-                        Difficulty Level of the Interview
+                        Difficulty Level of the Interview *
                       </Label>
                       <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
                         <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-violet-500 h-10 text-sm">
@@ -290,7 +378,7 @@ export const FeedbackFormDialog = ({
                     {/* Recommend Voke */}
                     <div className="space-y-1.5">
                       <Label className="text-zinc-300 text-xs font-semibold">
-                        Would you recommend Voke to a friend?
+                        Would you recommend Voke to a friend? *
                       </Label>
                       <Select value={recommended} onValueChange={setRecommended}>
                         <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-violet-500 h-10 text-sm">
@@ -312,7 +400,7 @@ export const FeedbackFormDialog = ({
                     {/* Interview Modes checklist */}
                     <div className="space-y-2">
                       <Label className="text-zinc-300 text-xs font-semibold block mb-1">
-                        Which interview modes did you practice today?
+                        Which interview modes did you practice today? *
                       </Label>
                       <div className="grid grid-cols-1 gap-2.5 bg-zinc-900/40 p-3 rounded-xl border border-white/5">
                         {[
@@ -341,7 +429,7 @@ export const FeedbackFormDialog = ({
                     {/* Feedback Helpfulness */}
                     <div className="space-y-1.5">
                       <Label className="text-zinc-300 text-xs font-semibold">
-                        How helpful was the AI feedback and score?
+                        How helpful was the AI feedback and score? *
                       </Label>
                       <Select value={feedbackHelpfulness} onValueChange={setFeedbackHelpfulness}>
                         <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-violet-500 h-10 text-sm">
@@ -358,7 +446,7 @@ export const FeedbackFormDialog = ({
                     {/* Valuable feedback part */}
                     <div className="space-y-1.5">
                       <Label className="text-zinc-300 text-xs font-semibold">
-                        Which part of the feedback was most valuable?
+                        Which part of the feedback was most valuable? *
                       </Label>
                       <Select value={valuableFeedbackPart} onValueChange={setValuableFeedbackPart}>
                         <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-violet-500 h-10 text-sm">
@@ -381,7 +469,7 @@ export const FeedbackFormDialog = ({
                     {/* Liked most */}
                     <div className="space-y-1.5">
                       <Label htmlFor="liked" className="text-zinc-300 text-xs font-semibold">
-                        What did you like the most about Voke?
+                        What did you like the most about Voke? *
                       </Label>
                       <Textarea
                         id="liked"
@@ -395,7 +483,7 @@ export const FeedbackFormDialog = ({
                     {/* Improvements */}
                     <div className="space-y-1.5">
                       <Label htmlFor="improvements" className="text-zinc-300 text-xs font-semibold">
-                        What features or improvements would make Voke your go-to platform?
+                        What features or improvements would make Voke your go-to platform? *
                       </Label>
                       <Textarea
                         id="improvements"
@@ -409,7 +497,7 @@ export const FeedbackFormDialog = ({
                     {/* Input Issues */}
                     <div className="space-y-1.5">
                       <Label htmlFor="inputIssues" className="text-zinc-300 text-xs font-semibold">
-                        Did you face any issues with AI understanding, mic, or video capture?
+                        Did you face any issues with AI understanding, mic, or video capture? *
                       </Label>
                       <Textarea
                         id="inputIssues"
@@ -423,7 +511,7 @@ export const FeedbackFormDialog = ({
                     {/* Bugs Faced */}
                     <div className="space-y-1.5">
                       <Label htmlFor="bugsFaced" className="text-zinc-300 text-xs font-semibold">
-                        Did you face any bugs in the product?
+                        Did you face any bugs in the product? *
                       </Label>
                       <Textarea
                         id="bugsFaced"

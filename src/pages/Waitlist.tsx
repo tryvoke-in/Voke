@@ -67,8 +67,8 @@ const Waitlist = () => {
     localStorage.removeItem("voke_waitlist_bypass");
     setIsBypassed(false);
     toast({
-      title: "Developer Bypass Deactivated",
-      description: "Bypass disabled. You are now previewing the waitlist as a public visitor.",
+      title: "Access Deactivated",
+      description: "Session closed. You are now previewing the waitlist as a public visitor.",
     });
   };
 
@@ -125,7 +125,7 @@ const Waitlist = () => {
       localStorage.setItem("voke_waitlist_bypass", "true");
       setIsBypassed(true);
       toast({
-        title: "Developer Bypass Activated",
+        title: "Access Granted",
         description: "Checking session and redirecting...",
       });
       setShowBypassDialog(false);
@@ -155,7 +155,7 @@ const Waitlist = () => {
       setBypassError(true);
       toast({
         title: "Access Denied",
-        description: "Incorrect developer bypass code.",
+        description: "Incorrect security code. Please check your email.",
         variant: "destructive",
       });
     }
@@ -176,7 +176,7 @@ const Waitlist = () => {
         <div 
           className="flex items-center gap-2 cursor-pointer group select-none"
           onDoubleClick={handleLogoDoubleClick}
-          title="Developers: Double click to bypass"
+          title="Enter security code to try Voke"
         >
           <img 
             src="/images/voke_logo.png" 
@@ -194,7 +194,7 @@ const Waitlist = () => {
             className="border-emerald-500/30 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 text-xs flex gap-1.5 items-center rounded-xl transition-all duration-300 hover:scale-105"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Dev Mode Active (Exit)
+            Access Active (Exit)
           </Button>
         ) : (
           <Button 
@@ -203,7 +203,7 @@ const Waitlist = () => {
             className="text-gray-400 hover:text-white hover:bg-white/5 text-xs flex gap-1 items-center"
           >
             <Code className="w-3.5 h-3.5" />
-            Developer Access
+            Enter Security Code
           </Button>
         )}
       </header>
@@ -328,28 +328,28 @@ const Waitlist = () => {
         &copy; {new Date().getFullYear()} Voke. All rights reserved. &middot; <a href="/privacy" className="hover:text-gray-400 transition-colors">Privacy Policy</a>
       </footer>
 
-      {/* Developer Bypass Dialog */}
+      {/* Security Code Dialog */}
       <Dialog open={showBypassDialog} onOpenChange={setShowBypassDialog}>
         <DialogContent className="bg-zinc-950 border-white/10 text-white max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg">
               <ShieldAlert className="w-5 h-5 text-violet-400" />
-              Developer Bypass
+              Enter Security Code
             </DialogTitle>
             <DialogDescription className="text-zinc-400 text-xs">
-              Enter the bypass passcode to unlock developer mode and preview the full app.
+              Enter the security code sent to your email to try Voke.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleBypassSubmit} className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="code" className="text-zinc-300 text-xs">
-                Passcode
+                Security Code
               </Label>
               <Input
                 id="code"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Enter code..."
                 value={bypassCode}
                 onChange={(e) => {
                   setBypassCode(e.target.value);

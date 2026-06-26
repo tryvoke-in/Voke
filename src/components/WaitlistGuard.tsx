@@ -14,8 +14,12 @@ export const WaitlistGuard = ({ children }: { children: React.ReactNode }) => {
     // Check URL parameters for bypass code
     const queryParams = new URLSearchParams(location.search);
     const bypassParam = queryParams.get("bypass");
+    const isRecovery = window.location.hash.includes("type=recovery") || window.location.search.includes("type=recovery");
 
-    if (bypassParam === WAITLIST_CONFIG.bypassCode) {
+    if (isRecovery) {
+      localStorage.setItem("voke_waitlist_bypass", "true");
+      setIsBypassed(true);
+    } else if (bypassParam === WAITLIST_CONFIG.bypassCode) {
       localStorage.setItem("voke_waitlist_bypass", "true");
       setIsBypassed(true);
       
@@ -27,8 +31,8 @@ export const WaitlistGuard = ({ children }: { children: React.ReactNode }) => {
       window.history.replaceState(null, "", window.location.origin + cleanPath);
       
       toast({
-        title: "Developer Bypass Activated",
-        description: "Bypass mode is active. You can access all restricted routes.",
+        title: "Access Granted",
+        description: "Access code active. You can access all restricted routes.",
       });
     }
   }, [location.search, location.pathname, toast]);
@@ -58,10 +62,10 @@ export const WaitlistGuard = ({ children }: { children: React.ReactNode }) => {
             window.location.href = "/";
           }}
           className="fixed bottom-6 left-6 z-[9999] flex items-center gap-2 bg-zinc-950/90 hover:bg-zinc-900 border border-emerald-500/30 text-emerald-400 px-4 py-2.5 rounded-full shadow-lg shadow-emerald-500/5 transition-all duration-300 group hover:scale-105 cursor-pointer text-xs font-semibold select-none"
-          title="Click to Exit Developer Bypass"
+          title="Click to Exit Session"
         >
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-          <span>Dev Mode Active</span>
+          <span>Access Active</span>
           <span className="text-zinc-600 dark:text-zinc-500 mx-1">|</span>
           <span className="text-emerald-500/80 group-hover:text-emerald-400 transition-colors flex items-center gap-1">
             Exit
