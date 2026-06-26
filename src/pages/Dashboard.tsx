@@ -30,6 +30,7 @@ import { Footer } from "@/components/Footer";
 import { getDailyQuestion } from "@/data/questions";
 import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 import { FeedbackFormDialog } from "@/components/FeedbackFormDialog";
+import { CodingProfilesDialog } from "@/components/CodingProfilesDialog";
 
 interface Notification {
   id: string;
@@ -900,6 +901,7 @@ const Dashboard = () => {
         onSuccess={refreshCredits}
         grantFeedbackCredits={grantFeedbackCredits}
       />
+      <CodingProfilesDialog profile={profile} onUpdate={() => loadData(true)} />
     </div>
   );
 };
