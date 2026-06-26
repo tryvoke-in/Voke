@@ -40,7 +40,7 @@ export const CodingProfilesDialog: React.FC<CodingProfilesDialogProps> = ({ prof
           <Button 
             onClick={() => {
               setIsOpen(false);
-              navigate('/profile');
+              navigate('/profile', { state: { tab: 'settings' } });
             }} 
             className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl h-11 shadow-lg shadow-violet-500/20 flex items-center justify-center gap-1.5 transition-all duration-300"
           >

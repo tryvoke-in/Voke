@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.tab || "overview");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -104,6 +106,12 @@ const Profile = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state]);
 
   const loadProfile = async (userId?: string, user?: any) => {
     try {
@@ -686,7 +694,7 @@ const Profile = () => {
 
             {/* Main Content Area */}
             <div className="lg:col-span-8">
-              <Tabs defaultValue="overview" className="space-y-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="bg-card/50 border border-border/50 p-1 rounded-xl w-full flex overflow-x-auto">
                   {[
                     { id: "overview", label: "Overview", icon: Activity },
