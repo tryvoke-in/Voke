@@ -47,7 +47,8 @@ export const WaitlistGuard = ({ children }: { children: React.ReactNode }) => {
   }
 
   // If developer bypass is active, let everything through
-  if (isBypassed) {
+  const currentBypass = localStorage.getItem("voke_waitlist_bypass") === "true";
+  if (isBypassed || currentBypass) {
     return (
       <>
         {children}

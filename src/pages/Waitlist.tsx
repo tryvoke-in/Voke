@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Mail, ArrowRight, Sparkles, CheckCircle, Twitter, Linkedin, ShieldAlert, Code } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WAITLIST_CONFIG } from "@/config/waitlist";
+import { ADMIN_EMAIL } from "@/config/admin";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,24 @@ const Waitlist = () => {
   const [isBypassed, setIsBypassed] = useState(() => {
     return localStorage.getItem("voke_waitlist_bypass") === "true";
   });
+
+  useEffect(() => {
+    if (isBypassed) {
+      const checkSessionAndRedirect = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          if (session.user.email === ADMIN_EMAIL) {
+            navigate("/admin");
+          } else {
+            navigate("/dashboard");
+          }
+        } else {
+          navigate("/auth");
+        }
+      };
+      checkSessionAndRedirect();
+    }
+  }, [isBypassed, navigate]);
 
   const handleExitBypass = () => {
     localStorage.removeItem("voke_waitlist_bypass");
@@ -95,10 +114,9 @@ const Waitlist = () => {
       setIsBypassed(true);
       toast({
         title: "Developer Bypass Activated",
-        description: "Welcome back! Redirecting to Dashboard...",
+        description: "Checking session and redirecting...",
       });
       setShowBypassDialog(false);
-      navigate("/dashboard");
     } else {
       setBypassError(true);
       toast({
