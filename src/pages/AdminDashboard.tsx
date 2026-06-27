@@ -70,6 +70,7 @@ const AdminDashboard = () => {
   const [waitlist, setWaitlist] = useState<any[]>([]);
   const [isLoadingWaitlist, setIsLoadingWaitlist] = useState(false);
   const [waitlistSearchQuery, setWaitlistSearchQuery] = useState("");
+  const [totalSessions, setTotalSessions] = useState(0);
 
   const filteredUsers = users.filter(user => {
     const searchLower = searchQuery.toLowerCase();
@@ -119,6 +120,7 @@ const AdminDashboard = () => {
     fetchUsers();
     fetchBlogs();
     fetchWaitlist();
+    fetchSessionStats();
 
     // Subscribe to new users in real-time
     const channel = supabase
@@ -191,6 +193,27 @@ const AdminDashboard = () => {
       toast.error("Failed to fetch waitlist entries");
     } finally {
       setIsLoadingWaitlist(false);
+    }
+  };
+
+  const fetchSessionStats = async () => {
+    try {
+      const { count: aiCount } = await supabase
+        .from('interview_sessions')
+        .select('*', { count: 'exact', head: true });
+
+      const { count: peerCount } = await supabase
+        .from('peer_interview_sessions')
+        .select('*', { count: 'exact', head: true });
+
+      const { count: videoCount } = await supabase
+        .from('video_interview_sessions')
+        .select('*', { count: 'exact', head: true });
+
+      const total = (aiCount || 0) + (peerCount || 0) + (videoCount || 0);
+      setTotalSessions(total);
+    } catch (err) {
+      console.error('Error fetching session stats:', err);
     }
   };
 
@@ -313,20 +336,63 @@ const AdminDashboard = () => {
 
   const stats = [
     { title: "Total Users", value: users.length.toString(), change: `Registered`, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", data: [40, 30, 45, 50, 65, 60, 70] },
-    { title: "Active Sessions", value: "423", change: "+5%", icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10", data: [20, 40, 35, 50, 45, 60, 55] },
+    { title: "Interviews Conducted", value: totalSessions.toString(), change: "Active", icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10", data: [20, 40, 35, 50, 45, 60, 55] },
     { title: "System Health", value: "99.9%", change: "Stable", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10", data: [80, 85, 82, 90, 88, 95, 99] },
     { title: "Waitlist Signups", value: waitlist.length.toString(), change: "Active", icon: Mail, color: "text-orange-400", bg: "bg-orange-500/10", data: [10, 15, 12, 20, 18, 15, 10] },
   ];
 
-  const chartData = [
-    { name: 'Mon', users: 4000, sessions: 2400 },
-    { name: 'Tue', users: 3000, sessions: 1398 },
-    { name: 'Wed', users: 2000, sessions: 9800 },
-    { name: 'Thu', users: 2780, sessions: 3908 },
-    { name: 'Fri', users: 1890, sessions: 4800 },
-    { name: 'Sat', users: 2390, sessions: 3800 },
-    { name: 'Sun', users: 3490, sessions: 4300 },
-  ];
+  const getChartData = () => {
+    const data = [];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    // Calculate initial running counts before the last 7 days window
+    let runningUsers = users.filter(user => {
+      if (!user.created_at) return false;
+      const userDate = new Date(user.created_at);
+      return userDate.getTime() < sevenDaysAgo.getTime();
+    }).length;
+
+    let runningWaitlist = waitlist.filter(item => {
+      if (!item.created_at) return false;
+      const itemDate = new Date(item.created_at);
+      return itemDate.getTime() < sevenDaysAgo.getTime();
+    }).length;
+
+    // Build day-by-day counts
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayName = days[d.getDay()];
+
+      const userCountToday = users.filter(user => {
+        if (!user.created_at) return false;
+        const userDate = new Date(user.created_at);
+        return userDate.toDateString() === d.toDateString();
+      }).length;
+
+      const waitlistCountToday = waitlist.filter(item => {
+        if (!item.created_at) return false;
+        const itemDate = new Date(item.created_at);
+        return itemDate.toDateString() === d.toDateString();
+      }).length;
+
+      runningUsers += userCountToday;
+      runningWaitlist += waitlistCountToday;
+
+      data.push({
+        name: dayName,
+        users: runningUsers,
+        waitlist: runningWaitlist
+      });
+    }
+
+    return data;
+  };
+
+  const chartData = getChartData();
 
 
 
@@ -356,9 +422,9 @@ const AdminDashboard = () => {
             This area is restricted to administrators only.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 w-full">
-            <Button variant="outline" className="flex-1 border-white/10 hover:bg-white/5" onClick={() => navigate("/dashboard")}>
+            <button className="flex-1 border border-white/10 hover:bg-white/5 text-white hover:text-white rounded-xl h-10 font-medium text-sm transition-colors flex items-center justify-center" onClick={() => navigate("/dashboard")}>
               Go to Dashboard
-            </Button>
+            </button>
             <Button className="flex-1 bg-red-600 hover:bg-red-700" onClick={handleLogout}>
               Logout
             </Button>
@@ -505,7 +571,11 @@ const AdminDashboard = () => {
                         <div className={`p-3 rounded-2xl ${stat.bg}`}>
                           <stat.icon className={`w-6 h-6 ${stat.color}`} />
                         </div>
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${stat.change.startsWith('+') ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                          stat.change.startsWith('+') || stat.change === 'Stable' || stat.change === 'Active' || stat.change === 'Registered'
+                            ? 'bg-green-500/10 text-green-400' 
+                            : 'bg-red-500/10 text-red-400'
+                        }`}>
                           {stat.change}
                         </span>
                       </div>
@@ -546,7 +616,7 @@ const AdminDashboard = () => {
                                 <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
                                 <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
                               </linearGradient>
-                              <linearGradient id="colorSessions" x1="0" y1="0" x2="0" y2="1">
+                              <linearGradient id="colorWaitlist" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
                                 <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
                               </linearGradient>
@@ -558,8 +628,8 @@ const AdminDashboard = () => {
                               contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                               itemStyle={{ color: '#e5e7eb' }}
                             />
-                            <Area type="monotone" dataKey="users" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
-                            <Area type="monotone" dataKey="sessions" stroke="#06b6d4" strokeWidth={2} fillOpacity={1} fill="url(#colorSessions)" />
+                            <Area type="monotone" dataKey="users" name="Total Users" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
+                            <Area type="monotone" dataKey="waitlist" name="Waitlist Signups" stroke="#06b6d4" strokeWidth={2} fillOpacity={1} fill="url(#colorWaitlist)" />
                           </AreaChart>
                         </ResponsiveContainer>
                       </div>
@@ -706,9 +776,9 @@ const AdminDashboard = () => {
                           <SelectItem value="created_at-asc">Oldest First</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button variant="outline" size="sm" onClick={fetchUsers} className="border-white/10 hover:bg-white/5">
+                      <button onClick={fetchUsers} className="border border-white/10 hover:bg-white/5 text-gray-200 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
                         Refresh List
-                      </Button>
+                      </button>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -795,9 +865,9 @@ const AdminDashboard = () => {
                       </span>
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={fetchWaitlist} className="border-white/10 hover:bg-white/5">
+                      <button onClick={fetchWaitlist} className="border border-white/10 hover:bg-white/5 text-gray-200 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
                         Refresh List
-                      </Button>
+                      </button>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -1003,9 +1073,9 @@ const AdminDashboard = () => {
                               onChange={(e) => setNewBlog({...newBlog, image: e.target.value})}
                               className="bg-black/20 border-white/10 text-white"
                             />
-                            <Button variant="outline" size="icon" className="border-white/10 hover:bg-white/5">
+                            <button type="button" className="border border-white/10 hover:bg-white/5 text-gray-200 hover:text-white h-10 w-10 flex items-center justify-center rounded-lg transition-colors">
                               <ImageIcon className="w-4 h-4 text-gray-400" />
-                            </Button>
+                            </button>
                           </div>
                         </div>
                         <div className="space-y-2">

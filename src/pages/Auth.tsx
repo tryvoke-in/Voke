@@ -792,8 +792,8 @@ const Auth = () => {
           <DialogFooter className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 pt-6 border-t border-white/5">
             <Button
               type="button"
-              variant="outline"
-              className="w-full sm:w-auto border-white/10 hover:bg-white/5 text-gray-300"
+              variant="ghost"
+              className="w-full sm:w-auto border border-white/10 hover:bg-white/5 hover:text-white text-gray-300"
               onClick={handleResendVerification}
               disabled={resendLoading}
             >

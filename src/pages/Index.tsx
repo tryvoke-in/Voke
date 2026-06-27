@@ -120,9 +120,9 @@ const Index = () => {
               <div className="flex flex-col gap-4 mt-8">
                 <Button 
                   size="lg"
-                  variant="outline" 
+                  variant="ghost" 
                   onClick={handleAuthNavigation}
-                  className="w-full border-white/20 text-white hover:bg-white/10"
+                  className="w-full border border-white/20 text-white hover:bg-white/10 hover:text-white"
                 >
                   Sign In
                 </Button>
@@ -200,8 +200,8 @@ const Index = () => {
                 <DialogTrigger asChild>
                   <Button
                     size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto border-white/20 text-black hover:bg-white/10 text-lg px-8 py-6 rounded-full backdrop-blur-sm"
+                    variant="ghost"
+                    className="w-full sm:w-auto border border-white/20 text-white hover:bg-white/10 hover:text-white text-lg px-8 py-6 rounded-full backdrop-blur-sm"
                   >
                     <Play className="mr-2 w-5 h-5 fill-current" />
                     Watch Demo

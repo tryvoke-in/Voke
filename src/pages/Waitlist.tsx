@@ -210,14 +210,13 @@ const Waitlist = () => {
           </span>
         </div>
         {isBypassed ? (
-          <Button 
-            variant="ghost" 
+          <button 
             onClick={handleExitBypass}
-            className="border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 bg-transparent hover:bg-emerald-500/10 text-xs flex gap-1.5 items-center rounded-xl transition-all duration-300 hover:scale-105"
+            className="border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 bg-transparent hover:bg-emerald-500/10 text-xs flex gap-1.5 items-center rounded-xl transition-all duration-300 hover:scale-105 h-9 px-4 py-2 font-medium"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Access Active (Exit)
-          </Button>
+          </button>
         ) : (
           <Button 
             variant="ghost" 
@@ -359,10 +358,10 @@ const Waitlist = () => {
                       rel="noopener noreferrer"
                       className="flex-1"
                     >
-                      <Button variant="ghost" className="w-full bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-white h-11 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
+                      <button className="w-full bg-white/5 border border-white/10 hover:bg-white/10 text-white h-11 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors font-medium">
                         <Twitter className="w-4 h-4 text-[#1DA1F2]" />
                         Share on X
-                      </Button>
+                      </button>
                     </a>
                     <a
                       href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://voke.in")}`}
@@ -370,10 +369,10 @@ const Waitlist = () => {
                       rel="noopener noreferrer"
                       className="flex-1"
                     >
-                      <Button variant="ghost" className="w-full bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-white h-11 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
+                      <button className="w-full bg-white/5 border border-white/10 hover:bg-white/10 text-white h-11 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors font-medium">
                         <Linkedin className="w-4 h-4 text-[#0A66C2]" />
                         Share on LinkedIn
-                      </Button>
+                      </button>
                     </a>
                   </div>
                 </div>

@@ -651,14 +651,29 @@ const Profile = () => {
 
                     {/* Social/External Links */}
                     <div className="mt-8 pt-6 border-t border-border/50 grid grid-cols-2 gap-3">
-                      <Button variant="outline" className="w-full border-border/50 bg-secondary/20 hover:bg-secondary/40 justify-start" onClick={() => window.open(profile.github_url, '_blank')}>
-                        <Github className="w-4 h-4 mr-2" />
+                      <button 
+                        className="w-full border border-border/50 bg-secondary/20 hover:bg-secondary/40 text-foreground hover:text-foreground justify-start h-10 px-4 py-2 inline-flex items-center gap-2 rounded-md text-sm font-medium transition-colors" 
+                        onClick={() => window.open(profile.github_url || '#', '_blank')}
+                      >
+                        <Github className="w-4 h-4" />
                         GitHub
-                      </Button>
-                      <Button variant="outline" className="w-full border-border/50 bg-secondary/20 hover:bg-secondary/40 justify-start">
-                        <Terminal className="w-4 h-4 mr-2" />
+                      </button>
+                      <button 
+                        className="w-full border border-border/50 bg-secondary/20 hover:bg-secondary/40 text-foreground hover:text-foreground justify-start h-10 px-4 py-2 inline-flex items-center gap-2 rounded-md text-sm font-medium transition-colors"
+                        onClick={() => {
+                          if (profile.leetcode_id) {
+                            const url = profile.leetcode_id.includes('http') 
+                              ? profile.leetcode_id 
+                              : `https://leetcode.com/u/${profile.leetcode_id}/`;
+                            window.open(url, '_blank');
+                          } else {
+                            window.open('https://leetcode.com', '_blank');
+                          }
+                        }}
+                      >
+                        <Terminal className="w-4 h-4" />
                         LeetCode
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </Card>

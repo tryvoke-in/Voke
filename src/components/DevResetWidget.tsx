@@ -9,6 +9,7 @@ const AUTHORIZED_EMAILS = [
   "anurag50434411@gmail.com",
   "nikhilbhor201@gmail.com",
   "sharma.priyanshu3434@gmail.com",
+  "priyanshu.sharmaiia@gmail.com",
   "24_nikhil.bhor@ges-coengg.org",
   "ompawar396@gmail.com"
 ];
