@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Mail, ArrowRight, Sparkles, CheckCircle, Twitter, Linkedin, ShieldAlert, Code } from "lucide-react";
+import { Mail, ArrowRight, Sparkles, CheckCircle, Twitter, Linkedin, ShieldAlert, Code, GraduationCap, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WAITLIST_CONFIG } from "@/config/waitlist";
 import { ADMIN_EMAIL } from "@/config/admin";
@@ -22,6 +22,8 @@ const Waitlist = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
+  const [collegeName, setCollegeName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   
@@ -82,12 +84,32 @@ const Waitlist = () => {
       });
       return;
     }
+    if (!collegeName.trim()) {
+      toast({
+        title: "College/University required",
+        description: "Please enter your college or university name.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!phoneNumber.trim()) {
+      toast({
+        title: "Phone Number required",
+        description: "Please enter your phone number.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setLoading(true);
     try {
       const { error } = await supabase
         .from("waitlist")
-        .insert([{ email }]);
+        .insert([{ 
+          email, 
+          college_name: collegeName, 
+          phone_number: phoneNumber 
+        }]);
 
       if (error) {
         // Check for duplicate key error (code 23505 in PostgreSQL)
@@ -189,9 +211,9 @@ const Waitlist = () => {
         </div>
         {isBypassed ? (
           <Button 
-            variant="outline" 
+            variant="ghost" 
             onClick={handleExitBypass}
-            className="border-emerald-500/30 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 text-xs flex gap-1.5 items-center rounded-xl transition-all duration-300 hover:scale-105"
+            className="border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 bg-transparent hover:bg-emerald-500/10 text-xs flex gap-1.5 items-center rounded-xl transition-all duration-300 hover:scale-105"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Access Active (Exit)
@@ -255,6 +277,44 @@ const Waitlist = () => {
                     </div>
                   </div>
 
+                  <div className="space-y-2">
+                    <Label htmlFor="college" className="text-gray-300 text-xs font-semibold uppercase tracking-wider">
+                      College / University
+                    </Label>
+                    <div className="relative">
+                      <GraduationCap className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                      <Input
+                        id="college"
+                        type="text"
+                        placeholder="e.g. Stanford University"
+                        value={collegeName}
+                        onChange={(e) => setCollegeName(e.target.value)}
+                        className="bg-black/50 border-white/10 text-white pl-10 h-12 focus-visible:ring-violet-500 rounded-xl"
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-gray-300 text-xs font-semibold uppercase tracking-wider">
+                      Phone Number
+                    </Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="e.g. +1 (555) 000-0000"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="bg-black/50 border-white/10 text-white pl-10 h-12 focus-visible:ring-violet-500 rounded-xl"
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <Button
                     type="submit"
                     className="w-full h-12 bg-white hover:bg-gray-200 text-black font-semibold rounded-xl transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 mt-2"
@@ -299,7 +359,7 @@ const Waitlist = () => {
                       rel="noopener noreferrer"
                       className="flex-1"
                     >
-                      <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 text-white h-11 rounded-xl flex items-center justify-center gap-2 text-sm">
+                      <Button variant="ghost" className="w-full bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-white h-11 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
                         <Twitter className="w-4 h-4 text-[#1DA1F2]" />
                         Share on X
                       </Button>
@@ -310,7 +370,7 @@ const Waitlist = () => {
                       rel="noopener noreferrer"
                       className="flex-1"
                     >
-                      <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 text-white h-11 rounded-xl flex items-center justify-center gap-2 text-sm">
+                      <Button variant="ghost" className="w-full bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-white h-11 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
                         <Linkedin className="w-4 h-4 text-[#0A66C2]" />
                         Share on LinkedIn
                       </Button>

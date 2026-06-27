@@ -798,18 +798,24 @@ export type Database = {
           email: string
           id: string
           status: string
+          college_name: string | null
+          phone_number: string | null
         }
         Insert: {
           created_at?: string
           email: string
           id?: string
           status?: string
+          college_name?: string | null
+          phone_number?: string | null
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
           status?: string
+          college_name?: string | null
+          phone_number?: string | null
         }
         Relationships: []
       }

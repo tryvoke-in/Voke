@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   LayoutDashboard, Users, Settings, LogOut, Activity, 
   Shield, AlertTriangle, Search, Bell, Database, TrendingUp,
-  MoreVertical, CheckCircle2, XCircle, Clock, FileText, Plus, Image as ImageIcon, Trash2, Edit, MessageSquare, Flag, Ban, Code2
+  MoreVertical, CheckCircle2, XCircle, Clock, FileText, Plus, Image as ImageIcon, Trash2, Edit, MessageSquare, Flag, Ban, Code2, Mail
 } from "lucide-react";
 import {
   Table,
@@ -67,12 +67,25 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
+  const [waitlist, setWaitlist] = useState<any[]>([]);
+  const [isLoadingWaitlist, setIsLoadingWaitlist] = useState(false);
+  const [waitlistSearchQuery, setWaitlistSearchQuery] = useState("");
+
   const filteredUsers = users.filter(user => {
     const searchLower = searchQuery.toLowerCase();
     const nameMatch = (user.full_name || "").toLowerCase().includes(searchLower);
     const emailMatch = (user.email || "").toLowerCase().includes(searchLower);
     const dateMatch = formatDate(user.created_at).toLowerCase().includes(searchLower);
     return nameMatch || emailMatch || dateMatch;
+  });
+
+  const filteredWaitlist = waitlist.filter(item => {
+    const searchLower = waitlistSearchQuery.toLowerCase();
+    const emailMatch = (item.email || "").toLowerCase().includes(searchLower);
+    const collegeMatch = (item.college_name || "").toLowerCase().includes(searchLower);
+    const phoneMatch = (item.phone_number || "").toLowerCase().includes(searchLower);
+    const dateMatch = formatDate(item.created_at).toLowerCase().includes(searchLower);
+    return emailMatch || collegeMatch || phoneMatch || dateMatch;
   });
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
@@ -105,6 +118,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchUsers();
     fetchBlogs();
+    fetchWaitlist();
 
     // Subscribe to new users in real-time
     const channel = supabase
@@ -115,8 +129,18 @@ const AdminDashboard = () => {
       })
       .subscribe();
 
+    // Subscribe to new waitlist entries in real-time
+    const waitlistChannel = supabase
+      .channel('public:waitlist')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'waitlist' }, payload => {
+        setWaitlist(current => [payload.new, ...current]);
+        toast.info(`New waitlist sign-up: ${payload.new.email}`);
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(waitlistChannel);
     };
   }, []);
 
@@ -149,6 +173,41 @@ const AdminDashboard = () => {
       toast.error("Failed to fetch users");
     } finally {
       setIsLoadingUsers(false);
+    }
+  };
+
+  const fetchWaitlist = async () => {
+    setIsLoadingWaitlist(true);
+    try {
+      const { data, error } = await supabase
+        .from('waitlist')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setWaitlist(data || []);
+    } catch (error) {
+      console.error('Error fetching waitlist:', error);
+      toast.error("Failed to fetch waitlist entries");
+    } finally {
+      setIsLoadingWaitlist(false);
+    }
+  };
+
+  const handleDeleteWaitlist = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('waitlist')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success("Waitlist entry deleted successfully");
+      fetchWaitlist();
+    } catch (error) {
+      console.error('Error deleting waitlist entry:', error);
+      toast.error("Failed to delete waitlist entry");
     }
   };
 
@@ -253,10 +312,10 @@ const AdminDashboard = () => {
   };
 
   const stats = [
-    { title: "Total Users", value: "12,345", change: "+12%", icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", data: [40, 30, 45, 50, 65, 60, 70] },
+    { title: "Total Users", value: users.length.toString(), change: `Registered`, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", data: [40, 30, 45, 50, 65, 60, 70] },
     { title: "Active Sessions", value: "423", change: "+5%", icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10", data: [20, 40, 35, 50, 45, 60, 55] },
     { title: "System Health", value: "99.9%", change: "Stable", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10", data: [80, 85, 82, 90, 88, 95, 99] },
-    { title: "Pending Reports", value: "15", change: "-2", icon: AlertTriangle, color: "text-orange-400", bg: "bg-orange-500/10", data: [10, 15, 12, 20, 18, 15, 10] },
+    { title: "Waitlist Signups", value: waitlist.length.toString(), change: "Active", icon: Mail, color: "text-orange-400", bg: "bg-orange-500/10", data: [10, 15, 12, 20, 18, 15, 10] },
   ];
 
   const chartData = [
@@ -339,6 +398,7 @@ const AdminDashboard = () => {
           {[
             { id: "overview", label: "Overview", icon: LayoutDashboard },
             { id: "users", label: "User Management", icon: Users },
+            { id: "waitlist", label: "Waitlist Signups", icon: Mail },
             { id: "community", label: "Community", icon: MessageSquare },
             { id: "challenges", label: "Daily Challenges", icon: Code2 },
             { id: "blogs", label: "Blog Management", icon: FileText },
@@ -401,9 +461,15 @@ const AdminDashboard = () => {
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               <Input 
-                placeholder="Search by name, email or date..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={activeTab === "waitlist" ? "Search waitlist..." : "Search by name, email..."} 
+                value={activeTab === "waitlist" ? waitlistSearchQuery : searchQuery}
+                onChange={(e) => {
+                  if (activeTab === "waitlist") {
+                    setWaitlistSearchQuery(e.target.value);
+                  } else {
+                    setSearchQuery(e.target.value);
+                  }
+                }}
                 className="pl-10 bg-white/5 border-white/10 text-sm w-64 rounded-full focus:bg-white/10 transition-all"
               />
             </div>
@@ -697,6 +763,95 @@ const AdminDashboard = () => {
                                 </TableCell>
                                 <TableCell className="text-right">
                                   <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-red-400">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {activeTab === "waitlist" && (
+              <motion.div
+                key="waitlist"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="w-5 h-5 text-violet-400" />
+                      Waitlist Signups
+                      <span className="ml-2 px-2.5 py-0.5 rounded-full bg-white/10 text-xs text-gray-400 font-normal">
+                        {waitlist.length}
+                      </span>
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={fetchWaitlist} className="border-white/10 hover:bg-white/5">
+                        Refresh List
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="rounded-md border border-white/10 overflow-hidden">
+                      <Table>
+                        <TableHeader className="bg-white/5">
+                          <TableRow className="border-white/10 hover:bg-white/5">
+                            <TableHead className="text-gray-300">Email</TableHead>
+                            <TableHead className="text-gray-300">College / University</TableHead>
+                            <TableHead className="text-gray-300">Phone Number</TableHead>
+                            <TableHead className="text-gray-300">Signed Up Date</TableHead>
+                            <TableHead className="text-gray-300">Status</TableHead>
+                            <TableHead className="text-right text-gray-300">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {isLoadingWaitlist ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-8 text-gray-400">
+                                Loading waitlist entries...
+                              </TableCell>
+                            </TableRow>
+                          ) : filteredWaitlist.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-8 text-gray-400">
+                                {waitlistSearchQuery ? "No matching entries found" : "No waitlist entries found"}
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filteredWaitlist.map((entry) => (
+                              <TableRow 
+                                key={entry.id} 
+                                className="border-white/10 hover:bg-white/5 transition-colors"
+                              >
+                                <TableCell className="font-medium text-gray-200">
+                                  {entry.email}
+                                </TableCell>
+                                <TableCell className="text-gray-400">{entry.college_name || "N/A"}</TableCell>
+                                <TableCell className="text-gray-400">{entry.phone_number || "N/A"}</TableCell>
+                                <TableCell className="text-gray-400">
+                                  {formatDate(entry.created_at)}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-0">
+                                    {entry.status || "Pending"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 hover:text-red-400"
+                                    onClick={() => handleDeleteWaitlist(entry.id)}
+                                  >
                                     <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </TableCell>
