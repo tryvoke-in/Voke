@@ -21,6 +21,13 @@ import {
 const Waitlist = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!WAITLIST_CONFIG.enabled) {
+      navigate("/");
+    }
+  }, [navigate]);
+
   const [email, setEmail] = useState("");
   const [collegeName, setCollegeName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");

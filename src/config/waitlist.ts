@@ -1,5 +1,5 @@
 export const WAITLIST_CONFIG = {
-  enabled: true,
+  enabled: false,
   bypassCode: "vokedev", // Secret key to bypass waitlist: ?bypass=vokedev or logo gesture
   publicPaths: ["/", "/waitlist", "/privacy", "/help", "/blogs", "/blog"],
 };
