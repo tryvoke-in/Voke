@@ -844,16 +844,113 @@ ${resumeText}${jdContext}`;
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    if (!apiKey) {
+      toast.error("VITE_GROQ_API_KEY not configured.");
+      return;
+    }
+
     setImporting(true);
     try {
       const text = await extractResumeText(file);
+      
+      if (!text || text.length < 50) {
+        throw new Error("Extracted text is too short or empty. Please check the PDF.");
+      }
 
-      toast.info("Parsing resume data...");
-      const { data: parsedData, error } = await supabase.functions.invoke("parse-resume", {
-        body: { resumeText: text }
+      toast.info("Parsing resume data with AI...");
+      
+      const systemPrompt = `You are an expert resume parser. Your job is to extract structured data from raw resume text.
+You must return a JSON object that strictly matches the following TypeScript interfaces:
+
+interface Experience {
+  id: string; // Use a random string
+  role: string;
+  company: string;
+  duration: string;
+  description: string;
+}
+
+interface Education {
+  id: string; // Use a random string
+  degree: string;
+  school: string;
+  year: string;
+  coursework: string;
+  location: string;
+}
+
+interface Project {
+  id: string; // Use a random string
+  name: string;
+  description: string;
+  link: string;
+}
+
+interface Leadership {
+  id: string; // Use a random string
+  type: 'Leadership' | 'Hackathon' | 'Certificate';
+  role: string;
+  organization: string;
+  duration: string;
+  description: string;
+}
+
+interface ResumeData {
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedin: string;
+  github: string;
+  website: string;
+  leetcode: string;
+  codeforces: string;
+  summary: string;
+  skills: string; // Comma separated string
+  experience: Experience[];
+  education: Education[];
+  projects: Project[];
+  leadership: Leadership[];
+}
+
+IMPORTANT:
+- Extract the FULL NAME accurately. If the name is split across lines, join it.
+- Capture ALL bullet points for projects and experience. Do not summarize or truncate.
+- Format "description" fields as a string with bullet points separated by newlines (\`\\n\`). Do NOT return a single paragraph.
+- Look for "Links on page" sections at the bottom of pages to find URLs for LinkedIn, GitHub, etc., and map them ensuring they are valid URLs.
+- If a field is not found, use an empty string "" or empty array [].
+- Infer 'type' for leadership based on context (default to 'Leadership').
+- Ensure arrays are never null.
+- Do not include explanation, only the JSON.
+- Preserve original text formatting where possible (e.g. capitals).`;
+
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: text }
+          ],
+          temperature: 0.1,
+          response_format: { type: "json_object" },
+        }),
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error("Failed to parse resume via AI");
+      }
+
+      const resData = await response.json();
+      const aiContent = resData.choices?.[0]?.message?.content;
+      if (!aiContent) throw new Error("Empty response from AI");
+
+      const parsedData = JSON.parse(aiContent);
 
       setData(prev => ({
         ...prev,
