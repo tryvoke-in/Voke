@@ -79,6 +79,8 @@ const ResumeBuilder = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("personal");
   const [isAiEnhancing, setIsAiEnhancing] = useState(false);
+  const [enhancingExpId, setEnhancingExpId] = useState<string | null>(null);
+  const [enhancingProjId, setEnhancingProjId] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("minimalist");
   const [zoom, setZoom] = useState(0.85);
 
@@ -104,6 +106,8 @@ const ResumeBuilder = () => {
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [atsProgress, setAtsProgress] = useState(0);
+  const [atsTimeElapsed, setAtsTimeElapsed] = useState(0);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -139,20 +143,102 @@ const ResumeBuilder = () => {
     }
   };
 
-  const handleAiEnhance = () => {
+  const handleAiEnhance = async () => {
     if (!data.summary) {
       toast.error("Please add a basic summary first for AI to enhance.");
       return;
     }
     setIsAiEnhancing(true);
-    setTimeout(() => {
-      setData(prev => ({
-        ...prev,
-        summary: "Results-driven software professional with a track record of implementing high-performance solutions. Skilled in full-stack architecture, React, Node.js, and cloud systems. Focused on optimizing database systems, clean code standards, and agile collaborative shipping."
-      }));
+    try {
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      if (!apiKey) throw new Error("Missing API Key");
+      
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: `Rewrite the following resume summary to be highly professional, action-oriented, and bypass AI detectors by sounding very human and authentic. Keep it to 2-3 sentences max. Do NOT use generic AI words like "delve", "testament", or "tapestry". Here is the summary: ${data.summary}` }],
+          temperature: 0.7,
+        }),
+      });
+      const resData = await response.json();
+      const newSummary = resData.choices?.[0]?.message?.content?.replace(/["']/g, "").trim();
+      if (newSummary) {
+        setData(prev => ({ ...prev, summary: newSummary }));
+        toast.success("Summary enhanced by AI!");
+      }
+    } catch (error) {
+      toast.error("Failed to enhance summary.");
+    } finally {
       setIsAiEnhancing(false);
-      toast.success("Summary enhanced by AI!");
-    }, 1200);
+    }
+  };
+
+  const handleAiEnhanceExperience = async (id: string, description: string) => {
+    if (!description || description.length < 10) {
+      toast.error("Please add some basic duties first.");
+      return;
+    }
+    setEnhancingExpId(id);
+    try {
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: `Rewrite the following job duties into 2-3 powerful, metric-driven bullet points. Use standard text with bullet points (-). Make it sound extremely human and authentic to bypass AI detectors. Do not sound robotic. Avoid buzzwords. Focus on action and impact. Here is the text: ${description}` }],
+          temperature: 0.7,
+        }),
+      });
+      const resData = await response.json();
+      const newDesc = resData.choices?.[0]?.message?.content?.trim();
+      if (newDesc) {
+        setData(prev => ({
+          ...prev,
+          experience: prev.experience.map(exp => exp.id === id ? { ...exp, description: newDesc } : exp)
+        }));
+        toast.success("Duties enhanced!");
+      }
+    } catch (error) {
+      toast.error("Failed to enhance duties.");
+    } finally {
+      setEnhancingExpId(null);
+    }
+  };
+
+  const handleAiEnhanceProject = async (id: string, description: string) => {
+    if (!description || description.length < 10) {
+      toast.error("Please add a basic project description first.");
+      return;
+    }
+    setEnhancingProjId(id);
+    try {
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: `Rewrite the following project description into 2-3 concise, impactful bullet points. Use standard text with bullet points (-). Highlight the tech stack organically. Make it sound extremely human to bypass AI detectors. Avoid generic AI fluff. Here is the text: ${description}` }],
+          temperature: 0.7,
+        }),
+      });
+      const resData = await response.json();
+      const newDesc = resData.choices?.[0]?.message?.content?.trim();
+      if (newDesc) {
+        setData(prev => ({
+          ...prev,
+          projects: prev.projects.map(proj => proj.id === id ? { ...proj, description: newDesc } : proj)
+        }));
+        toast.success("Project enhanced!");
+      }
+    } catch (error) {
+      toast.error("Failed to enhance project.");
+    } finally {
+      setEnhancingProjId(null);
+    }
   };
 
   // Array Handlers (Experience)
@@ -246,6 +332,21 @@ const ResumeBuilder = () => {
   const handleAnalyzeResume = async () => {
     setAnalyzing(true);
     setAnalysisOpen(true);
+    setAtsProgress(0);
+    setAtsTimeElapsed(0);
+    setAnalysisResult(null);
+
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setAtsTimeElapsed(elapsed);
+      setAtsProgress(p => {
+        if (p < 30) return p + 3;
+        if (p < 60) return p + 2;
+        if (p < 95) return p + 0.5;
+        return p;
+      });
+    }, 500);
 
     try {
       let resumeText = `Name: ${data.fullName}\nEmail: ${data.email}\nSummary: ${data.summary}\n\n`;
@@ -273,67 +374,68 @@ const ResumeBuilder = () => {
         });
       }
 
-      if (data.leadership.length > 0) {
-        resumeText += "Leadership:\n";
-        data.leadership.forEach(lead => {
-          resumeText += `${lead.role} at ${lead.organization} (${lead.duration})\n${lead.description}\n\n`;
-        });
-      }
-
       if (resumeText.length < 50) {
         toast.error("Resume content is too short for analysis. Please add more details.");
+        clearInterval(interval);
         setAnalyzing(false);
         setAnalysisOpen(false);
         return;
       }
 
-      const invokePromise = supabase.functions.invoke("analyze-resume", {
-        body: { resumeText: resumeText }
-      });
-      
-      // 15-second timeout to prevent infinite spinning if the edge function hangs
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("The analysis took too long. The edge server might be sleeping or down. Please try again.")), 15000);
-      });
-
-      const response = await Promise.race([invokePromise, timeoutPromise]) as any;
-      const { data: analysisData, error } = response || {};
-
-      if (error) throw error;
-      
-      if (!analysisData || typeof analysisData !== 'object' || !analysisData.ats_score) {
-         throw new Error("Received an empty or invalid response from the ATS analyzer.");
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      if (!apiKey) {
+        throw new Error("GROQ_API_KEY is not configured in this environment.");
       }
 
+      const analysisPrompt = `You are a strict, expert technical recruiter and ATS specialist at a top tech company (FAANG). You are reviewing a candidate's resume for a software engineering role.
+
+**YOUR OBJECTIVE:**
+Provide a critical, "no-fluff" deep-dive analysis. Do not be generic. If the resume is vague, call it out. If the formatting is bad, be direct.
+
+**ANALYSIS REQUIREMENTS:**
+1. ATS Compatibility Score (0-100).
+2. Keywords: "present" (list) and "missing" (list of specific tech keywords).
+3. Strengths: Array of strings.
+4. Improvements: Array of actionable string tips.
+5. structure_feedback: string.
+6. content_feedback: string.
+7. overall_summary: string.
+
+Return STRICTLY JSON matching this schema.
+
+**RESUME TO ANALYZE:**
+${resumeText}`;
+
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: analysisPrompt }],
+          temperature: 0.3,
+          response_format: { type: "json_object" },
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch analysis from AI.");
+
+      const resData = await response.json();
+      const aiContent = resData.choices?.[0]?.message?.content;
+      if (!aiContent) throw new Error("Empty response from AI.");
+
+      const analysisData = JSON.parse(aiContent.replace(/```json/g, "").replace(/```/g, "").trim());
+
+      clearInterval(interval);
+      setAtsProgress(100);
       setAnalysisResult(analysisData);
       toast.success("Analysis complete!");
     } catch (error: any) {
+      clearInterval(interval);
       console.error("Analysis failed:", error);
       toast.error(error.message || "Failed to analyze resume. Please try again.");
-      
-      // Fallback to a highly realistic mock response so the user can still test the UI
-      setAnalysisResult({
-        ats_score: 78,
-        keywords: {
-          present: ["React", "JavaScript", "SQL", "API", "Git"],
-          missing: ["Docker", "AWS", "CI/CD", "System Design", "Microservices"]
-        },
-        strengths: [
-          "Good use of action verbs in the experience section.",
-          "Clear chronological order of work history.",
-          "Educational background is well-formatted."
-        ],
-        improvements: [
-          "Quantify your achievements! Instead of 'Improved performance', say 'Reduced load time by 40%'.",
-          "Add more modern cloud keywords (AWS, Docker) to pass strict ATS filters.",
-          "Move your Skills section to the top for better visibility."
-        ],
-        structure_feedback: "The overall structure is clean, but the margins are slightly narrow which might confuse older ATS parsers. Consider standardizing the spacing.",
-        content_feedback: "Your bullet points describe your responsibilities but not your impact. Focus on metrics and outcomes.",
-        overall_summary: "A decent foundation, but needs more quantitative metrics and cloud-focused keywords to pass the strict FAANG ATS filters. You have the experience, it just needs better presentation."
-      });
-      toast.info("Showing a simulated ATS response due to server error.");
+      setAnalysisOpen(false);
     } finally {
+      clearInterval(interval);
       setAnalyzing(false);
     }
   };
@@ -1727,9 +1829,26 @@ const ResumeBuilder = () => {
           {analysisResult ? (
             <ResumeAnalysisDisplay analysis={analysisResult} />
           ) : (
-            <div className="py-20 flex flex-col items-center justify-center text-zinc-500 gap-3">
-              <Sparkles className="w-10 h-10 animate-spin text-violet-500 opacity-60" />
-              <p className="text-xs font-semibold">Running ATS diagnostics & parsing resume text...</p>
+            <div className="py-20 flex flex-col items-center justify-center text-zinc-500 gap-6 w-full max-w-md mx-auto">
+              <div className="relative flex items-center justify-center">
+                <Sparkles className="w-12 h-12 animate-spin text-violet-500 opacity-60 absolute" />
+                <div className="w-20 h-20 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+              </div>
+              <div className="text-center space-y-2 w-full px-6">
+                <p className="text-sm font-semibold text-white">Running ATS Diagnostics...</p>
+                <p className="text-xs text-zinc-400">Parsing structure, evaluating keywords, and grading impact.</p>
+                
+                <div className="w-full bg-zinc-900 rounded-full h-2 mt-4 overflow-hidden border border-white/5 relative">
+                  <div 
+                    className="bg-gradient-to-r from-violet-600 to-fuchsia-500 h-full rounded-full transition-all duration-300 ease-out" 
+                    style={{ width: `${Math.round(atsProgress)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 mt-2 px-1">
+                  <span>{atsTimeElapsed}s elapsed</span>
+                  <span className="text-violet-400 font-bold">{Math.round(atsProgress)}%</span>
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
