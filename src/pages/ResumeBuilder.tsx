@@ -393,7 +393,7 @@ const ResumeBuilder = () => {
 Provide a critical, "no-fluff" deep-dive analysis. Do not be generic. If the resume is vague, call it out. If the formatting is bad, be direct.
 
 **ANALYSIS REQUIREMENTS:**
-1. ATS Compatibility Score (0-100). Be harsh. Deduct points for vague bullet points.
+1. ATS Compatibility Score (0-100). Be highly granular and specific (e.g., return 68, 73, 84, 91). DO NOT just output round numbers like 70 or 80. Calculate it strictly based on the presence of metrics, cloud keywords, and precise bullet points.
 2. Keywords: Identify missing tech keywords.
 3. Structure & Content: Critique metrics and chronological layout.
 4. Actionable Improvements: Give concrete examples.
