@@ -111,8 +111,10 @@ const ResumeBuilder = () => {
   const [makingAtsFriendly, setMakingAtsFriendly] = useState(false);
   const [atsFriendlyProgress, setAtsFriendlyProgress] = useState('');
   const [fetchingRepoId, setFetchingRepoId] = useState<string | null>(null);
-  const [targetJobDescription, setTargetJobDescription] = useState("");
   const [importing, setImporting] = useState(false);
+  const [jobDescription, setJobDescription] = useState('');
+  const [jdKeywords, setJdKeywords] = useState<{ hard_skills: string[]; soft_skills: string[]; required_experience: string[] } | null>(null);
+  const [extractingJd, setExtractingJd] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Calculation for completion progress
@@ -426,8 +428,9 @@ CRITICAL RULES:
       ? `\nCRITICAL FEEDBACK TO INCORPORATE (apply these recommendations):\n${improvements.map((i: string) => `- ${i}`).join('\n')}`
       : '';
 
-    const jdInstruction = targetJobDescription
-      ? `\nTARGET JOB DESCRIPTION TO MATCH AND ALIGN WITH:\n${targetJobDescription}`
+    // JD verbatim keyword injection (Phase 2 of JD pipeline)
+    const jdInstruction = jdKeywords && jdKeywords.hard_skills?.length > 0
+      ? `\nJD VERBATIM KEYWORD INJECTION (MANDATORY — This resume is being tailored to a specific job):\nYou MUST naturally integrate as many of these EXACT skill names as possible (use the EXACT capitalization/spelling — ATS parsers are literal):\n${jdKeywords.hard_skills.map((k: string) => `- ${k}`).join('\n')}\nANTI-HALLUCINATION: Only add a skill if it is genuinely related to the existing experience/project. Do NOT invent unrelated claims.`
       : '';
 
     try {
@@ -436,16 +439,15 @@ CRITICAL RULES:
         setAtsFriendlyProgress('Optimizing Professional Summary...');
         const newSummary = await groqRewrite(
           "You are an elite ATS resume optimizer with deep expertise in how modern NLP-based ATS parsers evaluate professional summaries. Output only the rewritten text, nothing else.",
-          `Rewrite this professional summary to score 90+ on ALL modern ATS systems.
+          `Rewrite this professional summary to score 90+ on ALL modern ATS systems (Workday, Greenhouse, Lever, Eightfold).
 
 APPLY ALL THESE ATS RULES:
-1. RESULTS-FIRST: Start with what you deliver/have achieved, not who you are.
-2. ATS KEYWORD DENSITY: Naturally embed high-frequency ATS keywords.
-3. SPELL OUT ACRONYMS at least once inline.
-4. QUANTIFY if possible: Include a realistic metric or scope.
-5. SINGLE-PAGE COMPACTNESS: Keep it to exactly 2 concise, direct sentences.
-6. Read naturally — zero AI buzzwords: 'delve', 'synergize', 'tapestry', 'testament', 'pivotal', 'seamless', 'innovative', 'passionate'.
-7. Output ONLY the plain rewritten text. No quotes, no labels, no explanation.${missingKeywordsInstruction}${improvementsInstruction}${jdInstruction}
+1. RESULTS-FIRST: Start with what you deliver/have achieved, not who you are. (e.g., "Full-stack engineer with a proven record of..." not "I am a developer who...")
+2. ATS KEYWORD DENSITY: Naturally embed high-frequency ATS keywords: full-stack development, scalable systems, agile methodology, cross-functional collaboration, end-to-end delivery, software engineering, version control, API integration.
+3. SPELL OUT ACRONYMS at least once inline (e.g., "Representational State Transfer (REST) APIs" then "REST APIs" after).
+4. QUANTIFY if possible: Include a realistic metric or scope (e.g., "3+ years of experience", "2+ production applications", "team of 5").
+5. Max 2-3 sentences. Read naturally — zero AI buzzwords: 'delve', 'synergize', 'tapestry', 'testament', 'pivotal', 'seamless', 'innovative', 'passionate'.
+6. Output ONLY the plain rewritten text. No quotes, no labels, no explanation.${missingKeywordsInstruction}${improvementsInstruction}${jdInstruction}
 
 Original Summary: ${data.summary}`
         );
@@ -459,17 +461,17 @@ Original Summary: ${data.summary}`
         setAtsFriendlyProgress(`Optimizing Work Experience: ${exp.role || 'Role ' + (i + 1)}...`);
         const newDesc = await groqRewrite(
           "You are an elite ATS resume optimizer and FAANG-level resume writer. You understand exactly how NLP-based ATS parsers calculate experience scores. Output ONLY the bullet points, nothing else.",
-          `Rewrite these job duties into exactly 2-3 ATS-optimized bullet points for role: "${exp.role} at ${exp.company}".
+          `Rewrite these job duties into exactly 3 ATS-optimized bullet points for role: "${exp.role} at ${exp.company}" (Period: ${exp.duration || 'not specified'}).
 
 APPLY ALL OF THESE DEEP ATS RULES:
 1. XYZ FORMULA (MANDATORY): Every bullet follows "Accomplished [X] as measured by [Y], by doing [Z]".
-2. SINGLE-PAGE COMPACTNESS: Keep each bullet point short, direct, and under 18 words. Avoid long-winded sentences so they fit on exactly 1 page.
-3. ACTION VERBS: Start every bullet with a strong verb.
-4. CONTEXTUALIZE SKILLS INSIDE THE BULLET: Embed the exact technology name inside the sentence.
-5. SPELL OUT ACRONYMS ONCE.
-6. REALISTIC METRICS: If not present, add contextually realistic numbers.
-7. NEVER USE: 'leveraged', 'utilized', 'synergized', 'robust', 'seamless', 'cutting-edge', 'innovative', 'passionate'.
-8. Output ONLY the 2-3 bullets with "- " prefix. No intro, no outro, no explanation.${missingKeywordsInstruction}${improvementsInstruction}${jdInstruction}
+   Good example: "Engineered a React.js and Node.js dashboard that reduced average page load time by 37%, serving 12,000+ monthly active users."
+2. ACTION VERBS: Start every bullet with a strong verb (Architected, Engineered, Deployed, Optimized, Delivered, Implemented, Automated, Streamlined).
+3. CONTEXTUALIZE SKILLS INSIDE THE BULLET: Embed the exact technology name inside the sentence. This lets the ATS tie the skill to this job's dates and calculate years of experience with that specific tool.
+4. SPELL OUT ACRONYMS ONCE: Write the full term followed by the abbreviation (e.g., "Continuous Integration/Continuous Deployment (CI/CD)", "RESTful Application Programming Interface (API)").
+5. REALISTIC METRICS: If not present, add contextually realistic numbers — percentage improvements, user counts, latency reductions, data volumes, team size.
+6. NEVER USE: 'leveraged', 'utilized', 'synergized', 'robust', 'seamless', 'cutting-edge', 'innovative', 'passionate'.
+7. Output ONLY the 3 bullets with "- " prefix. No intro, no outro, no explanation.${missingKeywordsInstruction}${improvementsInstruction}${jdInstruction}
 
 Original duties: ${exp.description}`
         );
@@ -493,13 +495,13 @@ Original duties: ${exp.description}`
 
 APPLY ALL OF THESE DEEP ATS RULES:
 1. XYZ FORMULA (MANDATORY): Every bullet follows "Accomplished [X] as measured by [Y], by doing [Z]".
-2. SINGLE-PAGE COMPACTNESS: Keep each bullet point short, direct, and under 18 words. Avoid long-winded sentences so they fit on exactly 1 page.
-3. ACTION VERBS: Start every bullet with a strong verb.
-4. EMBED TECH STACK ORGANICALLY inside the sentence.
-5. SPELL OUT ACRONYMS ONCE.
-6. ADD REALISTIC PROJECT METRICS.
-7. NEVER USE: 'innovative', 'cutting-edge', 'seamless', 'robust', 'state-of-the-art', 'leverage', 'passionate'.
-8. Output ONLY the 2 bullets with "- " prefix. No intro, no outro, no explanation.${missingKeywordsInstruction}${improvementsInstruction}${jdInstruction}
+   Good example: "Architected a Python and TensorFlow-based plant disease detection system achieving 94.2% model accuracy, reducing diagnosis time by 45% for 2,000+ registered users."
+2. ACTION VERBS: Start every bullet with a strong verb (Architected, Built, Deployed, Designed, Implemented, Developed, Engineered).
+3. EMBED TECH STACK ORGANICALLY: Name the exact technologies inside the sentence, not as a separate list. This ties skills to the project timeframe for ATS experience calculation.
+4. SPELL OUT ACRONYMS ONCE: Write the full term first (e.g., "Artificial Intelligence (AI)", "Machine Learning (ML)", "Application Programming Interface (API)").
+5. ADD REALISTIC PROJECT METRICS: domain-specific numbers (e.g., model accuracy %, user count, data records processed, performance improvements, uptime %). Make them contextually appropriate.
+6. NEVER USE: 'innovative', 'cutting-edge', 'seamless', 'robust', 'state-of-the-art', 'leverage', 'passionate'.
+7. Output ONLY the 2 bullets with "- " prefix. No intro, no outro, no explanation.${missingKeywordsInstruction}${improvementsInstruction}${jdInstruction}
 
 Original description: ${proj.description}`
         );
@@ -611,6 +613,68 @@ Original description: ${proj.description}`
     }));
   };
 
+  // === Phase 1: Extract structured JD JSON ===
+  const handleExtractJdKeywords = async () => {
+    if (!jobDescription.trim()) {
+      toast.error("Please paste a Job Description first.");
+      return;
+    }
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    if (!apiKey) { toast.error("GROQ_API_KEY not configured."); return; }
+    setExtractingJd(true);
+    try {
+      // STEP 1: Sanitize — strip URLs, special chars, boilerplate phrases (LinkedIn UI noise)
+      const sanitized = jobDescription
+        .replace(/https?:\/\/[^\s]+/g, '')
+        .replace(/(Apply Now|Easy Apply|Company Size.*|Equal Opportunity.*|Report this job.*|Save job.*|Promoted.*)/gi, '')
+        .replace(/[^a-zA-Z0-9\s,./+#()-]/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+        .substring(0, 3000);
+
+      // STEP 2: LLM extraction — structured JSON schema ONLY, no resume generation yet
+      const extractPrompt = `You are an expert ATS keyword extraction engine. A raw, sanitized job description is given below.
+
+Your task: Analyze the JD and extract ONLY the three arrays. Do not generate any resume content.
+
+RULES:
+- hard_skills: Extract exact technology names and tools (e.g., "React.js", "Node.js", "Docker", "AWS S3", "PostgreSQL", "CI/CD"). Use the EXACT spelling and capitalization from the JD.
+- soft_skills: Extract explicit soft skills mentioned (e.g., "problem-solving", "communication", "cross-functional collaboration").
+- required_experience: Extract specific experience requirements (e.g., "3+ years of backend development", "experience with microservices architecture").
+- Only include items EXPLICITLY mentioned in the JD. Do NOT invent or hallucinate.
+
+Return STRICTLY this JSON schema and nothing else:
+{
+  "hard_skills": ["exact keyword 1", "exact keyword 2"],
+  "soft_skills": ["soft skill 1"],
+  "required_experience": ["experience requirement 1"]
+}
+
+JOB DESCRIPTION:
+${sanitized}`;
+
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: extractPrompt }],
+          temperature: 0.1,
+          response_format: { type: "json_object" },
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to extract JD keywords.");
+      const d = await res.json();
+      const extracted = JSON.parse(d.choices?.[0]?.message?.content || '{}');
+      setJdKeywords(extracted);
+      toast.success(`Extracted ${(extracted.hard_skills || []).length} hard skills from JD!`);
+    } catch (err: any) {
+      toast.error(`JD extraction failed: ${err.message}`);
+    } finally {
+      setExtractingJd(false);
+    }
+  };
+
   const handleAnalyzeResume = async () => {
     setAnalyzing(true);
     setAnalysisOpen(true);
@@ -669,9 +733,20 @@ Original description: ${proj.description}`
         throw new Error("GROQ_API_KEY is not configured in this environment.");
       }
 
+      // Build JD context for analysis
+      const jdContext = jdKeywords
+        ? `\n\n**JOB DESCRIPTION ANALYSIS (Cross-reference against resume):**
+Required Hard Skills: ${jdKeywords.hard_skills.join(', ')}
+Required Soft Skills: ${jdKeywords.soft_skills.join(', ')}
+Required Experience: ${jdKeywords.required_experience.join('; ')}
+
+ANTI-HALLUCINATION RULE: Only flag a JD keyword as "present" in the resume if that EXACT technology/skill appears verbatim in the resume text. Do NOT assume or infer — if the resume does not explicitly mention it, it is missing.
+VERBATIM MATCH RULE: If the JD says "React.js" but the resume only says "React", flag "React.js" as missing (ATS parsers are literal).`
+        : '';
+
       const analysisPrompt = `You are an elite ATS engine AND a senior FAANG technical recruiter performing a comprehensive technical ATS audit of a software engineering resume.
 
-${targetJobDescription ? `**TARGET JOB DESCRIPTION TO MATCH AGAINST:**\n${targetJobDescription}\n\n` : ''}You know exactly how modern ATS systems work:
+You know exactly how modern ATS systems work:
 - They use NLP + Named Entity Recognition to parse data into structured database fields.
 - Scoring weights: Keyword Match (40-50%), Experience Depth & Timeline (30%), Structure & Readability (20-30%).
 - They PENALIZE: skills listed without context, ambiguous dates, missing metrics, keyword stuffing.
@@ -680,8 +755,7 @@ ${targetJobDescription ? `**TARGET JOB DESCRIPTION TO MATCH AGAINST:**\n${target
 **SCORING BREAKDOWN:**
 
 Keyword Match (0-50 pts):
-${targetJobDescription ? `- How well does the resume cover the required skills, libraries, tools, and technical competencies mentioned in the Target Job Description?
-- Identify missing terms and technologies from the Target Job Description that are NOT in the resume.` : `- Are critical SW engineering keywords present? (REST API, CI/CD, Docker, AWS, Agile, system design, microservices)`}
+- Are critical SW engineering keywords present? (REST API, CI/CD, Docker, AWS, Agile, system design, microservices)
 - Are skills contextualized inside experience bullets, or only listed standalone in a Skills section? (context = full points, standalone only = half points)
 - Are acronyms spelled out at least once? (e.g., "CI/CD" vs "Continuous Integration/Continuous Deployment (CI/CD)")
 - Are tech names spelled correctly and fully? (MongoDB, Node.js, not "mongo" or "node")
@@ -708,7 +782,7 @@ Structure & Readability (0-20 pts):
   },
   "keywords": {
     "present": ["array of found technical keywords"],
-    "missing": ["array of highly specific missing keywords${targetJobDescription ? ' from the Target Job Description' : ''} that would boost ATS score"]
+    "missing": ["array of highly specific missing keywords that would boost ATS score"]
   },
   "strengths": ["specific strength 1", "specific strength 2", "specific strength 3"],
   "improvements": [
@@ -726,7 +800,7 @@ Structure & Readability (0-20 pts):
 }
 
 **RESUME TO ANALYZE:**
-${resumeText}`;
+${resumeText}${jdContext}`;
 
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -823,9 +897,9 @@ ${resumeText}`;
   const renderMinimalist = () => {
     return (
       <div className="font-sans text-gray-900 leading-snug">
-        <div className="text-center mb-3.5">
+        <div className="text-center mb-5">
           <h1 className="text-2xl font-bold uppercase tracking-wider text-black">{data.fullName || "YOUR NAME"}</h1>
-          <div className="flex flex-wrap justify-center gap-x-2 gap-y-0.5 text-[8.5pt] text-gray-600 mt-0.5">
+          <div className="flex flex-wrap justify-center gap-x-2 gap-y-0.5 text-[9pt] text-gray-600 mt-1">
             {data.location && <span>{data.location}</span>}
             {data.phone && <span>• {data.phone}</span>}
             {data.email && <span>• {data.email}</span>}
@@ -836,26 +910,26 @@ ${resumeText}`;
         </div>
 
         {data.summary && (
-          <div className="mb-3">
-            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-black">Profile</h2>
-            <p className="text-[9pt] text-gray-700 leading-normal text-justify">{data.summary}</p>
+          <div className="mb-4">
+            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Profile</h2>
+            <p className="text-[9.5pt] text-gray-700 leading-normal text-justify">{data.summary}</p>
           </div>
         )}
 
         {data.experience.length > 0 && (
-          <div className="mb-3">
-            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Experience</h2>
-            <div className="space-y-2">
+          <div className="mb-4">
+            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-2 text-black">Experience</h2>
+            <div className="space-y-3">
               {data.experience.map(exp => (
                 <div key={exp.id}>
-                  <div className="flex justify-between items-baseline text-[9pt] font-bold">
+                  <div className="flex justify-between items-baseline text-[9.5pt] font-bold">
                     <span className="text-gray-900">{exp.company}</span>
-                    <span className="font-normal italic text-gray-500 text-[8.5pt]">{exp.duration}</span>
+                    <span className="font-normal italic text-gray-500 text-[9pt]">{exp.duration}</span>
                   </div>
-                  <div className="flex justify-between items-baseline text-[8.5pt] italic text-gray-700 mb-0.5">
+                  <div className="flex justify-between items-baseline text-[9pt] italic text-gray-700 mb-1">
                     <span>{exp.role}</span>
                   </div>
-                  <ul className="list-disc list-outside ml-4 space-y-0.5 text-[8.5pt] text-gray-600 leading-normal">
+                  <ul className="list-disc list-outside ml-4 space-y-0.5 text-[9pt] text-gray-600 leading-normal">
                     {exp.description.split('\n').map((line, i) => line.trim() && (
                       <li key={i}>{line.trim().replace(/^[-•]\s*/, '')}</li>
                     ))}
@@ -867,18 +941,18 @@ ${resumeText}`;
         )}
 
         {data.projects.length > 0 && (
-          <div className="mb-3">
-            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Projects</h2>
-            <div className="space-y-2">
+          <div className="mb-4">
+            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-2 text-black">Projects</h2>
+            <div className="space-y-3">
               {data.projects.map(proj => (
                 <div key={proj.id}>
-                  <div className="flex justify-between items-baseline text-[9pt] font-bold">
+                  <div className="flex justify-between items-baseline text-[9.5pt] font-bold">
                     <div className="flex items-center gap-1">
                       <span className="text-gray-900">{proj.name}</span>
-                      {proj.link && <span className="text-[8pt] font-normal text-gray-500 font-sans">({proj.link.replace(/^https?:\/\//, '')})</span>}
+                      {proj.link && <span className="text-[8.5pt] font-normal text-gray-500 font-sans">({proj.link.replace(/^https?:\/\//, '')})</span>}
                     </div>
                   </div>
-                  <ul className="list-disc list-outside ml-4 mt-0.5 space-y-0.5 text-[8.5pt] text-gray-600 leading-normal">
+                  <ul className="list-disc list-outside ml-4 mt-1 space-y-0.5 text-[9pt] text-gray-600 leading-normal">
                     {proj.description.split('\n').map((line, i) => line.trim() && (
                       <li key={i}>{line.trim().replace(/^[-•]\s*/, '')}</li>
                     ))}
@@ -890,21 +964,21 @@ ${resumeText}`;
         )}
 
         {data.education.length > 0 && (
-          <div className="mb-3">
-            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Education</h2>
-            <div className="space-y-1.5">
+          <div className="mb-4">
+            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-2 text-black">Education</h2>
+            <div className="space-y-2">
               {data.education.map(edu => (
                 <div key={edu.id}>
-                  <div className="flex justify-between items-baseline text-[9pt] font-bold">
+                  <div className="flex justify-between items-baseline text-[9.5pt] font-bold">
                     <span className="text-gray-900">{edu.school}</span>
-                    <span className="font-normal italic text-gray-500 text-[8.5pt]">{edu.year}</span>
+                    <span className="font-normal italic text-gray-500 text-[9pt]">{edu.year}</span>
                   </div>
-                  <div className="flex justify-between items-baseline text-[8.5pt] text-gray-700 italic">
+                  <div className="flex justify-between items-baseline text-[9pt] text-gray-700 italic">
                     <span>{edu.degree}</span>
                     {edu.location && <span>{edu.location}</span>}
                   </div>
                   {edu.coursework && (
-                    <p className="text-[8pt] text-gray-500 mt-0.5"><span className="font-bold text-gray-600">Coursework:</span> {edu.coursework}</p>
+                    <p className="text-[8.5pt] text-gray-500 mt-0.5"><span className="font-bold text-gray-600">Coursework:</span> {edu.coursework}</p>
                   )}
                 </div>
               ))}
@@ -913,16 +987,16 @@ ${resumeText}`;
         )}
 
         {data.skills && (
-          <div className="mb-3">
-            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-black">Technical Skills</h2>
-            <p className="text-[9pt] text-gray-700 leading-normal">{data.skills}</p>
+          <div className="mb-4">
+            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Technical Skills</h2>
+            <p className="text-[9.5pt] text-gray-700 leading-normal">{data.skills}</p>
           </div>
         )}
 
         {data.leadership.length > 0 && (
           <div>
-            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Activities & Certs</h2>
-            <div className="space-y-2">
+            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-2 text-black">Activities & Certs</h2>
+            <div className="space-y-2.5">
               {data.leadership.map(item => (
                 <div key={item.id}>
                   <div className="flex justify-between items-baseline text-[9.5pt] font-bold">
@@ -1341,44 +1415,28 @@ ${resumeText}`;
       <style>
         {`
           @media print {
-            .no-print, [role="dialog"], header, button, footer, .no-print * {
-              display: none !important;
-            }
-            body, html {
-              background: white !important;
-              color: black !important;
-              height: auto !important;
-              overflow: visible !important;
-              padding: 0 !important;
-              margin: 0 !important;
-            }
-            main, .flex-1, .relative, .overflow-hidden, .scroll-area {
-              overflow: visible !important;
-              height: auto !important;
-              display: block !important;
-              background: white !important;
-              padding: 0 !important;
-              margin: 0 !important;
-              border: none !important;
-              box-shadow: none !important;
-            }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            html, body { background: white !important; color: black !important; height: auto !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; }
             .print-container {
-              position: static !important;
-              padding: 0 !important;
-              margin: 0 auto !important;
-              width: 100% !important;
+              padding: 10mm 12mm 10mm 12mm !important;
+              margin: 0 !important;
+              width: 210mm !important;
               max-width: 210mm !important;
-              min-height: 297mm !important;
-              height: auto !important;
-              transform: none !important;
+              min-height: auto !important;
+              max-height: 297mm !important;
+              overflow: hidden !important;
               box-shadow: none !important;
               border: none !important;
-              background: white !important;
-              color: black !important;
+              transform: none !important;
+              zoom: 1 !important;
+              position: relative !important;
+              page-break-inside: avoid !important;
             }
             @page {
               size: A4 portrait;
-              margin: 1.27cm;
+              margin: 0;
             }
           }
           .custom-scrollbar::-webkit-scrollbar {
@@ -1546,27 +1604,6 @@ ${resumeText}`;
           <ScrollArea className="flex-1 custom-scrollbar bg-black/10">
             <div className="p-6 max-w-xl mx-auto space-y-6 pb-24">
               
-              {/* Target Job Description Input Card */}
-              <Card className="bg-zinc-900/40 border border-violet-500/20 text-white backdrop-blur-xl rounded-2xl shadow-[0_8px_32px_0_rgba(124,58,237,0.05)]">
-                <CardHeader className="pb-2.5">
-                  <CardTitle className="flex items-center gap-2 text-xs font-bold text-white">
-                    <Briefcase className="w-3.5 h-3.5 text-violet-400" />
-                    Target Job Description (Optional)
-                  </CardTitle>
-                  <CardDescription className="text-zinc-400 text-[10px]">
-                    Paste the target job description to match keywords and get custom ATS optimization.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Textarea
-                    placeholder="Paste the Job Description (JD) here to match keywords & align optimization..."
-                    className="h-20 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300 placeholder:text-zinc-600"
-                    value={targetJobDescription}
-                    onChange={(e) => setTargetJobDescription(e.target.value)}
-                  />
-                </CardContent>
-              </Card>
-
               {/* Personal Information form fields */}
               {activeTab === "personal" && (
                 <Card className="bg-zinc-900/40 border border-white/10 text-white backdrop-blur-xl shadow-[0_8px_32px_0_rgba(124,58,237,0.02)] rounded-2xl">
@@ -2144,12 +2181,12 @@ ${resumeText}`;
         </div>
 
         {/* RIGHT PANEL: Live Interactive Resume Preview (Canvas) */}
-        <div className="flex-1 bg-[#09090b] flex flex-col relative overflow-hidden h-[calc(100vh-4rem)] select-none print-only:p-0">
+        <div className="flex-1 bg-[#09090b] flex flex-col relative overflow-hidden h-[calc(100vh-4rem)] select-none">
           {/* Subtle grid mesh overlay for canvas preview */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_80%,transparent_100%)] pointer-events-none z-0 no-print" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_80%,transparent_100%)] pointer-events-none z-0" />
 
           {/* Premium Floating Template Bar */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-full flex gap-1.5 shadow-xl shadow-black/40 no-print">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-full flex gap-1.5 shadow-xl shadow-black/40">
             {[
               { id: 'minimalist', label: 'ATS Clean' },
               { id: 'slate', label: 'Modern Slate' },
@@ -2189,7 +2226,7 @@ ${resumeText}`;
           </ScrollArea>
 
           {/* Floating Zoom Action Toolbar */}
-          <div className="absolute bottom-4 right-4 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-xl shadow-black/40 no-print">
+          <div className="absolute bottom-4 right-4 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-xl shadow-black/40">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -2226,13 +2263,56 @@ ${resumeText}`;
 
       {/* ATS Evaluation Audit Dialog */}
       <Dialog open={analysisOpen} onOpenChange={setAnalysisOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto bg-zinc-950 border border-white/10 text-white rounded-3xl custom-scrollbar no-print">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-zinc-950 border border-white/10 text-white rounded-3xl custom-scrollbar no-print">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-violet-400 animate-pulse" />
-              Resume ATS score and audit results
+              Resume ATS Score &amp; Audit
             </DialogTitle>
           </DialogHeader>
+
+          {/* ─── JD Input Panel (always visible at top) ─── */}
+          <div className="p-3.5 bg-zinc-900/60 border border-white/8 rounded-2xl space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-white">🎯 Target Job Description (Optional but Powerful)</p>
+                <p className="text-[10px] text-zinc-500 mt-0.5">Paste JD → AI extracts exact required keywords → Analysis &amp; optimization targets that specific role</p>
+              </div>
+              {jdKeywords && (
+                <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2 py-1 shrink-0">
+                  <Check className="w-2.5 h-2.5" /> {jdKeywords.hard_skills?.length || 0} skills extracted
+                </div>
+              )}
+            </div>
+            <Textarea
+              placeholder="Paste full job description here (LinkedIn, Naukri, etc.)..."
+              className="h-24 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl custom-scrollbar transition-all"
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+            />
+            <div className="flex gap-2 items-center">
+              <Button
+                size="sm"
+                onClick={handleExtractJdKeywords}
+                disabled={extractingJd || !jobDescription.trim()}
+                className="h-7 px-3 text-[10px] font-bold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/20 rounded-lg gap-1.5"
+              >
+                <Sparkles className={`w-3 h-3 ${extractingJd ? 'animate-spin' : ''}`} />
+                {extractingJd ? 'Extracting...' : 'Extract JD Keywords'}
+              </Button>
+              {jdKeywords && (
+                <div className="flex flex-wrap gap-1">
+                  {jdKeywords.hard_skills?.slice(0, 5).map((k: string) => (
+                    <span key={k} className="text-[8px] font-bold bg-violet-500/10 text-violet-300 border border-violet-500/20 rounded-md px-1.5 py-0.5">{k}</span>
+                  ))}
+                  {(jdKeywords.hard_skills?.length || 0) > 5 && (
+                    <span className="text-[8px] font-bold text-zinc-500">+{(jdKeywords.hard_skills?.length || 0) - 5} more</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
           {analysisResult ? (
             <div className="space-y-4">
               <ResumeAnalysisDisplay analysis={analysisResult} />
@@ -2244,10 +2324,12 @@ ${resumeText}`;
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-white">Auto-Optimize Your Entire Resume for ATS</p>
+                    <p className="text-sm font-bold text-white">Auto-Optimize Resume for ATS{jdKeywords ? ' + Job Match' : ''}</p>
                     <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
-                      One click — AI rewrites your summary, every work experience bullet, and every project 
-                      description to be fully ATS-optimized with power verbs, metrics, and high-value keywords.
+                      {jdKeywords
+                        ? `JD-targeted: Rewrites your resume to match the exact keywords from the job description using verbatim injection — no hallucination, no keyword stuffing.`
+                        : `One click — AI rewrites your summary, every work experience bullet, and every project description to be fully ATS-optimized with power verbs, metrics, and high-value keywords.`
+                      }
                     </p>
                   </div>
                 </div>
@@ -2267,13 +2349,13 @@ ${resumeText}`;
                   {makingAtsFriendly ? (
                     <><Sparkles className="w-4 h-4 mr-2 animate-spin" />{atsFriendlyProgress || 'Optimizing...'}</>
                   ) : (
-                    <><Sparkles className="w-4 h-4 mr-2" />Make My Resume ATS Friendly</>
+                    <><Sparkles className="w-4 h-4 mr-2" />{jdKeywords ? 'Optimize Resume for This Job' : 'Make My Resume ATS Friendly'}</>
                   )}
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="py-20 flex flex-col items-center justify-center text-zinc-500 gap-6 w-full max-w-md mx-auto">
+            <div className="py-16 flex flex-col items-center justify-center text-zinc-500 gap-6 w-full max-w-md mx-auto">
               <div className="relative flex items-center justify-center">
                 <Sparkles className="w-12 h-12 animate-spin text-violet-500 opacity-60 absolute" />
                 <div className="w-20 h-20 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
