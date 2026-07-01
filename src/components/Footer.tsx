@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Github, Twitter, Linkedin, Mail, Heart, ArrowRight, Layers, Zap, Hexagon } from "lucide-react";
+import { Github, Twitter, Linkedin, Mail, Heart, ArrowRight, Layers, Zap, Hexagon, Instagram } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 
 export const Footer = () => {
@@ -71,7 +71,8 @@ export const Footer = () => {
                                 {[
                                     { icon: Twitter, href: "https://twitter.com", color: "hover:bg-sky-500/10 hover:text-sky-400" },
                                     { icon: Github, href: "https://github.com", color: "hover:bg-zinc-500/10 hover:text-foreground" },
-                                    { icon: Linkedin, href: "https://linkedin.com", color: "hover:bg-blue-600/10 hover:text-blue-500" }
+                                    { icon: Linkedin, href: "https://www.linkedin.com/company/vokeaii/", color: "hover:bg-blue-600/10 hover:text-blue-500" },
+                                    { icon: Instagram, href: "https://www.instagram.com/tryvoke.in", color: "hover:bg-pink-600/10 hover:text-pink-500" }
                                 ].map((social, index) => (
                                     <a
                                         key={index}
