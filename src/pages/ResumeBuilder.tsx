@@ -188,8 +188,17 @@ const ResumeBuilder = () => {
         headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
-          messages: [{ role: "user", content: `Rewrite the following job duties into 2-3 powerful, metric-driven bullet points. Use standard text with bullet points (-). Make it sound extremely human and authentic to bypass AI detectors. Do not sound robotic. Avoid buzzwords. Focus on action and impact. Here is the text: ${description}` }],
-          temperature: 0.7,
+          messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, { role: "user", content: `Rewrite the following job duties into 2-3 elite, metric-driven bullet points. 
+          
+CRITICAL RULES:
+1. Start EVERY bullet point with a powerful action verb (e.g., Spearheaded, Architected, Engineered).
+2. Quantify impact organically (e.g., "resulting in a 40% reduction in latency" or "scaling to 10k+ users"). If no metrics are provided, invent highly realistic, contextual metrics that fit the role.
+3. Sound strictly human and authentic. DO NOT use generic AI words like "delve", "pivotal", "seamless", "tapestry", or "testament".
+4. Format exactly as a markdown list using '-' and nothing else.
+5. Focus purely on technical depth and business impact. 
+
+Original Text: ${description}` }],
+          temperature: 0.6,
         }),
       });
       const resData = await response.json();
@@ -221,8 +230,17 @@ const ResumeBuilder = () => {
         headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
-          messages: [{ role: "user", content: `Rewrite the following project description into 2-3 concise, impactful bullet points. Use standard text with bullet points (-). Highlight the tech stack organically. Make it sound extremely human to bypass AI detectors. Avoid generic AI fluff. Here is the text: ${description}` }],
-          temperature: 0.7,
+          messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, { role: "user", content: `Rewrite the following project description into 2-3 elite, metric-driven bullet points. 
+
+CRITICAL RULES:
+1. Start EVERY bullet point with a powerful action verb (e.g., Architected, Deployed, Engineered).
+2. Explicitly highlight the tech stack organically within the sentence (e.g., "Engineered a React.js front-end backed by Node.js...").
+3. Quantify the project's complexity or impact (e.g., "processing 5k+ data points" or "reducing load times by 30%"). If no metrics exist, invent highly realistic ones.
+4. Sound strictly human. DO NOT use words like "delve", "seamless", "testament", or "cutting-edge".
+5. Format exactly as a markdown list using '-' and nothing else.
+
+Original Text: ${description}` }],
+          temperature: 0.6,
         }),
       });
       const resData = await response.json();
