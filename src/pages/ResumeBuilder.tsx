@@ -1407,7 +1407,19 @@ ${resumeText}`;
                             />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Key Duties & Accomplishments</Label>
+                            <div className="flex items-center justify-between mb-1">
+                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Key Duties & Accomplishments</Label>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleAiEnhanceExperience(exp.id, exp.description)}
+                                disabled={enhancingExpId === exp.id}
+                                className="h-5 px-1.5 text-[9px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 rounded-md transition-all font-semibold"
+                              >
+                                <Sparkles className={`w-2.5 h-2.5 ${enhancingExpId === exp.id ? 'animate-spin' : ''}`} />
+                                {enhancingExpId === exp.id ? 'Enhancing...' : 'AI Enhance'}
+                              </Button>
+                            </div>
                             <Textarea
                               placeholder="Describe your achievements (each starting on a new line)..."
                               className="h-24 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
@@ -1575,7 +1587,19 @@ ${resumeText}`;
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Project Details / Stack</Label>
+                            <div className="flex items-center justify-between mb-1">
+                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Project Details / Stack</Label>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleAiEnhanceProject(proj.id, proj.description)}
+                                disabled={enhancingProjId === proj.id}
+                                className="h-5 px-1.5 text-[9px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 rounded-md transition-all font-semibold"
+                              >
+                                <Sparkles className={`w-2.5 h-2.5 ${enhancingProjId === proj.id ? 'animate-spin' : ''}`} />
+                                {enhancingProjId === proj.id ? 'Enhancing...' : 'AI Enhance'}
+                              </Button>
+                            </div>
                             <Textarea
                               placeholder="Describe implementation details & key results..."
                               className="h-20 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
