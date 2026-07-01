@@ -111,6 +111,7 @@ const ResumeBuilder = () => {
   const [makingAtsFriendly, setMakingAtsFriendly] = useState(false);
   const [atsFriendlyProgress, setAtsFriendlyProgress] = useState('');
   const [fetchingRepoId, setFetchingRepoId] = useState<string | null>(null);
+  const [targetJobDescription, setTargetJobDescription] = useState("");
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -425,21 +426,26 @@ CRITICAL RULES:
       ? `\nCRITICAL FEEDBACK TO INCORPORATE (apply these recommendations):\n${improvements.map((i: string) => `- ${i}`).join('\n')}`
       : '';
 
+    const jdInstruction = targetJobDescription
+      ? `\nTARGET JOB DESCRIPTION TO MATCH AND ALIGN WITH:\n${targetJobDescription}`
+      : '';
+
     try {
       // Step 1: Rewrite Summary
       if (data.summary) {
         setAtsFriendlyProgress('Optimizing Professional Summary...');
         const newSummary = await groqRewrite(
           "You are an elite ATS resume optimizer with deep expertise in how modern NLP-based ATS parsers evaluate professional summaries. Output only the rewritten text, nothing else.",
-          `Rewrite this professional summary to score 90+ on ALL modern ATS systems (Workday, Greenhouse, Lever, Eightfold).
+          `Rewrite this professional summary to score 90+ on ALL modern ATS systems.
 
 APPLY ALL THESE ATS RULES:
-1. RESULTS-FIRST: Start with what you deliver/have achieved, not who you are. (e.g., "Full-stack engineer with a proven record of..." not "I am a developer who...")
-2. ATS KEYWORD DENSITY: Naturally embed high-frequency ATS keywords: full-stack development, scalable systems, agile methodology, cross-functional collaboration, end-to-end delivery, software engineering, version control, API integration.
-3. SPELL OUT ACRONYMS at least once inline (e.g., "Representational State Transfer (REST) APIs" then "REST APIs" after).
-4. QUANTIFY if possible: Include a realistic metric or scope (e.g., "3+ years of experience", "2+ production applications", "team of 5").
-5. Max 2-3 sentences. Read naturally — zero AI buzzwords: 'delve', 'synergize', 'tapestry', 'testament', 'pivotal', 'seamless', 'innovative', 'passionate'.
-6. Output ONLY the plain rewritten text. No quotes, no labels, no explanation.${missingKeywordsInstruction}${improvementsInstruction}
+1. RESULTS-FIRST: Start with what you deliver/have achieved, not who you are.
+2. ATS KEYWORD DENSITY: Naturally embed high-frequency ATS keywords.
+3. SPELL OUT ACRONYMS at least once inline.
+4. QUANTIFY if possible: Include a realistic metric or scope.
+5. SINGLE-PAGE COMPACTNESS: Keep it to exactly 2 concise, direct sentences.
+6. Read naturally — zero AI buzzwords: 'delve', 'synergize', 'tapestry', 'testament', 'pivotal', 'seamless', 'innovative', 'passionate'.
+7. Output ONLY the plain rewritten text. No quotes, no labels, no explanation.${missingKeywordsInstruction}${improvementsInstruction}${jdInstruction}
 
 Original Summary: ${data.summary}`
         );
@@ -453,17 +459,17 @@ Original Summary: ${data.summary}`
         setAtsFriendlyProgress(`Optimizing Work Experience: ${exp.role || 'Role ' + (i + 1)}...`);
         const newDesc = await groqRewrite(
           "You are an elite ATS resume optimizer and FAANG-level resume writer. You understand exactly how NLP-based ATS parsers calculate experience scores. Output ONLY the bullet points, nothing else.",
-          `Rewrite these job duties into exactly 3 ATS-optimized bullet points for role: "${exp.role} at ${exp.company}" (Period: ${exp.duration || 'not specified'}).
+          `Rewrite these job duties into exactly 2-3 ATS-optimized bullet points for role: "${exp.role} at ${exp.company}".
 
 APPLY ALL OF THESE DEEP ATS RULES:
 1. XYZ FORMULA (MANDATORY): Every bullet follows "Accomplished [X] as measured by [Y], by doing [Z]".
-   Good example: "Engineered a React.js and Node.js dashboard that reduced average page load time by 37%, serving 12,000+ monthly active users."
-2. ACTION VERBS: Start every bullet with a strong verb (Architected, Engineered, Deployed, Optimized, Delivered, Implemented, Automated, Streamlined).
-3. CONTEXTUALIZE SKILLS INSIDE THE BULLET: Embed the exact technology name inside the sentence. This lets the ATS tie the skill to this job's dates and calculate years of experience with that specific tool.
-4. SPELL OUT ACRONYMS ONCE: Write the full term followed by the abbreviation (e.g., "Continuous Integration/Continuous Deployment (CI/CD)", "RESTful Application Programming Interface (API)").
-5. REALISTIC METRICS: If not present, add contextually realistic numbers — percentage improvements, user counts, latency reductions, data volumes, team size.
-6. NEVER USE: 'leveraged', 'utilized', 'synergized', 'robust', 'seamless', 'cutting-edge', 'innovative', 'passionate'.
-7. Output ONLY the 3 bullets with "- " prefix. No intro, no outro, no explanation.${missingKeywordsInstruction}${improvementsInstruction}
+2. SINGLE-PAGE COMPACTNESS: Keep each bullet point short, direct, and under 18 words. Avoid long-winded sentences so they fit on exactly 1 page.
+3. ACTION VERBS: Start every bullet with a strong verb.
+4. CONTEXTUALIZE SKILLS INSIDE THE BULLET: Embed the exact technology name inside the sentence.
+5. SPELL OUT ACRONYMS ONCE.
+6. REALISTIC METRICS: If not present, add contextually realistic numbers.
+7. NEVER USE: 'leveraged', 'utilized', 'synergized', 'robust', 'seamless', 'cutting-edge', 'innovative', 'passionate'.
+8. Output ONLY the 2-3 bullets with "- " prefix. No intro, no outro, no explanation.${missingKeywordsInstruction}${improvementsInstruction}${jdInstruction}
 
 Original duties: ${exp.description}`
         );
@@ -487,13 +493,13 @@ Original duties: ${exp.description}`
 
 APPLY ALL OF THESE DEEP ATS RULES:
 1. XYZ FORMULA (MANDATORY): Every bullet follows "Accomplished [X] as measured by [Y], by doing [Z]".
-   Good example: "Architected a Python and TensorFlow-based plant disease detection system achieving 94.2% model accuracy, reducing diagnosis time by 45% for 2,000+ registered users."
-2. ACTION VERBS: Start every bullet with a strong verb (Architected, Built, Deployed, Designed, Implemented, Developed, Engineered).
-3. EMBED TECH STACK ORGANICALLY: Name the exact technologies inside the sentence, not as a separate list. This ties skills to the project timeframe for ATS experience calculation.
-4. SPELL OUT ACRONYMS ONCE: Write the full term first (e.g., "Artificial Intelligence (AI)", "Machine Learning (ML)", "Application Programming Interface (API)").
-5. ADD REALISTIC PROJECT METRICS: domain-specific numbers (e.g., model accuracy %, user count, data records processed, performance improvements, uptime %). Make them contextually appropriate.
-6. NEVER USE: 'innovative', 'cutting-edge', 'seamless', 'robust', 'state-of-the-art', 'leverage', 'passionate'.
-7. Output ONLY the 2 bullets with "- " prefix. No intro, no outro, no explanation.${missingKeywordsInstruction}${improvementsInstruction}
+2. SINGLE-PAGE COMPACTNESS: Keep each bullet point short, direct, and under 18 words. Avoid long-winded sentences so they fit on exactly 1 page.
+3. ACTION VERBS: Start every bullet with a strong verb.
+4. EMBED TECH STACK ORGANICALLY inside the sentence.
+5. SPELL OUT ACRONYMS ONCE.
+6. ADD REALISTIC PROJECT METRICS.
+7. NEVER USE: 'innovative', 'cutting-edge', 'seamless', 'robust', 'state-of-the-art', 'leverage', 'passionate'.
+8. Output ONLY the 2 bullets with "- " prefix. No intro, no outro, no explanation.${missingKeywordsInstruction}${improvementsInstruction}${jdInstruction}
 
 Original description: ${proj.description}`
         );
@@ -665,7 +671,7 @@ Original description: ${proj.description}`
 
       const analysisPrompt = `You are an elite ATS engine AND a senior FAANG technical recruiter performing a comprehensive technical ATS audit of a software engineering resume.
 
-You know exactly how modern ATS systems work:
+${targetJobDescription ? `**TARGET JOB DESCRIPTION TO MATCH AGAINST:**\n${targetJobDescription}\n\n` : ''}You know exactly how modern ATS systems work:
 - They use NLP + Named Entity Recognition to parse data into structured database fields.
 - Scoring weights: Keyword Match (40-50%), Experience Depth & Timeline (30%), Structure & Readability (20-30%).
 - They PENALIZE: skills listed without context, ambiguous dates, missing metrics, keyword stuffing.
@@ -674,7 +680,8 @@ You know exactly how modern ATS systems work:
 **SCORING BREAKDOWN:**
 
 Keyword Match (0-50 pts):
-- Are critical SW engineering keywords present? (REST API, CI/CD, Docker, AWS, Agile, system design, microservices)
+${targetJobDescription ? `- How well does the resume cover the required skills, libraries, tools, and technical competencies mentioned in the Target Job Description?
+- Identify missing terms and technologies from the Target Job Description that are NOT in the resume.` : `- Are critical SW engineering keywords present? (REST API, CI/CD, Docker, AWS, Agile, system design, microservices)`}
 - Are skills contextualized inside experience bullets, or only listed standalone in a Skills section? (context = full points, standalone only = half points)
 - Are acronyms spelled out at least once? (e.g., "CI/CD" vs "Continuous Integration/Continuous Deployment (CI/CD)")
 - Are tech names spelled correctly and fully? (MongoDB, Node.js, not "mongo" or "node")
@@ -701,7 +708,7 @@ Structure & Readability (0-20 pts):
   },
   "keywords": {
     "present": ["array of found technical keywords"],
-    "missing": ["array of highly specific missing keywords that would boost ATS score"]
+    "missing": ["array of highly specific missing keywords${targetJobDescription ? ' from the Target Job Description' : ''} that would boost ATS score"]
   },
   "strengths": ["specific strength 1", "specific strength 2", "specific strength 3"],
   "improvements": [
@@ -816,9 +823,9 @@ ${resumeText}`;
   const renderMinimalist = () => {
     return (
       <div className="font-sans text-gray-900 leading-snug">
-        <div className="text-center mb-5">
+        <div className="text-center mb-3.5">
           <h1 className="text-2xl font-bold uppercase tracking-wider text-black">{data.fullName || "YOUR NAME"}</h1>
-          <div className="flex flex-wrap justify-center gap-x-2 gap-y-0.5 text-[9pt] text-gray-600 mt-1">
+          <div className="flex flex-wrap justify-center gap-x-2 gap-y-0.5 text-[8.5pt] text-gray-600 mt-0.5">
             {data.location && <span>{data.location}</span>}
             {data.phone && <span>• {data.phone}</span>}
             {data.email && <span>• {data.email}</span>}
@@ -829,26 +836,26 @@ ${resumeText}`;
         </div>
 
         {data.summary && (
-          <div className="mb-4">
-            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Profile</h2>
-            <p className="text-[9.5pt] text-gray-700 leading-normal text-justify">{data.summary}</p>
+          <div className="mb-3">
+            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-black">Profile</h2>
+            <p className="text-[9pt] text-gray-700 leading-normal text-justify">{data.summary}</p>
           </div>
         )}
 
         {data.experience.length > 0 && (
-          <div className="mb-4">
-            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-2 text-black">Experience</h2>
-            <div className="space-y-3">
+          <div className="mb-3">
+            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Experience</h2>
+            <div className="space-y-2">
               {data.experience.map(exp => (
                 <div key={exp.id}>
-                  <div className="flex justify-between items-baseline text-[9.5pt] font-bold">
+                  <div className="flex justify-between items-baseline text-[9pt] font-bold">
                     <span className="text-gray-900">{exp.company}</span>
-                    <span className="font-normal italic text-gray-500 text-[9pt]">{exp.duration}</span>
+                    <span className="font-normal italic text-gray-500 text-[8.5pt]">{exp.duration}</span>
                   </div>
-                  <div className="flex justify-between items-baseline text-[9pt] italic text-gray-700 mb-1">
+                  <div className="flex justify-between items-baseline text-[8.5pt] italic text-gray-700 mb-0.5">
                     <span>{exp.role}</span>
                   </div>
-                  <ul className="list-disc list-outside ml-4 space-y-0.5 text-[9pt] text-gray-600 leading-normal">
+                  <ul className="list-disc list-outside ml-4 space-y-0.5 text-[8.5pt] text-gray-600 leading-normal">
                     {exp.description.split('\n').map((line, i) => line.trim() && (
                       <li key={i}>{line.trim().replace(/^[-•]\s*/, '')}</li>
                     ))}
@@ -860,18 +867,18 @@ ${resumeText}`;
         )}
 
         {data.projects.length > 0 && (
-          <div className="mb-4">
-            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-2 text-black">Projects</h2>
-            <div className="space-y-3">
+          <div className="mb-3">
+            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Projects</h2>
+            <div className="space-y-2">
               {data.projects.map(proj => (
                 <div key={proj.id}>
-                  <div className="flex justify-between items-baseline text-[9.5pt] font-bold">
+                  <div className="flex justify-between items-baseline text-[9pt] font-bold">
                     <div className="flex items-center gap-1">
                       <span className="text-gray-900">{proj.name}</span>
-                      {proj.link && <span className="text-[8.5pt] font-normal text-gray-500 font-sans">({proj.link.replace(/^https?:\/\//, '')})</span>}
+                      {proj.link && <span className="text-[8pt] font-normal text-gray-500 font-sans">({proj.link.replace(/^https?:\/\//, '')})</span>}
                     </div>
                   </div>
-                  <ul className="list-disc list-outside ml-4 mt-1 space-y-0.5 text-[9pt] text-gray-600 leading-normal">
+                  <ul className="list-disc list-outside ml-4 mt-0.5 space-y-0.5 text-[8.5pt] text-gray-600 leading-normal">
                     {proj.description.split('\n').map((line, i) => line.trim() && (
                       <li key={i}>{line.trim().replace(/^[-•]\s*/, '')}</li>
                     ))}
@@ -883,21 +890,21 @@ ${resumeText}`;
         )}
 
         {data.education.length > 0 && (
-          <div className="mb-4">
-            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-2 text-black">Education</h2>
-            <div className="space-y-2">
+          <div className="mb-3">
+            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Education</h2>
+            <div className="space-y-1.5">
               {data.education.map(edu => (
                 <div key={edu.id}>
-                  <div className="flex justify-between items-baseline text-[9.5pt] font-bold">
+                  <div className="flex justify-between items-baseline text-[9pt] font-bold">
                     <span className="text-gray-900">{edu.school}</span>
-                    <span className="font-normal italic text-gray-500 text-[9pt]">{edu.year}</span>
+                    <span className="font-normal italic text-gray-500 text-[8.5pt]">{edu.year}</span>
                   </div>
-                  <div className="flex justify-between items-baseline text-[9pt] text-gray-700 italic">
+                  <div className="flex justify-between items-baseline text-[8.5pt] text-gray-700 italic">
                     <span>{edu.degree}</span>
                     {edu.location && <span>{edu.location}</span>}
                   </div>
                   {edu.coursework && (
-                    <p className="text-[8.5pt] text-gray-500 mt-0.5"><span className="font-bold text-gray-600">Coursework:</span> {edu.coursework}</p>
+                    <p className="text-[8pt] text-gray-500 mt-0.5"><span className="font-bold text-gray-600">Coursework:</span> {edu.coursework}</p>
                   )}
                 </div>
               ))}
@@ -906,16 +913,16 @@ ${resumeText}`;
         )}
 
         {data.skills && (
-          <div className="mb-4">
-            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Technical Skills</h2>
-            <p className="text-[9.5pt] text-gray-700 leading-normal">{data.skills}</p>
+          <div className="mb-3">
+            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-black">Technical Skills</h2>
+            <p className="text-[9pt] text-gray-700 leading-normal">{data.skills}</p>
           </div>
         )}
 
         {data.leadership.length > 0 && (
           <div>
-            <h2 className="text-[10.5pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-2 text-black">Activities & Certs</h2>
-            <div className="space-y-2.5">
+            <h2 className="text-[10pt] font-bold uppercase border-b border-gray-300 pb-0.5 mb-1.5 text-black">Activities & Certs</h2>
+            <div className="space-y-2">
               {data.leadership.map(item => (
                 <div key={item.id}>
                   <div className="flex justify-between items-baseline text-[9.5pt] font-bold">
@@ -1334,19 +1341,45 @@ ${resumeText}`;
       <style>
         {`
           @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            body { background: white; color: black; }
-            .print-container {
-              padding: 0;
-              margin: 0;
-              width: 100%;
-              max-width: none;
-              box-shadow: none;
-              border: none;
-              transform: none !important;
+            .no-print, [role="dialog"], header, button, footer, .no-print * {
+              display: none !important;
             }
-            @page { margin: 0.5cm; }
+            body, html {
+              background: white !important;
+              color: black !important;
+              height: auto !important;
+              overflow: visible !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+            main, .flex-1, .relative, .overflow-hidden, .scroll-area {
+              overflow: visible !important;
+              height: auto !important;
+              display: block !important;
+              background: white !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            .print-container {
+              position: static !important;
+              padding: 0 !important;
+              margin: 0 auto !important;
+              width: 100% !important;
+              max-width: 210mm !important;
+              min-height: 297mm !important;
+              height: auto !important;
+              transform: none !important;
+              box-shadow: none !important;
+              border: none !important;
+              background: white !important;
+              color: black !important;
+            }
+            @page {
+              size: A4 portrait;
+              margin: 1.27cm;
+            }
           }
           .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
@@ -1513,6 +1546,27 @@ ${resumeText}`;
           <ScrollArea className="flex-1 custom-scrollbar bg-black/10">
             <div className="p-6 max-w-xl mx-auto space-y-6 pb-24">
               
+              {/* Target Job Description Input Card */}
+              <Card className="bg-zinc-900/40 border border-violet-500/20 text-white backdrop-blur-xl rounded-2xl shadow-[0_8px_32px_0_rgba(124,58,237,0.05)]">
+                <CardHeader className="pb-2.5">
+                  <CardTitle className="flex items-center gap-2 text-xs font-bold text-white">
+                    <Briefcase className="w-3.5 h-3.5 text-violet-400" />
+                    Target Job Description (Optional)
+                  </CardTitle>
+                  <CardDescription className="text-zinc-400 text-[10px]">
+                    Paste the target job description to match keywords and get custom ATS optimization.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <Textarea
+                    placeholder="Paste the Job Description (JD) here to match keywords & align optimization..."
+                    className="h-20 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300 placeholder:text-zinc-600"
+                    value={targetJobDescription}
+                    onChange={(e) => setTargetJobDescription(e.target.value)}
+                  />
+                </CardContent>
+              </Card>
+
               {/* Personal Information form fields */}
               {activeTab === "personal" && (
                 <Card className="bg-zinc-900/40 border border-white/10 text-white backdrop-blur-xl shadow-[0_8px_32px_0_rgba(124,58,237,0.02)] rounded-2xl">
@@ -2090,12 +2144,12 @@ ${resumeText}`;
         </div>
 
         {/* RIGHT PANEL: Live Interactive Resume Preview (Canvas) */}
-        <div className="flex-1 bg-[#09090b] flex flex-col relative overflow-hidden h-[calc(100vh-4rem)] select-none">
+        <div className="flex-1 bg-[#09090b] flex flex-col relative overflow-hidden h-[calc(100vh-4rem)] select-none print-only:p-0">
           {/* Subtle grid mesh overlay for canvas preview */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_80%,transparent_100%)] pointer-events-none z-0" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_80%,transparent_100%)] pointer-events-none z-0 no-print" />
 
           {/* Premium Floating Template Bar */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-full flex gap-1.5 shadow-xl shadow-black/40">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-full flex gap-1.5 shadow-xl shadow-black/40 no-print">
             {[
               { id: 'minimalist', label: 'ATS Clean' },
               { id: 'slate', label: 'Modern Slate' },
@@ -2135,7 +2189,7 @@ ${resumeText}`;
           </ScrollArea>
 
           {/* Floating Zoom Action Toolbar */}
-          <div className="absolute bottom-4 right-4 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-xl shadow-black/40">
+          <div className="absolute bottom-4 right-4 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-xl shadow-black/40 no-print">
             <Button 
               variant="ghost" 
               size="icon" 

@@ -54,7 +54,7 @@ export const DevResetWidget = () => {
   if (!userEmail || !AUTHORIZED_EMAILS.includes(userEmail.toLowerCase())) return null;
 
   return (
-    <div className="fixed bottom-6 left-56 z-[9999] font-sans">
+    <div className="fixed bottom-6 left-56 z-[9999] font-sans no-print">
       <AnimatePresence>
         {isOpen && (
           <motion.div
