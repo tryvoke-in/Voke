@@ -286,15 +286,18 @@ Original Text: ${description}` }],
       if (data.summary) {
         setAtsFriendlyProgress('Optimizing Professional Summary...');
         const newSummary = await groqRewrite(
-          "You are an elite ATS resume optimizer. Output only the rewritten text, nothing else.",
-          `Rewrite this resume summary to score 90+ on ATS scans.
-RULES:
-- Use high-frequency ATS keywords: full-stack, scalable systems, agile, cross-functional, end-to-end.
-- Start with a strong results-first statement.
-- Max 2-3 sentences. Zero AI buzzwords like 'delve', 'tapestry', 'testament'.
-- Output ONLY the rewritten summary text. No labels, no quotes.
+          "You are an elite ATS resume optimizer with deep expertise in how modern NLP-based ATS parsers evaluate professional summaries. Output only the rewritten text, nothing else.",
+          `Rewrite this professional summary to score 90+ on ALL modern ATS systems (Workday, Greenhouse, Lever, Eightfold).
 
-Original: ${data.summary}`
+APPLY ALL THESE ATS RULES:
+1. RESULTS-FIRST: Start with what you deliver/have achieved, not who you are. (e.g., "Full-stack engineer with a proven record of..." not "I am a developer who...")
+2. ATS KEYWORD DENSITY: Naturally embed high-frequency ATS keywords: full-stack development, scalable systems, agile methodology, cross-functional collaboration, end-to-end delivery, software engineering, version control, API integration.
+3. SPELL OUT ACRONYMS at least once inline (e.g., "Representational State Transfer (REST) APIs" then "REST APIs" after).
+4. QUANTIFY if possible: Include a realistic metric or scope (e.g., "3+ years of experience", "2+ production applications", "team of 5").
+5. Max 2-3 sentences. Zero AI buzzwords: 'delve', 'synergize', 'tapestry', 'testament', 'pivotal', 'seamless', 'innovative', 'passionate'.
+6. Output ONLY the plain rewritten text. No quotes, no labels, no explanation.
+
+Original Summary: ${data.summary}`
         );
         if (newSummary) setData(prev => ({ ...prev, summary: newSummary }));
       }
@@ -305,15 +308,18 @@ Original: ${data.summary}`
         if (!exp.description) continue;
         setAtsFriendlyProgress(`Optimizing Work Experience: ${exp.role || 'Role ' + (i + 1)}...`);
         const newDesc = await groqRewrite(
-          "You are an elite ATS resume optimizer and FAANG-level resume writer.",
-          `Rewrite these job duties into exactly 3 elite, ATS-optimized bullet points for role: "${exp.role} at ${exp.company}".
+          "You are an elite ATS resume optimizer and FAANG-level resume writer. You understand exactly how NLP-based ATS parsers calculate experience scores. Output ONLY the bullet points, nothing else.",
+          `Rewrite these job duties into exactly 3 ATS-optimized bullet points for role: "${exp.role} at ${exp.company}" (Period: ${exp.duration || 'not specified'}).
 
-CRITICAL ATS RULES:
-1. Start every bullet with a strong action verb (Architected, Engineered, Spearheaded, Delivered, Built).
-2. Embed quantifiable metrics — if none exist, add realistic ones (e.g., "improving page load by 35%", "serving 15k+ monthly users").
-3. Naturally include high-value tech keywords matching the role.
-4. Prefix every bullet with "- " and nothing else. Output ONLY the 3 bullets.
-5. Sound 100% human. Zero AI filler words.
+APPLY ALL OF THESE DEEP ATS RULES:
+1. XYZ FORMULA (MANDATORY): Every bullet follows "Accomplished [X] as measured by [Y], by doing [Z]".
+   Good example: "Engineered a React.js and Node.js dashboard that reduced average page load time by 37%, serving 12,000+ monthly active users."
+2. ACTION VERBS: Start every bullet with a strong verb (Architected, Engineered, Deployed, Optimized, Delivered, Implemented, Automated, Streamlined).
+3. CONTEXTUALIZE SKILLS INSIDE THE BULLET: Embed the exact technology name inside the sentence. This lets the ATS tie the skill to this job's dates and calculate years of experience with that specific tool.
+4. SPELL OUT ACRONYMS ONCE: Write the full term followed by the abbreviation (e.g., "Continuous Integration/Continuous Deployment (CI/CD)", "RESTful Application Programming Interface (API)").
+5. REALISTIC METRICS: If not present, add contextually realistic numbers — percentage improvements, user counts, latency reductions, data volumes, team size.
+6. NEVER USE: 'leveraged', 'utilized', 'synergized', 'robust', 'seamless', 'cutting-edge', 'innovative', 'passionate'.
+7. Output ONLY the 3 bullets with "- " prefix. No intro, no outro, no explanation.
 
 Original duties: ${exp.description}`
         );
@@ -332,15 +338,18 @@ Original duties: ${exp.description}`
         if (!proj.description) continue;
         setAtsFriendlyProgress(`Optimizing Project: ${proj.name || 'Project ' + (i + 1)}...`);
         const newDesc = await groqRewrite(
-          "You are an elite ATS resume optimizer and FAANG-level resume writer.",
-          `Rewrite this project description into exactly 2 elite, ATS-optimized bullet points for project: "${proj.name}".
+          "You are an elite ATS resume optimizer and FAANG-level resume writer. You understand exactly how NLP-based ATS parsers evaluate project descriptions. Output ONLY the bullet points, nothing else.",
+          `Rewrite this project description into exactly 2 ATS-optimized bullet points for project: "${proj.name}".
 
-CRITICAL ATS RULES:
-1. Start every bullet with a strong action verb (Architected, Built, Deployed, Designed, Implemented).
-2. Highlight the tech stack organically within the sentence.
-3. Add realistic impact metrics if not present (e.g., "reducing inference time by 28%", "supporting 5k+ concurrent users").
-4. Prefix every bullet with "- " and nothing else. Output ONLY the 2 bullets.
-5. Sound 100% human. Zero AI buzzwords.
+APPLY ALL OF THESE DEEP ATS RULES:
+1. XYZ FORMULA (MANDATORY): Every bullet follows "Accomplished [X] as measured by [Y], by doing [Z]".
+   Good example: "Architected a Python and TensorFlow-based plant disease detection system achieving 94.2% model accuracy, reducing diagnosis time by 45% for 2,000+ registered users."
+2. ACTION VERBS: Start every bullet with a strong verb (Architected, Built, Deployed, Designed, Implemented, Developed, Engineered).
+3. EMBED TECH STACK ORGANICALLY: Name the exact technologies inside the sentence, not as a separate list. This ties skills to the project timeframe for ATS experience calculation.
+4. SPELL OUT ACRONYMS ONCE: Write the full term first (e.g., "Artificial Intelligence (AI)", "Machine Learning (ML)", "Application Programming Interface (API)").
+5. ADD REALISTIC PROJECT METRICS: domain-specific numbers (e.g., model accuracy %, user count, data records processed, performance improvements, uptime %). Make them contextually appropriate.
+6. NEVER USE: 'innovative', 'cutting-edge', 'seamless', 'robust', 'state-of-the-art', 'leverage', 'passionate'.
+7. Output ONLY the 2 bullets with "- " prefix. No intro, no outro, no explanation.
 
 Original description: ${proj.description}`
         );
@@ -510,36 +519,60 @@ Original description: ${proj.description}`
         throw new Error("GROQ_API_KEY is not configured in this environment.");
       }
 
-      const analysisPrompt = `You are a strict, expert technical recruiter and ATS specialist at a top tech company (FAANG). You are reviewing a candidate's resume for a software engineering role.
+      const analysisPrompt = `You are an elite ATS engine AND a senior FAANG technical recruiter performing a comprehensive technical ATS audit of a software engineering resume.
 
-**YOUR OBJECTIVE:**
-Provide a critical, "no-fluff" deep-dive analysis. Do not be generic. If the resume is vague, call it out. If the formatting is bad, be direct.
+You know exactly how modern ATS systems work:
+- They use NLP + Named Entity Recognition to parse data into structured database fields.
+- Scoring weights: Keyword Match (40-50%), Experience Depth & Timeline (30%), Structure & Readability (20-30%).
+- They PENALIZE: skills listed without context, ambiguous dates, missing metrics, keyword stuffing.
+- They REWARD: XYZ formula bullets, skills tied to specific experience blocks, spelled-out acronyms.
 
-**ANALYSIS REQUIREMENTS:**
-1. ATS Compatibility Score (0-100). Be highly granular and specific (e.g., return 68, 73, 84, 91). DO NOT just output round numbers like 70 or 80. Calculate it strictly based on the presence of metrics, cloud keywords, and precise bullet points.
-2. Keywords: Identify missing tech keywords.
-3. Structure & Content: Critique metrics and chronological layout.
-4. Actionable Improvements: Give concrete examples.
+**SCORING BREAKDOWN:**
 
-**OUTPUT FORMAT (JSON):**
+Keyword Match (0-50 pts):
+- Are critical SW engineering keywords present? (REST API, CI/CD, Docker, AWS, Agile, system design, microservices)
+- Are skills contextualized inside experience bullets, or only listed standalone in a Skills section? (context = full points, standalone only = half points)
+- Are acronyms spelled out at least once? (e.g., "CI/CD" vs "Continuous Integration/Continuous Deployment (CI/CD)")
+- Are tech names spelled correctly and fully? (MongoDB, Node.js, not "mongo" or "node")
+
+Experience Depth (0-30 pts):
+- Do bullets use the XYZ formula? ("Accomplished X, resulting in Y improvement, using Z technology")
+- Are there quantifiable metrics? (percentages, user counts, latency numbers, data volumes)
+- Dates in Month Year - Month Year format? (ambiguous dates like "2024-2025" = deductions)
+- Skills tied to specific dated experience blocks (allows ATS to calculate years of experience)?
+
+Structure & Readability (0-20 pts):
+- Professional Summary present?
+- Standard section headers used? (Professional Experience, Education, Technical Skills, Projects)
+- Bullets start with action verbs?
+- Contact info complete? (Email, Phone, LinkedIn, GitHub)
+
+**OUTPUT FORMAT - Return STRICTLY this JSON:**
 {
-  "ats_score": number (0-100),
-  "keywords": {
-    "present": ["list", "of", "found", "keywords"],
-    "missing": ["list", "of", "specific", "missing", "keywords"]
+  "ats_score": number (0-100, be HIGHLY granular like 67, 73, 84 - NEVER round to 70, 80, etc.),
+  "score_breakdown": {
+    "keyword_match": number (0-50),
+    "experience_depth": number (0-30),
+    "structure_readability": number (0-20)
   },
-  "strengths": ["Specific strength 1", "Specific strength 2"],
+  "keywords": {
+    "present": ["array of found technical keywords"],
+    "missing": ["array of highly specific missing keywords that would boost ATS score"]
+  },
+  "strengths": ["specific strength 1", "specific strength 2", "specific strength 3"],
   "improvements": [
-    "Specific actionable tip 1 (e.g., Rewrite summary to focus on X)",
-    "Specific actionable tip 2 (e.g., Move Skills section to top)",
-    "Specific actionable tip 3 (e.g., Quantify the 'Project X' bullet point)"
+    "Specific actionable tip 1 with example rewrite",
+    "Specific tip 2",
+    "Specific tip 3",
+    "Specific tip 4"
   ],
-  "structure_feedback": "Detailed critique of layout and organization.",
-  "content_feedback": "Detailed critique of the actual bullet point content.",
-  "overall_summary": "Professional summary of the candidate's standing."
+  "date_format_issues": "Assessment of date formats. Month Year - Month Year is ideal. List any problems found.",
+  "skills_context_check": "Are skills mentioned inside experience bullets (good) or only in a standalone Skills section (bad)? Be specific.",
+  "xyz_formula_check": "Do bullets use Accomplished X as measured by Y by doing Z? Provide one concrete example rewrite using XYZ format based on the actual resume content.",
+  "structure_feedback": "Critique of section headers, ordering, and completeness.",
+  "content_feedback": "Critique of bullet point quality - action verbs, metrics, and depth.",
+  "overall_summary": "2-3 sentence professional summary of ATS standing and the single most impactful improvement."
 }
-
-Return STRICTLY JSON matching this exact schema.
 
 **RESUME TO ANALYZE:**
 ${resumeText}`;
