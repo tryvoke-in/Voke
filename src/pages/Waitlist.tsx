@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Mail, ArrowRight, Sparkles, CheckCircle, Twitter, Linkedin, ShieldAlert, Code, GraduationCap, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WAITLIST_CONFIG } from "@/config/waitlist";
-import { ADMIN_EMAIL } from "@/config/admin";
+import { ADMIN_EMAIL, isAdminEmail } from "@/config/admin";
 import {
   Dialog,
   DialogContent,
@@ -55,7 +55,7 @@ const Waitlist = () => {
           if (error) throw error;
 
           if (data?.session) {
-            if (data.session.user.email === ADMIN_EMAIL) {
+            if (isAdminEmail(data.session.user.email)) {
               navigate("/admin");
             } else {
               navigate("/dashboard");
@@ -169,7 +169,7 @@ const Waitlist = () => {
         if (error) throw error;
 
         if (data?.session) {
-          if (data.session.user.email === ADMIN_EMAIL) {
+          if (isAdminEmail(data.session.user.email)) {
             navigate("/admin");
           } else {
             navigate("/dashboard");

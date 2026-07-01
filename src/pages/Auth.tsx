@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ADMIN_EMAIL } from "@/config/admin";
+import { ADMIN_EMAIL, isAdminEmail } from "@/config/admin";
 import { useToast } from "@/components/ui/use-toast";
 import { Mail, Lock, User, ArrowRight, Sparkles, Github, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,6 +34,13 @@ const Auth = () => {
   const [resetLinkSent, setResetLinkSent] = useState(false);
 
   useEffect(() => {
+    // If user arrived via referral link, store it persistently for OAuth/Magic Link support
+    const searchParams = new URLSearchParams(window.location.search);
+    const ref = searchParams.get("ref");
+    if (ref) {
+      localStorage.setItem("voke_pending_referral", ref);
+    }
+
     const isRecovery = window.location.hash.includes("type=recovery") || window.location.search.includes("type=recovery");
 
     if (isRecovery) {
@@ -44,7 +51,7 @@ const Auth = () => {
     if (!isRecovery) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
-          if (session.user.email === ADMIN_EMAIL) {
+          if (isAdminEmail(session.user.email)) {
             navigate("/admin");
           } else {
             navigate("/dashboard");
@@ -116,7 +123,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -142,6 +149,13 @@ const Auth = () => {
           });
         }
       } else {
+        // Signup successful – process referral if one was pending
+        const newUser = data?.user;
+        if (newUser && pendingReferralCode) {
+          // Fire-and-forget – don't block the UI
+          processReferral(pendingReferralCode, newUser.id).catch(console.error);
+        }
+        
         setPassword("");
         setFullName("");
         setConfirmPassword("");

@@ -14,6 +14,7 @@ import {
 import { SkillRadar } from "@/components/dashboard/SkillRadar";
 import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
 import { MarketPulse } from "@/components/dashboard/MarketPulse";
+import { ReferralFloatingWidget } from "@/components/dashboard/ReferralFloatingWidget";
 import { UpgradeButton } from "@/components/UpgradeButton";
 import { TRACKS } from "./LearningPaths";
 
@@ -894,6 +895,9 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+      
+      {/* Floating Referral Widget */}
+      <ReferralFloatingWidget />
       <Footer />
       <FeedbackFormDialog 
         open={showFeedbackModal} 

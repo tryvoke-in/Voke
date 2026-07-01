@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ADMIN_EMAIL } from "@/config/admin";
+import { ADMIN_EMAIL, isAdminEmail } from "@/config/admin";
 import { motion, AnimatePresence } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Switch } from "@/components/ui/switch";
@@ -321,7 +321,7 @@ const AdminDashboard = () => {
       return;
     }
     
-    if (session.user.email !== ADMIN_EMAIL) {
+    if (!isAdminEmail(session.user.email)) {
       setIsAuthorized(false);
     } else {
       setIsAuthorized(true);

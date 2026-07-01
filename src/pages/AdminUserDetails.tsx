@@ -34,7 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ADMIN_EMAIL } from "@/config/admin";
+import { ADMIN_EMAIL, isAdminEmail } from "@/config/admin";
 
 const AdminUserDetails = () => {
   const { userId } = useParams();
@@ -66,7 +66,7 @@ const AdminUserDetails = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
         
-        if (user.email === ADMIN_EMAIL) {
+        if (isAdminEmail(user.email)) {
             setIsAdmin(true);
         }
     } catch (error) {
