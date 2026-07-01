@@ -168,7 +168,7 @@ export const MarketPulse = ({ profile }: MarketPulseProps) => {
                                     transition={{ delay: i * 0.1 }}
                                 >
                                     <img
-                                        src={`https://logo.clearbit.com/${company.toLowerCase()}.com`}
+                                        src={`https://www.google.com/s2/favicons?domain=${company.toLowerCase()}.com&sz=128`}
                                         crossOrigin="anonymous"
                                         className="w-4 h-4 rounded-full bg-white"
                                         onError={(e) => e.currentTarget.style.display = 'none'}

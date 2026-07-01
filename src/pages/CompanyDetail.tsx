@@ -80,10 +80,10 @@ const CompanyDetail = () => {
             return logo;
         }
 
-        // 2. Clearbit API (try typical domain construction)
+        // 2. Google Favicon API (highly reliable, no DNS blocks)
         // Clean name: remove special chars, spaces, lowercase
         const cleanName = companyName.toLowerCase().replace(/[^a-z0-9]/g, '');
-        return `https://logo.clearbit.com/${cleanName}.com`;
+        return `https://www.google.com/s2/favicons?domain=${cleanName}.com&sz=128`;
     };
 
     useEffect(() => {
