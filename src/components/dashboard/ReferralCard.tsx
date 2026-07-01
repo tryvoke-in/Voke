@@ -20,7 +20,7 @@ import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 export const ReferralCard = () => {
   const [copied, setCopied] = useState(false);
   const { referralCode, referralLink, totalReferred, totalCredited, loading } = useReferral();
-  const { creditsElite, creditsVoice, creditsVideo, isPremium } = useInterviewCredits();
+  const { creditsElite: _e, creditsVoice: _v, creditsVideo: _vi, isPremium } = useInterviewCredits();
 
   const handleCopy = async () => {
     if (!referralLink) return;
@@ -42,9 +42,9 @@ export const ReferralCard = () => {
   };
 
   const features = [
-    { label: "AI Voice Agent", icon: Mic, credits: creditsVoice, color: "text-pink-500", bg: "bg-pink-500/10" },
-    { label: "Text Interview", icon: Zap, credits: creditsElite, color: "text-violet-500", bg: "bg-violet-500/10" },
-    { label: "Video Practice", icon: Play, credits: creditsVideo, color: "text-fuchsia-500", bg: "bg-fuchsia-500/10" },
+    { label: "AI Voice Agent", icon: Mic, credits: totalCredited, color: "text-pink-500", bg: "bg-pink-500/10" },
+    { label: "Text Interview", icon: Zap, credits: totalCredited, color: "text-violet-500", bg: "bg-violet-500/10" },
+    { label: "Video Practice", icon: Play, credits: totalCredited, color: "text-fuchsia-500", bg: "bg-fuchsia-500/10" },
   ];
 
   return (

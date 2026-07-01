@@ -53,7 +53,9 @@ export const useReferral = () => {
         return;
       }
 
-      const user = session.user;
+      // Force a session refresh so we get the latest user metadata (credits) from the server
+      const { data: refreshData } = await supabase.auth.refreshSession();
+      const user = refreshData.session?.user || session.user;
       const metadata = user.user_metadata || {};
 
       // Referral code = first 8 chars of the user UUID (deterministic, shareable)

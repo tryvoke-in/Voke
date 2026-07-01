@@ -151,9 +151,15 @@ const Auth = () => {
       } else {
         // Signup successful – process referral if one was pending
         const newUser = data?.user;
-        if (newUser && pendingReferralCode) {
+        const storedRef = localStorage.getItem("voke_pending_referral");
+        if (newUser && storedRef) {
           // Fire-and-forget – don't block the UI
-          processReferral(pendingReferralCode, newUser.id).catch(console.error);
+          supabase.rpc("process_referral", {
+            ref_code: storedRef,
+            new_user_id: newUser.id
+          }).then(({ error }) => {
+            if (!error) localStorage.removeItem("voke_pending_referral");
+          }).catch(console.error);
         }
         
         setPassword("");
