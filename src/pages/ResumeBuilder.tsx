@@ -117,6 +117,65 @@ const ResumeBuilder = () => {
   const [extractingJd, setExtractingJd] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Helper to handle Groq API calls with rate-limit retries and model fallbacks
+  const fetchGroqWithRetry = async (body: any, maxRetries = 2) => {
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    if (!apiKey) throw new Error("GROQ_API_KEY not configured.");
+
+    const models = [
+      body.model || "llama-3.3-70b-versatile",
+      "llama3-8b-8192",
+      "mixtral-8x7b-32768",
+    ];
+
+    let lastError = null;
+    let lastStatus = 200;
+
+    for (let i = 0; i < models.length; i++) {
+      const currentModel = models[i];
+      const attemptBody = { ...body, model: currentModel };
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify(attemptBody),
+          });
+
+          if (res.ok) {
+            return res;
+          }
+
+          lastStatus = res.status;
+          lastError = await res.text();
+
+          // If rate limited, wait and then try again or fall back to the next model
+          if (res.status === 429) {
+            console.warn(`Rate limit on ${currentModel}, attempt ${attempt + 1}.`);
+            if (attempt < maxRetries) {
+              const delay = 1500 * Math.pow(2, attempt);
+              await new Promise(r => setTimeout(r, delay));
+              continue; // Retry same model
+            }
+          } else {
+            // For non-429 errors (like 400 Bad Request), don't retry, just throw
+            throw new Error(`Groq API Error ${res.status}: ${lastError}`);
+          }
+        } catch (e: any) {
+          lastError = e.message;
+        }
+      }
+      
+      // If we exhausted retries on the current model due to 429, we'll loop to the next fallback model
+      if (lastStatus === 429 && i < models.length - 1) {
+        toast.info(`Rate limit hit. Switching to fallback model: ${models[i+1]}...`);
+      }
+    }
+
+    throw new Error(`Failed after retries and fallbacks. Last error: ${lastError}`);
+  };
+
   // Calculation for completion progress
   const calculateProgress = () => {
     let score = 0;
@@ -159,14 +218,10 @@ const ResumeBuilder = () => {
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       if (!apiKey) throw new Error("Missing API Key");
       
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [{ role: "user", content: `Rewrite the following resume summary to be highly professional, action-oriented, and bypass AI detectors by sounding very human and authentic. Keep it to 2-3 sentences max. Do NOT use generic AI words like "delve", "testament", or "tapestry". Here is the summary: ${data.summary}` }],
-          temperature: 0.7,
-        }),
+      const response = await fetchGroqWithRetry({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: `Rewrite the following resume summary to be highly professional, action-oriented, and bypass AI detectors by sounding very human and authentic. Keep it to 2-3 sentences max. Do NOT use generic AI words like "delve", "testament", or "tapestry". Here is the summary: ${data.summary}` }],
+        temperature: 0.7,
       });
       const resData = await response.json();
       const newSummary = resData.choices?.[0]?.message?.content?.replace(/["']/g, "").trim();
@@ -189,13 +244,10 @@ const ResumeBuilder = () => {
     setEnhancingExpId(id);
     try {
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, { role: "user", content: `Rewrite the following job duties into 2-3 elite, metric-driven bullet points. 
-          
+      const response = await fetchGroqWithRetry({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, { role: "user", content: `Rewrite the following job duties into 2-3 elite, metric-driven bullet points. 
+        
 CRITICAL RULES:
 1. Start EVERY bullet point with a powerful action verb (e.g., Spearheaded, Architected, Engineered).
 2. Quantify impact organically (e.g., "resulting in a 40% reduction in latency" or "scaling to 10k+ users"). If no metrics are provided, invent highly realistic, contextual metrics that fit the role.
@@ -204,8 +256,7 @@ CRITICAL RULES:
 5. Focus purely on technical depth and business impact. 
 
 Original Text: ${description}` }],
-          temperature: 0.6,
-        }),
+        temperature: 0.6,
       });
       const resData = await response.json();
       const newDesc = resData.choices?.[0]?.message?.content?.trim();
@@ -231,23 +282,19 @@ Original Text: ${description}` }],
     setEnhancingProjId(id);
     try {
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, { role: "user", content: `Rewrite the following project description into 2-3 elite, metric-driven bullet points. 
+      const response = await fetchGroqWithRetry({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, { role: "user", content: `Rewrite the following project description into 2-3 elite, metric-driven bullet points. 
 
 CRITICAL RULES:
-1. Start EVERY bullet point with a powerful action verb (e.g., Architected, Deployed, Engineered).
-2. Explicitly highlight the tech stack organically within the sentence (e.g., "Engineered a React.js front-end backed by Node.js...").
-3. Quantify the project's complexity or impact (e.g., "processing 5k+ data points" or "reducing load times by 30%"). If no metrics exist, invent highly realistic ones.
-4. Sound strictly human. DO NOT use words like "delve", "seamless", "testament", or "cutting-edge".
-5. Format exactly as a markdown list using '-' and nothing else.
+1. Start EVERY bullet point with a powerful action verb.
+2. Quantify impact organically. If no metrics are provided, invent highly realistic, contextual metrics that fit the project.
+3. Sound strictly human and authentic. DO NOT use generic AI words like "delve", "pivotal", "seamless", "tapestry", or "testament".
+4. Format exactly as a markdown list using '-' and nothing else.
+5. Focus purely on technical depth and business impact. 
 
 Original Text: ${description}` }],
-          temperature: 0.6,
-        }),
+        temperature: 0.6,
       });
       const resData = await response.json();
       const newDesc = resData.choices?.[0]?.message?.content?.trim();
@@ -353,14 +400,10 @@ CRITICAL RULES:
 4. Ensure the output feels 100% human-written and passes all AI detectors. DO NOT use generic buzzwords ("leveraged", "robust", "seamless", "tapestry", "delve").
 5. Output ONLY the 2 bullets. No introduction, no markdown backticks block, no outro.`;
 
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.5,
-        }),
+      const response = await fetchGroqWithRetry({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.5,
       });
 
       if (!response.ok) {
@@ -403,14 +446,10 @@ CRITICAL RULES:
     setMakingAtsFriendly(true);
 
     const groqRewrite = async (systemMsg: string, userMsg: string): Promise<string> => {
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [{ role: "system", content: systemMsg }, { role: "user", content: userMsg }],
-          temperature: 0.4,
-        }),
+      const res = await fetchGroqWithRetry({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "system", content: systemMsg }, { role: "user", content: userMsg }],
+        temperature: 0.4,
       });
       const d = await res.json();
       return d.choices?.[0]?.message?.content?.trim() ?? '';
@@ -653,15 +692,11 @@ Return STRICTLY this JSON schema and nothing else:
 JOB DESCRIPTION:
 ${sanitized}`;
 
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [{ role: "user", content: extractPrompt }],
-          temperature: 0.1,
-          response_format: { type: "json_object" },
-        }),
+      const res = await fetchGroqWithRetry({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: extractPrompt }],
+        temperature: 0.1,
+        response_format: { type: "json_object" },
       });
       if (!res.ok) throw new Error("Failed to extract JD keywords.");
       const d = await res.json();
@@ -802,15 +837,11 @@ Structure & Readability (0-20 pts):
 **RESUME TO ANALYZE:**
 ${resumeText}${jdContext}`;
 
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [{ role: "user", content: analysisPrompt }],
-          temperature: 0.3,
-          response_format: { type: "json_object" },
-        }),
+      const response = await fetchGroqWithRetry({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: analysisPrompt }],
+        temperature: 0.3,
+        response_format: { type: "json_object" },
       });
 
       if (!response.ok) throw new Error("Failed to fetch analysis from AI.");
@@ -925,26 +956,15 @@ IMPORTANT:
 - Do not include explanation, only the JSON.
 - Preserve original text formatting where possible (e.g. capitals).`;
 
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: text }
-          ],
-          temperature: 0.1,
-          response_format: { type: "json_object" },
-        }),
+      const response = await fetchGroqWithRetry({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: text }
+        ],
+        temperature: 0.1,
+        response_format: { type: "json_object" },
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to parse resume via AI");
-      }
 
       const resData = await response.json();
       const aiContent = resData.choices?.[0]?.message?.content;
