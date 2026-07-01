@@ -110,6 +110,7 @@ const ResumeBuilder = () => {
   const [atsTimeElapsed, setAtsTimeElapsed] = useState(0);
   const [makingAtsFriendly, setMakingAtsFriendly] = useState(false);
   const [atsFriendlyProgress, setAtsFriendlyProgress] = useState('');
+  const [fetchingRepoId, setFetchingRepoId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -261,6 +262,137 @@ Original Text: ${description}` }],
     }
   };
 
+  const handleFetchGitHubProject = async (id: string, urlLink: string) => {
+    if (!urlLink || urlLink.trim() === "") {
+      toast.error("Please add a GitHub URL link first.");
+      return;
+    }
+
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    if (!apiKey) {
+      toast.error("VITE_GROQ_API_KEY not configured.");
+      return;
+    }
+
+    // Try parsing owner and repo name from urlLink
+    const cleanedUrl = urlLink.trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+    const parts = cleanedUrl.split('/');
+    let owner = '';
+    let repo = '';
+
+    // E.g. github.com/owner/repo
+    if (parts[0].toLowerCase().includes('github.com')) {
+      owner = parts[1] || '';
+      repo = parts[2] || '';
+    } else {
+      // E.g. owner/repo
+      owner = parts[0] || '';
+      repo = parts[1] || '';
+    }
+
+    // Clean repo name from hash/query parameters
+    if (repo) {
+      repo = repo.split('?')[0].split('#')[0].replace(/\.git$/i, '');
+    }
+
+    if (!owner || !repo) {
+      toast.error("Could not parse owner and repository name from the link. Make sure it is in the format github.com/owner/repo or owner/repo.");
+      return;
+    }
+
+    setFetchingRepoId(id);
+    try {
+      // Fetch repo metadata
+      const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+      if (!repoRes.ok) {
+        throw new Error(`Failed to fetch repo: ${repoRes.statusText}`);
+      }
+      const repoData = await repoRes.json();
+      if (!repoData) {
+        throw new Error("Could not retrieve repository information.");
+      }
+
+      // Fetch README content
+      let readmeText = "";
+      try {
+        const readmeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/readme`);
+        if (readmeRes.ok) {
+          const readmeJson = await readmeRes.json();
+          if (readmeJson.content) {
+            const base64Str = readmeJson.content.replace(/\s/g, '');
+            let decoded = "";
+            try {
+              decoded = decodeURIComponent(escape(atob(base64Str)));
+            } catch (err) {
+              decoded = atob(base64Str);
+            }
+            readmeText = decoded.substring(0, 2500);
+          }
+        }
+      } catch (e) {
+        console.log("No readme or parsing issue", e);
+      }
+
+      // Construct Prompt
+      const prompt = `You are an elite, senior software engineer and professional resume builder. We fetched the following info from the GitHub repository of this project:
+Project Name: ${repoData.name}
+Description: ${repoData.description || 'N/A'}
+Primary Language: ${repoData.language || 'N/A'}
+Topics: ${repoData.topics?.join(', ') || 'N/A'}
+${readmeText ? `README content excerpt:\n${readmeText}` : ''}
+
+Write exactly 2 elite, professional, fully humanized resume bullet points (prefixed with "- ") detailing the design, architecture, key implementation features, and impact.
+
+CRITICAL RULES:
+1. Start every bullet with a strong action verb (e.g. Architected, Engineered, Developed, Deployed, Optimized, Designed).
+2. Embed the key technologies used organically inside the bullets.
+3. Quantify everything with realistic impact metrics (e.g. latency, user count, accuracy, bundle size, uptime). If none are in the readme, invent contextually appropriate metrics.
+4. Ensure the output feels 100% human-written and passes all AI detectors. DO NOT use generic buzzwords ("leveraged", "robust", "seamless", "tapestry", "delve").
+5. Output ONLY the 2 bullets. No introduction, no markdown backticks block, no outro.`;
+
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.5,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate description with AI.");
+      }
+
+      const resData = await response.json();
+      const generatedDesc = resData.choices?.[0]?.message?.content?.trim();
+      if (!generatedDesc) {
+        throw new Error("Empty description returned from AI.");
+      }
+
+      // Update state
+      setData(prev => ({
+        ...prev,
+        projects: prev.projects.map(proj => {
+          if (proj.id === id) {
+            return {
+              ...proj,
+              name: proj.name && proj.name.trim() !== "" ? proj.name : repoData.name,
+              description: generatedDesc
+            };
+          }
+          return proj;
+        })
+      }));
+
+      toast.success("Project details imported and optimized from GitHub!");
+    } catch (error: any) {
+      toast.error(`GitHub import failed: ${error.message}`);
+    } finally {
+      setFetchingRepoId(null);
+    }
+  };
+
   // === Make ATS Friendly: full resume auto-optimize ===
   const handleMakeAtsFriendly = async () => {
     const apiKey = import.meta.env.VITE_GROQ_API_KEY;
@@ -281,6 +413,18 @@ Original Text: ${description}` }],
       return d.choices?.[0]?.message?.content?.trim() ?? '';
     };
 
+    // Extract recommendations from the most recent ATS audit
+    const missingKeywords = analysisResult?.keywords?.missing || [];
+    const improvements = analysisResult?.improvements || [];
+
+    const missingKeywordsInstruction = missingKeywords.length > 0
+      ? `\nCRITICAL KEYWORDS TO INJECT (integrate naturally where relevant):\n${missingKeywords.map((k: string) => `- ${k}`).join('\n')}`
+      : '';
+
+    const improvementsInstruction = improvements.length > 0
+      ? `\nCRITICAL FEEDBACK TO INCORPORATE (apply these recommendations):\n${improvements.map((i: string) => `- ${i}`).join('\n')}`
+      : '';
+
     try {
       // Step 1: Rewrite Summary
       if (data.summary) {
@@ -294,8 +438,8 @@ APPLY ALL THESE ATS RULES:
 2. ATS KEYWORD DENSITY: Naturally embed high-frequency ATS keywords: full-stack development, scalable systems, agile methodology, cross-functional collaboration, end-to-end delivery, software engineering, version control, API integration.
 3. SPELL OUT ACRONYMS at least once inline (e.g., "Representational State Transfer (REST) APIs" then "REST APIs" after).
 4. QUANTIFY if possible: Include a realistic metric or scope (e.g., "3+ years of experience", "2+ production applications", "team of 5").
-5. Max 2-3 sentences. Zero AI buzzwords: 'delve', 'synergize', 'tapestry', 'testament', 'pivotal', 'seamless', 'innovative', 'passionate'.
-6. Output ONLY the plain rewritten text. No quotes, no labels, no explanation.
+5. Max 2-3 sentences. Read naturally — zero AI buzzwords: 'delve', 'synergize', 'tapestry', 'testament', 'pivotal', 'seamless', 'innovative', 'passionate'.
+6. Output ONLY the plain rewritten text. No quotes, no labels, no explanation.${missingKeywordsInstruction}${improvementsInstruction}
 
 Original Summary: ${data.summary}`
         );
@@ -319,7 +463,7 @@ APPLY ALL OF THESE DEEP ATS RULES:
 4. SPELL OUT ACRONYMS ONCE: Write the full term followed by the abbreviation (e.g., "Continuous Integration/Continuous Deployment (CI/CD)", "RESTful Application Programming Interface (API)").
 5. REALISTIC METRICS: If not present, add contextually realistic numbers — percentage improvements, user counts, latency reductions, data volumes, team size.
 6. NEVER USE: 'leveraged', 'utilized', 'synergized', 'robust', 'seamless', 'cutting-edge', 'innovative', 'passionate'.
-7. Output ONLY the 3 bullets with "- " prefix. No intro, no outro, no explanation.
+7. Output ONLY the 3 bullets with "- " prefix. No intro, no outro, no explanation.${missingKeywordsInstruction}${improvementsInstruction}
 
 Original duties: ${exp.description}`
         );
@@ -349,7 +493,7 @@ APPLY ALL OF THESE DEEP ATS RULES:
 4. SPELL OUT ACRONYMS ONCE: Write the full term first (e.g., "Artificial Intelligence (AI)", "Machine Learning (ML)", "Application Programming Interface (API)").
 5. ADD REALISTIC PROJECT METRICS: domain-specific numbers (e.g., model accuracy %, user count, data records processed, performance improvements, uptime %). Make them contextually appropriate.
 6. NEVER USE: 'innovative', 'cutting-edge', 'seamless', 'robust', 'state-of-the-art', 'leverage', 'passionate'.
-7. Output ONLY the 2 bullets with "- " prefix. No intro, no outro, no explanation.
+7. Output ONLY the 2 bullets with "- " prefix. No intro, no outro, no explanation.${missingKeywordsInstruction}${improvementsInstruction}
 
 Original description: ${proj.description}`
         );
@@ -1733,9 +1877,23 @@ ${resumeText}`;
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Project URL Link</Label>
+                              <div className="flex items-center justify-between mb-1">
+                                <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Project URL Link</Label>
+                                {proj.link && (proj.link.toLowerCase().includes('github.com') || (proj.link.split('/').length === 2 && !proj.link.includes('.'))) && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => handleFetchGitHubProject(proj.id, proj.link)}
+                                    disabled={fetchingRepoId === proj.id}
+                                    className="h-5 px-1.5 text-[9px] text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 gap-1 rounded-md transition-all font-semibold"
+                                  >
+                                    <Github className={`w-2.5 h-2.5 ${fetchingRepoId === proj.id ? 'animate-spin' : ''}`} />
+                                    {fetchingRepoId === proj.id ? 'Importing...' : 'Fetch & Write with AI'}
+                                  </Button>
+                                )}
+                              </div>
                               <Input 
-                                placeholder="e.g. github.com/..." 
+                                placeholder="e.g. github.com/owner/repo" 
                                 value={proj.link} 
                                 onChange={(e) => updateProject(proj.id, 'link', e.target.value)} 
                                 className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
