@@ -108,6 +108,8 @@ const ResumeBuilder = () => {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [atsProgress, setAtsProgress] = useState(0);
   const [atsTimeElapsed, setAtsTimeElapsed] = useState(0);
+  const [makingAtsFriendly, setMakingAtsFriendly] = useState(false);
+  const [atsFriendlyProgress, setAtsFriendlyProgress] = useState('');
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -256,6 +258,109 @@ Original Text: ${description}` }],
       toast.error("Failed to enhance project.");
     } finally {
       setEnhancingProjId(null);
+    }
+  };
+
+  // === Make ATS Friendly: full resume auto-optimize ===
+  const handleMakeAtsFriendly = async () => {
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    if (!apiKey) { toast.error("GROQ_API_KEY not configured."); return; }
+    setMakingAtsFriendly(true);
+
+    const groqRewrite = async (systemMsg: string, userMsg: string): Promise<string> => {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "system", content: systemMsg }, { role: "user", content: userMsg }],
+          temperature: 0.4,
+        }),
+      });
+      const d = await res.json();
+      return d.choices?.[0]?.message?.content?.trim() ?? '';
+    };
+
+    try {
+      // Step 1: Rewrite Summary
+      if (data.summary) {
+        setAtsFriendlyProgress('Optimizing Professional Summary...');
+        const newSummary = await groqRewrite(
+          "You are an elite ATS resume optimizer. Output only the rewritten text, nothing else.",
+          `Rewrite this resume summary to score 90+ on ATS scans.
+RULES:
+- Use high-frequency ATS keywords: full-stack, scalable systems, agile, cross-functional, end-to-end.
+- Start with a strong results-first statement.
+- Max 2-3 sentences. Zero AI buzzwords like 'delve', 'tapestry', 'testament'.
+- Output ONLY the rewritten summary text. No labels, no quotes.
+
+Original: ${data.summary}`
+        );
+        if (newSummary) setData(prev => ({ ...prev, summary: newSummary }));
+      }
+
+      // Step 2: Rewrite each Experience entry
+      for (let i = 0; i < data.experience.length; i++) {
+        const exp = data.experience[i];
+        if (!exp.description) continue;
+        setAtsFriendlyProgress(`Optimizing Work Experience: ${exp.role || 'Role ' + (i + 1)}...`);
+        const newDesc = await groqRewrite(
+          "You are an elite ATS resume optimizer and FAANG-level resume writer.",
+          `Rewrite these job duties into exactly 3 elite, ATS-optimized bullet points for role: "${exp.role} at ${exp.company}".
+
+CRITICAL ATS RULES:
+1. Start every bullet with a strong action verb (Architected, Engineered, Spearheaded, Delivered, Built).
+2. Embed quantifiable metrics — if none exist, add realistic ones (e.g., "improving page load by 35%", "serving 15k+ monthly users").
+3. Naturally include high-value tech keywords matching the role.
+4. Prefix every bullet with "- " and nothing else. Output ONLY the 3 bullets.
+5. Sound 100% human. Zero AI filler words.
+
+Original duties: ${exp.description}`
+        );
+        if (newDesc) {
+          const id = exp.id;
+          setData(prev => ({
+            ...prev,
+            experience: prev.experience.map(e => e.id === id ? { ...e, description: newDesc } : e)
+          }));
+        }
+      }
+
+      // Step 3: Rewrite each Project entry
+      for (let i = 0; i < data.projects.length; i++) {
+        const proj = data.projects[i];
+        if (!proj.description) continue;
+        setAtsFriendlyProgress(`Optimizing Project: ${proj.name || 'Project ' + (i + 1)}...`);
+        const newDesc = await groqRewrite(
+          "You are an elite ATS resume optimizer and FAANG-level resume writer.",
+          `Rewrite this project description into exactly 2 elite, ATS-optimized bullet points for project: "${proj.name}".
+
+CRITICAL ATS RULES:
+1. Start every bullet with a strong action verb (Architected, Built, Deployed, Designed, Implemented).
+2. Highlight the tech stack organically within the sentence.
+3. Add realistic impact metrics if not present (e.g., "reducing inference time by 28%", "supporting 5k+ concurrent users").
+4. Prefix every bullet with "- " and nothing else. Output ONLY the 2 bullets.
+5. Sound 100% human. Zero AI buzzwords.
+
+Original description: ${proj.description}`
+        );
+        if (newDesc) {
+          const id = proj.id;
+          setData(prev => ({
+            ...prev,
+            projects: prev.projects.map(p => p.id === id ? { ...p, description: newDesc } : p)
+          }));
+        }
+      }
+
+      toast.success('Resume fully ATS-optimized! Re-run the ATS Audit to see your new score.');
+      setAnalysisResult(null);
+      setAnalysisOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || 'ATS optimization failed. Please try again.');
+    } finally {
+      setMakingAtsFriendly(false);
+      setAtsFriendlyProgress('');
     }
   };
 
@@ -1884,7 +1989,44 @@ ${resumeText}`;
             </DialogTitle>
           </DialogHeader>
           {analysisResult ? (
-            <ResumeAnalysisDisplay analysis={analysisResult} />
+            <div className="space-y-4">
+              <ResumeAnalysisDisplay analysis={analysisResult} />
+
+              {/* ─── Make ATS Friendly CTA ─── */}
+              <div className="p-4 bg-gradient-to-br from-violet-950/60 to-fuchsia-950/40 border border-violet-500/20 rounded-2xl flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20">
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">Auto-Optimize Your Entire Resume for ATS</p>
+                    <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+                      One click — AI rewrites your summary, every work experience bullet, and every project 
+                      description to be fully ATS-optimized with power verbs, metrics, and high-value keywords.
+                    </p>
+                  </div>
+                </div>
+
+                {makingAtsFriendly && atsFriendlyProgress && (
+                  <div className="flex items-center gap-2 text-xs text-violet-300 bg-violet-500/10 rounded-xl px-3 py-2 border border-violet-500/20">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>{atsFriendlyProgress}</span>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleMakeAtsFriendly}
+                  disabled={makingAtsFriendly}
+                  className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold rounded-xl h-10 text-sm shadow-lg shadow-violet-500/20 transition-all disabled:opacity-60"
+                >
+                  {makingAtsFriendly ? (
+                    <><Sparkles className="w-4 h-4 mr-2 animate-spin" />{atsFriendlyProgress || 'Optimizing...'}</>
+                  ) : (
+                    <><Sparkles className="w-4 h-4 mr-2" />Make My Resume ATS Friendly</>
+                  )}
+                </Button>
+              </div>
+            </div>
           ) : (
             <div className="py-20 flex flex-col items-center justify-center text-zinc-500 gap-6 w-full max-w-md mx-auto">
               <div className="relative flex items-center justify-center">
