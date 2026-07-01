@@ -182,7 +182,11 @@ const Profile = () => {
         setCodingStats(loadedProfile.coding_stats);
       }
 
-      setShowMandatoryModal(!loadedProfile.github_url || !loadedProfile.resume_url || !loadedProfile.leetcode_id || !loadedProfile.codeforces_id);
+      if (!loadedProfile.github_url || !loadedProfile.resume_url) {
+        setShowMandatoryModal(true);
+      } else {
+        setShowMandatoryModal(false);
+      }
 
       // If the row was missing in the database, attempt to create it on the fly so it persists
       if (!profileData) {
@@ -1005,7 +1009,7 @@ const Profile = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="modal_leetcode_id" className="text-right">LeetCode Username <span className="text-red-500">*</span></Label>
+                <Label htmlFor="modal_leetcode_id" className="text-right">LeetCode Username</Label>
                 <Input
                   id="modal_leetcode_id"
                   value={formData.leetcode_id}
@@ -1015,7 +1019,7 @@ const Profile = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="modal_codeforces_id" className="text-right">Codeforces Handle <span className="text-red-500">*</span></Label>
+                <Label htmlFor="modal_codeforces_id" className="text-right">Codeforces Handle</Label>
                 <Input
                   id="modal_codeforces_id"
                   value={formData.codeforces_id}
@@ -1083,7 +1087,7 @@ const Profile = () => {
                   await handleSave();
                   
                   // Optimistically close modal if we have all fields locally
-                  if (formData.github_url && formData.leetcode_id && formData.codeforces_id && (profile?.resume_url || resumeFile)) {
+                  if (formData.github_url && (profile?.resume_url || resumeFile)) {
                     setShowMandatoryModal(false);
                   }
                 }}

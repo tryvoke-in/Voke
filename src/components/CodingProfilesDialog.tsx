@@ -14,7 +14,7 @@ export const CodingProfilesDialog: React.FC<CodingProfilesDialogProps> = ({ prof
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (profile && (!profile.github_url || !profile.codeforces_id || !profile.leetcode_id)) {
+    if (profile && (!profile.github_url || !profile.resume_url)) {
       setIsOpen(true);
     }
   }, [profile]);
@@ -31,8 +31,7 @@ export const CodingProfilesDialog: React.FC<CodingProfilesDialogProps> = ({ prof
           </DialogTitle>
           <DialogDescription className="text-zinc-400 text-center mt-3 text-sm leading-relaxed">
             Please complete your profile to unlock the full potential of Voke. 
-            <br /><br />
-            Without linking your GitHub, LeetCode, and Codeforces data, the AI cannot properly tailor your mock interviews to your actual skill level.
+            Without linking your GitHub profile and uploading your resume, the AI cannot properly tailor your mock interviews to your actual skill level.
           </DialogDescription>
         </DialogHeader>
 
