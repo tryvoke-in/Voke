@@ -77,7 +77,7 @@ export const MarketPulse = ({ profile }: MarketPulseProps) => {
                 </CardHeader>
 
                 <CardContent className="relative z-10 space-y-6">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {/* Salary Card */}
                         <motion.div
                             className="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex flex-col justify-between group/salary hover:bg-gray-100 dark:hover:bg-white/10 transition-colors cursor-default"

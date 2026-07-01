@@ -542,9 +542,9 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-8">
                   {realStats.slice(0, 3).map((stat, i) => (
-                    <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/5 hover:bg-white/20 transition-colors">
+                    <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/5 hover:bg-white/20 transition-colors">
                       <div className="flex items-center gap-2 mb-2 text-white/70">
                         <stat.icon className="w-4 h-4" />
                         <span className="text-xs font-medium">{stat.label}</span>
@@ -556,16 +556,16 @@ const Dashboard = () => {
                   {/* AI Resume Button */}
                   <div 
                     onClick={() => navigate("/resume-builder")}
-                    className="relative bg-gradient-to-br from-amber-500/20 to-orange-600/20 backdrop-blur-sm rounded-xl p-4 border border-amber-500/30 hover:bg-amber-500/30 transition-all cursor-pointer group hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center text-center"
+                    className="relative bg-gradient-to-br from-amber-500/20 to-orange-600/20 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-amber-500/30 hover:bg-amber-500/30 transition-all cursor-pointer group hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center text-center"
                   >
-                    <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg shadow-lg flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-white fill-white" />
+                    <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-bl-lg shadow-lg flex items-center gap-1">
+                      <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 text-white fill-white" />
                       <span>New</span>
                     </div>
                     
-                    <FileText className="w-8 h-8 text-amber-500 mb-2 group-hover:scale-110 transition-transform" />
-                    <p className="text-sm font-bold text-white leading-tight">
-                      Generate Resume
+                    <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500 mb-1 sm:mb-2 group-hover:scale-110 transition-transform" />
+                    <p className="text-xs sm:text-sm font-bold text-white leading-tight">
+                      Build Resume
                     </p>
                   </div>
                 </div>
