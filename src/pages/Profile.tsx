@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Brain, LogOut, Upload, FileText, TrendingUp, Target, Award, Calendar,
   User, Briefcase, Activity, Sparkles, MessageSquare, BarChart3,
-  Github, Code, Terminal, Zap, Shield, Crown, ChevronRight, Settings, Camera
+  Github, Code, Terminal, Zap, Shield, Crown, ChevronRight, Settings, Camera,
+  Gift, Copy, Check, Users, Mic, Play
 } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -20,6 +21,8 @@ import InterviewAnalytics from "@/components/InterviewAnalytics";
 import AICoachChat from "@/components/AICoachChat";
 import ResumeAnalyzer from "@/components/ResumeAnalyzer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useReferral } from "@/hooks/useReferral";
+import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -55,6 +58,11 @@ const Profile = () => {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [skillGaps, setSkillGaps] = useState<any[]>([]);
   const [showMandatoryModal, setShowMandatoryModal] = useState(false);
+  const [referralCopied, setReferralCopied] = useState(false);
+
+  // Referral data
+  const { referralCode, referralLink, referrals, totalReferred, totalCredited, loading: referralLoading } = useReferral();
+  const { creditsElite, creditsVoice, creditsVideo, isPremium } = useInterviewCredits();
 
   useEffect(() => {
     // Safety watchdog: force-disable loading screen after 1.5 seconds if auth or query hangs
@@ -712,10 +720,12 @@ const Profile = () => {
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="bg-card/50 border border-border/50 p-1 rounded-xl w-full flex overflow-x-auto">
                   {[
-                    { id: "overview", label: "Overview", icon: Activity },
+                   {
+                    id: "overview", label: "Overview", icon: Activity },
                     { id: "analytics", label: "Analytics", icon: BarChart3 },
                     { id: "resume", label: "Resume", icon: FileText },
                     { id: "skills", label: "Skills", icon: Brain },
+                    { id: "referral", label: "Referrals", icon: Gift },
                     { id: "settings", label: "Settings", icon: Settings },
                   ].map(tab => (
                     <TabsTrigger
@@ -786,6 +796,167 @@ const Profile = () => {
                               </div>
                             ))
                           )}
+                        </CardContent>
+                      </Card>
+
+                    </motion.div>
+                  </TabsContent>
+
+                  {/* REFERRAL TAB */}
+                  <TabsContent value="referral" className="space-y-6 outline-none">
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+
+                      {/* Header Banner */}
+                      <Card className="relative overflow-hidden border-violet-500/20 bg-gradient-to-br from-violet-500/10 via-card to-fuchsia-500/10">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                        <CardContent className="p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+                          <div className="space-y-3 max-w-lg">
+                            <div className="flex items-center gap-2 text-violet-500 font-semibold text-sm">
+                              <Gift className="w-4 h-4" />
+                              Referral Program
+                            </div>
+                            <h3 className="text-2xl font-bold">Invite Friends, Earn Credits</h3>
+                            <p className="text-muted-foreground text-sm">
+                              For every friend who signs up using your link, you earn
+                              <span className="font-semibold text-foreground"> +1 credit</span> each for
+                              <span className="text-pink-500 font-semibold"> AI Voice</span>,
+                              <span className="text-violet-500 font-semibold"> Text Interview</span>, and
+                              <span className="text-fuchsia-500 font-semibold"> Video Practice</span>.
+                              No limits!
+                            </p>
+                          </div>
+                          <div className="text-7xl select-none opacity-20 hidden md:block">🎁</div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Stats */}
+                      <div className="grid grid-cols-3 gap-4">
+                        {[
+                          { label: "Friends Referred", value: referralLoading ? "—" : totalReferred, icon: Users, color: "text-violet-500", bg: "bg-violet-500/10" },
+                          { label: "Credits Earned", value: referralLoading ? "—" : totalCredited * 3, icon: Gift, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                          { label: "Current Balance", value: referralLoading ? "—" : (isPremium ? "∞" : creditsElite + creditsVoice + creditsVideo), icon: Zap, color: "text-amber-500", bg: "bg-amber-500/10" },
+                        ].map((s, i) => (
+                          <Card key={i} className="bg-card/50 border-border/50">
+                            <CardContent className="p-5 flex flex-col gap-2">
+                              <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center`}>
+                                <s.icon className={`w-5 h-5 ${s.color}`} />
+                              </div>
+                              <div className="text-3xl font-bold">{s.value}</div>
+                              <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{s.label}</div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+
+                      {/* Your Link */}
+                      <Card className="bg-card/50 border-border/50">
+                        <CardHeader>
+                          <CardTitle className="text-base">Your Referral Link</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex gap-3">
+                            <div className="flex-1 min-w-0 px-4 py-3 rounded-xl bg-muted/50 border border-border/50 text-sm font-mono truncate">
+                              {referralLoading ? "Generating..." : (referralLink || "Loading...")}
+                            </div>
+                            <Button
+                              onClick={async () => {
+                                if (!referralLink) return;
+                                try { await navigator.clipboard.writeText(referralLink); } catch {}
+                                setReferralCopied(true);
+                                setTimeout(() => setReferralCopied(false), 2000);
+                                toast.success("Referral link copied! Share it with friends 🎉");
+                              }}
+                              disabled={referralLoading || !referralLink}
+                              className={`shrink-0 rounded-xl px-4 transition-all duration-300 ${
+                                referralCopied
+                                  ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                                  : "bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white"
+                              }`}
+                            >
+                              {referralCopied ? <><Check className="w-4 h-4 mr-1.5" />Copied!</> : <><Copy className="w-4 h-4 mr-1.5" />Copy Link</>}
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3 pt-1">
+                            {[
+                              { label: "AI Voice", icon: Mic, credits: creditsVoice, color: "text-pink-500", bg: "bg-pink-500/10" },
+                              { label: "Text Interview", icon: Zap, credits: creditsElite, color: "text-violet-500", bg: "bg-violet-500/10" },
+                              { label: "Video Practice", icon: Play, credits: creditsVideo, color: "text-fuchsia-500", bg: "bg-fuchsia-500/10" },
+                            ].map((f, i) => (
+                              <div key={i} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/30">
+                                <div className={`w-8 h-8 rounded-lg ${f.bg} flex items-center justify-center`}>
+                                  <f.icon className={`w-4 h-4 ${f.color}`} />
+                                </div>
+                                <span className="text-xs font-medium text-center">{f.label}</span>
+                                <span className={`text-lg font-bold ${f.color}`}>{isPremium ? "∞" : f.credits}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Referral History */}
+                      <Card className="bg-card/50 border-border/50">
+                        <CardHeader>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Users className="w-4 h-4 text-violet-500" />
+                            Referral History
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {referralLoading ? (
+                            <div className="py-8 text-center text-muted-foreground">Loading...</div>
+                          ) : referrals.length === 0 ? (
+                            <div className="py-12 text-center space-y-2">
+                              <div className="text-4xl">🎯</div>
+                              <p className="text-muted-foreground text-sm">No referrals yet. Share your link to get started!</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {referrals.map((ref, i) => (
+                                <div key={ref.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/30">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-sm">
+                                      {i + 1}
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium">Friend #{i + 1}</p>
+                                      <p className="text-xs text-muted-foreground">{new Date(ref.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                  </div>
+                                  <div className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                                    ref.status === "credited"
+                                      ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                                      : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                  }`}>
+                                    {ref.status === "credited" ? "+3 Credits Earned" : "Pending"}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* How it works */}
+                      <Card className="bg-card/50 border-border/50">
+                        <CardHeader>
+                          <CardTitle className="text-base">How It Works</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {[
+                            { step: "1", title: "Share your unique link", desc: "Copy your referral link and share it with friends, classmates, or on social media.", icon: "🔗" },
+                            { step: "2", title: "Friend signs up", desc: "When someone clicks your link and creates a Voke account, they're linked to you.", icon: "👤" },
+                            { step: "3", title: "You both benefit", desc: "You earn +1 credit for each of: AI Voice Agent, Text Interview, and Video Practice.", icon: "🎁" },
+                            { step: "4", title: "No limits!", desc: "Every new referral earns you more credits. Keep sharing and keep practicing!", icon: "♾️" },
+                          ].map((s, i) => (
+                            <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-muted/30 border border-border/30">
+                              <div className="text-2xl shrink-0">{s.icon}</div>
+                              <div>
+                                <p className="font-semibold text-sm">{s.title}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
+                              </div>
+                            </div>
+                          ))}
                         </CardContent>
                       </Card>
 

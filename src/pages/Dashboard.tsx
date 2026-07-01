@@ -14,6 +14,7 @@ import {
 import { SkillRadar } from "@/components/dashboard/SkillRadar";
 import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
 import { MarketPulse } from "@/components/dashboard/MarketPulse";
+import { ReferralCard } from "@/components/dashboard/ReferralCard";
 import { UpgradeButton } from "@/components/UpgradeButton";
 import { TRACKS } from "./LearningPaths";
 
@@ -757,6 +758,9 @@ const Dashboard = () => {
 
               </div>
             </div>
+
+            {/* Referral Program Card – middle of left column */}
+            <ReferralCard />
 
             {/* Road to Offer (Timeline) */}
             <RoadToOffer profile={profile} onUpdate={() => loadData(true)} />

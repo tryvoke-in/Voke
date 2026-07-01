@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Mail, Lock, User, ArrowRight, Sparkles, Github, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isDisposableEmail } from "@/utils/emailValidation";
+import { useReferral } from "@/hooks/useReferral";
 import {
   Dialog,
   DialogContent,
@@ -32,12 +33,25 @@ const Auth = () => {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resetLinkSent, setResetLinkSent] = useState(false);
+  const [pendingReferralCode, setPendingReferralCode] = useState<string | null>(null);
+
+  // Referral processing (only used after successful signup)
+  const { processReferral } = useReferral();
 
   useEffect(() => {
     const isRecovery = window.location.hash.includes("type=recovery") || window.location.search.includes("type=recovery");
 
     if (isRecovery) {
       setAuthMode("reset");
+    }
+
+    // Read referral code from ?ref= query param
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get("ref");
+    if (refCode) {
+      setPendingReferralCode(refCode);
+      // Pre-select signup tab so the referral flow is obvious
+      setAuthMode("signup");
     }
 
     // Check if already logged in (only if not recovering)
@@ -142,6 +156,13 @@ const Auth = () => {
           });
         }
       } else {
+        // Signup successful – process referral if one was pending
+        const { data: { session } } = await supabase.auth.getSession();
+        const newUser = session?.user;
+        if (newUser && pendingReferralCode) {
+          // Fire-and-forget – don't block the UI
+          processReferral(pendingReferralCode, newUser.id).catch(console.error);
+        }
         setPassword("");
         setFullName("");
         setConfirmPassword("");
