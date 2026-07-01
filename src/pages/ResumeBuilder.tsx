@@ -393,15 +393,30 @@ const ResumeBuilder = () => {
 Provide a critical, "no-fluff" deep-dive analysis. Do not be generic. If the resume is vague, call it out. If the formatting is bad, be direct.
 
 **ANALYSIS REQUIREMENTS:**
-1. ATS Compatibility Score (0-100).
-2. Keywords: "present" (list) and "missing" (list of specific tech keywords).
-3. Strengths: Array of strings.
-4. Improvements: Array of actionable string tips.
-5. structure_feedback: string.
-6. content_feedback: string.
-7. overall_summary: string.
+1. ATS Compatibility Score (0-100). Be harsh. Deduct points for vague bullet points.
+2. Keywords: Identify missing tech keywords.
+3. Structure & Content: Critique metrics and chronological layout.
+4. Actionable Improvements: Give concrete examples.
 
-Return STRICTLY JSON matching this schema.
+**OUTPUT FORMAT (JSON):**
+{
+  "ats_score": number (0-100),
+  "keywords": {
+    "present": ["list", "of", "found", "keywords"],
+    "missing": ["list", "of", "specific", "missing", "keywords"]
+  },
+  "strengths": ["Specific strength 1", "Specific strength 2"],
+  "improvements": [
+    "Specific actionable tip 1 (e.g., Rewrite summary to focus on X)",
+    "Specific actionable tip 2 (e.g., Move Skills section to top)",
+    "Specific actionable tip 3 (e.g., Quantify the 'Project X' bullet point)"
+  ],
+  "structure_feedback": "Detailed critique of layout and organization.",
+  "content_feedback": "Detailed critique of the actual bullet point content.",
+  "overall_summary": "Professional summary of the candidate's standing."
+}
+
+Return STRICTLY JSON matching this exact schema.
 
 **RESUME TO ANALYZE:**
 ${resumeText}`;
