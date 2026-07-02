@@ -1584,17 +1584,20 @@ IMPORTANT:
       <style>
         {`
           @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             
-            /* HIDE EVERYTHING EXCEPT ROOT TO REMOVE DEV TOOLS AND CHAT BUBBLES */
-            body > *:not(#root) {
-              display: none !important;
+            /* HIDE EVERYTHING by default to ruthlessly kill Dev Tools, Chat Widgets, etc. */
+            body * {
+              visibility: hidden;
             }
             
-            /* Reset body and html to force exactly 1 page */
-            html, body, #root { 
+            /* Only show the print container and its descendants */
+            .print-container, .print-container * {
+              visibility: visible;
+            }
+            
+            /* Force exactly 1 page */
+            html, body { 
               background: white !important; 
               color: black !important; 
               height: 100vh !important; 
@@ -1603,44 +1606,27 @@ IMPORTANT:
               overflow: hidden !important; 
               margin: 0 !important; 
               padding: 0 !important;
-              display: block !important;
-              position: static !important;
             }
             
-            /* Remove all height and overflow restrictions on parent wrappers */
-            .min-h-screen, .flex-1, .overflow-hidden, .custom-scrollbar, [data-radix-scroll-area-viewport] {
-              height: auto !important;
-              min-height: auto !important;
-              max-height: none !important;
-              overflow: visible !important;
-              position: static !important;
-              display: block !important;
-              transform: none !important;
-            }
-            
+            /* Reset print container and center it perfectly */
             .print-container {
+              position: absolute !important;
+              top: 0 !important;
+              left: 0 !important;
+              right: 0 !important;
+              margin: 0 auto !important; /* Centers absolute element with fixed width */
+              
               padding: 10mm 12mm 10mm 12mm !important;
-              margin: 0 auto !important; /* Center horizontally for equal padding */
               width: 210mm !important;
               max-width: 210mm !important;
-              height: auto !important;
-              min-height: auto !important;
-              max-height: none !important;
-              overflow: visible !important;
-              box-shadow: none !important;
-              border: none !important;
-              transform: none !important;
               
               /* Auto-fit to 1 page using the CSS variable injected by React */
               zoom: var(--print-scale, 1) !important;
               
-              position: static !important;
-              page-break-inside: avoid !important;
+              box-shadow: none !important;
+              border: none !important;
+              transform: none !important;
             }
-            
-            /* Prevent awkward page breaks inside items */
-            .print-container h2, .print-container h3 { page-break-after: avoid; }
-            .print-container > div > div > div { page-break-inside: avoid; }
             
             @page {
               size: A4 portrait;
