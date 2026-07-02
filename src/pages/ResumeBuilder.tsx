@@ -1584,53 +1584,55 @@ IMPORTANT:
       <style>
         {`
           @media print {
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
             
-            /* HIDE EVERYTHING by default to ruthlessly kill Dev Tools, Chat Widgets, etc. */
-            body * {
-              visibility: hidden;
+            /* Step 1: Hide EVERYTHING - kills Dev Tool, Chat Bubble, sidebars */
+            body > * {
+              visibility: hidden !important;
+              position: static !important;
             }
-            
-            /* Only show the print container and its descendants */
-            .print-container, .print-container * {
-              visibility: visible;
-            }
-            
-            /* Force exactly 1 page */
-            html, body { 
-              background: white !important; 
-              color: black !important; 
-              height: 100vh !important; 
-              min-height: 100vh !important;
-              max-height: 100vh !important;
-              overflow: hidden !important; 
-              margin: 0 !important; 
-              padding: 0 !important;
-            }
-            
-            /* Reset print container and center it perfectly */
+
+            /* Step 2: Make only the resume container visible */
             .print-container {
-              position: absolute !important;
+              visibility: visible !important;
+            }
+            .print-container * {
+              visibility: visible !important;
+            }
+            
+            /* Step 3: Reset page & body */
+            @page {
+              size: A4 portrait;
+              margin: 12mm 12mm 12mm 12mm;
+            }
+            
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: white !important;
+              width: 100% !important;
+              height: auto !important;
+            }
+            
+            /* Step 4: Make the container fill the page exactly */
+            .print-container {
+              position: fixed !important;
               top: 0 !important;
               left: 0 !important;
-              right: 0 !important;
-              margin: 0 auto !important; /* Centers absolute element with fixed width */
-              
-              padding: 10mm 12mm 10mm 12mm !important;
-              width: 210mm !important;
-              max-width: 210mm !important;
-              
-              /* Auto-fit to 1 page using the CSS variable injected by React */
-              zoom: var(--print-scale, 1) !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              height: auto !important;
+              padding: 0 !important;
+              margin: 0 !important;
               
               box-shadow: none !important;
               border: none !important;
+              background: white !important;
+              
+              /* Auto-scale to fit 1 page */
+              zoom: var(--print-scale, 1) !important;
               transform: none !important;
-            }
-            
-            @page {
-              size: A4 portrait;
-              margin: 0;
             }
           }
           .custom-scrollbar::-webkit-scrollbar {
