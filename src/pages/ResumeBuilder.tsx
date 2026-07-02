@@ -149,8 +149,35 @@ const ResumeBuilder = () => {
   }, [selectedTemplate, data]);
 
   // Calculate auto-scale factor to force exactly 1-page print (A4 height is ~1122px at 96dpi)
-  // We use 1120px to leave a tiny safety margin to prevent a blank second page.
-  const printScaleFactor = printHeight > 1120 ? 1120 / printHeight : 1;
+  // A4 at 96 CSS dpi = 794 x 1123px. We use 1110 with safety margin.
+  const A4_HEIGHT_PX = 1110;
+  const printScaleFactor = printHeight > A4_HEIGHT_PX ? (A4_HEIGHT_PX / printHeight) : 1;
+
+  // Apply scale directly to DOM element before printing, restore after
+  // This is more reliable than CSS zoom with CSS variables
+  useEffect(() => {
+    const el = printContainerRef.current;
+    if (!el) return;
+
+    const beforePrint = () => {
+      const scale = printHeight > A4_HEIGHT_PX ? (A4_HEIGHT_PX / printHeight) : 1;
+      el.style.transform = `scale(${scale})`;
+      el.style.transformOrigin = 'top left';
+    };
+
+    const afterPrint = () => {
+      // Restore the screen zoom transform
+      el.style.transform = `scale(${zoom})`;
+      el.style.transformOrigin = 'top center';
+    };
+
+    window.addEventListener('beforeprint', beforePrint);
+    window.addEventListener('afterprint', afterPrint);
+    return () => {
+      window.removeEventListener('beforeprint', beforePrint);
+      window.removeEventListener('afterprint', afterPrint);
+    };
+  }, [printHeight, zoom]);
 
   // Persist State to Local Storage
   useEffect(() => {
@@ -1584,61 +1611,48 @@ IMPORTANT:
       <style>
         {`
           @media print {
-            /* ============================================
-               DEFINITIVE PRINT FIX
-               - Hides ENTIRE body (not just children)
-               - Shows ONLY the .print-container
-               - Uses @page margin:0 to remove Chrome's
-                 date/title/URL browser headers
-               ============================================ */
-
             /* Remove Chrome browser print headers (date, title, URL) */
             @page {
               size: A4 portrait;
               margin: 0;
             }
             
-            /* 1. Hide the ENTIRE body — this is the key.
-                  Child elements inherit visibility:hidden from body,
-                  but we can selectively override with visibility:visible */
+            /* Hide ENTIRE body — child elements inherit visibility:hidden */
             body {
               visibility: hidden !important;
               margin: 0 !important;
               padding: 0 !important;
               background: white !important;
-              width: 210mm !important;
-              height: 297mm !important;
-              overflow: hidden !important;
+              /* NO height or overflow constraints — let the scaled container handle sizing */
             }
 
-            /* 2. Show ONLY the print-container and all its children */
+            /* Show ONLY the print-container */
             .print-container {
               visibility: visible !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
               
-              /* Anchor it to the top-left of the A4 page */
+              /* Anchor to top-left corner of the A4 page */
               position: fixed !important;
               top: 0 !important;
               left: 0 !important;
               
-              /* Fill the full A4 page with proper internal padding */
+              /* Full A4 width with standard margins as internal padding */
               width: 210mm !important;
               height: auto !important;
               padding: 10mm 12mm !important;
               margin: 0 !important;
               
-              /* Clean style */
               box-shadow: none !important;
               border: none !important;
               background: white !important;
               
-              /* Auto-scale to fit everything on 1 page */
-              zoom: var(--print-scale, 1) !important;
-              transform: none !important;
+              /* transform:scale is applied via beforeprint JS event for reliability */
+              /* transform-origin must be top-left so content stays in top-left corner */
+              transform-origin: top left !important;
             }
             
-            /* 3. Make all children of the container visible */
+            /* Make all children of the container visible */
             .print-container * {
               visibility: visible !important;
               -webkit-print-color-adjust: exact !important;
