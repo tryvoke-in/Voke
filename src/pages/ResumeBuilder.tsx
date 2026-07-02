@@ -1020,9 +1020,9 @@ IMPORTANT:
             {data.location && <span>{data.location}</span>}
             {data.phone && <span>• {data.phone}</span>}
             {data.email && <span>• {data.email}</span>}
-            {data.website && <span>• {data.website.replace(/^https?:\/\//, '')}</span>}
-            {data.linkedin && <span>• {data.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</span>}
-            {data.github && <span>• {data.github.replace(/^https?:\/\/(www\.)?/, '')}</span>}
+            {data.website && <span>• <a href={data.website.startsWith('http') ? data.website : `https://${data.website}`} target="_blank" rel="noreferrer" className="hover:underline text-blue-600 print:text-gray-600 print:no-underline">{data.website.replace(/^https?:\/\//, '')}</a></span>}
+            {data.linkedin && <span>• <a href={data.linkedin.startsWith('http') ? data.linkedin : `https://${data.linkedin}`} target="_blank" rel="noreferrer" className="hover:underline text-blue-600 print:text-gray-600 print:no-underline">{data.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</a></span>}
+            {data.github && <span>• <a href={data.github.startsWith('http') ? data.github : `https://${data.github}`} target="_blank" rel="noreferrer" className="hover:underline text-blue-600 print:text-gray-600 print:no-underline">{data.github.replace(/^https?:\/\/(www\.)?/, '')}</a></span>}
           </div>
         </div>
 
@@ -1066,7 +1066,7 @@ IMPORTANT:
                   <div className="flex justify-between items-baseline text-[9.5pt] font-bold">
                     <div className="flex items-center gap-1">
                       <span className="text-gray-900">{proj.name}</span>
-                      {proj.link && <span className="text-[8.5pt] font-normal text-gray-500 font-sans">({proj.link.replace(/^https?:\/\//, '')})</span>}
+                      {proj.link && <span className="text-[8.5pt] font-normal text-gray-500 font-sans">(<a href={proj.link.startsWith('http') ? proj.link : `https://${proj.link}`} target="_blank" rel="noreferrer" className="hover:underline text-blue-600 print:text-gray-500 print:no-underline">{proj.link.replace(/^https?:\/\//, '')}</a>)</span>}
                     </div>
                   </div>
                   <ul className="list-disc list-outside ml-4 mt-1 space-y-0.5 text-[9pt] text-gray-600 leading-normal">
@@ -1178,19 +1178,19 @@ IMPORTANT:
                 {data.linkedin && (
                   <div className="flex items-center gap-1.5">
                     <Linkedin className="w-3 h-3 text-[#0077b5] shrink-0" />
-                    <span className="truncate">{data.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                    <a href={data.linkedin.startsWith('http') ? data.linkedin : `https://${data.linkedin}`} target="_blank" rel="noreferrer" className="truncate hover:underline text-blue-600 print:text-slate-600 print:no-underline">{data.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</a>
                   </div>
                 )}
                 {data.github && (
                   <div className="flex items-center gap-1.5">
                     <Github className="w-3 h-3 text-slate-800 shrink-0" />
-                    <span className="truncate">{data.github.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                    <a href={data.github.startsWith('http') ? data.github : `https://${data.github}`} target="_blank" rel="noreferrer" className="truncate hover:underline text-blue-600 print:text-slate-600 print:no-underline">{data.github.replace(/^https?:\/\/(www\.)?/, '')}</a>
                   </div>
                 )}
                 {data.website && (
                   <div className="flex items-center gap-1.5">
                     <Globe className="w-3 h-3 text-emerald-600 shrink-0" />
-                    <span className="truncate">{data.website.replace(/^https?:\/\//, '')}</span>
+                    <a href={data.website.startsWith('http') ? data.website : `https://${data.website}`} target="_blank" rel="noreferrer" className="truncate hover:underline text-blue-600 print:text-slate-600 print:no-underline">{data.website.replace(/^https?:\/\//, '')}</a>
                   </div>
                 )}
                 {data.leetcode && (
@@ -1281,7 +1281,7 @@ IMPORTANT:
                   <div key={proj.id}>
                     <div className="flex justify-between items-baseline">
                       <h3 className="font-bold text-slate-800 text-[9.5pt]">{proj.name}</h3>
-                      {proj.link && <span className="text-[8.5pt] text-blue-500 font-medium truncate max-w-xs">{proj.link.replace(/^https?:\/\//, '')}</span>}
+                      {proj.link && <a href={proj.link.startsWith('http') ? proj.link : `https://${proj.link}`} target="_blank" rel="noreferrer" className="text-[8.5pt] text-blue-500 font-medium truncate max-w-xs hover:underline print:no-underline">{proj.link.replace(/^https?:\/\//, '')}</a>}
                     </div>
                     <ul className="list-disc list-outside ml-4 mt-1 space-y-0.5 text-[8.5pt] text-slate-600 leading-relaxed">
                       {proj.description.split('\n').map((line, i) => line.trim() && (
@@ -1331,8 +1331,8 @@ IMPORTANT:
             {data.phone && <span>{data.phone}</span>}
             {data.location && <span>{data.location}</span>}
             <div className="flex gap-2.5 mt-1 text-indigo-200">
-              {data.linkedin && <span className="underline">LinkedIn</span>}
-              {data.github && <span className="underline">GitHub</span>}
+              {data.linkedin && <a href={data.linkedin.startsWith('http') ? data.linkedin : `https://${data.linkedin}`} target="_blank" rel="noreferrer" className="underline hover:text-white print:text-indigo-200">LinkedIn</a>}
+              {data.github && <a href={data.github.startsWith('http') ? data.github : `https://${data.github}`} target="_blank" rel="noreferrer" className="underline hover:text-white print:text-indigo-200">GitHub</a>}
             </div>
           </div>
         </div>
@@ -1374,7 +1374,7 @@ IMPORTANT:
                 <div key={proj.id}>
                   <div className="flex justify-between items-baseline font-bold text-[9.5pt] text-zinc-900">
                     <span>{proj.name}</span>
-                    {proj.link && <span className="font-normal text-[8.5pt] text-indigo-600 font-sans underline">{proj.link.replace(/^https?:\/\//, '')}</span>}
+                    {proj.link && <a href={proj.link.startsWith('http') ? proj.link : `https://${proj.link}`} target="_blank" rel="noreferrer" className="font-normal text-[8.5pt] text-indigo-600 font-sans underline hover:text-indigo-800 print:text-indigo-600 print:no-underline">{proj.link.replace(/^https?:\/\//, '')}</a>}
                   </div>
                   <ul className="list-disc list-outside ml-4 mt-1 space-y-0.5 text-[8.5pt] text-zinc-600 leading-normal font-sans">
                     {proj.description.split('\n').map((line, i) => line.trim() && (
@@ -1432,8 +1432,8 @@ IMPORTANT:
             {data.phone && <div>$ cell: {data.phone}</div>}
             {data.location && <div>$ loc:  {data.location}</div>}
             <div className="flex gap-2 mt-1.5 font-bold text-zinc-950">
-              {data.linkedin && <span className="underline">/linkedin</span>}
-              {data.github && <span className="underline">/github</span>}
+              {data.linkedin && <a href={data.linkedin.startsWith('http') ? data.linkedin : `https://${data.linkedin}`} target="_blank" rel="noreferrer" className="underline hover:text-blue-600 print:text-zinc-950">/linkedin</a>}
+              {data.github && <a href={data.github.startsWith('http') ? data.github : `https://${data.github}`} target="_blank" rel="noreferrer" className="underline hover:text-blue-600 print:text-zinc-950">/github</a>}
             </div>
           </div>
         </div>
@@ -1491,7 +1491,7 @@ IMPORTANT:
                 <div key={proj.id} className="border border-zinc-200 p-2.5 rounded-lg bg-zinc-50/50">
                   <div className="flex justify-between items-baseline font-black text-zinc-950 text-[8.5pt]">
                     <span>{proj.name}</span>
-                    {proj.link && <span className="font-normal text-[7.5pt] text-zinc-500 underline">{proj.link.replace(/^https?:\/\//, '')}</span>}
+                    {proj.link && <a href={proj.link.startsWith('http') ? proj.link : `https://${proj.link}`} target="_blank" rel="noreferrer" className="font-normal text-[7.5pt] text-zinc-500 underline hover:text-blue-600 print:text-zinc-500 print:no-underline">{proj.link.replace(/^https?:\/\//, '')}</a>}
                   </div>
                   <ul className="list-none space-y-0.5 mt-1 text-[8pt] text-zinc-700 font-sans">
                     {proj.description.split('\n').map((line, i) => line.trim() && (
@@ -1536,7 +1536,12 @@ IMPORTANT:
             .print-only { display: block !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             html, body { background: white !important; color: black !important; height: auto !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; }
+            body * { visibility: hidden; }
+            .print-container, .print-container * { visibility: visible; }
             .print-container {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
               padding: 10mm 12mm 10mm 12mm !important;
               margin: 0 !important;
               width: 210mm !important;
@@ -1548,7 +1553,6 @@ IMPORTANT:
               border: none !important;
               transform: none !important;
               zoom: 1 !important;
-              position: relative !important;
               page-break-inside: avoid !important;
             }
             @page {
