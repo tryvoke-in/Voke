@@ -77,30 +77,44 @@ interface ResumeData {
 
 const ResumeBuilder = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("personal");
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('voke_resume_activeTab') || "personal";
+  });
   const [isAiEnhancing, setIsAiEnhancing] = useState(false);
   const [enhancingExpId, setEnhancingExpId] = useState<string | null>(null);
   const [enhancingProjId, setEnhancingProjId] = useState<string | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("minimalist");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>(() => {
+    return localStorage.getItem('voke_resume_template') || "minimalist";
+  });
   const [zoom, setZoom] = useState(0.85);
 
-  // Initial State
-  const [data, setData] = useState<ResumeData>({
-    fullName: "",
-    email: "",
-    phone: "",
-    location: "",
-    linkedin: "",
-    github: "",
-    website: "",
-    leetcode: "",
-    codeforces: "",
-    summary: "",
-    skills: "",
-    experience: [],
-    education: [],
-    projects: [],
-    leadership: []
+  // Initial State from Local Storage or Defaults
+  const [data, setData] = useState<ResumeData>(() => {
+    const savedData = localStorage.getItem('voke_resume_data');
+    if (savedData) {
+      try {
+        return JSON.parse(savedData);
+      } catch (e) {
+        console.error('Failed to parse saved resume data', e);
+      }
+    }
+    return {
+      fullName: "",
+      email: "",
+      phone: "",
+      location: "",
+      linkedin: "",
+      github: "",
+      website: "",
+      leetcode: "",
+      codeforces: "",
+      summary: "",
+      skills: "",
+      experience: [],
+      education: [],
+      projects: [],
+      leadership: []
+    };
   });
 
   const [analysisOpen, setAnalysisOpen] = useState(false);
@@ -112,7 +126,9 @@ const ResumeBuilder = () => {
   const [atsFriendlyProgress, setAtsFriendlyProgress] = useState('');
   const [fetchingRepoId, setFetchingRepoId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
-  const [jobDescription, setJobDescription] = useState('');
+  const [jobDescription, setJobDescription] = useState(() => {
+    return localStorage.getItem('voke_resume_jd') || '';
+  });
   const [jdKeywords, setJdKeywords] = useState<{ hard_skills: string[]; soft_skills: string[]; required_experience: string[] } | null>(null);
   const [extractingJd, setExtractingJd] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -131,6 +147,23 @@ const ResumeBuilder = () => {
     observer.observe(printContainerRef.current);
     return () => observer.disconnect();
   }, [selectedTemplate, data]);
+
+  // Persist State to Local Storage
+  useEffect(() => {
+    localStorage.setItem('voke_resume_data', JSON.stringify(data));
+  }, [data]);
+
+  useEffect(() => {
+    localStorage.setItem('voke_resume_activeTab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    localStorage.setItem('voke_resume_template', selectedTemplate);
+  }, [selectedTemplate]);
+
+  useEffect(() => {
+    localStorage.setItem('voke_resume_jd', jobDescription);
+  }, [jobDescription]);
 
   // Helper to handle Groq API calls with rate-limit retries and model fallbacks
   const fetchGroqWithRetry = async (body: any, maxRetries = 2) => {
