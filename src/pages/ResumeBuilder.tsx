@@ -116,6 +116,21 @@ const ResumeBuilder = () => {
   const [jdKeywords, setJdKeywords] = useState<{ hard_skills: string[]; soft_skills: string[]; required_experience: string[] } | null>(null);
   const [extractingJd, setExtractingJd] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Track true pixel height of print container to ensure perfect zoom scrolling
+  const printContainerRef = useRef<HTMLDivElement>(null);
+  const [printHeight, setPrintHeight] = useState(1122); // Fallback to A4 ~1122px
+
+  useEffect(() => {
+    if (!printContainerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setPrintHeight(entry.contentRect.height);
+      }
+    });
+    observer.observe(printContainerRef.current);
+    return () => observer.disconnect();
+  }, [selectedTemplate, data]);
 
   // Helper to handle Groq API calls with rate-limit retries and model fallbacks
   const fetchGroqWithRetry = async (body: any, maxRetries = 2) => {
@@ -2357,11 +2372,13 @@ IMPORTANT:
           {/* Document container inside scroll view - with glowing Violet drop shadow around the paper */}
           <ScrollArea className="flex-1 custom-scrollbar relative z-10 w-full print:overflow-visible print:h-auto">
             <div 
-              className="w-full flex justify-center py-10 md:py-20 transition-all duration-300 print:py-0 print:block print:h-auto"
+              className="w-full flex justify-center py-10 md:py-20 transition-all duration-300 print:py-0 print:block print:h-auto print:!min-h-0"
+              style={{ minHeight: `${printHeight * zoom + 120}px` }}
             >
               <div 
-                className="print-container bg-white shadow-[0_20px_50px_rgba(139,92,246,0.15)] border border-gray-100/60 w-[210mm] min-h-[297mm] p-[10mm] text-left relative transition-all duration-300 ease-in-out origin-top text-gray-900 print:shadow-none print:border-none"
-                style={{ zoom: zoom, transformOrigin: 'top center' }}
+                ref={printContainerRef}
+                className="print-container bg-white shadow-[0_20px_50px_rgba(139,92,246,0.15)] border border-gray-100/60 w-[210mm] min-h-[297mm] p-[10mm] text-left relative transition-all duration-300 ease-in-out origin-top text-gray-900 print:shadow-none print:border-none print:!transform-none"
+                style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
               >
                 {selectedTemplate === 'minimalist' && renderMinimalist()}
                 {selectedTemplate === 'slate' && renderSlate()}
