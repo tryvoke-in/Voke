@@ -1584,55 +1584,65 @@ IMPORTANT:
       <style>
         {`
           @media print {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            
-            /* Step 1: Hide EVERYTHING - kills Dev Tool, Chat Bubble, sidebars */
-            body > * {
-              visibility: hidden !important;
-              position: static !important;
-            }
+            /* ============================================
+               DEFINITIVE PRINT FIX
+               - Hides ENTIRE body (not just children)
+               - Shows ONLY the .print-container
+               - Uses @page margin:0 to remove Chrome's
+                 date/title/URL browser headers
+               ============================================ */
 
-            /* Step 2: Make only the resume container visible */
-            .print-container {
-              visibility: visible !important;
-            }
-            .print-container * {
-              visibility: visible !important;
-            }
-            
-            /* Step 3: Reset page & body */
+            /* Remove Chrome browser print headers (date, title, URL) */
             @page {
               size: A4 portrait;
-              margin: 12mm 12mm 12mm 12mm;
+              margin: 0;
             }
             
-            html, body {
+            /* 1. Hide the ENTIRE body — this is the key.
+                  Child elements inherit visibility:hidden from body,
+                  but we can selectively override with visibility:visible */
+            body {
+              visibility: hidden !important;
               margin: 0 !important;
               padding: 0 !important;
               background: white !important;
-              width: 100% !important;
-              height: auto !important;
+              width: 210mm !important;
+              height: 297mm !important;
+              overflow: hidden !important;
             }
-            
-            /* Step 4: Make the container fill the page exactly */
+
+            /* 2. Show ONLY the print-container and all its children */
             .print-container {
+              visibility: visible !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              
+              /* Anchor it to the top-left of the A4 page */
               position: fixed !important;
               top: 0 !important;
               left: 0 !important;
-              width: 100% !important;
-              max-width: 100% !important;
+              
+              /* Fill the full A4 page with proper internal padding */
+              width: 210mm !important;
               height: auto !important;
-              padding: 0 !important;
+              padding: 10mm 12mm !important;
               margin: 0 !important;
               
+              /* Clean style */
               box-shadow: none !important;
               border: none !important;
               background: white !important;
               
-              /* Auto-scale to fit 1 page */
+              /* Auto-scale to fit everything on 1 page */
               zoom: var(--print-scale, 1) !important;
               transform: none !important;
+            }
+            
+            /* 3. Make all children of the container visible */
+            .print-container * {
+              visibility: visible !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
           }
           .custom-scrollbar::-webkit-scrollbar {
