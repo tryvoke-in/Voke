@@ -1535,26 +1535,52 @@ IMPORTANT:
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            html, body { background: white !important; color: black !important; height: auto !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; }
-            body * { visibility: hidden; }
-            .print-container, .print-container * { visibility: visible; }
+            
+            /* Reset body and html to allow natural pagination */
+            html, body, #root { 
+              background: white !important; 
+              color: black !important; 
+              height: auto !important; 
+              min-height: auto !important;
+              overflow: visible !important; 
+              margin: 0 !important; 
+              padding: 0 !important;
+              display: block !important;
+              position: static !important;
+            }
+            
+            /* Remove all height and overflow restrictions on parent wrappers */
+            .min-h-screen, .flex-1, .overflow-hidden, .custom-scrollbar, [data-radix-scroll-area-viewport] {
+              height: auto !important;
+              min-height: auto !important;
+              max-height: none !important;
+              overflow: visible !important;
+              position: static !important;
+              display: block !important;
+              transform: none !important;
+            }
+            
             .print-container {
-              position: absolute !important;
-              left: 0 !important;
-              top: 0 !important;
               padding: 10mm 12mm 10mm 12mm !important;
               margin: 0 !important;
               width: 210mm !important;
               max-width: 210mm !important;
+              height: auto !important;
               min-height: auto !important;
-              max-height: 297mm !important;
-              overflow: hidden !important;
+              max-height: none !important;
+              overflow: visible !important;
               box-shadow: none !important;
               border: none !important;
               transform: none !important;
               zoom: 1 !important;
-              page-break-inside: avoid !important;
+              position: static !important;
+              page-break-inside: auto !important;
             }
+            
+            /* Prevent awkward page breaks inside items */
+            .print-container h2, .print-container h3 { page-break-after: avoid; }
+            .print-container > div > div > div { page-break-inside: avoid; }
+            
             @page {
               size: A4 portrait;
               margin: 0;
@@ -2302,12 +2328,12 @@ IMPORTANT:
         </div>
 
         {/* RIGHT PANEL: Live Interactive Resume Preview (Canvas) */}
-        <div className="flex-1 bg-[#09090b] flex flex-col relative overflow-hidden h-[calc(100vh-4rem)] select-none">
+        <div className="flex-1 bg-[#09090b] flex flex-col relative overflow-hidden h-[calc(100vh-4rem)] select-none print:bg-white print:h-auto print:overflow-visible">
           {/* Subtle grid mesh overlay for canvas preview */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_80%,transparent_100%)] pointer-events-none z-0" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_80%,transparent_100%)] pointer-events-none z-0 print:hidden" />
 
           {/* Premium Floating Template Bar */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-full flex gap-1.5 shadow-xl shadow-black/40">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-full flex gap-1.5 shadow-xl shadow-black/40 print:hidden">
             {[
               { id: 'minimalist', label: 'ATS Clean' },
               { id: 'slate', label: 'Modern Slate' },
@@ -2329,14 +2355,13 @@ IMPORTANT:
           </div>
 
           {/* Document container inside scroll view - with glowing Violet drop shadow around the paper */}
-          <ScrollArea className="flex-1 custom-scrollbar relative z-10 w-full">
+          <ScrollArea className="flex-1 custom-scrollbar relative z-10 w-full print:overflow-visible print:h-auto">
             <div 
-              className="w-full flex justify-center py-20 transition-all duration-300"
-              style={{ height: `${297 * zoom + 120}mm` }}
+              className="w-full flex justify-center py-10 md:py-20 transition-all duration-300 print:py-0 print:block print:h-auto"
             >
               <div 
-                className="print-container bg-white shadow-[0_20px_50px_rgba(139,92,246,0.15)] border border-gray-100/60 w-[210mm] min-h-[297mm] p-[10mm] text-left relative transition-all duration-300 ease-in-out origin-top text-gray-900"
-                style={{ transform: `scale(${zoom})` }}
+                className="print-container bg-white shadow-[0_20px_50px_rgba(139,92,246,0.15)] border border-gray-100/60 w-[210mm] min-h-[297mm] p-[10mm] text-left relative transition-all duration-300 ease-in-out origin-top text-gray-900 print:shadow-none print:border-none"
+                style={{ zoom: zoom, transformOrigin: 'top center' }}
               >
                 {selectedTemplate === 'minimalist' && renderMinimalist()}
                 {selectedTemplate === 'slate' && renderSlate()}
@@ -2347,7 +2372,7 @@ IMPORTANT:
           </ScrollArea>
 
           {/* Floating Zoom Action Toolbar */}
-          <div className="absolute bottom-4 right-4 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-xl shadow-black/40">
+          <div className="absolute bottom-4 right-4 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-xl shadow-black/40 print:hidden">
             <Button 
               variant="ghost" 
               size="icon" 
