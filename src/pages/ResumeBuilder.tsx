@@ -148,6 +148,10 @@ const ResumeBuilder = () => {
     return () => observer.disconnect();
   }, [selectedTemplate, data]);
 
+  // Calculate auto-scale factor to force exactly 1-page print (A4 height is ~1122px at 96dpi)
+  // We use 1120px to leave a tiny safety margin to prevent a blank second page.
+  const printScaleFactor = printHeight > 1120 ? 1120 / printHeight : 1;
+
   // Persist State to Local Storage
   useEffect(() => {
     localStorage.setItem('voke_resume_data', JSON.stringify(data));
@@ -1584,13 +1588,19 @@ IMPORTANT:
             .print-only { display: block !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             
-            /* Reset body and html to allow natural pagination */
+            /* HIDE EVERYTHING EXCEPT ROOT TO REMOVE DEV TOOLS AND CHAT BUBBLES */
+            body > *:not(#root) {
+              display: none !important;
+            }
+            
+            /* Reset body and html to force exactly 1 page */
             html, body, #root { 
               background: white !important; 
               color: black !important; 
-              height: auto !important; 
-              min-height: auto !important;
-              overflow: visible !important; 
+              height: 100vh !important; 
+              min-height: 100vh !important;
+              max-height: 100vh !important;
+              overflow: hidden !important; 
               margin: 0 !important; 
               padding: 0 !important;
               display: block !important;
@@ -1610,7 +1620,7 @@ IMPORTANT:
             
             .print-container {
               padding: 10mm 12mm 10mm 12mm !important;
-              margin: 0 !important;
+              margin: 0 auto !important; /* Center horizontally for equal padding */
               width: 210mm !important;
               max-width: 210mm !important;
               height: auto !important;
@@ -1620,9 +1630,12 @@ IMPORTANT:
               box-shadow: none !important;
               border: none !important;
               transform: none !important;
-              zoom: 1 !important;
+              
+              /* Auto-fit to 1 page using the CSS variable injected by React */
+              zoom: var(--print-scale, 1) !important;
+              
               position: static !important;
-              page-break-inside: auto !important;
+              page-break-inside: avoid !important;
             }
             
             /* Prevent awkward page breaks inside items */
@@ -2411,7 +2424,11 @@ IMPORTANT:
               <div 
                 ref={printContainerRef}
                 className="print-container bg-white shadow-[0_20px_50px_rgba(139,92,246,0.15)] border border-gray-100/60 w-[210mm] min-h-[297mm] p-[10mm] text-left relative transition-all duration-300 ease-in-out origin-top text-gray-900 print:shadow-none print:border-none print:!transform-none"
-                style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
+                style={{ 
+                  transform: `scale(${zoom})`, 
+                  transformOrigin: 'top center',
+                  '--print-scale': printScaleFactor 
+                } as React.CSSProperties}
               >
                 {selectedTemplate === 'minimalist' && renderMinimalist()}
                 {selectedTemplate === 'slate' && renderSlate()}
