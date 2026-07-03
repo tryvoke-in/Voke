@@ -118,15 +118,15 @@ const Index = () => {
 
       {/* Dynamic mesh backgrounds with rich drifting glow auras */}
       <div 
-        className="absolute top-0 left-1/4 w-[900px] h-[900px] bg-gradient-to-r from-violet-600/25 via-fuchsia-600/20 to-indigo-600/15 rounded-full blur-[140px] -z-10 pointer-events-none" 
+        className="absolute top-0 left-1/4 w-[300px] md:w-[900px] h-[300px] md:h-[900px] bg-gradient-to-r from-violet-600/25 via-fuchsia-600/20 to-indigo-600/15 rounded-full blur-[140px] -z-10 pointer-events-none" 
         style={{ animation: 'drift 15s infinite ease-in-out' }}
       />
       <div 
-        className="absolute top-[35%] right-[-10%] w-[800px] h-[800px] bg-gradient-to-br from-fuchsia-600/22 via-violet-600/18 to-transparent rounded-full blur-[130px] -z-10 pointer-events-none" 
+        className="absolute top-[35%] right-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-gradient-to-br from-fuchsia-600/22 via-violet-600/18 to-transparent rounded-full blur-[130px] -z-10 pointer-events-none" 
         style={{ animation: 'drift 20s infinite ease-in-out 2s' }}
       />
       <div 
-        className="absolute top-[65%] left-[-10%] w-[850px] h-[850px] bg-gradient-to-tr from-violet-600/22 via-indigo-600/18 to-transparent rounded-full blur-[150px] -z-10 pointer-events-none" 
+        className="absolute top-[65%] left-[-10%] w-[300px] md:w-[850px] h-[300px] md:h-[850px] bg-gradient-to-tr from-violet-600/22 via-indigo-600/18 to-transparent rounded-full blur-[150px] -z-10 pointer-events-none" 
         style={{ animation: 'drift 18s infinite ease-in-out 4s' }}
       />
 
@@ -285,7 +285,8 @@ const Index = () => {
               >
                 <Button
                   onClick={handleAuthNavigation}
-                  className="w-full sm:w-auto bg-white text-black hover:bg-zinc-200 text-sm px-8 h-12 rounded-full font-bold shadow-xl shadow-violet-500/5 hover:scale-105 transition-all duration-300 flex items-center justify-center border-0"
+                  variant="ghost"
+                  className="w-full max-w-[280px] sm:w-auto bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white text-sm px-8 h-12 rounded-full font-bold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 hover:scale-105 transition-all duration-300 flex items-center justify-center border-0"
                 >
                   Start Preparing Free
                   <ArrowRight className="ml-2 w-4 h-4" />
@@ -294,7 +295,8 @@ const Index = () => {
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
-                      className="w-full sm:w-auto border border-white/10 text-white bg-white/5 hover:bg-white/10 text-sm px-8 h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all shadow-none"
+                      variant="ghost"
+                      className="w-full max-w-[280px] sm:w-auto border border-white/10 text-gray-200 hover:text-white bg-white/5 hover:bg-white/10 text-sm px-8 h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-none"
                     >
                       <Play className="mr-2 w-4 h-4 fill-current text-white" />
                       Watch Platform Demo
@@ -330,7 +332,7 @@ const Index = () => {
                 className="w-full md:w-[85%] bg-zinc-950/80 border border-white/10 rounded-3xl p-5 shadow-2xl backdrop-blur-xl relative"
               >
                 {/* Simulated Webcam layout with live typing dialogue overlay rendering INSIDE the aspect-video screen container */}
-                <div className="bg-black/80 border border-white/5 rounded-2xl p-4 relative aspect-video flex flex-col justify-between overflow-hidden min-h-[220px]">
+                <div className="bg-black/80 border border-white/5 rounded-2xl p-4 relative aspect-video flex flex-col justify-between overflow-hidden min-h-[180px] md:min-h-[220px]">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,#000_100%)] opacity-75 z-10 pointer-events-none" />
                   
                   {/* Fine face mesh scanning visualizer lines */}
