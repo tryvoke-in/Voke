@@ -250,9 +250,10 @@ const Index = () => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="inline-flex items-center px-4 py-2 rounded-full bg-white/[0.03] border border-white/10 text-violet-300 text-xs font-semibold tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(124,58,237,0.1)]"
+                className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/[0.03] border border-white/10 text-violet-300 text-xs font-semibold tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(124,58,237,0.1)]"
               >
-                <span>Voke Platform • Advanced Interview Sandbox</span>
+                <span className="hidden sm:inline">Voke Platform • Advanced Interview Sandbox</span>
+                <span className="inline sm:hidden text-[10px]">Voke • AI Interview Sandbox</span>
               </motion.div>
 
               <motion.h1
@@ -329,10 +330,10 @@ const Index = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
                 whileHover={{ scale: 1.01 }}
-                className="w-full md:w-[85%] bg-zinc-950/80 border border-white/10 rounded-3xl p-5 shadow-2xl backdrop-blur-xl relative"
+                className="w-full md:w-[85%] bg-zinc-950/80 border border-white/10 rounded-3xl p-3.5 sm:p-5 shadow-2xl backdrop-blur-xl relative"
               >
                 {/* Simulated Webcam layout with live typing dialogue overlay rendering INSIDE the aspect-video screen container */}
-                <div className="bg-black/80 border border-white/5 rounded-2xl p-4 relative aspect-video flex flex-col justify-between overflow-hidden min-h-[180px] md:min-h-[220px]">
+                <div className="bg-black/80 border border-white/5 rounded-2xl p-3 sm:p-4 relative aspect-video flex flex-col justify-between overflow-hidden min-h-[150px] sm:min-h-[180px] md:min-h-[220px]">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,#000_100%)] opacity-75 z-10 pointer-events-none" />
                   
                   {/* Fine face mesh scanning visualizer lines */}
