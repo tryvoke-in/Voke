@@ -327,7 +327,7 @@ const Index = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
                 whileHover={{ scale: 1.01 }}
-                className="w-[85%] bg-zinc-950/80 border border-white/10 rounded-3xl p-5 shadow-2xl backdrop-blur-xl relative"
+                className="w-full md:w-[85%] bg-zinc-950/80 border border-white/10 rounded-3xl p-5 shadow-2xl backdrop-blur-xl relative"
               >
                 {/* Simulated Webcam layout with live typing dialogue overlay rendering INSIDE the aspect-video screen container */}
                 <div className="bg-black/80 border border-white/5 rounded-2xl p-4 relative aspect-video flex flex-col justify-between overflow-hidden min-h-[220px]">
@@ -405,7 +405,7 @@ const Index = () => {
               <motion.div
                 animate={{ y: [0, -12, 0] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-[30px] left-0 z-20 w-[220px] bg-zinc-900/90 border border-white/15 rounded-2xl p-4 shadow-xl backdrop-blur-2xl flex items-center gap-3 animate-none"
+                className="absolute top-[30px] left-0 z-20 w-[220px] bg-zinc-900/90 border border-white/15 rounded-2xl p-4 shadow-xl backdrop-blur-2xl items-center gap-3 animate-none hidden md:flex"
               >
                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0">
                   <Smile className="w-4 h-4 text-emerald-400" />
@@ -421,7 +421,7 @@ const Index = () => {
               <motion.div
                 animate={{ y: [0, 12, 0] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute bottom-[20px] right-0 z-20 w-[230px] bg-zinc-900/90 border border-white/15 rounded-2xl p-4 shadow-xl backdrop-blur-2xl space-y-2.5 animate-none"
+                className="absolute bottom-[20px] right-0 z-20 w-[230px] bg-zinc-900/90 border border-white/15 rounded-2xl p-4 shadow-xl backdrop-blur-2xl space-y-2.5 animate-none hidden md:block"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Match Scorecard</span>
