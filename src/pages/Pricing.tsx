@@ -195,11 +195,11 @@ const Pricing = () => {
             price: "Free",
             priceLabel: "",
             features: [
+                "1 Free Mock Credit for each round (Elite, Voice, Video)",
+                "+2 Bonus Mock Credits upon giving platform feedback",
                 "Access to Basic Question Bank",
-                "Community Discussion Access",
                 "Daily Coding Challenges",
-                "Basic Progress Tracking",
-                "1 AI Mock Interview / Month"
+                "Basic Progress Tracking"
             ],
             cta: "Get Started Free",
             variant: "outline" as const,
@@ -211,7 +211,7 @@ const Pricing = () => {
             name: "Voke Elite",
             description: "Complete power for serious job hunters.",
             price: "₹99",
-            priceLabel: "one-time (testing)",
+            priceLabel: "/ month",
             originalPrice: "₹199",
             features: [
                 "Everything in Basic",
@@ -219,20 +219,20 @@ const Pricing = () => {
                 "Elite Mock with Code IDE",
                 "Resume Analysis & Optimization",
                 "Priority Community Support",
-                "Verified Skills Certificate",
+                "Elite Audio/Video Performance Reports",
                 "Ad-free Experience"
             ],
             cta: "Upgrade to Elite",
             variant: "default" as const,
             popular: true,
-            icon: Sparkles,
+            icon: Zap,
             highlight: true
         },
         {
             name: "Enterprise",
             description: "For universities and coding bootcamps.",
             price: "Custom",
-            priceLabel: "",
+            priceLabel: "Contact teamtryvoke@gmail.com",
             features: [
                 "Everything in Elite",
                 "Bulk Seat Management",
@@ -399,15 +399,14 @@ const Pricing = () => {
                                                          }
                                                          handleUpgrade();
                                                      } else {
-                                                         toast.info("For Enterprise custom plans, contact: sales@voke.ai");
+                                                         toast.info("For Enterprise custom plans, contact: teamtryvoke@gmail.com");
                                                      }
                                                  }}
                                                  disabled={isPaying}
-                                                 className={`w-full h-12 rounded-xl text-sm font-bold transition-all duration-300 mb-8
+                                                 className={`w-full h-12 rounded-xl text-sm font-bold transition-all duration-300 mb-8 border
                                                  ${plan.popular 
-                                                     ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02]' 
-                                                     : 'hover:bg-secondary/80'}`}
-                                                 variant={plan.variant}
+                                                     ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] border-transparent' 
+                                                     : 'bg-white/5 hover:bg-white/10 border-white/10 text-white hover:text-white'}`}
                                              >
                                                  {isPremium && plan.name === "Voke Elite" ? "Already Premium" : isPaying && plan.name === "Voke Elite" ? "Opening checkout..." : plan.cta}
                                                  {plan.popular && !isPaying && !isPremium && <ArrowRight className="w-4 h-4 ml-2" />}
@@ -455,12 +454,12 @@ const Pricing = () => {
                         className="grid md:grid-cols-2 gap-6"
                     >
                          {[
-                            { q: "Can I upgrade later?", a: "Yes, you can upgrade from Basic to Pro at any time. We'll prorate the difference for the remainder of your cycle." },
-                            { q: "Is there a student discount?", a: "Absolutely! Verify your student status with a .edu email to receive 50% off the Pro plan for up to 4 years." },
-                            { q: "What's the Enterprise limit?", a: "Enterprise plans support unlimited seats and come with volume discounts starting at 10 seats." },
-                            { q: "Do you offer refunds?", a: "We offer a 7-day money-back guarantee on the Pro plan if you're not completely satisfied." },
-                            { q: "Can I pause my subscription?", a: "Yes, you can pause your Pro subscription for up to 3 months if you're taking a break from interviewing." },
-                            { q: "Is the certificate official?", a: "Our Verified Skills Certificates are industry-recognized and can be added directly to your LinkedIn profile." }
+                            { q: "Can I upgrade later?", a: "Yes, you can upgrade from Basic to Voke Elite at any time to unlock unlimited mock interviews and coding compiler environments instantly." },
+                            { q: "Is there a student discount?", a: "We do not offer separate student discounts. Voke Elite is priced extremely affordably at ₹99/month for everyone, including students, to ensure high-quality prep is accessible." },
+                            { q: "What's the Enterprise limit?", a: "Enterprise plans support custom limits, custom interview templates, and LMS integration options. Contact teamtryvoke@gmail.com to request custom seating setups." },
+                            { q: "Do you offer refunds?", a: "No, we do not offer refunds once premium features are activated or credits are used. You can cancel your monthly subscription at any time to prevent renewals." },
+                            { q: "Can I pause my subscription?", a: "We do not support pausing. However, you can cancel your subscription from your profile page anytime with no penalties, and restart when you resume prep." },
+                            { q: "How does the AI Coach evaluate my answers?", a: "The AI analyzes your response logic, speech pacing, vocabulary alignment, and posture tracking to deliver actionable, step-by-step improvement instructions." }
                         ].map((faq, i) => (
                             <div key={i} className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6 hover:bg-card/50 transition-colors">
                                 <h3 className="font-bold text-foreground mb-2 flex items-start gap-2">

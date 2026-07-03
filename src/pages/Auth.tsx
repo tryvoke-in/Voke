@@ -437,30 +437,7 @@ const Auth = () => {
             </p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-sm font-bold">
-                JD
-              </div>
-              <div>
-                <h4 className="font-semibold">John Doe</h4>
-                <p className="text-xs text-gray-400">Software Engineer @ Google</p>
-              </div>
-              <div className="ml-auto flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <div key={star} className="w-4 h-4 text-yellow-500 fill-yellow-500">★</div>
-                ))}
-              </div>
-            </div>
-            <p className="text-gray-300 italic">
-              "Voke changed the game for me. The AI feedback was incredibly accurate and helped me identify weak spots I didn't know I had."
-            </p>
-          </motion.div>
+
         </div>
       </div>
 
