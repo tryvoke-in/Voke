@@ -23,7 +23,7 @@ export const Navbar = () => {
 
     const isCommunityPage = location.pathname === '/community';
     const brandName = isCommunityPage ? "Voke Pulse" : "Voke";
-    const logoSrc = isCommunityPage ? "/images/voke_pulse_logo.png" : "/images/voke_logo.png";
+    const logoSrc = "/images/voke_logo.png";
 
     useEffect(() => {
         checkUser();
@@ -123,13 +123,6 @@ export const Navbar = () => {
                     <div className="hidden md:flex items-center gap-1">
                         <Button
                             variant="ghost"
-                            onClick={() => navigate("/learning-paths")}
-                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
-                        >
-                            Learning Paths
-                        </Button>
-                        <Button
-                            variant="ghost"
                             onClick={() => navigate("/video-interview")}
                             className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
                         >
@@ -142,13 +135,6 @@ export const Navbar = () => {
                             className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
                         >
                             AI Voice Agent
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            onClick={() => navigate("/blogs")}
-                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
-                        >
-                            Blogs
                         </Button>
                         <Button
                             variant="ghost"

@@ -467,7 +467,6 @@ const AdminDashboard = () => {
             { id: "waitlist", label: "Waitlist Signups", icon: Mail },
             { id: "community", label: "Community", icon: MessageSquare },
             { id: "challenges", label: "Daily Challenges", icon: Code2 },
-            { id: "blogs", label: "Blog Management", icon: FileText },
             { id: "settings", label: "System Settings", icon: Settings },
           ].map((item) => (
             <button

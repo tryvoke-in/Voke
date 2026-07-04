@@ -96,7 +96,6 @@ export const Footer = () => {
                             </h3>
                             <ul className="space-y-4">
                                 {[
-                                    { label: "Learning Paths", to: "/learning-paths" },
                                     { label: "Video Practice", to: "/video-interview" },
                                     { label: "Leaderboard", to: "/leaderboard" },
                                     { label: "Peer Sessions", to: "/peer-interviews" }
@@ -120,7 +119,6 @@ export const Footer = () => {
                             </h3>
                             <ul className="space-y-4">
                                 {[
-                                    { label: "Blog", to: "/blog" },
                                     { label: "Community", to: "/community" },
                                     { label: "Help Center", to: "/help" },
                                     { label: "Privacy Policy", to: "/privacy" }

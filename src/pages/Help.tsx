@@ -73,10 +73,6 @@ const Help = () => {
             border: "border-emerald-500/20",
             faqs: [
                 {
-                    question: "How do Learning Paths work?",
-                    answer: "Learning Paths are structured curricula designed to help you master specific skills or prepare for particular roles. They include curated resources, practice exercises, and progress tracking."
-                },
-                {
                     question: "Can I practice with other users?",
                     answer: "Yes! The Peer Interviews feature allows you to schedule mock interviews with other users. You can take turns being the interviewer and interviewee."
                 }

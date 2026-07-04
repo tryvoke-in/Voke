@@ -8,10 +8,10 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
-import Blogs from "./pages/Blogs";
+// import Blogs from "./pages/Blogs";
 import AdminUserDetails from "./pages/AdminUserDetails";
 
-import LearningPaths from "./pages/LearningPaths";
+// import LearningPaths from "./pages/LearningPaths";
 import InterviewNew from "./pages/InterviewNew";
 import InterviewResults from "./pages/InterviewResults";
 import InterviewSession from "./pages/InterviewSession";
@@ -30,8 +30,8 @@ import CreatePeerSession from "./pages/CreatePeerSession";
 import PeerSessionRoom from "./pages/PeerSessionRoom";
 import RatePeerSession from "./pages/RatePeerSession";
 import Leaderboard from "./pages/Leaderboard";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
+// import Blog from "./pages/Blog";
+// import BlogPost from "./pages/BlogPost";
 import Community from "./pages/Community";
 import Help from "./pages/Help";
 import Privacy from "./pages/Privacy";
@@ -75,9 +75,9 @@ const App = () => (
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/users/:userId" element={<AdminUserDetails />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/blogs" element={<Blogs />} />
+              {/* <Route path="/blogs" element={<Blogs />} /> */}
               <Route path="/community" element={<Community />} />
-              <Route path="/learning-paths" element={<LearningPaths />} />
+              {/* <Route path="/learning-paths" element={<LearningPaths />} /> */}
               <Route path="/interview/new" element={<InterviewNew />} />
               <Route path="/interview/results/:id" element={<InterviewResults />} />
               <Route path="/interview/:id" element={<InterviewSession />} />
@@ -98,8 +98,8 @@ const App = () => (
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/job-recommendations" element={<JobRecommendations />} />
               <Route path="/career-plan/:planId" element={<CareerPlanView />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:id" element={<BlogPost />} />
+              {/* <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:id" element={<BlogPost />} /> */}
               <Route path="/community" element={<Community />} />
               <Route path="/help" element={<Help />} />
               <Route path="/privacy" element={<Privacy />} />

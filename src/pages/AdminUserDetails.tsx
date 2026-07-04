@@ -176,7 +176,6 @@ const AdminUserDetails = () => {
     { id: "users", label: "User Management", icon: Users, path: "/admin" },
     { id: "community", label: "Community", icon: MessageSquare, path: "/admin" },
     { id: "challenges", label: "Daily Challenges", icon: Code2, path: "/admin" },
-    { id: "blogs", label: "Blog Management", icon: FileText, path: "/admin" },
     { id: "settings", label: "System Settings", icon: Settings, path: "/admin" },
   ];
 

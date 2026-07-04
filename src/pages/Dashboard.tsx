@@ -9,14 +9,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   FileText, LogOut, TrendingUp, Upload, Play, Target, Users, Mic, Settings,
   Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search,
-  Globe, BookOpen, Briefcase, FileQuestion, ChevronRight, Sparkles, Lock
+  Globe, Briefcase, FileQuestion, ChevronRight, Sparkles, Lock
 } from "lucide-react";
 import { SkillRadar } from "@/components/dashboard/SkillRadar";
 import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
 import { MarketPulse } from "@/components/dashboard/MarketPulse";
 import { ReferralFloatingWidget } from "@/components/dashboard/ReferralFloatingWidget";
 import { UpgradeButton } from "@/components/UpgradeButton";
-import { TRACKS } from "./LearningPaths";
 
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -386,9 +385,6 @@ const Dashboard = () => {
           <nav className="flex items-center gap-2">
 
             <UpgradeButton />
-            <Button variant="ghost" size="icon" onClick={() => navigate("/blog")}>
-              <BookOpen className="w-5 h-5" />
-            </Button>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
@@ -827,36 +823,6 @@ const Dashboard = () => {
                      </>
                    );
                 })()}
-              </CardContent>
-            </Card>
-
-            {/* Learning Paths */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-violet-500" />
-                  Learning Paths
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {TRACKS.map((track, i) => (
-                  <div 
-                    key={i} 
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted transition-colors cursor-pointer group"
-                    onClick={() => navigate("/learning-paths")}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-md bg-background flex items-center justify-center shadow-sm text-primary">
-                        <track.icon className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium group-hover:text-primary transition-colors">{track.title}</p>
-                        <p className="text-[10px] text-muted-foreground">{track.role}</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                ))}
               </CardContent>
             </Card>
 
