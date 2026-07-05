@@ -9,6 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Footer } from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/utils/analytics";
 import { toast } from "sonner";
 import ReactConfetti from "react-confetti";
 
@@ -59,6 +60,7 @@ const Pricing = () => {
 
     const handleUpgrade = async () => {
         setIsPaying(true);
+        trackEvent("pricing_upgrade_click", "/pricing");
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
@@ -120,6 +122,10 @@ const Pricing = () => {
                 image: "/images/voke_logo.png",
                 handler: async function (response: any) {
                     console.log("Payment response:", response);
+                    trackEvent("pricing_upgrade_success", "/pricing", {
+                      payment_id: response.razorpay_payment_id,
+                      order_id: response.razorpay_order_id
+                    });
                     toast.success("Payment successful! Upgrading to Voke Elite Pro...");
 
                     const { error } = await supabase.auth.updateUser({

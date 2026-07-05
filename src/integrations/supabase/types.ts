@@ -819,6 +819,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activities: {
+        Row: {
+          id: string
+          user_id: string | null
+          user_email: string | null
+          session_id: string
+          event_type: string
+          page_path: string
+          action_details: Json | null
+          user_agent: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          user_email?: string | null
+          session_id: string
+          event_type: string
+          page_path: string
+          action_details?: Json | null
+          user_agent?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          user_email?: string | null
+          session_id?: string
+          event_type?: string
+          page_path?: string
+          action_details?: Json | null
+          user_agent?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

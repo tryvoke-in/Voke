@@ -559,48 +559,48 @@ Respond with ONLY the question text, nothing else.`;
       <div className="min-h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 pointer-events-none">
-           <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-violet-900/10 rounded-full blur-[120px]" />
-           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-fuchsia-900/10 rounded-full blur-[120px]" />
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-violet-900/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-fuchsia-900/10 rounded-full blur-[120px]" />
         </div>
 
         <div className="relative z-10 flex flex-col items-center">
           <div className="w-24 h-24 mb-8 relative">
-            <motion.div 
-               animate={{ rotate: 360 }}
-               transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-               className="absolute inset-0 rounded-full border-t-2 border-l-2 border-violet-500/50"
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 rounded-full border-t-2 border-l-2 border-violet-500/50"
             />
-            <motion.div 
-               animate={{ rotate: -360 }}
-               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-               className="absolute inset-2 rounded-full border-b-2 border-r-2 border-cyan-500/50"
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-2 rounded-full border-b-2 border-r-2 border-cyan-500/50"
             />
-             <div className="absolute inset-0 flex items-center justify-center">
-                <BrainCircuit className="w-8 h-8 text-white animate-pulse" />
-             </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <BrainCircuit className="w-8 h-8 text-white animate-pulse" />
+            </div>
           </div>
-          
+
           <h2 className="text-2xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent mb-2">
             VOKE INTELLIGENCE
           </h2>
-          
+
           <div className="flex flex-col items-center gap-1">
-             <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="text-sm font-mono text-cyan-500"
-             >
-                INITIALIZING_SECURE_ENVIRONMENT...
-             </motion.div>
-             <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.5 }}
-                className="text-xs font-mono text-zinc-600"
-             >
-                CALIBRATING_SENSORS... [OK]
-             </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="text-sm font-mono text-cyan-500"
+            >
+              INITIALIZING_SECURE_ENVIRONMENT...
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              className="text-xs font-mono text-zinc-600"
+            >
+              CALIBRATING_SENSORS... [OK]
+            </motion.div>
           </div>
         </div>
       </div>
@@ -618,14 +618,14 @@ Respond with ONLY the question text, nothing else.`;
 
       {interviewState === InterviewState.SETUP ? (
         <>
-          <motion.header 
+          <motion.header
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl"
           >
             <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-              <div 
-                className="flex items-center gap-3 cursor-pointer group" 
+              <div
+                className="flex items-center gap-3 cursor-pointer group"
                 onClick={() => navigate("/dashboard")}
               >
                 <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors">
@@ -636,11 +636,11 @@ Respond with ONLY the question text, nothing else.`;
                 </h1>
               </div>
               <nav className="flex items-center gap-4">
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleLogout}
-                    className="text-zinc-400 hover:text-white hover:bg-white/5"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-zinc-400 hover:text-white hover:bg-white/5"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   Exit
@@ -665,288 +665,287 @@ Respond with ONLY the question text, nothing else.`;
             ) : (
               <div className="grid lg:grid-cols-2 gap-12 items-center">
                 <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
                 >
-                    <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-                        Master Your <br />
-                        <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
-                            Interview Skills
-                        </span>
-                    </h1>
-                    <p className="text-lg text-zinc-400 mb-8 leading-relaxed max-w-lg">
-                        Practice with our AI-powered simulator. Get real-time feedback on your answers, body language, and speaking confidence.
-                    </p>
+                  <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                    Master Your <br />
+                    <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
+                      Interview Skills
+                    </span>
+                  </h1>
+                  <p className="text-lg text-zinc-400 mb-8 leading-relaxed max-w-lg">
+                    Practice with our AI-powered simulator. Get real-time feedback on your answers, body language, and speaking confidence.
+                  </p>
 
-                    <div className="space-y-4 mb-8">
-                        {[
-                            { icon: BrainCircuit, title: "Smart Questions", desc: "Adaptive to your role & resume" },
-                            { icon: Activity, title: "Real-time Feedback", desc: "Instant analysis of your performance" },
-                            { icon: Monitor, title: "Realistic Environment", desc: "Simulates actual interview pressure" }
-                        ].map((item, i) => (
-                            <motion.div 
-                                key={i}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 + (i * 0.1) }}
-                                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
-                            >
-                                <div className="p-3 rounded-xl bg-violet-500/20 text-violet-300">
-                                    <item.icon className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-white">{item.title}</h3>
-                                    <p className="text-sm text-zinc-500">{item.desc}</p>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+                  <div className="space-y-4 mb-8">
+                    {[
+                      { icon: BrainCircuit, title: "Smart Questions", desc: "Adaptive to your role & resume" },
+                      { icon: Activity, title: "Real-time Feedback", desc: "Instant analysis of your performance" },
+                      { icon: Monitor, title: "Realistic Environment", desc: "Simulates actual interview pressure" }
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 + (i * 0.1) }}
+                        className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+                      >
+                        <div className="p-3 rounded-xl bg-violet-500/20 text-violet-300">
+                          <item.icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-white">{item.title}</h3>
+                          <p className="text-sm text-zinc-500">{item.desc}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </motion.div>
 
                 <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
                 >
-                    <Card className="bg-zinc-900/50 backdrop-blur-xl border-white/10 shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500" />
-                        
-                        <CardContent className="p-8 space-y-8">
-                        <div>
-                            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3 block">
-                                Target Role
-                            </label>
-                            <Select value={selectedRole} onValueChange={setSelectedRole}>
-                                <SelectTrigger className="w-full bg-black/40 border-white/10 focus:ring-violet-500/50 h-12 text-lg">
-                                    <SelectValue placeholder="Select role" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                                    {Object.keys(ROLE_SPECIFIC_QUESTIONS).map((role) => (
-                                        <SelectItem key={role} value={role} className="focus:bg-violet-600/20 focus:text-violet-300">
-                                            {role}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                  <Card className="bg-zinc-900/50 backdrop-blur-xl border-white/10 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500" />
 
-                        <div>
-                            <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3 block">
-                                Duration
-                            </label>
-                            <div className="grid grid-cols-3 gap-3">
-                                {TIME_LIMITS.map(limit => (
-                                    <button
-                                        key={limit.value}
-                                        onClick={() => setTimeLimit(limit.value)}
-                                        className={`p-3 rounded-xl border text-sm font-medium transition-all duration-300 ${
-                                            timeLimit === limit.value 
-                                            ? 'bg-violet-600 border-violet-500 text-white shadow-[0_0_20px_rgba(124,58,237,0.3)]' 
-                                            : 'bg-black/40 border-white/10 text-zinc-400 hover:bg-white/5 hover:border-white/20'
-                                        }`}
-                                    >
-                                        {limit.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                    <CardContent className="p-8 space-y-8">
+                      <div>
+                        <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3 block">
+                          Target Role
+                        </label>
+                        <Select value={selectedRole} onValueChange={setSelectedRole}>
+                          <SelectTrigger className="w-full bg-black/40 border-white/10 focus:ring-violet-500/50 h-12 text-lg">
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-zinc-900 border-white/10 text-white">
+                            {Object.keys(ROLE_SPECIFIC_QUESTIONS).map((role) => (
+                              <SelectItem key={role} value={role} className="focus:bg-violet-600/20 focus:text-violet-300">
+                                {role}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                        <div className="pt-4">
-                            <Button
-                                onClick={startInterview}
-                                size="lg"
-                                className="w-full h-14 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-lg font-medium shadow-xl shadow-violet-500/20 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      <div>
+                        <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3 block">
+                          Duration
+                        </label>
+                        <div className="grid grid-cols-3 gap-3">
+                          {TIME_LIMITS.map(limit => (
+                            <button
+                              key={limit.value}
+                              onClick={() => setTimeLimit(limit.value)}
+                              className={`p-3 rounded-xl border text-sm font-medium transition-all duration-300 ${timeLimit === limit.value
+                                  ? 'bg-violet-600 border-violet-500 text-white shadow-[0_0_20px_rgba(124,58,237,0.3)]'
+                                  : 'bg-black/40 border-white/10 text-zinc-400 hover:bg-white/5 hover:border-white/20'
+                                }`}
                             >
-                                <Sparkles className="w-5 h-5 mr-2" />
-                                Begin Session
-                            </Button>
-                            <p className="text-center text-xs text-zinc-500 mt-4">
-                                Camera and microphone access required
-                            </p>
+                              {limit.label}
+                            </button>
+                          ))}
                         </div>
-                        </CardContent>
-                    </Card>
+                      </div>
+
+                      <div className="pt-4">
+                        <Button
+                          onClick={startInterview}
+                          size="lg"
+                          className="w-full h-14 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-lg font-medium shadow-xl shadow-violet-500/20 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                          <Sparkles className="w-5 h-5 mr-2" />
+                          Begin Session
+                        </Button>
+                        <p className="text-center text-xs text-zinc-500 mt-4">
+                          Camera and microphone access required
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </motion.div>
-            </div>
+              </div>
             )}
           </main>
         </>
       ) : (
         <div className="relative z-10 min-h-screen flex flex-col">
-            <header className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-xl border-b border-white/5">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
-                         <Video className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-sm font-bold text-white">Live Interview</h1>
-                        <div className="flex items-center gap-2 text-xs text-violet-400">
-                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                             {interviewState === InterviewState.COMPLETED ? "Completed" : "In Progress"}
-                        </div>
-                    </div>
+          <header className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-xl border-b border-white/5">
+            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+                  <Video className="w-4 h-4 text-white" />
                 </div>
-                
-                <div className="flex items-center gap-4">
-                     <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                        <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                        <span className="font-mono font-medium text-sm text-white">{formatTimeRemaining(timeRemaining)}</span>
+                <div>
+                  <h1 className="text-sm font-bold text-white">Live Interview</h1>
+                  <div className="flex items-center gap-2 text-xs text-violet-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    {interviewState === InterviewState.COMPLETED ? "Completed" : "In Progress"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                  <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="font-mono font-medium text-sm text-white">{formatTimeRemaining(timeRemaining)}</span>
+                </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={endInterview}
+                  className="bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/20"
+                >
+                  <StopCircle className="w-4 h-4 mr-2" />
+                  End Session
+                </Button>
+              </div>
+            </div>
+          </header>
+
+          <main className="flex-1 container mx-auto px-4 pt-24 pb-12 max-w-6xl">
+            <div className="grid lg:grid-cols-2 gap-8 h-[calc(100vh-140px)]">
+              {/* Left: Video */}
+              <div className="space-y-6 flex flex-col">
+                <Card className="flex-1 bg-zinc-900/50 backdrop-blur-xl border-white/10 overflow-hidden relative group">
+                  <div className="absolute inset-0 bg-black">
+                    {!isPreviewing ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-violet-500/20 blur-xl rounded-full" />
+                          <Camera className="w-12 h-12 mb-4 relative z-10" />
+                        </div>
+                        <h3 className="text-sm font-medium">Initializing Camera...</h3>
+                      </div>
+                    ) : (
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted={isRecording || isPreviewing}
+                        controls={!!recordedBlob && !isRecording}
+                        className="w-full h-full object-cover transform scale-x-[-1]"
+                      />
+                    )}
+                  </div>
+
+                  {/* Recording Indicator */}
+                  {isRecording && (
+                    <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-mono font-medium shadow-lg animate-pulse">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      {formatTime(recordingTime)}
                     </div>
+                  )}
+
+                  {/* Stream Controls Overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
+                        <div className="p-2 rounded-full bg-white/10 backdrop-blur-md">
+                          <Mic className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="p-2 rounded-full bg-white/10 backdrop-blur-md">
+                          <Video className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                <div className="h-20">
+                  {interviewState === InterviewState.QUESTION && !isRecording && (
                     <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={endInterview}
-                        className="bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/20"
+                      onClick={startRecording}
+                      size="lg"
+                      className="w-full h-14 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg shadow-red-600/20 transition-all hover:scale-[1.02]"
                     >
-                        <StopCircle className="w-4 h-4 mr-2" />
-                        End Session
+                      <div className="w-3 h-3 rounded-full bg-white mr-2.5 animate-pulse"></div>
+                      Start Recording Answer
                     </Button>
-                </div>
-                </div>
-            </header>
+                  )}
 
-            <main className="flex-1 container mx-auto px-4 pt-24 pb-12 max-w-6xl">
-                <div className="grid lg:grid-cols-2 gap-8 h-[calc(100vh-140px)]">
-                {/* Left: Video */}
-                <div className="space-y-6 flex flex-col">
-                    <Card className="flex-1 bg-zinc-900/50 backdrop-blur-xl border-white/10 overflow-hidden relative group">
-                        <div className="absolute inset-0 bg-black">
-                            {!isPreviewing ? (
-                                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500">
-                                    <div className="relative">
-                                        <div className="absolute inset-0 bg-violet-500/20 blur-xl rounded-full" />
-                                        <Camera className="w-12 h-12 mb-4 relative z-10" />
-                                    </div>
-                                    <h3 className="text-sm font-medium">Initializing Camera...</h3>
-                                </div>
-                            ) : (
-                                <video
-                                    ref={videoRef}
-                                    autoPlay
-                                    playsInline
-                                    muted={isRecording || isPreviewing}
-                                    controls={!!recordedBlob && !isRecording}
-                                    className="w-full h-full object-cover transform scale-x-[-1]"
-                                />
-                            )}
+                  {isRecording && (
+                    <Button
+                      onClick={stopRecording}
+                      size="lg"
+                      className="w-full h-14 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl border border-white/10"
+                    >
+                      <div className="w-3 h-3 rounded-sm bg-red-500 mr-2.5"></div>
+                      Stop Recording
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: Content */}
+              <div className="space-y-6 flex flex-col">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                  <AnimatePresence mode="wait">
+                    {interviewState === InterviewState.QUESTION && (
+                      <motion.div
+                        key="question"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                      >
+                        <div className="mb-4 flex items-center gap-2 text-sm text-zinc-500 uppercase tracking-widest font-semibold">
+                          <span className="w-8 h-[1px] bg-violet-500" />
+                          Question {currentQuestionIndex + 1}
                         </div>
+                        <h2 className="text-3xl font-medium leading-tight text-white mb-8">
+                          {questions[currentQuestionIndex]}
+                        </h2>
 
-                        {/* Recording Indicator */}
-                        {isRecording && (
-                            <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-mono font-medium shadow-lg animate-pulse">
-                                <div className="w-2 h-2 bg-white rounded-full"></div>
-                                {formatTime(recordingTime)}
-                            </div>
-                        )}
-                        
-                        {/* Stream Controls Overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                             <div className="flex items-center justify-between">
-                                 <div className="flex gap-2">
-                                     <div className="p-2 rounded-full bg-white/10 backdrop-blur-md">
-                                         <Mic className="w-4 h-4 text-white" />
-                                     </div>
-                                     <div className="p-2 rounded-full bg-white/10 backdrop-blur-md">
-                                         <Video className="w-4 h-4 text-white" />
-                                     </div>
-                                 </div>
-                             </div>
+                        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-200 text-sm flex gap-3">
+                          <Zap className="w-5 h-5 flex-shrink-0 text-blue-400" />
+                          <p>Take a moment to structure your answer. Focus on the STAR method (Situation, Task, Action, Result) for behavioral questions.</p>
                         </div>
-                    </Card>
+                      </motion.div>
+                    )}
 
-                    <div className="h-20">
-                        {interviewState === InterviewState.QUESTION && !isRecording && (
-                            <Button
-                                onClick={startRecording}
-                                size="lg"
-                                className="w-full h-14 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg shadow-red-600/20 transition-all hover:scale-[1.02]"
-                            >
-                                <div className="w-3 h-3 rounded-full bg-white mr-2.5 animate-pulse"></div>
-                                Start Recording Answer
-                            </Button>
-                        )}
+                    {interviewState === InterviewState.ANALYZING && (
+                      <motion.div
+                        key="analyzing"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full flex flex-col items-center justify-center p-8 text-center"
+                      >
+                        <div className="relative mb-8">
+                          <div className="absolute inset-0 bg-violet-500/20 blur-xl rounded-full" />
+                          <Loader2 className="w-16 h-16 animate-spin text-violet-500 relative z-10" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-2">Analyzing Response</h3>
+                        <p className="text-zinc-400">Our AI is evaluating your delivery and content...</p>
+                      </motion.div>
+                    )}
 
-                        {isRecording && (
-                            <Button
-                                onClick={stopRecording}
-                                size="lg"
-                                className="w-full h-14 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl border border-white/10"
-                            >
-                                <div className="w-3 h-3 rounded-sm bg-red-500 mr-2.5"></div>
-                                Stop Recording
-                            </Button>
-                        )}
-                    </div>
+                    {interviewState === InterviewState.FEEDBACK && currentFeedback && (
+                      <motion.div
+                        key="feedback"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                      >
+                        <QuickFeedback
+                          modelAnswer={currentFeedback.model_answer}
+                          whatsGood={currentFeedback.whats_good}
+                          whatsWrong={currentFeedback.whats_wrong}
+                          deliveryScore={currentFeedback.delivery_score}
+                          bodyLanguageScore={currentFeedback.body_language_score}
+                          confidenceScore={currentFeedback.confidence_score}
+                          onNext={handleNextQuestion}
+                          isLastQuestion={currentQuestionIndex === questions.length - 1}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-
-                {/* Right: Content */}
-                <div className="space-y-6 flex flex-col">
-                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                        <AnimatePresence mode="wait">
-                            {interviewState === InterviewState.QUESTION && (
-                                <motion.div
-                                    key="question"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                >
-                                    <div className="mb-4 flex items-center gap-2 text-sm text-zinc-500 uppercase tracking-widest font-semibold">
-                                         <span className="w-8 h-[1px] bg-violet-500" />
-                                         Question {currentQuestionIndex + 1}
-                                    </div>
-                                    <h2 className="text-3xl font-medium leading-tight text-white mb-8">
-                                        {questions[currentQuestionIndex]}
-                                    </h2>
-                                    
-                                    <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-200 text-sm flex gap-3">
-                                         <Zap className="w-5 h-5 flex-shrink-0 text-blue-400" />
-                                         <p>Take a moment to structure your answer. Focus on the STAR method (Situation, Task, Action, Result) for behavioral questions.</p>
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {interviewState === InterviewState.ANALYZING && (
-                                <motion.div
-                                    key="analyzing"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="h-full flex flex-col items-center justify-center p-8 text-center"
-                                >
-                                    <div className="relative mb-8">
-                                        <div className="absolute inset-0 bg-violet-500/20 blur-xl rounded-full" />
-                                        <Loader2 className="w-16 h-16 animate-spin text-violet-500 relative z-10" />
-                                    </div>
-                                    <h3 className="text-2xl font-bold text-white mb-2">Analyzing Response</h3>
-                                    <p className="text-zinc-400">Our AI is evaluating your delivery and content...</p>
-                                </motion.div>
-                            )}
-                            
-                            {interviewState === InterviewState.FEEDBACK && currentFeedback && (
-                                <motion.div
-                                    key="feedback"
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                >
-                                    <QuickFeedback
-                                        modelAnswer={currentFeedback.model_answer}
-                                        whatsGood={currentFeedback.whats_good}
-                                        whatsWrong={currentFeedback.whats_wrong}
-                                        deliveryScore={currentFeedback.delivery_score}
-                                        bodyLanguageScore={currentFeedback.body_language_score}
-                                        confidenceScore={currentFeedback.confidence_score}
-                                        onNext={handleNextQuestion}
-                                        isLastQuestion={currentQuestionIndex === questions.length - 1}
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </div>
-                </div>
-            </main>
+              </div>
+            </div>
+          </main>
         </div>
       )}
     </div>

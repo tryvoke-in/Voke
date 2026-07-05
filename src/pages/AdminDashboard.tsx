@@ -71,6 +71,11 @@ const AdminDashboard = () => {
   const [isLoadingWaitlist, setIsLoadingWaitlist] = useState(false);
   const [waitlistSearchQuery, setWaitlistSearchQuery] = useState("");
   const [totalSessions, setTotalSessions] = useState(0);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState("");
+  const [analyticsFilterEvent, setAnalyticsFilterEvent] = useState("all");
+  const [expandedActivityId, setExpandedActivityId] = useState<string | null>(null);
 
   const filteredUsers = users.filter(user => {
     const searchLower = searchQuery.toLowerCase();
@@ -121,6 +126,7 @@ const AdminDashboard = () => {
     fetchBlogs();
     fetchWaitlist();
     fetchSessionStats();
+    fetchAnalytics();
 
     // Subscribe to new users in real-time
     const channel = supabase
@@ -140,9 +146,18 @@ const AdminDashboard = () => {
       })
       .subscribe();
 
+    // Subscribe to new activities in real-time
+    const activitiesChannel = supabase
+      .channel('public:user_activities')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_activities' }, payload => {
+        setActivities(current => [payload.new, ...current]);
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(waitlistChannel);
+      supabase.removeChannel(activitiesChannel);
     };
   }, []);
 
@@ -214,6 +229,24 @@ const AdminDashboard = () => {
       setTotalSessions(total);
     } catch (err) {
       console.error('Error fetching session stats:', err);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    setIsLoadingAnalytics(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_activities')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setActivities(data || []);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      toast.error("Failed to fetch analytics logs");
+    } finally {
+      setIsLoadingAnalytics(false);
     }
   };
 
@@ -463,6 +496,7 @@ const AdminDashboard = () => {
         <nav className="flex-1 px-4 space-y-2">
           {[
             { id: "overview", label: "Overview", icon: LayoutDashboard },
+            { id: "analytics", label: "Analytics", icon: TrendingUp },
             { id: "users", label: "User Management", icon: Users },
             { id: "waitlist", label: "Waitlist Signups", icon: Mail },
             { id: "community", label: "Community", icon: MessageSquare },
@@ -526,11 +560,25 @@ const AdminDashboard = () => {
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               <Input 
-                placeholder={activeTab === "waitlist" ? "Search waitlist..." : "Search by name, email..."} 
-                value={activeTab === "waitlist" ? waitlistSearchQuery : searchQuery}
+                placeholder={
+                  activeTab === "waitlist" 
+                    ? "Search waitlist..." 
+                    : activeTab === "analytics"
+                      ? "Search activities..."
+                      : "Search by name, email..."
+                } 
+                value={
+                  activeTab === "waitlist" 
+                    ? waitlistSearchQuery 
+                    : activeTab === "analytics"
+                      ? analyticsSearchQuery
+                      : searchQuery
+                }
                 onChange={(e) => {
                   if (activeTab === "waitlist") {
                     setWaitlistSearchQuery(e.target.value);
+                  } else if (activeTab === "analytics") {
+                    setAnalyticsSearchQuery(e.target.value);
                   } else {
                     setSearchQuery(e.target.value);
                   }
@@ -731,6 +779,463 @@ const AdminDashboard = () => {
                         )))}
                       </TableBody>
                     </Table>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {activeTab === "analytics" && (
+              <motion.div
+                key="analytics"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-8 animate-in fade-in duration-300"
+              >
+                {/* Metrics Summary Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    {
+                      title: "Total Page Views",
+                      value: activities.filter(a => a.event_type === 'page_view').length,
+                      desc: "Accumulated page views",
+                      icon: Activity,
+                      color: "text-violet-400",
+                      bg: "bg-violet-500/10"
+                    },
+                    {
+                      title: "Total Visits",
+                      value: new Set(activities.map(a => a.session_id)).size,
+                      desc: "Unique browsing sessions",
+                      icon: Database,
+                      color: "text-blue-400",
+                      bg: "bg-blue-500/10"
+                    },
+                    {
+                      title: "Unique Users",
+                      value: (() => {
+                        const set = new Set();
+                        activities.forEach(a => {
+                          if (a.user_email) set.add(a.user_email);
+                          else if (a.user_id) set.add(a.user_id);
+                        });
+                        return set.size;
+                      })(),
+                      desc: "Identified distinct users",
+                      icon: Users,
+                      color: "text-emerald-400",
+                      bg: "bg-emerald-500/10"
+                    },
+                    {
+                      title: "Custom Actions",
+                      value: activities.filter(a => a.event_type !== 'page_view').length,
+                      desc: "Buttons clicked & forms sent",
+                      icon: TrendingUp,
+                      color: "text-amber-400",
+                      bg: "bg-amber-500/10"
+                    }
+                  ].map((card, i) => (
+                    <Card key={i} className="bg-white/5 border-white/10 shadow-xl overflow-hidden group hover:bg-white/10 transition-all duration-300">
+                      <CardContent className="p-6 relative">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm font-medium text-gray-400">{card.title}</p>
+                            <h3 className="text-3xl font-extrabold mt-2 tracking-tight">{card.value}</h3>
+                          </div>
+                          <div className={`p-3 rounded-2xl ${card.color} ${card.bg} group-hover:scale-110 transition-transform duration-300`}>
+                            <card.icon className="w-6 h-6" />
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-4">{card.desc}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Main Activity Chart */}
+                <Card className="bg-white/5 border-white/10 shadow-xl">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-violet-400 animate-pulse" />
+                      Web Activity Trends
+                    </CardTitle>
+                    <p className="text-xs text-gray-400">Daily breakdown of unique visits, page views, and custom actions</p>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={(() => {
+                        const last7Days: Record<string, { dateStr: string; visits: Set<string>; pageViews: number; actions: number }> = {};
+                        for (let i = 6; i >= 0; i--) {
+                          const d = new Date();
+                          d.setDate(d.getDate() - i);
+                          const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+                          const isoDate = d.toISOString().split('T')[0];
+                          last7Days[isoDate] = { dateStr, visits: new Set(), pageViews: 0, actions: 0 };
+                        }
+                        activities.forEach(a => {
+                          const dKey = new Date(a.created_at).toISOString().split('T')[0];
+                          if (last7Days[dKey]) {
+                            last7Days[dKey].visits.add(a.session_id);
+                            if (a.event_type === 'page_view') last7Days[dKey].pageViews += 1;
+                            else last7Days[dKey].actions += 1;
+                          }
+                        });
+                        return Object.values(last7Days).map(day => ({
+                          date: day.dateStr,
+                          "Page Views": day.pageViews,
+                          "Unique Visits": day.visits.size,
+                          "Custom Actions": day.actions
+                        }));
+                      })()}>
+                        <defs>
+                          <linearGradient id="colorPageViews" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="colorActions" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                        <XAxis dataKey="date" stroke="#6b7280" fontSize={11} tickLine={false} />
+                        <YAxis stroke="#6b7280" fontSize={11} tickLine={false} />
+                        <Tooltip contentStyle={{ backgroundColor: '#09090b', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '12px' }} />
+                        <Area type="monotone" dataKey="Page Views" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorPageViews)" strokeWidth={2} />
+                        <Area type="monotone" dataKey="Unique Visits" stroke="#3b82f6" fillOpacity={1} fill="url(#colorVisits)" strokeWidth={2} />
+                        <Area type="monotone" dataKey="Custom Actions" stroke="#10b981" fillOpacity={1} fill="url(#colorActions)" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Popular Breakdown Cards */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Top Pages */}
+                  <Card className="bg-white/5 border-white/10 shadow-xl">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold">Top Pages Visited</CardTitle>
+                      <p className="text-xs text-gray-400">Routes with highest hit rates</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {(() => {
+                          const counts: Record<string, number> = {};
+                          activities.forEach(a => {
+                            if (a.event_type === 'page_view') {
+                              counts[a.page_path] = (counts[a.page_path] || 0) + 1;
+                            }
+                          });
+                          const sorted = Object.entries(counts)
+                            .map(([path, count]) => ({ path, count }))
+                            .sort((a, b) => b.count - a.count)
+                            .slice(0, 5);
+                          
+                          const maxCount = sorted[0]?.count || 1;
+
+                          if (sorted.length === 0) {
+                            return <p className="text-sm text-gray-500 py-4 text-center">No page views recorded yet</p>;
+                          }
+
+                          return sorted.map((page, index) => (
+                            <div key={index} className="space-y-1.5">
+                              <div className="flex justify-between text-sm">
+                                <span className="font-mono text-gray-300 truncate max-w-[80%]">{page.path}</span>
+                                <span className="font-bold text-violet-400">{page.count} hits</span>
+                              </div>
+                              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                <div 
+                                  className="bg-violet-600 h-full rounded-full transition-all duration-500" 
+                                  style={{ width: `${(page.count / maxCount) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Top Actions */}
+                  <Card className="bg-white/5 border-white/10 shadow-xl">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold">Top Custom Actions</CardTitle>
+                      <p className="text-xs text-gray-400">Most frequent user interactions</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {(() => {
+                          const counts: Record<string, number> = {};
+                          activities.forEach(a => {
+                            if (a.event_type !== 'page_view') {
+                              counts[a.event_type] = (counts[a.event_type] || 0) + 1;
+                            }
+                          });
+                          const sorted = Object.entries(counts)
+                            .map(([type, count]) => ({ type, count }))
+                            .sort((a, b) => b.count - a.count)
+                            .slice(0, 5);
+                          
+                          const maxCount = sorted[0]?.count || 1;
+
+                          if (sorted.length === 0) {
+                            return <p className="text-sm text-gray-500 py-4 text-center">No custom actions recorded yet</p>;
+                          }
+
+                          return sorted.map((action, index) => (
+                            <div key={index} className="space-y-1.5">
+                              <div className="flex justify-between text-sm">
+                                <span className="font-semibold text-gray-300 capitalize">{action.type.replace(/_/g, ' ')}</span>
+                                <span className="font-bold text-emerald-400">{action.count} times</span>
+                              </div>
+                              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                <div 
+                                  className="bg-emerald-600 h-full rounded-full transition-all duration-500" 
+                                  style={{ width: `${(action.count / maxCount) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* User Engagement Summary (Visits Breakdown) */}
+                <Card className="bg-white/5 border-white/10 shadow-xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                      <Users className="w-5 h-5 text-emerald-400" />
+                      User Engagement Summary
+                    </CardTitle>
+                    <p className="text-xs text-gray-400">List of users, their total visits (sessions), page views/actions, and last activity time</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-white/10 hover:bg-white/5">
+                            <TableHead className="text-gray-400">User Email</TableHead>
+                            <TableHead className="text-gray-400">Total Visits (Sessions)</TableHead>
+                            <TableHead className="text-gray-400">Total Page Views / Actions</TableHead>
+                            <TableHead className="text-gray-400">Last Active</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {(() => {
+                            const breakdown = (() => {
+                              const userStats: Record<string, { email: string; sessions: Set<string>; pageViews: number; lastActive: string }> = {};
+
+                              activities.forEach(activity => {
+                                const identifier = activity.user_email || "Guest (Anonymous)";
+                                if (!userStats[identifier]) {
+                                  userStats[identifier] = {
+                                    email: identifier,
+                                    sessions: new Set<string>(),
+                                    pageViews: 0,
+                                    lastActive: activity.created_at
+                                  };
+                                }
+                                userStats[identifier].sessions.add(activity.session_id);
+                                userStats[identifier].pageViews += 1;
+                                if (new Date(activity.created_at) > new Date(userStats[identifier].lastActive)) {
+                                  userStats[identifier].lastActive = activity.created_at;
+                                }
+                              });
+
+                              return Object.values(userStats)
+                                .map(stat => ({
+                                  email: stat.email,
+                                  visitCount: stat.sessions.size,
+                                  pageViews: stat.pageViews,
+                                  lastActive: stat.lastActive
+                                }))
+                                .sort((a, b) => b.visitCount - a.visitCount);
+                            })();
+
+                            if (breakdown.length === 0) {
+                              return (
+                                <TableRow>
+                                  <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                                    No user activity recorded yet
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            }
+
+                            return breakdown.map((userBreakdown, index) => (
+                              <TableRow key={index} className="border-white/10 hover:bg-white/5">
+                                <TableCell className="font-medium text-gray-300">
+                                  {userBreakdown.email.includes("Guest") ? (
+                                    <span className="text-gray-500 italic">{userBreakdown.email}</span>
+                                  ) : (
+                                    userBreakdown.email
+                                  )}
+                                </TableCell>
+                                <TableCell className="font-bold text-violet-400">
+                                  {userBreakdown.visitCount} visits
+                                </TableCell>
+                                <TableCell className="text-gray-300 text-sm">
+                                  {userBreakdown.pageViews} hits
+                                </TableCell>
+                                <TableCell className="text-gray-400 text-sm">
+                                  {new Date(userBreakdown.lastActive).toLocaleString('en-GB')}
+                                </TableCell>
+                              </TableRow>
+                            ));
+                          })()}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Live Activity Log Table */}
+                <Card className="bg-white/5 border-white/10 shadow-xl">
+                  <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-lg font-bold">Activity Logs</CardTitle>
+                      <p className="text-xs text-gray-400">Granular view of user activities on the website</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 mr-1">Filter Type:</span>
+                      <Select value={analyticsFilterEvent} onValueChange={setAnalyticsFilterEvent}>
+                        <SelectTrigger className="w-[180px] bg-white/5 border-white/10 text-gray-300 rounded-xl">
+                          <SelectValue placeholder="Event Type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-zinc-950 border-white/10 text-white rounded-xl">
+                          <SelectItem value="all">All Events</SelectItem>
+                          <SelectItem value="page_view">Page Views</SelectItem>
+                          <SelectItem value="waitlist_signup">Waitlist Signups</SelectItem>
+                          <SelectItem value="auth_login">Logins</SelectItem>
+                          <SelectItem value="user_signup">Registrations</SelectItem>
+                          <SelectItem value="pricing_upgrade_click">Checkout Started</SelectItem>
+                          <SelectItem value="pricing_upgrade_success">Upgrades Done</SelectItem>
+                          <SelectItem value="custom_actions">Custom Actions Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {isLoadingAnalytics ? (
+                      <div className="py-20 text-center text-gray-400">Loading activity logs...</div>
+                    ) : (() => {
+                      const filtered = activities.filter(activity => {
+                        if (analyticsFilterEvent !== "all") {
+                          if (analyticsFilterEvent === "custom_actions" && activity.event_type === "page_view") {
+                            return false;
+                          } else if (analyticsFilterEvent !== "custom_actions" && activity.event_type !== analyticsFilterEvent) {
+                            return false;
+                          }
+                        }
+
+                        if (!analyticsSearchQuery) return true;
+                        const searchLower = analyticsSearchQuery.toLowerCase();
+                        const emailMatch = (activity.user_email || "guest").toLowerCase().includes(searchLower);
+                        const pathMatch = activity.page_path.toLowerCase().includes(searchLower);
+                        const typeMatch = activity.event_type.toLowerCase().includes(searchLower);
+                        const detailsMatch = JSON.stringify(activity.action_details || {}).toLowerCase().includes(searchLower);
+
+                        return emailMatch || pathMatch || typeMatch || detailsMatch;
+                      });
+
+                      if (filtered.length === 0) {
+                        return <div className="py-20 text-center text-gray-500">No matching activities found</div>;
+                      }
+
+                      return (
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="border-white/10 hover:bg-white/5">
+                                <TableHead className="text-gray-400 w-[240px]">User</TableHead>
+                                <TableHead className="text-gray-400">Event</TableHead>
+                                <TableHead className="text-gray-400">Path</TableHead>
+                                <TableHead className="text-gray-400">Time</TableHead>
+                                <TableHead className="text-right text-gray-400 w-[120px]">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {filtered.map((activity) => {
+                                const isExpanded = expandedActivityId === activity.id;
+                                const isGuest = !activity.user_email;
+                                
+                                let badgeColor = "bg-gray-500/10 text-gray-400";
+                                if (activity.event_type === "waitlist_signup") badgeColor = "bg-green-500/10 text-green-400";
+                                else if (activity.event_type === "auth_login" || activity.event_type === "user_signup") badgeColor = "bg-blue-500/10 text-blue-400";
+                                else if (activity.event_type === "pricing_upgrade_success") badgeColor = "bg-yellow-500/10 text-yellow-400";
+                                else if (activity.event_type === "pricing_upgrade_click") badgeColor = "bg-amber-500/10 text-amber-400";
+                                else if (activity.event_type === "interview_start" || activity.event_type === "interview_complete") badgeColor = "bg-purple-500/10 text-purple-400";
+
+                                return (
+                                  <>
+                                    <TableRow 
+                                      key={activity.id} 
+                                      className="border-white/10 hover:bg-white/5 transition-colors"
+                                    >
+                                      <TableCell className="font-medium text-gray-300">
+                                        {isGuest ? (
+                                          <span className="text-gray-500 italic">Guest User</span>
+                                        ) : (
+                                          <div className="truncate max-w-[220px]" title={activity.user_email}>
+                                            {activity.user_email}
+                                          </div>
+                                        )}
+                                      </TableCell>
+                                      <TableCell>
+                                        <Badge variant="outline" className={`${badgeColor} border-0 capitalize font-medium`}>
+                                          {activity.event_type.replace(/_/g, ' ')}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell className="font-mono text-xs text-gray-400">
+                                        {activity.page_path}
+                                      </TableCell>
+                                      <TableCell className="text-gray-400 text-sm">
+                                        {new Date(activity.created_at).toLocaleString('en-GB')}
+                                      </TableCell>
+                                      <TableCell className="text-right">
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          onClick={() => setExpandedActivityId(isExpanded ? null : activity.id)}
+                                          className="text-violet-400 hover:text-white hover:bg-violet-600/20 rounded-lg text-xs"
+                                        >
+                                          {isExpanded ? "Hide Details" : "View Details"}
+                                        </Button>
+                                      </TableCell>
+                                    </TableRow>
+                                    {isExpanded && (
+                                      <TableRow className="bg-white/[0.01] hover:bg-white/[0.01]">
+                                        <TableCell colSpan={5} className="py-4 px-6 border-white/5">
+                                          <div className="bg-black/50 p-4 rounded-xl border border-white/5 space-y-3 font-sans text-xs text-left">
+                                            <div>
+                                              <span className="font-semibold text-gray-400 block mb-1">User Agent (Browser & Device)</span>
+                                              <p className="text-gray-300 bg-white/5 p-2 rounded-lg font-mono truncate">{activity.user_agent || "Unknown"}</p>
+                                            </div>
+                                            <div>
+                                              <span className="font-semibold text-gray-400 block mb-1">Payload Details (action_details)</span>
+                                              <pre className="text-emerald-400 bg-white/5 p-3 rounded-lg overflow-x-auto font-mono text-[11px] leading-relaxed">
+                                                {JSON.stringify(activity.action_details || {}, null, 2)}
+                                              </pre>
+                                            </div>
+                                          </div>
+                                        </TableCell>
+                                      </TableRow>
+                                    )}
+                                  </>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </motion.div>

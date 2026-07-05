@@ -132,7 +132,7 @@ const ResumeBuilder = () => {
   const [jdKeywords, setJdKeywords] = useState<{ hard_skills: string[]; soft_skills: string[]; required_experience: string[] } | null>(null);
   const [extractingJd, setExtractingJd] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Track true pixel height of print container to ensure perfect zoom scrolling
   const printContainerRef = useRef<HTMLDivElement>(null);
   const [printHeight, setPrintHeight] = useState(1122); // Fallback to A4 ~1122px
@@ -245,10 +245,10 @@ const ResumeBuilder = () => {
           lastError = e.message;
         }
       }
-      
+
       // If we exhausted retries on the current model due to 429, we'll loop to the next fallback model
       if (lastStatus === 429 && i < models.length - 1) {
-        toast.info(`Rate limit hit. Switching to fallback model: ${models[i+1]}...`);
+        toast.info(`Rate limit hit. Switching to fallback model: ${models[i + 1]}...`);
       }
     }
 
@@ -296,7 +296,7 @@ const ResumeBuilder = () => {
     try {
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       if (!apiKey) throw new Error("Missing API Key");
-      
+
       const response = await fetchGroqWithRetry({
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: `Rewrite the following resume summary to be highly professional, action-oriented, and bypass AI detectors by sounding very human and authentic. Keep it to 2-3 sentences max. Do NOT use generic AI words like "delve", "testament", or "tapestry". Here is the summary: ${data.summary}` }],
@@ -325,7 +325,8 @@ const ResumeBuilder = () => {
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       const response = await fetchGroqWithRetry({
         model: "llama-3.3-70b-versatile",
-        messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, { role: "user", content: `Rewrite the following job duties into 2-3 elite, metric-driven bullet points. 
+        messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
+          role: "user", content: `Rewrite the following job duties into 2-3 elite, metric-driven bullet points. 
         
 CRITICAL RULES:
 1. Start EVERY bullet point with a powerful action verb (e.g., Spearheaded, Architected, Engineered).
@@ -334,7 +335,8 @@ CRITICAL RULES:
 4. Format exactly as a markdown list using '-' and nothing else.
 5. Focus purely on technical depth and business impact. 
 
-Original Text: ${description}` }],
+Original Text: ${description}`
+        }],
         temperature: 0.6,
       });
       const resData = await response.json();
@@ -363,7 +365,8 @@ Original Text: ${description}` }],
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       const response = await fetchGroqWithRetry({
         model: "llama-3.3-70b-versatile",
-        messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, { role: "user", content: `Rewrite the following project description into 2-3 elite, metric-driven bullet points. 
+        messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
+          role: "user", content: `Rewrite the following project description into 2-3 elite, metric-driven bullet points. 
 
 CRITICAL RULES:
 1. Start EVERY bullet point with a powerful action verb.
@@ -372,7 +375,8 @@ CRITICAL RULES:
 4. Format exactly as a markdown list using '-' and nothing else.
 5. Focus purely on technical depth and business impact. 
 
-Original Text: ${description}` }],
+Original Text: ${description}`
+        }],
         temperature: 0.6,
       });
       const resData = await response.json();
@@ -963,13 +967,13 @@ ${resumeText}${jdContext}`;
     setImporting(true);
     try {
       const text = await extractResumeText(file);
-      
+
       if (!text || text.length < 50) {
         throw new Error("Extracted text is too short or empty. Please check the PDF.");
       }
 
       toast.info("Parsing resume data with AI...");
-      
+
       const systemPrompt = `You are an expert resume parser. Your job is to extract structured data from raw resume text.
 You must return a JSON object that strictly matches the following TypeScript interfaces:
 
@@ -1223,7 +1227,7 @@ IMPORTANT:
               <img src={data.photo} alt={data.fullName} className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md" />
             </div>
           )}
-          
+
           {/* Contact Details */}
           <div>
             <h3 className="text-[9pt] font-extrabold uppercase tracking-wider text-slate-500 mb-2.5 border-b border-slate-200 pb-1">Contact</h3>
@@ -1686,10 +1690,10 @@ IMPORTANT:
       {/* Voke Themed Header */}
       <header className="h-16 border-b border-white/5 bg-zinc-950/40 backdrop-blur-xl flex items-center justify-between px-6 z-20 no-print sticky top-0">
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate('/dashboard')} 
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/dashboard')}
             className="hover:bg-white/5 text-zinc-400 hover:text-white transition-all rounded-xl h-9 w-9"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -1750,17 +1754,17 @@ IMPORTANT:
             ATS Audit
           </Button>
 
-          <Button 
-            variant="ghost" 
-            onClick={handlePrint} 
+          <Button
+            variant="ghost"
+            onClick={handlePrint}
             className="text-zinc-400 hover:text-white hover:bg-white/5 text-xs h-9 rounded-xl transition-all"
           >
             <Printer className="w-3.5 h-3.5 mr-1.5" />
             Print
           </Button>
 
-          <Button 
-            onClick={handlePrint} 
+          <Button
+            onClick={handlePrint}
             className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold text-xs h-9 rounded-xl shadow-lg shadow-violet-500/10 transition-all hover:scale-[1.02] border-0"
           >
             <Download className="w-3.5 h-3.5 mr-1.5" />
@@ -1785,11 +1789,10 @@ IMPORTANT:
                   <button
                     key={sec.id}
                     onClick={() => setActiveTab(sec.id)}
-                    className={`w-full text-left px-3.5 py-3 rounded-xl flex items-center justify-between gap-3 group transition-all duration-300 ${
-                      active 
-                        ? 'bg-gradient-to-r from-violet-500/10 to-fuchsia-500/5 border-l-2 border-violet-500 text-white bg-zinc-900/60' 
+                    className={`w-full text-left px-3.5 py-3 rounded-xl flex items-center justify-between gap-3 group transition-all duration-300 ${active
+                        ? 'bg-gradient-to-r from-violet-500/10 to-fuchsia-500/5 border-l-2 border-violet-500 text-white bg-zinc-900/60'
                         : 'text-zinc-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-violet-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
@@ -1823,7 +1826,7 @@ IMPORTANT:
           {/* Form Content Scroll Pane - Violet focus accents */}
           <ScrollArea className="flex-1 custom-scrollbar bg-black/10">
             <div className="p-6 max-w-xl mx-auto space-y-6 pb-24">
-              
+
               {/* Personal Information form fields */}
               {activeTab === "personal" && (
                 <Card className="bg-zinc-900/40 border border-white/10 text-white backdrop-blur-xl shadow-[0_8px_32px_0_rgba(124,58,237,0.02)] rounded-2xl">
@@ -1838,22 +1841,22 @@ IMPORTANT:
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label className="text-zinc-400 text-xs font-medium">Full Name</Label>
-                        <Input 
-                          placeholder="e.g. John Doe" 
-                          value={data.fullName} 
-                          onChange={(e) => handleChange('fullName', e.target.value)} 
-                          className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300" 
+                        <Input
+                          placeholder="e.g. John Doe"
+                          value={data.fullName}
+                          onChange={(e) => handleChange('fullName', e.target.value)}
+                          className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                         />
                       </div>
                       <div className="space-y-1.5">
                         <Label className="text-zinc-400 text-xs font-medium">Profile Image (Optional)</Label>
                         <div className="flex items-center gap-2">
                           {data.photo && <img src={data.photo} alt="Preview" className="w-7 h-7 rounded-full object-cover border border-white/10" />}
-                          <Input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={handlePhotoUpload} 
-                            className="bg-white/5 border border-white/10 text-xs file:text-white file:bg-white/10 file:border-0 file:rounded-lg file:px-2 file:py-1 file:mr-2 text-zinc-500 h-9 p-1 rounded-xl focus:border-violet-500/40 transition-all duration-300" 
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePhotoUpload}
+                            className="bg-white/5 border border-white/10 text-xs file:text-white file:bg-white/10 file:border-0 file:rounded-lg file:px-2 file:py-1 file:mr-2 text-zinc-500 h-9 p-1 rounded-xl focus:border-violet-500/40 transition-all duration-300"
                           />
                         </div>
                       </div>
@@ -1862,31 +1865,31 @@ IMPORTANT:
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label className="text-zinc-400 text-xs font-medium">Email Address</Label>
-                        <Input 
-                          placeholder="john@example.com" 
-                          value={data.email} 
-                          onChange={(e) => handleChange('email', e.target.value)} 
-                          className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300" 
+                        <Input
+                          placeholder="john@example.com"
+                          value={data.email}
+                          onChange={(e) => handleChange('email', e.target.value)}
+                          className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                         />
                       </div>
                       <div className="space-y-1.5">
                         <Label className="text-zinc-400 text-xs font-medium">Phone Number</Label>
-                        <Input 
-                          placeholder="+1 234 567 890" 
-                          value={data.phone} 
-                          onChange={(e) => handleChange('phone', e.target.value)} 
-                          className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300" 
+                        <Input
+                          placeholder="+1 234 567 890"
+                          value={data.phone}
+                          onChange={(e) => handleChange('phone', e.target.value)}
+                          className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
                       <Label className="text-zinc-400 text-xs font-medium">Location</Label>
-                      <Input 
-                        placeholder="e.g. San Francisco, CA" 
-                        value={data.location} 
-                        onChange={(e) => handleChange('location', e.target.value)} 
-                        className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300" 
+                      <Input
+                        placeholder="e.g. San Francisco, CA"
+                        value={data.location}
+                        onChange={(e) => handleChange('location', e.target.value)}
+                        className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                       />
                     </div>
 
@@ -1895,38 +1898,38 @@ IMPORTANT:
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="relative">
                           <Linkedin className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
-                          <Input 
-                            placeholder="LinkedIn URL" 
-                            value={data.linkedin} 
-                            onChange={(e) => handleChange('linkedin', e.target.value)} 
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300" 
+                          <Input
+                            placeholder="LinkedIn URL"
+                            value={data.linkedin}
+                            onChange={(e) => handleChange('linkedin', e.target.value)}
+                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                           />
                         </div>
                         <div className="relative">
                           <Github className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
-                          <Input 
-                            placeholder="GitHub URL" 
-                            value={data.github} 
-                            onChange={(e) => handleChange('github', e.target.value)} 
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300" 
+                          <Input
+                            placeholder="GitHub URL"
+                            value={data.github}
+                            onChange={(e) => handleChange('github', e.target.value)}
+                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                           />
                         </div>
                         <div className="relative">
                           <Globe className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
-                          <Input 
-                            placeholder="Portfolio URL" 
-                            value={data.website} 
-                            onChange={(e) => handleChange('website', e.target.value)} 
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300" 
+                          <Input
+                            placeholder="Portfolio URL"
+                            value={data.website}
+                            onChange={(e) => handleChange('website', e.target.value)}
+                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                           />
                         </div>
                         <div className="relative">
                           <Code className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
-                          <Input 
-                            placeholder="LeetCode URL" 
-                            value={data.leetcode} 
-                            onChange={(e) => handleChange('leetcode', e.target.value)} 
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300" 
+                          <Input
+                            placeholder="LeetCode URL"
+                            value={data.leetcode}
+                            onChange={(e) => handleChange('leetcode', e.target.value)}
+                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                           />
                         </div>
                       </div>
@@ -1965,9 +1968,9 @@ IMPORTANT:
                       <h3 className="font-bold text-sm text-white">Work History</h3>
                       <p className="text-[11px] text-zinc-500">Record your timeline of roles.</p>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={addExperience} 
+                    <Button
+                      size="sm"
+                      onClick={addExperience}
                       className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs h-8 rounded-xl transition-all duration-300"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add Role
@@ -1978,9 +1981,9 @@ IMPORTANT:
                     {data.experience.map((exp) => (
                       <Card key={exp.id} className="relative group bg-zinc-900/30 border border-white/10 text-white rounded-2xl overflow-hidden">
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
                             onClick={() => removeExperience(exp.id)}
                           >
@@ -1991,38 +1994,38 @@ IMPORTANT:
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Company</Label>
-                              <Input 
-                                placeholder="e.g. Microsoft" 
-                                value={exp.company} 
-                                onChange={(e) => updateExperience(exp.id, 'company', e.target.value)} 
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
+                              <Input
+                                placeholder="e.g. Microsoft"
+                                value={exp.company}
+                                onChange={(e) => updateExperience(exp.id, 'company', e.target.value)}
+                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                             <div className="space-y-1">
                               <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Job Role Title</Label>
-                              <Input 
-                                placeholder="e.g. Software Engineer" 
-                                value={exp.role} 
-                                onChange={(e) => updateExperience(exp.id, 'role', e.target.value)} 
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
+                              <Input
+                                placeholder="e.g. Software Engineer"
+                                value={exp.role}
+                                onChange={(e) => updateExperience(exp.id, 'role', e.target.value)}
+                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
                           <div className="space-y-1">
                             <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Employment Period</Label>
-                            <Input 
-                              placeholder="e.g. Jun 2021 - Present" 
-                              value={exp.duration} 
-                              onChange={(e) => updateExperience(exp.id, 'duration', e.target.value)} 
-                              className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
+                            <Input
+                              placeholder="e.g. Jun 2021 - Present"
+                              value={exp.duration}
+                              onChange={(e) => updateExperience(exp.id, 'duration', e.target.value)}
+                              className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                             />
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between mb-1">
                               <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Key Duties & Accomplishments</Label>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => handleAiEnhanceExperience(exp.id, exp.description)}
                                 disabled={enhancingExpId === exp.id}
                                 className="h-5 px-1.5 text-[9px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 rounded-md transition-all font-semibold"
@@ -2060,9 +2063,9 @@ IMPORTANT:
                       <h3 className="font-bold text-sm text-white">Education History</h3>
                       <p className="text-[11px] text-zinc-500">Record your academic credentials.</p>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={addEducation} 
+                    <Button
+                      size="sm"
+                      onClick={addEducation}
                       className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs h-8 rounded-xl transition-all duration-300"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add School
@@ -2073,9 +2076,9 @@ IMPORTANT:
                     {data.education.map((edu) => (
                       <Card key={edu.id} className="relative group bg-zinc-900/30 border border-white/10 text-white rounded-2xl overflow-hidden">
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
                             onClick={() => removeEducation(edu.id)}
                           >
@@ -2086,40 +2089,40 @@ IMPORTANT:
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Institution / School</Label>
-                              <Input 
-                                placeholder="e.g. Stanford University" 
-                                value={edu.school} 
-                                onChange={(e) => updateEducation(edu.id, 'school', e.target.value)} 
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
+                              <Input
+                                placeholder="e.g. Stanford University"
+                                value={edu.school}
+                                onChange={(e) => updateEducation(edu.id, 'school', e.target.value)}
+                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                             <div className="space-y-1">
                               <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Degree / Major</Label>
-                              <Input 
-                                placeholder="e.g. BS Computer Science" 
-                                value={edu.degree} 
-                                onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)} 
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
+                              <Input
+                                placeholder="e.g. BS Computer Science"
+                                value={edu.degree}
+                                onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
+                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Year of Graduation</Label>
-                              <Input 
-                                placeholder="e.g. 2018 - 2022" 
-                                value={edu.year} 
-                                onChange={(e) => updateEducation(edu.id, 'year', e.target.value)} 
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
+                              <Input
+                                placeholder="e.g. 2018 - 2022"
+                                value={edu.year}
+                                onChange={(e) => updateEducation(edu.id, 'year', e.target.value)}
+                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                             <div className="space-y-1">
                               <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Location</Label>
-                              <Input 
-                                placeholder="e.g. Stanford, CA" 
-                                value={edu.location} 
-                                onChange={(e) => updateEducation(edu.id, 'location', e.target.value)} 
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
+                              <Input
+                                placeholder="e.g. Stanford, CA"
+                                value={edu.location}
+                                onChange={(e) => updateEducation(edu.id, 'location', e.target.value)}
+                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
@@ -2154,9 +2157,9 @@ IMPORTANT:
                       <h3 className="font-bold text-sm text-white">Projects</h3>
                       <p className="text-[11px] text-zinc-500">Exhibit your development projects.</p>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={addProject} 
+                    <Button
+                      size="sm"
+                      onClick={addProject}
                       className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs h-8 rounded-xl transition-all duration-300"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add Project
@@ -2167,9 +2170,9 @@ IMPORTANT:
                     {data.projects.map((proj) => (
                       <Card key={proj.id} className="relative group bg-zinc-900/30 border border-white/10 text-white rounded-2xl overflow-hidden">
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
                             onClick={() => removeProject(proj.id)}
                           >
@@ -2180,20 +2183,20 @@ IMPORTANT:
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Project Name</Label>
-                              <Input 
-                                placeholder="e.g. AI Portfolio Suite" 
-                                value={proj.name} 
-                                onChange={(e) => updateProject(proj.id, 'name', e.target.value)} 
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
+                              <Input
+                                placeholder="e.g. AI Portfolio Suite"
+                                value={proj.name}
+                                onChange={(e) => updateProject(proj.id, 'name', e.target.value)}
+                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                             <div className="space-y-1">
                               <div className="flex items-center justify-between mb-1">
                                 <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Project URL Link</Label>
                                 {proj.link && (proj.link.toLowerCase().includes('github.com') || (proj.link.split('/').length === 2 && !proj.link.includes('.'))) && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={() => handleFetchGitHubProject(proj.id, proj.link)}
                                     disabled={fetchingRepoId === proj.id}
                                     className="h-5 px-1.5 text-[9px] text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 gap-1 rounded-md transition-all font-semibold"
@@ -2203,20 +2206,20 @@ IMPORTANT:
                                   </Button>
                                 )}
                               </div>
-                              <Input 
-                                placeholder="e.g. github.com/owner/repo" 
-                                value={proj.link} 
-                                onChange={(e) => updateProject(proj.id, 'link', e.target.value)} 
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
+                              <Input
+                                placeholder="e.g. github.com/owner/repo"
+                                value={proj.link}
+                                onChange={(e) => updateProject(proj.id, 'link', e.target.value)}
+                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between mb-1">
                               <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Project Details / Stack</Label>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => handleAiEnhanceProject(proj.id, proj.description)}
                                 disabled={enhancingProjId === proj.id}
                                 className="h-5 px-1.5 text-[9px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 rounded-md transition-all font-semibold"
@@ -2291,9 +2294,9 @@ IMPORTANT:
                       <h3 className="font-bold text-sm text-white">Activities / Honors / Certs</h3>
                       <p className="text-[11px] text-zinc-500">Add extracurricular achievements.</p>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={addLeadership} 
+                    <Button
+                      size="sm"
+                      onClick={addLeadership}
                       className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs h-8 rounded-xl transition-all duration-300"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add Item
@@ -2304,9 +2307,9 @@ IMPORTANT:
                     {data.leadership.map((item) => (
                       <Card key={item.id} className="relative group bg-zinc-900/30 border border-white/10 text-white rounded-2xl overflow-hidden">
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
                             onClick={() => removeLeadership(item.id)}
                           >
@@ -2364,11 +2367,11 @@ IMPORTANT:
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Period / Date Achieved</Label>
-                              <Input 
-                                placeholder="e.g. 2021 - 2022" 
-                                value={item.duration} 
-                                onChange={(e) => updateLeadership(item.id, 'duration', e.target.value)} 
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300" 
+                              <Input
+                                placeholder="e.g. 2021 - 2022"
+                                value={item.duration}
+                                onChange={(e) => updateLeadership(item.id, 'duration', e.target.value)}
+                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
@@ -2416,11 +2419,10 @@ IMPORTANT:
               <button
                 key={t.id}
                 onClick={() => setSelectedTemplate(t.id)}
-                className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${
-                  selectedTemplate === t.id 
-                    ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-md shadow-violet-500/20 scale-105' 
+                className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${selectedTemplate === t.id
+                    ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-md shadow-violet-500/20 scale-105'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                }`}
+                  }`}
               >
                 {t.label}
               </button>
@@ -2429,17 +2431,17 @@ IMPORTANT:
 
           {/* Document container inside scroll view - with glowing Violet drop shadow around the paper */}
           <ScrollArea className="flex-1 custom-scrollbar relative z-10 w-full print:overflow-visible print:h-auto">
-            <div 
+            <div
               className="w-full flex justify-center py-10 md:py-20 transition-all duration-300 print:py-0 print:block print:h-auto print:!min-h-0"
               style={{ minHeight: `${printHeight * zoom + 120}px` }}
             >
-              <div 
+              <div
                 ref={printContainerRef}
                 className="print-container bg-white shadow-[0_20px_50px_rgba(139,92,246,0.15)] border border-gray-100/60 w-[210mm] min-h-[297mm] p-[10mm] text-left relative transition-all duration-300 ease-in-out origin-top text-gray-900 print:shadow-none print:border-none print:!transform-none"
-                style={{ 
-                  transform: `scale(${zoom})`, 
+                style={{
+                  transform: `scale(${zoom})`,
                   transformOrigin: 'top center',
-                  '--print-scale': printScaleFactor 
+                  '--print-scale': printScaleFactor
                 } as React.CSSProperties}
               >
                 {selectedTemplate === 'minimalist' && renderMinimalist()}
@@ -2452,29 +2454,29 @@ IMPORTANT:
 
           {/* Floating Zoom Action Toolbar */}
           <div className="absolute bottom-4 right-4 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-xl shadow-black/40 print:hidden">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setZoom(prev => Math.max(0.5, prev - 0.05))} 
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setZoom(prev => Math.max(0.5, prev - 0.05))}
               className="h-7 w-7 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg shrink-0"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </Button>
             <span className="text-[10px] font-bold font-mono text-zinc-300 w-11 text-center select-none shrink-0">{Math.round(zoom * 100)}%</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setZoom(prev => Math.min(1.25, prev + 0.05))} 
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setZoom(prev => Math.min(1.25, prev + 0.05))}
               className="h-7 w-7 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg shrink-0"
               title="Zoom In"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </Button>
             <div className="w-px h-3.5 bg-white/10 shrink-0" />
-            <Button 
-              variant="ghost" 
-              onClick={() => setZoom(0.85)} 
+            <Button
+              variant="ghost"
+              onClick={() => setZoom(0.85)}
               className="h-7 px-2 text-[10px] font-bold text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg flex items-center gap-1 shrink-0"
               title="Reset Zoom"
             >
@@ -2588,10 +2590,10 @@ IMPORTANT:
               <div className="text-center space-y-2 w-full px-6">
                 <p className="text-sm font-semibold text-white">Running ATS Diagnostics...</p>
                 <p className="text-xs text-zinc-400">Parsing structure, evaluating keywords, and grading impact.</p>
-                
+
                 <div className="w-full bg-zinc-900 rounded-full h-2 mt-4 overflow-hidden border border-white/5 relative">
-                  <div 
-                    className="bg-gradient-to-r from-violet-600 to-fuchsia-500 h-full rounded-full transition-all duration-300 ease-out" 
+                  <div
+                    className="bg-gradient-to-r from-violet-600 to-fuchsia-500 h-full rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${Math.round(atsProgress)}%` }}
                   />
                 </div>

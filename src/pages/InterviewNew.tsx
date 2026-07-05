@@ -12,6 +12,7 @@ import {
   Settings, Menu, X
 } from "lucide-react";
 import { toast } from "sonner";
+import { trackEvent } from "@/utils/analytics";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
@@ -163,6 +164,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
   };
 
   const startSession = (category: string) => {
+    trackEvent("interview_start", "/interview/new", { category });
     setMessages([]);
     setQuestionCount(0);
     setStartTime(Date.now());
@@ -233,6 +235,11 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
           throw error;
         }
 
+        trackEvent("interview_complete", "/interview/new", {
+          session_id: data.id,
+          score: finalScore,
+          category: activeCategory
+        });
         toast.success(`Session Completed! Score: ${finalScore}%`);
         // Pass the real AI evaluation data to the results page
         navigate(`/interview/results/${data.id}`, {

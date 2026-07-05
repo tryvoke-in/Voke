@@ -49,12 +49,12 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const { 
-    isPremium, 
-    refreshCredits, 
-    grantFeedbackCredits, 
-    creditsElite, 
-    creditsVoice, 
+  const {
+    isPremium,
+    refreshCredits,
+    grantFeedbackCredits,
+    creditsElite,
+    creditsVoice,
     creditsVideo,
     hasGivenFeedback
   } = useInterviewCredits();
@@ -519,7 +519,7 @@ const Dashboard = () => {
                       <Flame className="w-4 h-4 text-orange-300 fill-orange-300" />
                       <span className="font-bold text-sm">{realStats[3].value} Streak</span>
                     </div>
-                    <div 
+                    <div
                       onClick={() => {
                         if (!isPremium && totalCredits === 0 && !hasGivenFeedback) {
                           setShowFeedbackModal(true);
@@ -527,9 +527,8 @@ const Dashboard = () => {
                           navigate("/pricing");
                         }
                       }}
-                      className={`bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10 select-none ${
-                        (!isPremium && totalCredits === 0) ? 'cursor-pointer hover:bg-white/30 border-amber-500/30' : ''
-                      }`}
+                      className={`bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10 select-none ${(!isPremium && totalCredits === 0) ? 'cursor-pointer hover:bg-white/30 border-amber-500/30' : ''
+                        }`}
                     >
                       <span className="text-sm">🎫</span>
                       <span className="font-bold text-sm">
@@ -549,9 +548,9 @@ const Dashboard = () => {
                       <p className="text-xl sm:text-2xl font-bold">{stat.value}</p>
                     </div>
                   ))}
-                  
+
                   {/* Build Resume Button */}
-                  <div 
+                  <div
                     onClick={() => navigate("/resume-builder")}
                     className="relative bg-gradient-to-br from-amber-500/20 to-orange-600/20 backdrop-blur-sm rounded-xl p-2.5 sm:p-4 border border-amber-500/30 hover:bg-amber-500/30 transition-all cursor-pointer group hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center text-center min-h-[72px]"
                   >
@@ -579,23 +578,23 @@ const Dashboard = () => {
                   <div>
                     <h4 className="text-sm font-bold text-foreground">Mock Interviews Locked</h4>
                     <p className="text-xs text-muted-foreground">
-                      {!hasGivenFeedback 
-                        ? "Give feedback to unlock 2 more free mock interviews." 
+                      {!hasGivenFeedback
+                        ? "Give feedback to unlock 2 more free mock interviews."
                         : "Upgrade to Voke Elite for unlimited premium practice."}
                     </p>
                   </div>
                 </div>
                 {!hasGivenFeedback ? (
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={() => setShowFeedbackModal(true)}
                     className="bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl"
                   >
                     Give Feedback (+2 Credits)
                   </Button>
                 ) : (
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={() => navigate("/pricing")}
                     className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-xl"
                   >
@@ -637,17 +636,16 @@ const Dashboard = () => {
                 </Card>
 
                 <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/voice-assistant")}>
-                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${
-                    isPremium 
-                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
-                      : creditsVoice > 0 
-                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25' 
+                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
+                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                      : creditsVoice > 0
+                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25'
                         : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                  }`}>
-                    {isPremium 
-                      ? 'Unlimited' 
-                      : creditsVoice > 0 
-                        ? `${creditsVoice} ${creditsVoice === 1 ? 'Credit' : 'Credits'}` 
+                    }`}>
+                    {isPremium
+                      ? 'Unlimited'
+                      : creditsVoice > 0
+                        ? `${creditsVoice} ${creditsVoice === 1 ? 'Credit' : 'Credits'}`
                         : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
                   </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
@@ -660,17 +658,16 @@ const Dashboard = () => {
                 </Card>
 
                 <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/peer-interviews")}>
-                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${
-                    isPremium 
-                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
-                      : creditsElite > 0 
-                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25' 
+                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
+                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                      : creditsElite > 0
+                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25'
                         : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                  }`}>
-                    {isPremium 
-                      ? 'Unlimited' 
-                      : creditsElite > 0 
-                        ? `${creditsElite} ${creditsElite === 1 ? 'Credit' : 'Credits'}` 
+                    }`}>
+                    {isPremium
+                      ? 'Unlimited'
+                      : creditsElite > 0
+                        ? `${creditsElite} ${creditsElite === 1 ? 'Credit' : 'Credits'}`
                         : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
                   </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
@@ -683,17 +680,16 @@ const Dashboard = () => {
                 </Card>
 
                 <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-blue-500 overflow-hidden" onClick={() => navigate("/elite-prep")}>
-                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${
-                    isPremium 
-                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
-                      : creditsElite > 0 
-                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25' 
+                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
+                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                      : creditsElite > 0
+                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25'
                         : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                  }`}>
-                    {isPremium 
-                      ? 'Unlimited' 
-                      : creditsElite > 0 
-                        ? `${creditsElite} ${creditsElite === 1 ? 'Credit' : 'Credits'}` 
+                    }`}>
+                    {isPremium
+                      ? 'Unlimited'
+                      : creditsElite > 0
+                        ? `${creditsElite} ${creditsElite === 1 ? 'Credit' : 'Credits'}`
                         : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
                   </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
@@ -706,17 +702,16 @@ const Dashboard = () => {
                 </Card>
 
                 <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-fuchsia-500" onClick={() => navigate("/video-interview")}>
-                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${
-                    isPremium 
-                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
-                      : creditsVideo > 0 
-                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25' 
+                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
+                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                      : creditsVideo > 0
+                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25'
                         : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                  }`}>
-                    {isPremium 
-                      ? 'Unlimited' 
-                      : creditsVideo > 0 
-                        ? `${creditsVideo} ${creditsVideo === 1 ? 'Credit' : 'Credits'}` 
+                    }`}>
+                    {isPremium
+                      ? 'Unlimited'
+                      : creditsVideo > 0
+                        ? `${creditsVideo} ${creditsVideo === 1 ? 'Credit' : 'Credits'}`
                         : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
                   </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
@@ -796,11 +791,10 @@ const Dashboard = () => {
                           <Target className="w-4 h-4 text-orange-500" />
                           Daily Challenge
                         </CardTitle>
-                        <span className={`text-xs font-medium px-2 py-1 rounded-md ${
-                          dailyQ.difficulty === 'Easy' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30' :
-                          dailyQ.difficulty === 'Medium' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' :
-                          'bg-red-100 text-red-600 dark:bg-red-900/30'
-                        }`}>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-md ${dailyQ.difficulty === 'Easy' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30' :
+                            dailyQ.difficulty === 'Medium' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' :
+                              'bg-red-100 text-red-600 dark:bg-red-900/30'
+                          }`}>
                           {dailyQ.difficulty}
                         </span>
                       </>
@@ -810,18 +804,18 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 {(() => {
-                   const dailyQ = getDailyQuestion();
-                   return (
-                     <>
-                        <h4 className="font-semibold mb-2 line-clamp-1">{dailyQ.title}</h4>
-                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                          {dailyQ.tags.join(" • ")}
-                        </p>
-                        <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white" onClick={() => navigate("/daily-challenge")}>
-                          Solve Now <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                     </>
-                   );
+                  const dailyQ = getDailyQuestion();
+                  return (
+                    <>
+                      <h4 className="font-semibold mb-2 line-clamp-1">{dailyQ.title}</h4>
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                        {dailyQ.tags.join(" • ")}
+                      </p>
+                      <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white" onClick={() => navigate("/daily-challenge")}>
+                        Solve Now <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </>
+                  );
                 })()}
               </CardContent>
             </Card>
@@ -859,13 +853,13 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
-      
+
       {/* Floating Referral Widget */}
       <ReferralFloatingWidget />
       <Footer />
-      <FeedbackFormDialog 
-        open={showFeedbackModal} 
-        onOpenChange={setShowFeedbackModal} 
+      <FeedbackFormDialog
+        open={showFeedbackModal}
+        onOpenChange={setShowFeedbackModal}
         onSuccess={refreshCredits}
         grantFeedbackCredits={grantFeedbackCredits}
       />
