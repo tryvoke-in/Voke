@@ -1492,7 +1492,7 @@ IMPORTANT:
 
         {data.skills && (
           <div className="mb-4">
-            <h2 className="text-[10pt] font-bold uppercase tracking-widest text-indigo-950 border-b border-indigo-200 pb-0.5 mb-1 text-black">Areas of Expertise</h2>
+            <h2 className="text-[10pt] font-bold uppercase tracking-widest text-black border-b border-indigo-200 pb-0.5 mb-1">Areas of Expertise</h2>
             <p className="text-[9pt] text-zinc-700 leading-normal font-sans">{data.skills}</p>
           </div>
         )}
