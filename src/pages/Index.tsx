@@ -307,7 +307,7 @@ const Index = () => {
                     <div className="aspect-video w-full">
                       <iframe 
                         className="w-full h-full"
-                        src="https://www.youtube.com/embed/LXb3EKWsInQ?si=KvH-2j1k2j1k2j1k&autoplay=1&mute=0" 
+                        src="https://drive.google.com/file/d/1YXFu8M0o0InAG7WJLkz8pjywuJdYTNit/preview" 
                         title="Voke AI Demo" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                         allowFullScreen

@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AnalyticsTracker } from "./components/AnalyticsTracker";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -66,7 +65,6 @@ const App = () => (
       <Sonner />
       <OnlinePresenceProvider>
         <BrowserRouter>
-          <AnalyticsTracker />
           <WaitlistGuard>
             <ProfileCompletionGuard>
               <Routes>
@@ -92,41 +90,42 @@ const App = () => (
               <Route path="/video-practice" element={<VideoPracticeHistory />} />
               <Route path="/progress-analytics" element={<ProgressAnalytics />} />
 
-              <Route path="/adaptive-interview" element={<AdaptiveInterview />} />
-              <Route path="/peer-interviews" element={<PeerInterviews />} />
-              <Route path="/peer-interviews/create" element={<CreatePeerSession />} />
-              <Route path="/peer-interviews/session/:sessionId" element={<PeerSessionRoom />} />
-              <Route path="/peer-interviews/rate/:sessionId" element={<RatePeerSession />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/job-recommendations" element={<JobRecommendations />} />
-              <Route path="/career-plan/:planId" element={<CareerPlanView />} />
-              {/* <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:id" element={<BlogPost />} /> */}
-              <Route path="/community" element={<Community />} />
-              <Route path="/help" element={<Help />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/daily-challenge" element={<DailyChallengeLanding />} />
-              <Route path="/daily-challenge/solve" element={<DailyChallenge />} />
-              <Route path="/question-practice" element={<QuestionPractice />} />
-              <Route path="/companies" element={<Companies />} />
-              <Route path="/companies/:slug" element={<CompanyDetail />} />
-              <Route path="/playground" element={<Playground />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/dashboard/pricing" element={<Pricing />} />
-              <Route path="/elite-prep" element={<ElitePrep />} />
-              <Route path="/resume-builder" element={<ResumeBuilder />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </ProfileCompletionGuard>
-        </WaitlistGuard>
-        <GlobalAIChatbot />
-        <DevResetWidget />
-        <SessionRequestNotifier />
-      </BrowserRouter>
-      </OnlinePresenceProvider>
-    </TooltipProvider>
-  </QueryClientProvider >
+                <Route path="/adaptive-interview" element={<AdaptiveInterview />} />
+                <Route path="/peer-interviews" element={<PeerInterviews />} />
+                <Route path="/peer-interviews/create" element={<CreatePeerSession />} />
+                <Route path="/peer-interviews/session/:sessionId" element={<PeerSessionRoom />} />
+                <Route path="/peer-interviews/rate/:sessionId" element={<RatePeerSession />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/job-recommendations" element={<JobRecommendations />} />
+                <Route path="/career-plan/:planId" element={<CareerPlanView />} />
+                {/* <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:id" element={<BlogPost />} /> */}
+                <Route path="/community" element={<Community />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/daily-challenge" element={<DailyChallengeLanding />} />
+                <Route path="/daily-challenge/solve" element={<DailyChallenge />} />
+                <Route path="/question-practice" element={<QuestionPractice />} />
+                <Route path="/companies" element={<Companies />} />
+                <Route path="/companies/:slug" element={<CompanyDetail />} />
+                <Route path="/playground" element={<Playground />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/dashboard/pricing" element={<Pricing />} />
+                <Route path="/elite-prep" element={<ElitePrep />} />
+                <Route path="/resume-builder" element={<ResumeBuilder />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </ProfileCompletionGuard>
+          </WaitlistGuard>
+          <GlobalAIChatbot />
+          <DevResetWidget />
+          <SessionRequestNotifier />
+        </BrowserRouter>
+        </OnlinePresenceProvider>
+      </TooltipProvider>
+    </QueryClientProvider >
+  </ReactLenis>
 );
 
 export default App;
