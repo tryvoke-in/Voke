@@ -11,6 +11,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { WAITLIST_CONFIG } from "@/config/waitlist";
+import { ReactLenis } from "lenis/react";
+import "lenis/dist/lenis.css";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -103,7 +105,8 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen text-white selection:bg-violet-500/30 font-sans antialiased overflow-x-hidden relative">
+    <ReactLenis root options={{ anchors: true }}>
+      <div className="min-h-screen text-white selection:bg-violet-500/30 font-sans antialiased overflow-x-hidden relative">
       {/* Base Solid Background beneath all negative layers */}
       <div className="absolute inset-0 bg-[#030305] -z-30 pointer-events-none" />
 
@@ -1156,6 +1159,7 @@ const Index = () => {
         </div>
       </footer>
     </div>
+  </ReactLenis>
   );
 };
 
