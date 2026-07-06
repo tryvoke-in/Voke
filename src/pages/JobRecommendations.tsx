@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreatingPlanLoader } from "@/components/ui/CreatingPlanLoader";
+import { Sidebar } from "@/components/Sidebar";
 
 interface JobPosting {
     id: string;
@@ -232,7 +233,7 @@ export default function JobRecommendations() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-violet-500/30">
+        <div className="min-h-screen bg-black text-white selection:bg-violet-500/30 flex flex-col">
             {creatingPlan && <CreatingPlanLoader />}
             
             {/* Background Effects */}
@@ -279,8 +280,12 @@ export default function JobRecommendations() {
                 </div>
             </motion.header>
 
-            {/* Main Content */}
-            <main className="relative z-10 container mx-auto px-4 pt-32 pb-20 max-w-7xl">
+            {/* Sidebar + Main Content Layout */}
+            <div className="flex-1 flex w-full min-w-0 relative">
+                <Sidebar />
+                <div className="flex-1 flex flex-col min-w-0 relative z-10">
+                    {/* Main Content */}
+                    <main className="container mx-auto px-4 pt-32 pb-20 max-w-7xl w-full">
                 
                 {/* Hero / Stats Area */}
                 <motion.div 
@@ -535,7 +540,9 @@ export default function JobRecommendations() {
                         </div>
                     </>
                 )}
-            </main>
+                    </main>
+                </div>
+            </div>
         </div>
     );
 }

@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Navbar } from "@/components/Navbar";
 import { toast } from "sonner";
+import { Sidebar } from "@/components/Sidebar";
 import { Progress } from "@/components/ui/progress";
 import {
     Command,
@@ -276,7 +277,11 @@ const QuestionPractice = () => {
         <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-violet-500/30">
             <Navbar />
 
-            <main className="flex-1 pt-24 px-4 pb-12 container mx-auto max-w-7xl">
+            {/* Sidebar + Main Content Layout */}
+            <div className="flex-1 flex w-full min-w-0 relative">
+                <Sidebar />
+                <div className="flex-1 flex flex-col min-w-0">
+                    <main className="flex-1 pt-24 px-4 pb-12 container mx-auto max-w-7xl w-full">
 
                 {/* Hero Section */}
                 <motion.div
@@ -873,7 +878,9 @@ const QuestionPractice = () => {
                     </motion.div>
                 )}
 
-            </main>
+                    </main>
+                </div>
+            </div>
         </div>
     );
 };

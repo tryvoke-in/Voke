@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -9,13 +9,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   FileText, LogOut, TrendingUp, Upload, Play, Target, Users, Mic, Settings,
   Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search,
-  Globe, Briefcase, FileQuestion, ChevronRight, Sparkles, Lock
+  Globe, Briefcase, FileQuestion, ChevronRight, Sparkles, Lock, LayoutDashboard
 } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { SkillRadar } from "@/components/dashboard/SkillRadar";
 import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
 import { MarketPulse } from "@/components/dashboard/MarketPulse";
 import { ReferralFloatingWidget } from "@/components/dashboard/ReferralFloatingWidget";
 import { UpgradeButton } from "@/components/UpgradeButton";
+import { Sidebar } from "@/components/Sidebar";
 
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -43,6 +45,7 @@ interface Notification {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -346,6 +349,81 @@ const Dashboard = () => {
     navigate("/");
   };
 
+  const sidebarItems = [
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      path: "/dashboard",
+      color: "text-violet-500",
+      hoverBg: "hover:bg-violet-500/10 hover:text-violet-500",
+    },
+    {
+      id: "job-recommendations",
+      label: "Job Matches",
+      icon: Briefcase,
+      path: "/job-recommendations",
+      color: "text-amber-500",
+      hoverBg: "hover:bg-amber-500/10 hover:text-amber-500",
+    },
+    {
+      id: "interview-new",
+      label: "Text Interview",
+      icon: MessageSquare,
+      path: "/interview/new",
+      color: "text-violet-500",
+      hoverBg: "hover:bg-violet-500/10 hover:text-violet-500",
+    },
+    {
+      id: "voice-assistant",
+      label: "AI Voice Agent",
+      icon: Mic,
+      path: "/voice-assistant",
+      color: "text-pink-500",
+      hoverBg: "hover:bg-pink-500/10 hover:text-pink-500",
+    },
+    {
+      id: "resume-builder",
+      label: "Resume Builder",
+      icon: FileText,
+      path: "/resume-builder",
+      color: "text-emerald-500",
+      hoverBg: "hover:bg-emerald-500/10 hover:text-emerald-500",
+    },
+    {
+      id: "elite-prep",
+      label: "Elite Prep",
+      icon: Zap,
+      path: "/elite-prep",
+      color: "text-blue-500",
+      hoverBg: "hover:bg-blue-500/10 hover:text-blue-500",
+    },
+    {
+      id: "video-interview",
+      label: "Video Practice",
+      icon: Play,
+      path: "/video-interview",
+      color: "text-fuchsia-500",
+      hoverBg: "hover:bg-fuchsia-500/10 hover:text-fuchsia-500",
+    },
+    {
+      id: "playground",
+      label: "Playground",
+      icon: Code,
+      path: "/playground",
+      color: "text-indigo-500",
+      hoverBg: "hover:bg-indigo-500/10 hover:text-indigo-500",
+    },
+    {
+      id: "question-practice",
+      label: "Question Practice",
+      icon: FileQuestion,
+      path: "/question-practice",
+      color: "text-orange-500",
+      hoverBg: "hover:bg-orange-500/10 hover:text-orange-500",
+    },
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -358,9 +436,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-muted/30 flex flex-col">
       {/* Header */}
-      <header className="bg-card/80 backdrop-blur-xl border-b border-border sticky top-0 z-50 shadow-sm">
+      <header className="bg-card/80 backdrop-blur-xl border-b border-border sticky top-0 z-50 shadow-sm w-full">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-0.5 cursor-pointer" onClick={() => navigate("/dashboard")}>
             <img
@@ -489,8 +567,15 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      {/* Main Layout Container */}
+      <div className="flex-1 flex w-full min-w-0 relative">
+        {/* Sidebar */}
+        <Sidebar />
+
+        {/* Main App Container */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Main Content */}
+          <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
           {/* Left Column - Main Feed */}
@@ -657,25 +742,16 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/peer-interviews")}>
-                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
-                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                      : creditsElite > 0
-                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25'
-                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                    }`}>
-                    {isPremium
-                      ? 'Unlimited'
-                      : creditsElite > 0
-                        ? `${creditsElite} ${creditsElite === 1 ? 'Credit' : 'Credits'}`
-                        : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
+                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/resume-builder")}>
+                  <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 z-10">
+                    Free
                   </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                     <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                      <FileText className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <h4 className="font-semibold text-sm">Peer Match</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Practice with Others</p>
+                    <h4 className="font-semibold text-sm">Resume Builder</h4>
+                    <p className="text-xs text-muted-foreground mt-1">AI-Powered ATS Resume</p>
                   </CardContent>
                 </Card>
 
@@ -855,8 +931,11 @@ const Dashboard = () => {
       </main>
 
       {/* Floating Referral Widget */}
-      <ReferralFloatingWidget />
-      <Footer />
+        <ReferralFloatingWidget />
+        <Footer />
+      </div>
+    </div>
+
       <FeedbackFormDialog
         open={showFeedbackModal}
         onOpenChange={setShowFeedbackModal}

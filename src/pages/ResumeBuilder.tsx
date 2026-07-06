@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ResumeAnalysisDisplay from "@/components/ResumeAnalysisDisplay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ADMIN_EMAIL } from "@/config/admin";
+import { Sidebar } from "@/components/Sidebar";
 
 // --- Types ---
 interface Experience {
@@ -1773,8 +1774,12 @@ IMPORTANT:
         </div>
       </header>
 
-      {/* Main Split Layout Workspace */}
-      <main className="flex-1 flex overflow-hidden z-10 relative">
+      {/* Main Layout Container with Sidebar */}
+      <div className="flex-1 flex w-full min-w-0 relative overflow-hidden">
+        <Sidebar />
+
+        {/* Main Split Layout Workspace */}
+        <main className="flex-1 flex overflow-hidden z-10 relative">
 
         {/* LEFT PANEL: Sidebar Tab workflow and Editor Content */}
         <div className="w-[45%] border-r border-white/5 bg-zinc-950/20 backdrop-blur-md flex no-print">
@@ -2487,6 +2492,7 @@ IMPORTANT:
         </div>
 
       </main >
+      </div>
 
       {/* ATS Evaluation Audit Dialog */}
       <Dialog open={analysisOpen} onOpenChange={setAnalysisOpen}>
