@@ -6,10 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   MessageSquare,
-  Send, User, Bot, Mic, MicOff, LogOut,
-  Settings, Menu, X
+  Send, User, Mic, MicOff, LogOut,
+  Settings, Menu, X, Clock, History, Sparkles,
+  ArrowLeft, Activity, Loader2, Check, ChevronDown,
+  ChevronUp, Award, CheckCircle2, StopCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import { trackEvent } from "@/utils/analytics";
@@ -30,6 +35,40 @@ interface Message {
   content: string;
 }
 
+interface InterviewTurn {
+  question: string;
+  answer?: string;
+  feedback?: string;
+}
+
+// Parses consecutive assistant/user messages into paired structured turns
+const getInterviewTurns = (msgs: Message[]) => {
+  const turns: InterviewTurn[] = [];
+  
+  for (let i = 0; i < msgs.length; i++) {
+    const msg = msgs[i];
+    
+    if (msg.role === "assistant") {
+      // Check if this message content is feedback or a question
+      const isFeedback = msg.content.startsWith("### ✅") || msg.content.includes("### What Went Well") || msg.content.includes("### ✅ What Went Well");
+      
+      if (isFeedback) {
+        if (turns.length > 0) {
+          turns[turns.length - 1].feedback = msg.content;
+        }
+      } else {
+        turns.push({ question: msg.content });
+      }
+    } else if (msg.role === "user") {
+      if (turns.length > 0) {
+        turns[turns.length - 1].answer = msg.content;
+      }
+    }
+  }
+  
+  return turns;
+};
+
 const InterviewNew = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('general');
@@ -40,12 +79,19 @@ const InterviewNew = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true); // Default open on desktop
   const [questionCount, setQuestionCount] = useState(0); // Track number of questions asked
   const [startTime, setStartTime] = useState<number>(Date.now());
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [sessionActive, setSessionActive] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
   const [codingStats, setCodingStats] = useState<any>(null);
   const [profileContext, setProfileContext] = useState<ProfileContext | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [pastSessions, setPastSessions] = useState<any[]>([]);
+  
+  // Navigation tabs for mobile viewports
+  const [activeTab, setActiveTab] = useState<'arena' | 'history' | 'timeline'>('arena');
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
+  const [expandedFeedback, setExpandedFeedback] = useState<Record<number, boolean>>({});
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { loading: creditsLoading } = useInterviewCredits('elite');
   const sessionInitializedRef = useRef(false);
 
@@ -66,6 +112,7 @@ const InterviewNew = () => {
     checkAuth();
     loadCodingStats();
     loadContext();
+    loadPastSessions();
   }, []);
 
   useEffect(() => {
@@ -74,6 +121,34 @@ const InterviewNew = () => {
       startSession(activeCategory);
     }
   }, [activeCategory]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (sessionActive && !isFinished) {
+        setElapsedTime(Math.round((Date.now() - startTime) / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [startTime, sessionActive, isFinished]);
+
+  const loadPastSessions = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: pastData } = await supabase
+        .from("interview_sessions")
+        .select("*")
+        .eq("user_id", user.id)
+        .not("interview_type", "in", '("voice","timed_video")')
+        .order("created_at", { ascending: false });
+      if (pastData) {
+        setPastSessions(pastData);
+      }
+    } catch (err) {
+      console.error("Error loading past sessions:", err);
+    }
+  };
 
   const loadContext = async () => {
     try {
@@ -168,19 +243,12 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
     setMessages([]);
     setQuestionCount(0);
     setStartTime(Date.now());
+    setElapsedTime(0);
     setSessionActive(true);
     setIsFinished(false);
 
     // Generate opening question
     generateAIQuestion([], 0);
-  };
-
-  const handleCategoryChange = (categoryId: string) => {
-    setActiveCategory(categoryId);
-    startSession(categoryId);
-    if (window.innerWidth < 768) {
-      setSidebarOpen(false);
-    }
   };
 
   const [isCompleting, setIsCompleting] = useState(false);
@@ -206,13 +274,9 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
         if (aiError || !evaluation) {
           console.error("AI Evaluation Failed:", aiError);
           toast.error("Could not generate AI score. Please try again.");
-          // Do NOT use a random fallback. Set to 0 to indicate failure/invalidity.
         }
 
         console.log("AI Evaluation Result:", evaluation);
-
-        // Use the actual AI score, or 0 if it failed/missing. 
-        // We do NOT want to give free points for broken/spam sessions.
         const finalScore = evaluation?.score || 0;
 
         const { data, error } = await supabase
@@ -221,7 +285,6 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
             user_id: user.id,
             interview_type: activeCategory, // Use the ID (lowercase) instead of Label
             status: "completed",
-            // score: finalScore, // Removing score as column doesn't exist
             job_profile_id: null,
           })
           .select()
@@ -241,13 +304,13 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
           category: activeCategory
         });
         toast.success(`Session Completed! Score: ${finalScore}%`);
-        // Pass the real AI evaluation data to the results page
+        
         navigate(`/interview/results/${data.id}`, {
           state: {
             score: finalScore,
             evaluation: evaluation // Pass full evaluation object
           }
-        });        // Text interviews are unlimited, so no credit is consumed.
+        });
       }
     } catch (error: any) {
       console.error("Error saving session:", error);
@@ -270,15 +333,12 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
     await generateAIQuestion(updatedMessages, questionCount);
   };
 
-  // Removed auto-scroll useEffect as requested by user
-
   const toggleVoiceMode = () => {
     if (voiceMode) {
       stopListening();
       stopSpeaking();
       setVoiceMode(false);
     } else {
-      // startListening(); // Uncomment if you want actual listening
       setVoiceMode(true);
       toast.success("Voice mode active");
     }
@@ -289,224 +349,481 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
     navigate("/");
   };
 
+  const toggleFeedback = (index: number) => {
+    setExpandedFeedback(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "N/A";
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Parsing variables
+  const turns = getInterviewTurns(messages);
+  const currentQuestionIndex = turns.length;
+  const totalQuestions = 5;
+  const progressPercent = Math.min(100, Math.round((currentQuestionIndex / totalQuestions) * 100));
+
+  // Extract active question and feedback
+  const activeTurn = turns[turns.length - 1];
+  const activeQuestion = activeTurn && !activeTurn.answer ? activeTurn.question : "";
+  const completedTurns = turns.filter(t => t.answer);
+
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Sidebar */}
-      <AnimatePresence mode="wait">
-        {sidebarOpen && (
-          <motion.aside
-            initial={{ x: -300, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -300, opacity: 0 }}
-            className="fixed md:relative z-40 w-72 h-full border-r border-border/40 bg-card/50 backdrop-blur-xl flex flex-col"
-          >
-            <div className="p-6 border-b border-border/40 flex items-center justify-between">
-              <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
-                <img src="/images/voke_logo.png" alt="Voke" className="w-8 h-8 object-contain" />
-                <span className="font-bold text-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">Voke</span>
-              </div>
-              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(false)}>
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
+    <div className="w-screen h-screen flex bg-[#0c0d14] text-foreground overflow-hidden relative font-sans">
+      {/* Background Glowing Mesh Gradients */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-violet-600/5 rounded-full blur-[130px] pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-fuchsia-600/5 rounded-full blur-[130px] pointer-events-none z-0" />
 
-            <ScrollArea className="flex-1 p-6">
-              <div className="space-y-6">
-                {/* Interview Info Card */}
-                <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/20">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2.5 rounded-lg bg-violet-500/20">
-                      <MessageSquare className="w-5 h-5 text-violet-500" />
-                    </div>
-                    <h3 className="font-semibold text-foreground">AI Interview</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Practice with our AI interviewer. Get real-time feedback and improve your skills.
-                  </p>
-                </div>
-
-                {/* Tips Section */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
-                    Interview Tips
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30">
-                      <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 shrink-0"></div>
-                      <p className="text-xs text-muted-foreground">Be specific and provide concrete examples</p>
-                    </div>
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30">
-                      <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 shrink-0"></div>
-                      <p className="text-xs text-muted-foreground">Use the STAR method for behavioral questions</p>
-                    </div>
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30">
-                      <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 shrink-0"></div>
-                      <p className="text-xs text-muted-foreground">Take your time to think before answering</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ScrollArea>
-
-            <div className="p-4 border-t border-border/40 space-y-2">
-              <ThemeToggle />
-              <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={handleLogout}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col relative bg-background">
-        {/* Header */}
-        <header className="h-16 border-b border-border/40 bg-background/80 backdrop-blur-md flex items-center justify-between px-4 sticky top-0 z-30">
+      {/* 1. LEFT SIDEBAR (Config details & Session list) */}
+      <aside className={`
+        w-full md:w-80 border-r border-white/5 bg-[#0e1017]/40 backdrop-blur-xl shrink-0 h-full relative z-20 flex-col
+        ${activeTab === 'history' ? 'flex' : 'hidden md:flex'}
+      `}>
+        {/* Brand Header */}
+        <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {!sidebarOpen && (
-              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
-                <Menu className="w-5 h-5" />
-              </Button>
-            )}
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-lg">AI Interview</span>
-              <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-xs font-medium">Live</span>
+            <img 
+              src="/images/voke_logo.png" 
+              alt="Voke Logo" 
+              className="w-8 h-8 object-contain"
+            />
+            <div>
+              <h1 className="font-bold text-lg tracking-tight bg-gradient-to-r from-violet-200 to-white bg-clip-text text-transparent">Voke AI</h1>
+              <p className="text-[10px] text-violet-400/60 font-semibold uppercase tracking-wider">Interview Suite</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
-              <Settings className="w-5 h-5" />
+          <Button
+            onClick={() => navigate("/dashboard")}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-violet-200/60 hover:text-white hover:bg-white/5 rounded-lg shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Active Session Status Card */}
+        <div className="p-6 border-b border-white/5 space-y-5">
+          <div className="space-y-3">
+            <h2 className="text-xs font-bold text-violet-400/60 uppercase tracking-wider">Active Session</h2>
+            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-violet-200/50 font-medium">Focus Topic</span>
+                <Badge className="bg-violet-500/10 text-violet-300 border-0 text-[10px] py-0.5 px-2 hover:bg-violet-500/10">
+                  {CATEGORIES.find(c => c.id === activeCategory)?.label || "General"}
+                </Badge>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-violet-200/50 font-medium font-sans">Timer</span>
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span className="font-mono text-sm font-bold text-emerald-400">{formatTime(elapsedTime)}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <div className="flex justify-between text-[11px] font-semibold text-violet-200/60">
+                  <span>Questions Progress</span>
+                  <span>{progressPercent}% ({currentQuestionIndex}/{totalQuestions})</span>
+                </div>
+                <Progress value={progressPercent} className="h-1.5 bg-white/5 [&>div]:bg-gradient-to-r [&>div]:from-violet-500 [&>div]:to-fuchsia-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Past Sessions List */}
+        <div className="flex-1 overflow-hidden flex flex-col p-6 min-h-0">
+          <div className="flex items-center gap-2 mb-4">
+            <History className="w-3.5 h-3.5 text-violet-400/60" />
+            <h2 className="text-xs font-bold text-violet-400/60 uppercase tracking-wider">Past Sessions</h2>
+          </div>
+          
+          <ScrollArea className="flex-1 -mx-2 px-2">
+            <div className="space-y-2.5 pb-4">
+              {pastSessions.length === 0 ? (
+                <div className="text-center py-8 text-xs text-violet-200/30">
+                  No past sessions found.
+                </div>
+              ) : (
+                pastSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    onClick={() => navigate(`/interview/results/${session.id}`)}
+                    className="p-3.5 rounded-xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 hover:border-violet-500/20 transition-all duration-300 cursor-pointer group flex justify-between items-center"
+                  >
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-violet-100 group-hover:text-violet-400 transition-colors capitalize truncate max-w-[140px]">
+                        {session.interview_type || "General"}
+                      </h4>
+                      <p className="text-[10px] text-violet-200/40 font-medium">
+                        {formatDate(session.created_at)}
+                      </p>
+                    </div>
+                    <div>
+                      {session.overall_score !== null ? (
+                        <div className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/10">
+                          {session.overall_score}%
+                        </div>
+                      ) : (
+                        <div className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white/5 text-violet-200/40">
+                          Done
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+
+        {/* Sidebar Footer Controls */}
+        <div className="p-6 border-t border-white/5 space-y-3 bg-[#0c0e14]/50">
+          <ThemeToggle />
+          <Button 
+            onClick={completeSession} 
+            variant="destructive" 
+            className="w-full text-xs justify-start h-10 px-4 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/10 rounded-xl"
+            disabled={isCompleting}
+          >
+            <StopCircle className="w-4 h-4 mr-2" />
+            {isCompleting ? "Evaluating..." : "Finish & Evaluate"}
+          </Button>
+        </div>
+      </aside>
+
+      {/* 2. CENTER PANEL (Active Interview Arena) */}
+      <main className={`
+        flex-1 h-full flex flex-col relative min-w-0
+        ${activeTab === 'arena' ? 'flex' : 'hidden md:flex'}
+      `}>
+        {/* Mobile Header / Navigation Tabs */}
+        <header className="md:hidden border-b border-white/5 bg-[#0e1017]/40 backdrop-blur-xl p-4 flex items-center justify-between z-30 shrink-0">
+          <div className="flex items-center gap-3">
+            <img 
+              src="/images/voke_logo.png" 
+              alt="Voke Logo" 
+              className="w-7 h-7 object-contain"
+            />
+            <span className="font-bold text-sm tracking-tight text-white md:hidden">Voke AI Arena</span>
+            <div className="hidden md:flex items-center gap-2">
+              <span className="text-xs text-violet-400 font-semibold uppercase tracking-wider">Practice Arena</span>
+              <span className="h-1 w-1 bg-white/20 rounded-full" />
+              <span className="text-xs text-violet-200/40">Text Simulation</span>
+            </div>
+          </div>
+
+          {/* Mobile Viewport Navigation Selector */}
+          <div className="flex md:hidden items-center gap-1.5 p-1 rounded-xl bg-white/5 border border-white/5">
+            <Button
+              size="sm"
+              variant={activeTab === 'history' ? 'secondary' : 'ghost'}
+              onClick={() => setActiveTab('history')}
+              className={`h-7 px-2.5 text-[11px] rounded-lg transition-all ${activeTab === 'history' ? 'bg-violet-600 text-white hover:bg-violet-600' : 'text-violet-200/60 hover:text-white'}`}
+            >
+              History
+            </Button>
+            <Button
+              size="sm"
+              variant={activeTab === 'arena' ? 'secondary' : 'ghost'}
+              onClick={() => setActiveTab('arena')}
+              className={`h-7 px-2.5 text-[11px] rounded-lg transition-all ${activeTab === 'arena' ? 'bg-violet-600 text-white hover:bg-violet-600' : 'text-violet-200/60 hover:text-white'}`}
+            >
+              Arena
+            </Button>
+            <Button
+              size="sm"
+              variant={activeTab === 'timeline' ? 'secondary' : 'ghost'}
+              onClick={() => setActiveTab('timeline')}
+              className={`h-7 px-2.5 text-[11px] rounded-lg transition-all ${activeTab === 'timeline' ? 'bg-violet-600 text-white hover:bg-violet-600' : 'text-violet-200/60 hover:text-white'}`}
+            >
+              Timeline
+            </Button>
+          </div>
+          
+          <div className="md:hidden flex items-center">
+            <Button size="icon" variant="ghost" className="text-violet-200/60 hover:text-white h-8 w-8" onClick={completeSession}>
+              <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </header>
 
-        {creditsLoading ? (
-          <div className="flex-1 flex items-center justify-center bg-background">
-            <div className="relative w-12 h-12">
-              <div className="absolute inset-0 border-t-2 border-violet-500 rounded-full animate-spin"></div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Chat Area */}
-            <ScrollArea className="flex-1 p-4 md:p-8">
-          <div className="max-w-3xl mx-auto space-y-6 pb-4">
-            {messages.map((message, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex gap-4 ${message.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                {message.role === "assistant" && (
-                  <Avatar className="w-8 h-8 mt-1 border border-border shadow-sm">
-                    <AvatarImage src="/ai-avatar.png" />
-                    <AvatarFallback className="bg-gradient-to-br from-violet-600 to-purple-600 text-white">AI</AvatarFallback>
-                  </Avatar>
-                )}
 
-                <div className={`flex flex-col max-w-[85%] md:max-w-[75%] ${message.role === "user" ? "items-end" : "items-start"}`}>
-                  <div
-                    className={`p-4 rounded-2xl shadow-sm text-sm leading-relaxed ${message.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-tr-none"
-                      : "bg-card border border-border/50 text-foreground rounded-tl-none"
-                      }`}
+        {/* Center Workspace Scroll */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 flex items-center justify-center">
+          <div className="max-w-2xl w-full space-y-6 py-6">
+            
+            {/* The Active Question Card */}
+            <AnimatePresence mode="wait">
+              {activeQuestion ? (
+                <motion.div
+                  key={currentQuestionIndex}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.4 }}
+                  className="relative p-6 md:p-8 rounded-3xl bg-white/[0.02] border border-white/5 shadow-2xl overflow-hidden"
+                >
+                  {/* Decorative glowing gradient border on top */}
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-80" />
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400/70 bg-violet-500/5 px-2.5 py-1 rounded-md border border-violet-500/10">
+                      Question {currentQuestionIndex} of {totalQuestions}
+                    </span>
+                  </div>
+
+                  <div className="prose prose-invert max-w-none text-violet-100/90 text-[15px] font-sans md:text-base leading-relaxed tracking-wide font-medium">
+                    <ReactMarkdown>{activeQuestion}</ReactMarkdown>
+                  </div>
+                </motion.div>
+              ) : (
+                sending && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="p-8 rounded-3xl bg-white/[0.01] border border-white/5 border-dashed flex flex-col items-center justify-center py-16 gap-4 text-center"
                   >
-                    <ReactMarkdown>{message.content}</ReactMarkdown>
-                  </div>
-                </div>
+                    <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-violet-200">Sarah is reviewing...</h4>
+                      <p className="text-xs text-violet-200/40">Evaluating answer depth and aligning skill metrics.</p>
+                    </div>
+                  </motion.div>
+                )
+              )}
+            </AnimatePresence>
 
-                {message.role === "user" && (
-                  <Avatar className="w-8 h-8 mt-1 border border-border">
-                    <AvatarFallback className="bg-muted text-muted-foreground">
-                      <User className="w-4 h-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-              </motion.div>
-            ))}
-
-            {/* Auto-navigation handles this now, but we can keep a loading state if needed */}
-            {!sessionActive && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center py-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-                  Generating Results...
-                </div>
-              </motion.div>
-            )}
-
-            {sending && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-4 justify-start">
-                <Avatar className="w-8 h-8 mt-1 border border-border">
-                  <AvatarFallback className="bg-gradient-to-br from-violet-600 to-purple-600 text-white">AI</AvatarFallback>
-                </Avatar>
-                <div className="p-4 rounded-2xl rounded-tl-none bg-card border border-border/50 shadow-sm">
-                  <div className="flex gap-1 items-center h-4">
-                    <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce"></span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
-
-        {/* Input Area */}
-        <div className="p-4 bg-background/80 backdrop-blur-xl border-t border-border/40">
-          <div className="max-w-3xl mx-auto relative">
+            {/* Answer Workspace Editor */}
             {isFinished ? (
               <Button
                 onClick={completeSession}
-                className="w-full h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-primary/20"
+                className="w-full h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-violet-500/10 rounded-2xl transition-all duration-300 hover:scale-[1.01]"
                 disabled={isCompleting}
               >
-                {isCompleting ? "Generating Results..." : "Complete Interview & View Results"}
+                {isCompleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin text-white" />
+                    Generating Scorecard...
+                  </>
+                ) : (
+                  <>
+                    Complete Interview & View Results
+                    <Award className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
             ) : (
-              <div className="relative flex items-end gap-2 p-2 bg-card border border-border/50 rounded-3xl shadow-sm focus-within:ring-1 focus-within:ring-primary/20 transition-all">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className={`rounded-full h-10 w-10 shrink-0 ${voiceMode ? 'text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/30' : 'text-muted-foreground'}`}
-                  onClick={toggleVoiceMode}
-                >
-                  {voiceMode ? <Mic className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5" />}
-                </Button>
+              <div className={`p-4 rounded-3xl bg-[#0e1017]/40 border ${
+                isEditorFocused 
+                  ? 'border-violet-500/30 shadow-[0_0_25px_rgba(139,92,246,0.05)]' 
+                  : 'border-white/5'
+              } transition-all duration-300 space-y-4`}>
+                <div className="flex justify-between items-center text-[10px] text-violet-300/40 font-bold uppercase tracking-wider px-1">
+                  <span>Your Response Area</span>
+                  <span className="flex items-center gap-1">
+                    <Activity className="w-3 h-3 text-violet-400" />
+                    Press Enter to submit
+                  </span>
+                </div>
 
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  onFocus={() => setIsEditorFocused(true)}
+                  onBlur={() => setIsEditorFocused(false)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
                       handleSendMessage(input);
                     }
                   }}
-                  placeholder={voiceMode ? "Listening..." : "Type your answer..."}
-                  className="min-h-[44px] max-h-[120px] py-3 px-2 border-0 focus-visible:ring-0 bg-transparent resize-none shadow-none"
-                  rows={1}
+                  placeholder={voiceMode ? "Listening... Speak your answer now." : "Draft your detailed answer here... Connect your experience and use structural models like STAR where possible."}
+                  className="min-h-[140px] max-h-[220px] py-2 px-1 border-0 focus-visible:ring-0 bg-transparent resize-none text-[14px] leading-relaxed text-violet-100/90 focus:outline-none placeholder-violet-200/20"
                   disabled={sending || !sessionActive || isCompleting}
                 />
 
-                <Button
-                  onClick={() => handleSendMessage(input)}
-                  disabled={!input.trim() || sending || !sessionActive || isCompleting}
-                  size="icon"
-                  className="rounded-full h-10 w-10 shrink-0"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center justify-between border-t border-white/5 pt-3.5 mt-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className={`rounded-xl h-9 w-9 shrink-0 transition-all ${
+                        voiceMode 
+                          ? 'text-red-400 bg-red-500/10 border border-red-500/20' 
+                          : 'text-violet-300/40 bg-white/5 hover:bg-white/10 hover:text-white border border-white/5'
+                      }`}
+                      onClick={toggleVoiceMode}
+                    >
+                      {voiceMode ? <Mic className="w-4.5 h-4.5 animate-pulse" /> : <Mic className="w-4.5 h-4.5" />}
+                    </Button>
+                    <div className="flex items-center gap-2 text-[11px] text-violet-200/40 font-medium">
+                      <span className="bg-white/5 px-2.5 py-0.5 rounded-md">
+                        Words: {input.trim() ? input.trim().split(/\s+/).length : 0}
+                      </span>
+                      <span className="bg-white/5 px-2.5 py-0.5 rounded-md">
+                        Chars: {input.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => handleSendMessage(input)}
+                    disabled={!input.trim() || sending || !sessionActive || isCompleting}
+                    className={`h-9 px-5 font-bold text-xs rounded-xl transition-all duration-300 ${
+                      input.trim() && !sending && sessionActive && !isCompleting
+                        ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-lg shadow-violet-500/10 hover:scale-[1.02]'
+                        : 'bg-white/5 text-violet-200/20 cursor-not-allowed border border-white/5'
+                    }`}
+                  >
+                    {sending ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin text-violet-300" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        Submit Answer
+                        <Send className="w-3.5 h-3.5 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             )}
+
           </div>
         </div>
-          </>
-        )}
       </main>
+
+      {/* 3. RIGHT SIDEBAR (Conversation Transcript Timeline) */}
+      <aside className={`
+        w-full lg:w-96 border-l border-white/5 bg-[#0e1017]/30 backdrop-blur-xl shrink-0 h-full relative z-20 flex-col
+        ${activeTab === 'timeline' ? 'flex' : 'hidden lg:flex'}
+      `}>
+        {/* Title Header */}
+        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <MessageSquare className="w-4 h-4 text-violet-400" />
+            <h2 className="font-bold text-sm tracking-tight text-white">Interview Timeline</h2>
+          </div>
+          <span className="text-[10px] font-bold text-violet-400 bg-violet-500/5 px-2 py-0.5 rounded-md border border-violet-500/10">
+            {completedTurns.length} Completed
+          </span>
+        </div>
+
+        {/* Scrollable Timeline Stream */}
+        <ScrollArea className="flex-1 p-6">
+          {completedTurns.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center py-20 gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                <Activity className="w-4 h-4 text-violet-200/30" />
+              </div>
+              <p className="text-xs text-violet-200/30 max-w-[180px]">
+                Previous responses and AI evaluations will construct here as the session flows.
+              </p>
+            </div>
+          ) : (
+            <div className="relative pl-6 space-y-6">
+              {/* Vertical Dotted Timeline Track Line */}
+              <div className="absolute left-[7px] top-2 bottom-2 w-[1px] bg-dashed border-l border-dashed border-white/10" />
+
+              {completedTurns.map((turn, index) => {
+                const isExpanded = !!expandedFeedback[index];
+                
+                return (
+                  <div key={index} className="relative space-y-3">
+                    {/* Node Dot Indicator */}
+                    <div className="absolute -left-[24px] top-1.5 w-4 h-4 rounded-full bg-emerald-500/10 border-2 border-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-400/20">
+                      <Check className="w-2.5 h-2.5 text-emerald-400 stroke-[3]" />
+                    </div>
+
+                    {/* Question summary badge */}
+                    <div className="flex justify-between items-center text-[10px] font-bold text-violet-400/60 uppercase tracking-wider">
+                      <span>Question {index + 1}</span>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white/[0.01] hover:bg-white/[0.02] border border-white/5 space-y-3 transition-colors duration-300">
+                      {/* Display Question Summary */}
+                      <p className="text-xs text-violet-100/70 leading-relaxed italic line-clamp-2">
+                        "{turn.question}"
+                      </p>
+
+                      {/* Display Answer Details */}
+                      {turn.answer && (
+                        <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 mt-2">
+                          <p className="text-[11px] text-violet-200/40 font-bold uppercase tracking-wider mb-1">Your Response</p>
+                          <p className="text-xs text-violet-200/80 leading-relaxed font-mono whitespace-pre-line">
+                            {turn.answer}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Collapse AI Evaluation Accordion */}
+                      {turn.feedback && (
+                        <div className="mt-2.5 pt-2.5 border-t border-white/5">
+                          <button
+                            onClick={() => toggleFeedback(index)}
+                            className="w-full flex items-center justify-between text-[11px] text-violet-300 font-bold hover:text-violet-100 transition-colors"
+                          >
+                            <span className="flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-violet-400" />
+                              AI Feedback Summary
+                            </span>
+                            {isExpanded ? (
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="mt-3 p-3.5 rounded-xl bg-violet-600/[0.03] border border-violet-500/10 text-[11px] text-violet-200/70 leading-relaxed prose prose-sm prose-invert max-w-none">
+                                  <ReactMarkdown>{turn.feedback}</ReactMarkdown>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </ScrollArea>
+      </aside>
     </div>
   );
 };
