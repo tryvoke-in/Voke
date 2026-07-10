@@ -15,7 +15,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { SkillRadar } from "@/components/dashboard/SkillRadar";
 import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
 import { MarketPulse } from "@/components/dashboard/MarketPulse";
-import { ReferralFloatingWidget } from "@/components/dashboard/ReferralFloatingWidget";
+import { ReferralButton } from "@/components/dashboard/ReferralButton";
 import { UpgradeButton } from "@/components/UpgradeButton";
 import { Sidebar } from "@/components/Sidebar";
 
@@ -449,8 +449,8 @@ const Dashboard = () => {
             <h1 className="text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">Voke</h1>
           </div>
 
-          <div className="flex-1 max-w-md mx-8 hidden md:block">
-            <div className="relative">
+          <div className="flex-1 max-w-md mx-8 hidden md:flex items-center gap-3">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
@@ -458,10 +458,13 @@ const Dashboard = () => {
                 className="w-full pl-10 pr-4 py-2 rounded-full bg-muted/50 border-transparent focus:bg-background focus:border-primary/20 transition-all outline-none text-sm"
               />
             </div>
+            <ReferralButton />
           </div>
 
           <nav className="flex items-center gap-2">
-
+            <div className="md:hidden">
+              <ReferralButton iconOnly />
+            </div>
             <UpgradeButton />
             <Popover>
               <PopoverTrigger asChild>
@@ -930,8 +933,6 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* Floating Referral Widget */}
-        <ReferralFloatingWidget />
         <Footer />
       </div>
     </div>
