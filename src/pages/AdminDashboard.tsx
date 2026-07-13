@@ -39,6 +39,18 @@ const formatDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
+const formatDuration = (totalSeconds: number) => {
+  if (!totalSeconds || totalSeconds <= 0) return "0s";
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  if (minutes < 60) {
+    const seconds = totalSeconds % 60;
+    return `${minutes}m ${seconds}s`;
+  }
+  const hours = (totalSeconds / 3600).toFixed(1);
+  return `${hours}h`;
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
@@ -73,6 +85,20 @@ const AdminDashboard = () => {
   const [totalSessions, setTotalSessions] = useState(0);
   const [activities, setActivities] = useState<any[]>([]);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [newUsersOnly, setNewUsersOnly] = useState(false);
+
+  const isNewUser = (userEmail?: string | null, userId?: string | null) => {
+    if (!userEmail && !userId) return false;
+    const foundUser = users.find(u => 
+      (userId && u.id === userId) || 
+      (userEmail && u.email === userEmail)
+    );
+    if (!foundUser) return false;
+    const joinedDate = new Date(foundUser.created_at);
+    const diffTime = Math.abs(Date.now() - joinedDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+  };
   const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState("");
   const [analyticsFilterEvent, setAnalyticsFilterEvent] = useState("all");
   const [expandedActivityId, setExpandedActivityId] = useState<string | null>(null);
@@ -784,17 +810,41 @@ const AdminDashboard = () => {
               </motion.div>
             )}
 
-            {activeTab === "analytics" && (
-              <motion.div
-                key="analytics"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-8 animate-in fade-in duration-300"
-              >
+            {activeTab === "analytics" && ((allActivities) => {
+              const activities = allActivities.filter(activity => {
+                if (!newUsersOnly) return true;
+                return isNewUser(activity.user_email, activity.user_id);
+              });
+
+              return (
+                <motion.div
+                  key="analytics"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-8 animate-in fade-in duration-300"
+                >
+                  {/* Analytics Control Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-200">Analytics Scope</h3>
+                      <p className="text-xs text-gray-400">Toggle whether to show overall system activity or new signups only</p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-black/30 px-4 py-2 rounded-xl border border-white/5">
+                      <Label htmlFor="new-users-toggle" className="text-xs font-semibold text-gray-300 cursor-pointer">
+                        New Users Only (Registered ≤ 7 Days)
+                      </Label>
+                      <Switch
+                        id="new-users-toggle"
+                        checked={newUsersOnly}
+                        onCheckedChange={setNewUsersOnly}
+                        className="data-[state=checked]:bg-violet-600"
+                      />
+                    </div>
+                  </div>
                 {/* Metrics Summary Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
                     {
                       title: "Total Page Views",
@@ -826,14 +876,6 @@ const AdminDashboard = () => {
                       icon: Users,
                       color: "text-emerald-400",
                       bg: "bg-emerald-500/10"
-                    },
-                    {
-                      title: "Custom Actions",
-                      value: activities.filter(a => a.event_type !== 'page_view').length,
-                      desc: "Buttons clicked & forms sent",
-                      icon: TrendingUp,
-                      color: "text-amber-400",
-                      bg: "bg-amber-500/10"
                     }
                   ].map((card, i) => (
                     <Card key={i} className="bg-white/5 border-white/10 shadow-xl overflow-hidden group hover:bg-white/10 transition-all duration-300">
@@ -860,32 +902,30 @@ const AdminDashboard = () => {
                       <TrendingUp className="w-5 h-5 text-violet-400 animate-pulse" />
                       Web Activity Trends
                     </CardTitle>
-                    <p className="text-xs text-gray-400">Daily breakdown of unique visits, page views, and custom actions</p>
+                    <p className="text-xs text-gray-400">Daily breakdown of unique visits and page views</p>
                   </CardHeader>
                   <CardContent className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={(() => {
-                        const last7Days: Record<string, { dateStr: string; visits: Set<string>; pageViews: number; actions: number }> = {};
+                        const last7Days: Record<string, { dateStr: string; visits: Set<string>; pageViews: number }> = {};
                         for (let i = 6; i >= 0; i--) {
                           const d = new Date();
                           d.setDate(d.getDate() - i);
                           const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
                           const isoDate = d.toISOString().split('T')[0];
-                          last7Days[isoDate] = { dateStr, visits: new Set(), pageViews: 0, actions: 0 };
+                          last7Days[isoDate] = { dateStr, visits: new Set(), pageViews: 0 };
                         }
                         activities.forEach(a => {
                           const dKey = new Date(a.created_at).toISOString().split('T')[0];
                           if (last7Days[dKey]) {
                             last7Days[dKey].visits.add(a.session_id);
                             if (a.event_type === 'page_view') last7Days[dKey].pageViews += 1;
-                            else last7Days[dKey].actions += 1;
                           }
                         });
                         return Object.values(last7Days).map(day => ({
                           date: day.dateStr,
                           "Page Views": day.pageViews,
-                          "Unique Visits": day.visits.size,
-                          "Custom Actions": day.actions
+                          "Unique Visits": day.visits.size
                         }));
                       })()}>
                         <defs>
@@ -897,10 +937,6 @@ const AdminDashboard = () => {
                             <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
                             <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                           </linearGradient>
-                          <linearGradient id="colorActions" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                          </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                         <XAxis dataKey="date" stroke="#6b7280" fontSize={11} tickLine={false} />
@@ -908,14 +944,13 @@ const AdminDashboard = () => {
                         <Tooltip contentStyle={{ backgroundColor: '#09090b', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '12px' }} />
                         <Area type="monotone" dataKey="Page Views" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorPageViews)" strokeWidth={2} />
                         <Area type="monotone" dataKey="Unique Visits" stroke="#3b82f6" fillOpacity={1} fill="url(#colorVisits)" strokeWidth={2} />
-                        <Area type="monotone" dataKey="Custom Actions" stroke="#10b981" fillOpacity={1} fill="url(#colorActions)" strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
 
                 {/* Popular Breakdown Cards */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="w-full">
                   {/* Top Pages */}
                   <Card className="bg-white/5 border-white/10 shadow-xl">
                     <CardHeader>
@@ -960,51 +995,6 @@ const AdminDashboard = () => {
                       </div>
                     </CardContent>
                   </Card>
-
-                  {/* Top Actions */}
-                  <Card className="bg-white/5 border-white/10 shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="text-lg font-bold">Top Custom Actions</CardTitle>
-                      <p className="text-xs text-gray-400">Most frequent user interactions</p>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {(() => {
-                          const counts: Record<string, number> = {};
-                          activities.forEach(a => {
-                            if (a.event_type !== 'page_view') {
-                              counts[a.event_type] = (counts[a.event_type] || 0) + 1;
-                            }
-                          });
-                          const sorted = Object.entries(counts)
-                            .map(([type, count]) => ({ type, count }))
-                            .sort((a, b) => b.count - a.count)
-                            .slice(0, 5);
-                          
-                          const maxCount = sorted[0]?.count || 1;
-
-                          if (sorted.length === 0) {
-                            return <p className="text-sm text-gray-500 py-4 text-center">No custom actions recorded yet</p>;
-                          }
-
-                          return sorted.map((action, index) => (
-                            <div key={index} className="space-y-1.5">
-                              <div className="flex justify-between text-sm">
-                                <span className="font-semibold text-gray-300 capitalize">{action.type.replace(/_/g, ' ')}</span>
-                                <span className="font-bold text-emerald-400">{action.count} times</span>
-                              </div>
-                              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                                <div 
-                                  className="bg-emerald-600 h-full rounded-full transition-all duration-500" 
-                                  style={{ width: `${(action.count / maxCount) * 100}%` }}
-                                />
-                              </div>
-                            </div>
-                          ));
-                        })()}
-                      </div>
-                    </CardContent>
-                  </Card>
                 </div>
 
                 {/* User Engagement Summary (Visits Breakdown) */}
@@ -1021,29 +1011,43 @@ const AdminDashboard = () => {
                       <Table>
                         <TableHeader>
                           <TableRow className="border-white/10 hover:bg-white/5">
-                            <TableHead className="text-gray-400">User Email</TableHead>
+                            <TableHead className="text-gray-400">User / Visitor</TableHead>
                             <TableHead className="text-gray-400">Total Visits (Sessions)</TableHead>
-                            <TableHead className="text-gray-400">Total Page Views / Actions</TableHead>
+                            <TableHead className="text-gray-400">Total Page Views</TableHead>
+                            <TableHead className="text-gray-400">Total Time Spent</TableHead>
                             <TableHead className="text-gray-400">Last Active</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {(() => {
                             const breakdown = (() => {
-                              const userStats: Record<string, { email: string; sessions: Set<string>; pageViews: number; lastActive: string }> = {};
+                              const userStats: Record<string, { email: string; userId: string | null; sessions: Set<string>; pageViews: number; totalDuration: number; lastActive: string }> = {};
 
                               activities.forEach(activity => {
                                 const identifier = activity.user_email || "Guest (Anonymous)";
                                 if (!userStats[identifier]) {
                                   userStats[identifier] = {
                                     email: identifier,
+                                    userId: activity.user_id || null,
                                     sessions: new Set<string>(),
                                     pageViews: 0,
+                                    totalDuration: 0,
                                     lastActive: activity.created_at
                                   };
                                 }
+                                if (activity.user_id && !userStats[identifier].userId) {
+                                  userStats[identifier].userId = activity.user_id;
+                                }
                                 userStats[identifier].sessions.add(activity.session_id);
                                 userStats[identifier].pageViews += 1;
+                                
+                                if (activity.event_type === "page_leave" && activity.action_details) {
+                                  const details = activity.action_details as any;
+                                  if (details.duration_seconds) {
+                                    userStats[identifier].totalDuration += details.duration_seconds;
+                                  }
+                                }
+
                                 if (new Date(activity.created_at) > new Date(userStats[identifier].lastActive)) {
                                   userStats[identifier].lastActive = activity.created_at;
                                 }
@@ -1052,8 +1056,10 @@ const AdminDashboard = () => {
                               return Object.values(userStats)
                                 .map(stat => ({
                                   email: stat.email,
+                                  userId: stat.userId,
                                   visitCount: stat.sessions.size,
                                   pageViews: stat.pageViews,
+                                  totalDuration: stat.totalDuration,
                                   lastActive: stat.lastActive
                                 }))
                                 .sort((a, b) => b.visitCount - a.visitCount);
@@ -1062,7 +1068,7 @@ const AdminDashboard = () => {
                             if (breakdown.length === 0) {
                               return (
                                 <TableRow>
-                                  <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                                     No user activity recorded yet
                                   </TableCell>
                                 </TableRow>
@@ -1072,10 +1078,19 @@ const AdminDashboard = () => {
                             return breakdown.map((userBreakdown, index) => (
                               <TableRow key={index} className="border-white/10 hover:bg-white/5">
                                 <TableCell className="font-medium text-gray-300">
-                                  {userBreakdown.email.includes("Guest") ? (
+                                  {userBreakdown.userId ? (() => {
+                                    const profile = users.find(u => u.id === userBreakdown.userId);
+                                    const displayName = profile?.full_name ? `${profile.full_name} (${userBreakdown.email})` : userBreakdown.email;
+                                    return (
+                                      <button
+                                        onClick={() => navigate(`/admin/users/${userBreakdown.userId}`)}
+                                        className="text-violet-400 hover:text-violet-300 hover:underline font-semibold text-left transition-colors"
+                                      >
+                                        {displayName}
+                                      </button>
+                                    );
+                                  })() : (
                                     <span className="text-gray-500 italic">{userBreakdown.email}</span>
-                                  ) : (
-                                    userBreakdown.email
                                   )}
                                 </TableCell>
                                 <TableCell className="font-bold text-violet-400">
@@ -1083,6 +1098,9 @@ const AdminDashboard = () => {
                                 </TableCell>
                                 <TableCell className="text-gray-300 text-sm">
                                   {userBreakdown.pageViews} hits
+                                </TableCell>
+                                <TableCell className="text-gray-300 font-mono text-sm">
+                                  {formatDuration(userBreakdown.totalDuration)}
                                 </TableCell>
                                 <TableCell className="text-gray-400 text-sm">
                                   {new Date(userBreakdown.lastActive).toLocaleString('en-GB')}
@@ -1112,12 +1130,8 @@ const AdminDashboard = () => {
                         <SelectContent className="bg-zinc-950 border-white/10 text-white rounded-xl">
                           <SelectItem value="all">All Events</SelectItem>
                           <SelectItem value="page_view">Page Views</SelectItem>
-                          <SelectItem value="waitlist_signup">Waitlist Signups</SelectItem>
                           <SelectItem value="auth_login">Logins</SelectItem>
                           <SelectItem value="user_signup">Registrations</SelectItem>
-                          <SelectItem value="pricing_upgrade_click">Checkout Started</SelectItem>
-                          <SelectItem value="pricing_upgrade_success">Upgrades Done</SelectItem>
-                          <SelectItem value="custom_actions">Custom Actions Only</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1239,7 +1253,8 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
               </motion.div>
-            )}
+            );
+          })(activities)}
 
             {activeTab === "users" && (
               <motion.div

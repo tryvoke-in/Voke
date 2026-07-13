@@ -1,15 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
 
-// Safe, fallback-friendly session generator
+// In-memory session ID.
+// This is cleared whenever the tab/page is closed or fully reloaded,
+// starting a fresh "Visit" session. It persists across client-side router navigation.
+let memorySessionId: string | null = null;
+
 const getSessionId = (): string => {
-  let sessionId = sessionStorage.getItem("voke_analytics_session_id");
-  if (!sessionId) {
-    // Generate simple random string that looks like a unique identifier
+  if (!memorySessionId) {
     const randPart = () => Math.random().toString(36).substring(2, 15);
-    sessionId = `${randPart()}-${randPart()}-${Date.now()}`;
-    sessionStorage.setItem("voke_analytics_session_id", sessionId);
+    memorySessionId = `${randPart()}-${randPart()}-${Date.now()}`;
   }
-  return sessionId;
+  return memorySessionId;
 };
 
 /**

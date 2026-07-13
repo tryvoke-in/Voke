@@ -55,6 +55,7 @@ import { SessionRequestNotifier } from "./components/SessionRequestNotifier";
 import { ProfileCompletionGuard } from "./components/ProfileCompletionGuard";
 import Waitlist from "./pages/Waitlist";
 import { WaitlistGuard } from "./components/WaitlistGuard";
+import AnalyticsTracker from "./components/AnalyticsTracker";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
       <Sonner />
       <OnlinePresenceProvider>
         <BrowserRouter>
+          <AnalyticsTracker />
           <WaitlistGuard>
             <ProfileCompletionGuard>
               <Routes>

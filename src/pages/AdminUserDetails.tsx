@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Users, LayoutDashboard, Settings, FileText, Code2, LogOut, 
   MessageSquare, ArrowLeft, Mail, Calendar, Shield, Activity,
-  Trophy, Terminal, Clock, CheckCircle2, Ban, Lock, Edit, Trash2, Search, Bell
+  Trophy, Terminal, Clock, CheckCircle2, Ban, Lock, Edit, Trash2, Search, Bell, Globe
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -36,7 +36,20 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ADMIN_EMAIL, isAdminEmail } from "@/config/admin";
 
+const formatDuration = (totalSeconds: number) => {
+  if (!totalSeconds || totalSeconds <= 0) return "0s";
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  if (minutes < 60) {
+    const seconds = totalSeconds % 60;
+    return `${minutes}m ${seconds}s`;
+  }
+  const hours = (totalSeconds / 3600).toFixed(1);
+  return `${hours}h`;
+};
+
 const AdminUserDetails = () => {
+  const [userActivities, setUserActivities] = useState<any[]>([]);
   const { userId } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -90,37 +103,148 @@ const AdminUserDetails = () => {
       
       if (profileError) throw profileError;
 
-      // Fetch interview sessions count (as proxy for "Problems Solved" or activity)
-      const { count: interviewsCount, error: countError } = await supabase
+      // Fetch user activities (by user_id or email)
+      const { data: activityData, error: activityError } = await supabase
+        .from('user_activities')
+        .select('*')
+        .or(`user_id.eq.${userId},user_email.eq.${profile.email}`)
+        .order('created_at', { ascending: false });
+
+      if (activityError) throw activityError;
+
+      // Fetch actual mock interviews from all 3 session tables to backfill timeline
+      const { data: aiInterviews } = await supabase
+        .from('interview_sessions')
+        .select('id, role, created_at, status, overall_score, interview_type, total_duration_seconds')
+        .eq('user_id', userId);
+
+      const { data: videoInterviews } = await supabase
+        .from('video_interview_sessions')
+        .select('id, question, created_at, status, overall_score, duration_seconds')
+        .eq('user_id', userId);
+
+      const { data: peerInterviews } = await supabase
+        .from('peer_interview_sessions')
+        .select('id, topic, created_at, status, duration_minutes')
+        .or(`host_user_id.eq.${userId},guest_user_id.eq.${userId}`);
+
+      const mergedActivities: any[] = [...(activityData || [])];
+
+      aiInterviews?.forEach(item => {
+        mergedActivities.push({
+          id: `ai-session-${item.id}`,
+          event_type: "interview_complete",
+          created_at: item.created_at || new Date().toISOString(),
+          page_path: "/interview",
+          action_details: {
+            role: item.role,
+            status: item.status,
+            score: item.overall_score,
+            interview_type: item.interview_type,
+            duration_seconds: item.total_duration_seconds,
+            type: "AI Interview"
+          },
+          session_id: item.id
+        });
+      });
+
+      videoInterviews?.forEach(item => {
+        mergedActivities.push({
+          id: `video-session-${item.id}`,
+          event_type: "video_interview",
+          created_at: item.created_at || new Date().toISOString(),
+          page_path: "/video-interview",
+          action_details: {
+            question: item.question,
+            status: item.status,
+            score: item.overall_score,
+            duration_seconds: item.duration_seconds,
+            type: "Video Interview"
+          },
+          session_id: item.id
+        });
+      });
+
+      peerInterviews?.forEach(item => {
+        mergedActivities.push({
+          id: `peer-session-${item.id}`,
+          event_type: "peer_interview",
+          created_at: item.created_at || new Date().toISOString(),
+          page_path: "/peer-interviews",
+          action_details: {
+            topic: item.topic,
+            status: item.status,
+            duration_minutes: item.duration_minutes,
+            type: "Peer Interview"
+          },
+          session_id: item.id
+        });
+      });
+
+      // Sort activities newest first
+      mergedActivities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setUserActivities(mergedActivities);
+
+      // Compute total active duration spent on pages
+      let totalDurationSeconds = 0;
+      mergedActivities.forEach(a => {
+        if (a.event_type === "page_leave" && a.action_details) {
+          const details = a.action_details as any;
+          if (details.duration_seconds) {
+            totalDurationSeconds += details.duration_seconds;
+          }
+        }
+      });
+
+      // Fetch AI interviews count
+      const { count: aiCount, error: aiCountError } = await supabase
         .from('interview_sessions')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId);
 
-      if (countError) throw countError;
+      if (aiCountError) throw aiCountError;
+
+      // Fetch video interviews count
+      const { count: videoCount, error: videoCountError } = await supabase
+        .from('video_interview_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      if (videoCountError) throw videoCountError;
+
+      // Fetch peer interviews count
+      const { count: peerCount, error: peerCountError } = await supabase
+        .from('peer_interview_sessions')
+        .select('*', { count: 'exact', head: true })
+        .or(`host_user_id.eq.${userId},guest_user_id.eq.${userId}`);
+
+      if (peerCountError) throw peerCountError;
+
+      const totalInterviews = (aiCount || 0) + (videoCount || 0) + (peerCount || 0);
 
       if (profile) {
         setUser({
           id: profile.id,
           full_name: profile.full_name || "Unknown User",
-          email: profile.email || "No email", // Note: email might be null in profiles if not synced, usually handled by auth
-          role: "User", // Default for now
-          status: "Active", // Default for now
+          email: profile.email || "No email",
+          role: "User",
+          status: "Active",
           joined_at: profile.created_at,
           last_active: profile.updated_at,
           avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email || userId}`,
-          bio: "No bio available", // Not in schema
-          location: "Unknown", // Not in schema
+          bio: "No bio available",
+          location: "Unknown",
           github: profile.github_url || "Not linked",
           website: profile.linkedin_url || "Not linked",
           stats: {
-             problems_solved: interviewsCount || 0
+             problems_solved: totalInterviews,
+             total_duration_seconds: totalDurationSeconds
           }
         });
       }
     } catch (error: any) {
       console.error("Error fetching user details:", error);
       toast.error("Failed to fetch user details");
-      // Fallback or navigate back could be added here
     } finally {
       setLoading(false);
     }
@@ -312,7 +436,7 @@ const AdminUserDetails = () => {
                                 { label: "XP Earned", value: "0", icon: Trophy, color: "text-amber-400", bg: "bg-amber-500/10" },
                                 { label: "Interviews", value: user.stats?.problems_solved || "0", icon: Terminal, color: "text-blue-400", bg: "bg-blue-500/10" },
                                 { label: "Streak", value: "0 Days", icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-                                { label: "Time Spent", value: "0h", icon: Clock, color: "text-purple-400", bg: "bg-purple-500/10" },
+                                { label: "Time Spent", value: formatDuration(user.stats?.total_duration_seconds || 0), icon: Clock, color: "text-purple-400", bg: "bg-purple-500/10" },
                             ].map((stat, i) => (
                                 <Card key={i} className="bg-white/5 border-white/10 backdrop-blur-sm">
                                     <CardContent className="p-6">
@@ -326,39 +450,196 @@ const AdminUserDetails = () => {
                             ))}
                         </div>
 
-                        {/* Recent Activity */}
-                        <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                        {/* Page Visit Breakdown */}
+                        <Card className="bg-white/5 border-white/10 backdrop-blur-sm shadow-xl">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Activity className="w-5 h-5 text-violet-400" />
-                                    Recent Activity
+                                <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                                    <Clock className="w-5 h-5 text-purple-400" />
+                                    Time Spent Per Page
                                 </CardTitle>
+                                <CardDescription className="text-gray-400 text-xs">
+                                    Aggregated view of time spent across different sections of the website (highest first)
+                                </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-6 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-[2px] before:bg-white/10">
-                                    {[
-                                        { action: "Solved 'Two Sum'", details: "Passed all test cases (12ms)", time: "2 hours ago", type: "code" },
-                                        { action: "Posted in Community", details: "Asked about Dynamic Programming", time: "5 hours ago", type: "post" },
-                                        { action: "Logged In", details: "From San Francisco, CA", time: "1 day ago", type: "login" },
-                                        { action: "Updated Profile", details: "Changed avatar image", time: "3 days ago", type: "edit" }
-                                    ].map((activity, i) => (
-                                        <div key={i} className="flex gap-4 relative">
-                                            <div className="w-10 h-10 rounded-full bg-[#0f1117] border border-white/10 flex items-center justify-center shrink-0 z-10">
-                                                {activity.type === 'code' ? <Code2 className="w-4 h-4 text-blue-400" /> : 
-                                                 activity.type === 'post' ? <MessageSquare className="w-4 h-4 text-emerald-400" /> :
-                                                 activity.type === 'login' ? <CheckCircle2 className="w-4 h-4 text-violet-400" /> :
-                                                 <Edit className="w-4 h-4 text-amber-400" />}
+                                <div className="space-y-4">
+                                    {(() => {
+                                        const pageBreakdown: Record<string, { path: string; totalSeconds: number; visitCount: number }> = {};
+                                        
+                                        userActivities.forEach(a => {
+                                            if (a.event_type === "page_view") {
+                                                const path = a.page_path;
+                                                if (!pageBreakdown[path]) {
+                                                    pageBreakdown[path] = { path, totalSeconds: 0, visitCount: 0 };
+                                                }
+                                                pageBreakdown[path].visitCount += 1;
+                                            } else if (a.event_type === "page_leave") {
+                                                const path = a.page_path;
+                                                if (!pageBreakdown[path]) {
+                                                    pageBreakdown[path] = { path, totalSeconds: 0, visitCount: 0 };
+                                                }
+                                                const details = a.action_details as any;
+                                                if (details?.duration_seconds) {
+                                                    pageBreakdown[path].totalSeconds += details.duration_seconds;
+                                                }
+                                            }
+                                        });
+
+                                        const sortedPages = Object.values(pageBreakdown)
+                                            .sort((a, b) => b.totalSeconds - a.totalSeconds);
+
+                                        if (sortedPages.length === 0) {
+                                            return <p className="text-sm text-gray-500 py-4 text-center">No page visits recorded yet</p>;
+                                        }
+
+                                        const maxDuration = Math.max(...sortedPages.map(p => p.totalSeconds), 1);
+
+                                        return (
+                                            <div className="space-y-4">
+                                                {sortedPages.map((page, index) => (
+                                                    <div key={index} className="space-y-2">
+                                                        <div className="flex justify-between text-sm items-center">
+                                                            <span className="font-mono text-gray-300 truncate max-w-[65%] text-xs" title={page.path}>
+                                                                {page.path}
+                                                            </span>
+                                                            <div className="text-right text-xs">
+                                                                <span className="font-bold text-purple-400 mr-2">
+                                                                    {formatDuration(page.totalSeconds)}
+                                                                </span>
+                                                                <span className="text-gray-500">
+                                                                    ({page.visitCount} visits)
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                                            <div 
+                                                                className="bg-purple-600 h-full rounded-full transition-all duration-500" 
+                                                                style={{ width: `${(page.totalSeconds / maxDuration) * 100}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                            <div className="flex-1 pt-1">
-                                                <div className="flex justify-between items-start">
-                                                    <h4 className="text-sm font-semibold text-gray-200">{activity.action}</h4>
-                                                    <span className="text-xs text-gray-500 font-mono">{activity.time}</span>
-                                                </div>
-                                                <p className="text-xs text-gray-400 mt-1">{activity.details}</p>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })()}
                                 </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Interviews Taken */}
+                        <Card className="bg-white/5 border-white/10 backdrop-blur-sm shadow-xl">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                                    <Terminal className="w-5 h-5 text-blue-400" />
+                                    Interviews Taken
+                                </CardTitle>
+                                <CardDescription className="text-gray-400 text-xs">
+                                    Clear, simplified history of mock interviews completed by this user
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {(() => {
+                                    const interviewEvents = userActivities.filter(a => {
+                                        if (a.event_type !== "interview_complete" && a.event_type !== "video_interview" && a.event_type !== "peer_interview") {
+                                            return false;
+                                        }
+                                        const details = a.action_details as any;
+                                        // Only show completed/given interviews, filter out future scheduled peer/standard sessions
+                                        if (details?.status === "scheduled") {
+                                            return false;
+                                        }
+                                        return true;
+                                    });
+
+                                    if (interviewEvents.length === 0) {
+                                        return (
+                                            <div className="text-center py-8 text-gray-500 text-sm">
+                                                No completed interviews recorded for this user yet.
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <div className="space-y-4">
+                                            {interviewEvents.map((session) => {
+                                                const details = session.action_details as any;
+                                                
+                                                let interviewTypeLabel = "AI Interview";
+                                                let subtitle = "";
+                                                let scoreText = "N/A";
+                                                let badgeColor = "bg-blue-500/10 text-blue-400";
+                                                let durationText = "";
+
+                                                if (session.event_type === "interview_complete") {
+                                                    const isVoice = details?.interview_type === "voice";
+                                                    interviewTypeLabel = isVoice ? "AI Voice Interview" : "AI Text Interview";
+                                                    subtitle = `Role: ${details?.role || "General"}`;
+                                                    scoreText = details?.score ? `${details.score}%` : "No Score";
+                                                    badgeColor = isVoice ? "bg-purple-500/10 text-purple-400" : "bg-blue-500/10 text-blue-400";
+                                                    
+                                                    const secs = details?.duration_seconds || 0;
+                                                    if (secs > 0) {
+                                                        durationText = `Duration: ${formatDuration(secs)}`;
+                                                    }
+                                                } else if (session.event_type === "video_interview") {
+                                                    interviewTypeLabel = "Video Interview";
+                                                    subtitle = `Question: "${details?.question || ""}"`;
+                                                    scoreText = details?.score ? `${details.score}%` : "No Score";
+                                                    badgeColor = "bg-amber-500/10 text-amber-400";
+
+                                                    const secs = details?.duration_seconds || 0;
+                                                    if (secs > 0) {
+                                                        durationText = `Duration: ${formatDuration(secs)}`;
+                                                    }
+                                                } else if (session.event_type === "peer_interview") {
+                                                    interviewTypeLabel = "Peer Interview";
+                                                    subtitle = `Topic: ${details?.topic || "General Practice"}`;
+                                                    scoreText = details?.status || "Completed";
+                                                    badgeColor = "bg-emerald-500/10 text-emerald-400";
+
+                                                    const mins = details?.duration_minutes || 0;
+                                                    if (mins > 0) {
+                                                        durationText = `Duration: ${mins}m`;
+                                                    }
+                                                }
+
+                                                const timeStr = new Date(session.created_at).toLocaleString('en-GB', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                });
+
+                                                return (
+                                                    <div 
+                                                        key={session.id} 
+                                                        className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-200"
+                                                    >
+                                                        <div className="space-y-1 text-left max-w-[70%]">
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <Badge className={`${badgeColor} border-0 capitalize font-semibold text-xs`}>
+                                                                    {interviewTypeLabel}
+                                                                </Badge>
+                                                                <span className="text-gray-500 text-[10px] font-mono">{timeStr}</span>
+                                                                {durationText && (
+                                                                    <span className="text-purple-400 text-[10px] font-semibold bg-purple-500/10 px-2 py-0.5 rounded-full">
+                                                                        {durationText}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <h4 className="text-sm font-semibold text-gray-200 truncate">{subtitle}</h4>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-xs text-gray-500 uppercase font-bold">Score</p>
+                                                            <p className="text-lg font-black text-violet-400">{scoreText}</p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })()}
                             </CardContent>
                         </Card>
 
