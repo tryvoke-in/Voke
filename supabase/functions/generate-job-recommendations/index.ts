@@ -141,7 +141,7 @@ serve(async (req) => {
         console.log("Fetching jobs...");
         const jobApiKey = Deno.env.get('JOB_SEARCH_API_KEY')
         // API key removed as it was causing 403 errors and the API is public
-        const museUrl = `https://www.themuse.com/api/public/jobs?page=1&descending=true&category=Engineering`
+        const museUrl = `https://www.themuse.com/api/public/jobs?page=1&descending=true&category=Software%20Engineering`
 
         let jobPostings = [];
         try {
@@ -175,14 +175,41 @@ serve(async (req) => {
             console.error("Job fetch error:", e);
         }
 
-        // Get jobs from DB
-        const { data: dbJobs } = await supabase
+        // Get jobs from DB, prioritizing real jobs (not ai-generated seed jobs)
+        let { data: dbJobs } = await supabase
             .from('job_postings')
             .select('*')
+            .neq('source', 'ai-generated')
             .order('posted_date', { ascending: false })
             .limit(50)
 
+        // Fallback to all jobs (including seeded ones) if no real fetched jobs are available
+        if (!dbJobs || dbJobs.length === 0) {
+            console.log("No real jobs found in DB, falling back to seeded jobs...");
+            const { data: allJobs } = await supabase
+                .from('job_postings')
+                .select('*')
+                .order('posted_date', { ascending: false })
+                .limit(50)
+            dbJobs = allJobs
+        }
+
         jobPostings = dbJobs || [];
+
+        // Filter jobs based on candidate's experience level
+        let filteredJobs = jobPostings;
+        if (experienceLevel === 'entry') {
+            filteredJobs = jobPostings.filter((j: any) => j.experience_level === 'entry' || j.experience_level === 'mid');
+        } else if (experienceLevel === 'mid') {
+            filteredJobs = jobPostings.filter((j: any) => j.experience_level === 'entry' || j.experience_level === 'mid' || j.experience_level === 'senior');
+        } else if (experienceLevel === 'senior') {
+            filteredJobs = jobPostings.filter((j: any) => j.experience_level === 'mid' || j.experience_level === 'senior' || j.experience_level === 'lead' || j.experience_level === 'executive');
+        }
+
+        // If the filter returns nothing, fall back to the original list to ensure recommendations can still be generated
+        if (filteredJobs.length > 0) {
+            jobPostings = filteredJobs;
+        }
 
         if (jobPostings.length === 0) {
             // Fallback seed data if absolutely nothing found
@@ -224,7 +251,7 @@ CANDIDATE PROFILE:
 - Target Roles: ${roles.length > 0 ? roles.join(', ') : 'General'}
 
 AVAILABLE JOBS:
-${JSON.stringify(jobPostings.slice(0, 10).map((j: any) => ({
+${JSON.stringify(jobPostings.slice(0, 25).map((j: any) => ({
             id: j.id,
             title: j.title,
             company: j.company,
@@ -238,11 +265,11 @@ TASK:
 Match the candidate to the most suitable jobs based on:
 1. Interview performance scores across all types
 2. Communication and presentation skills (if available)
-3. Experience level match
+3. Experience level match (CRITICAL: An entry-level candidate should NEVER be matched with senior, lead, or executive roles. Mid-level roles are only acceptable if candidate shows high performance).
 4. Role preferences and demonstrated skills
 
 Return JSON with top 5-10 matches. For each match, provide:
-- Accurate match_score (0-100) based on fit
+- Accurate match_score (0-100) based on fit. An entry-level candidate matched with a mid-level job should generally have a lower match score than if matched with a perfect entry-level job.
 - Specific match_reasons referencing actual performance data
 - Relevant skill_gaps with realistic time estimates
 

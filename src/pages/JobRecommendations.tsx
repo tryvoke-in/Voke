@@ -8,12 +8,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
     Briefcase, MapPin, DollarSign, TrendingUp, Sparkles, RefreshCw,
     ArrowLeft, ExternalLink, BookmarkPlus, X, CheckCircle2, Building2,
-    Zap, Clock, Target, Search, Filter, BriefcaseBusiness
+    Zap, Clock, Target, Search, Filter, BriefcaseBusiness, AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreatingPlanLoader } from "@/components/ui/CreatingPlanLoader";
 import { Sidebar } from "@/components/Sidebar";
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogAction
+} from "@/components/ui/alert-dialog";
 
 interface JobPosting {
     id: string;
@@ -50,6 +59,7 @@ export default function JobRecommendations() {
     const [filterRemote, setFilterRemote] = useState<string>("all");
     const [sortBy, setSortBy] = useState<string>("match_score");
     const [searchQuery, setSearchQuery] = useState("");
+    const [showBetaAlert, setShowBetaAlert] = useState(true);
 
     useEffect(() => {
         loadRecommendations();
@@ -236,6 +246,30 @@ export default function JobRecommendations() {
         <div className="min-h-screen bg-black text-white selection:bg-violet-500/30 flex flex-col">
             {creatingPlan && <CreatingPlanLoader />}
             
+            <AlertDialog open={showBetaAlert} onOpenChange={setShowBetaAlert}>
+                <AlertDialogContent className="bg-zinc-950/95 border border-white/10 text-white max-w-md backdrop-blur-2xl rounded-3xl shadow-2xl">
+                    <AlertDialogHeader className="flex flex-col items-center text-center">
+                        <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+                            <AlertTriangle className="h-6 w-6 text-amber-400" />
+                        </div>
+                        <AlertDialogTitle className="text-xl font-bold bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-500 bg-clip-text text-transparent">
+                            Feature Under Development
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-zinc-400 text-sm leading-relaxed mt-2">
+                            This feature is currently under active development. Recommendation matching results are experimental and may show false or temporary information as we continue to train and refine our AI engine.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="sm:justify-center mt-6">
+                        <AlertDialogAction 
+                            onClick={() => setShowBetaAlert(false)}
+                            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium rounded-full border-0 shadow-lg shadow-violet-500/20 px-8 py-2.5 transition-all duration-300 transform hover:scale-105"
+                        >
+                            Understood
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             {/* Background Effects */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-violet-900/20 rounded-full blur-[120px]" />
