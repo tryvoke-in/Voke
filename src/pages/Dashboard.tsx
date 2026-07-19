@@ -627,7 +627,7 @@ const Dashboard = () => {
                 </div>
 
                 <div id="tour-stats" className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4">
-                  {realStats.slice(0, 3).map((stat, i) => (
+                  {realStats.map((stat, i) => (
                     <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-2.5 sm:p-4 border border-white/5 hover:bg-white/20 transition-colors">
                       <div className="flex items-center gap-1.5 mb-1 text-white/70">
                         <stat.icon className="w-3.5 h-3.5" />
@@ -636,19 +636,6 @@ const Dashboard = () => {
                       <p className="text-xl sm:text-2xl font-bold">{stat.value}</p>
                     </div>
                   ))}
-
-                  {/* Build Resume Button */}
-                  <div
-                    onClick={() => navigate("/resume-builder")}
-                    className="relative bg-gradient-to-br from-amber-500/20 to-orange-600/20 backdrop-blur-sm rounded-xl p-2.5 sm:p-4 border border-amber-500/30 hover:bg-amber-500/30 transition-all cursor-pointer group hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center text-center min-h-[72px]"
-                  >
-                    <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg shadow-lg flex items-center gap-0.5">
-                      <Sparkles className="w-2 h-2 text-white fill-white" />
-                      <span>New</span>
-                    </div>
-                    <FileText className="w-5 h-5 sm:w-7 sm:h-7 text-amber-500 mb-1 group-hover:scale-110 transition-transform" />
-                    <p className="text-[10px] sm:text-xs font-bold text-white leading-tight">Build Resume</p>
-                  </div>
                 </div>
               </div>
             </motion.div>
