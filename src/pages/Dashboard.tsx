@@ -12,7 +12,7 @@ import {
   Globe, Briefcase, FileQuestion, ChevronRight, Sparkles, Lock, LayoutDashboard
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { SkillRadar } from "@/components/dashboard/SkillRadar";
+import { ProgressPanel } from "@/components/dashboard/ProgressPanel";
 import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
 import { ReferralButton } from "@/components/dashboard/ReferralButton";
 import { UpgradeButton } from "@/components/UpgradeButton";
@@ -50,6 +50,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [allSessions, setAllSessions] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -239,6 +240,7 @@ const Dashboard = () => {
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       setSessions(allActivity.slice(0, 5));
+      setAllSessions(allActivity);
 
       // Calculate Stats
       const statsData = calculateRealStats(textSessions || [], videoSessions || [], peerSessions || [], user.id);
@@ -834,24 +836,8 @@ const Dashboard = () => {
           {/* Right Column - Sidebar Widgets */}
           <div className="lg:col-span-4 space-y-6">
 
-            {/* AI Skill Radar (Competency Map) */}
-            <div id="tour-radar">
-              <SkillRadar
-                data={sessions.length > 0 ? [
-                  { subject: "Confidence", A: sessions.reduce((acc, s) => acc + (s.score || 70), 0) / (sessions.length || 1), fullMark: 100 },
-                  { subject: "Technical", A: sessions.filter(s => s.type === 'Text').reduce((acc, s) => acc + (s.score || 0), 0) / (sessions.filter(s => s.type === 'Text').length || 1) || 60, fullMark: 100 },
-                  { subject: "ATS Score", A: 85, fullMark: 100 }, // Mocked or derived from resume analysis
-                  { subject: "Problem Solving", A: sessions.filter(s => s.topic?.includes('Code') || s.topic?.includes('System')).reduce((acc, s) => acc + (s.score || 0), 0) / (sessions.filter(s => s.topic?.includes('Code') || s.topic?.includes('System')).length || 1) || 75, fullMark: 100 },
-                  { subject: "Communication", A: sessions.filter(s => s.type === 'Video').reduce((acc, s) => acc + (s.score || 0), 0) / (sessions.filter(s => s.type === 'Video').length || 1) || 80, fullMark: 100 },
-                ] : [
-                  { subject: "Confidence", A: 0, fullMark: 100 },
-                  { subject: "Technical", A: 0, fullMark: 100 },
-                  { subject: "ATS Score", A: 0, fullMark: 100 },
-                  { subject: "Problem Solving", A: 0, fullMark: 100 },
-                  { subject: "Communication", A: 0, fullMark: 100 },
-                ]}
-              />
-            </div>
+            {/* Progress Panel Widget */}
+            <ProgressPanel allSessions={allSessions} />
 
 
 
