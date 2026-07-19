@@ -197,64 +197,57 @@ const ResumeBuilder = () => {
     localStorage.setItem('voke_resume_jd', jobDescription);
   }, [jobDescription]);
 
-  // Helper to handle Groq API calls with rate-limit retries and model fallbacks
+  // SEC-04 FIX: Helper to handle Groq API calls via the secure server-side proxy.
+  // VITE_GROQ_API_KEY is no longer read or needed in the browser.
   const fetchGroqWithRetry = async (body: any, maxRetries = 2) => {
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-    if (!apiKey) throw new Error("GROQ_API_KEY not configured.");
-
     const models = [
       body.model || "llama-3.3-70b-versatile",
       "llama3-8b-8192",
       "llama-3.1-8b-instant",
     ];
 
-    let lastError = null;
-    let lastStatus = 200;
+    let lastError: any = null;
 
     for (let i = 0; i < models.length; i++) {
       const currentModel = models[i];
-      const attemptBody = { ...body, model: currentModel };
 
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
-          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify(attemptBody),
-          });
+          // Route through the authenticated edge function — key never leaves the server
+          const { groqChat } = await import("@/utils/groqProxy");
+          const data = await groqChat({ ...body, model: currentModel });
 
-          if (res.ok) {
-            return res;
-          }
+          // Wrap in a Response-like object to keep all callers unchanged
+          return {
+            ok: true,
+            json: async () => data,
+          };
+        } catch (e: any) {
+          lastError = e;
+          const is429 = e?.status === 429 || (typeof e?.message === 'string' && e.message.includes('429'));
 
-          lastStatus = res.status;
-          lastError = await res.text();
-
-          // If rate limited, wait and then try again or fall back to the next model
-          if (res.status === 429) {
+          if (is429) {
             console.warn(`Rate limit on ${currentModel}, attempt ${attempt + 1}.`);
             if (attempt < maxRetries) {
               const delay = 1500 * Math.pow(2, attempt);
               await new Promise(r => setTimeout(r, delay));
               continue; // Retry same model
             }
+            // Exhausted retries → fall through to next model
+            if (i < models.length - 1) {
+              toast.info(`Rate limit hit. Switching to fallback model: ${models[i + 1]}...`);
+            }
           } else {
-            // For non-429 errors (like 400 Bad Request), don't retry, just throw
-            throw new Error(`Groq API Error ${res.status}: ${lastError}`);
+            // Non-429 error — don't retry
+            throw e;
           }
-        } catch (e: any) {
-          lastError = e.message;
         }
-      }
-
-      // If we exhausted retries on the current model due to 429, we'll loop to the next fallback model
-      if (lastStatus === 429 && i < models.length - 1) {
-        toast.info(`Rate limit hit. Switching to fallback model: ${models[i + 1]}...`);
       }
     }
 
-    throw new Error(`Failed after retries and fallbacks. Last error: ${lastError}`);
+    throw new Error(`Failed after retries and fallbacks. Last error: ${lastError?.message || lastError}`);
   };
+
 
   // Calculation for completion progress
   const calculateProgress = () => {
@@ -295,9 +288,6 @@ const ResumeBuilder = () => {
     }
     setIsAiEnhancing(true);
     try {
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-      if (!apiKey) throw new Error("Missing API Key");
-
       const response = await fetchGroqWithRetry({
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: `Rewrite the following resume summary to be highly professional, action-oriented, and bypass AI detectors by sounding very human and authentic. Keep it to 2-3 sentences max. Do NOT use generic AI words like "delve", "testament", or "tapestry". Here is the summary: ${data.summary}` }],
@@ -323,7 +313,6 @@ const ResumeBuilder = () => {
     }
     setEnhancingExpId(id);
     try {
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       const response = await fetchGroqWithRetry({
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
@@ -363,7 +352,6 @@ Original Text: ${description}`
     }
     setEnhancingProjId(id);
     try {
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       const response = await fetchGroqWithRetry({
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
@@ -399,12 +387,6 @@ Original Text: ${description}`
   const handleFetchGitHubProject = async (id: string, urlLink: string) => {
     if (!urlLink || urlLink.trim() === "") {
       toast.error("Please add a GitHub URL link first.");
-      return;
-    }
-
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-    if (!apiKey) {
-      toast.error("VITE_GROQ_API_KEY not configured.");
       return;
     }
 
@@ -525,8 +507,6 @@ CRITICAL RULES:
 
   // === Make ATS Friendly: full resume auto-optimize ===
   const handleMakeAtsFriendly = async () => {
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-    if (!apiKey) { toast.error("GROQ_API_KEY not configured."); return; }
     setMakingAtsFriendly(true);
 
     const groqRewrite = async (systemMsg: string, userMsg: string): Promise<string> => {
@@ -742,8 +722,6 @@ Original description: ${proj.description}`
       toast.error("Please paste a Job Description first.");
       return;
     }
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-    if (!apiKey) { toast.error("GROQ_API_KEY not configured."); return; }
     setExtractingJd(true);
     try {
       // STEP 1: Sanitize — strip URLs, special chars, boilerplate phrases (LinkedIn UI noise)
@@ -845,11 +823,6 @@ ${sanitized}`;
         setAnalyzing(false);
         setAnalysisOpen(false);
         return;
-      }
-
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-      if (!apiKey) {
-        throw new Error("GROQ_API_KEY is not configured in this environment.");
       }
 
       // Build JD context for analysis
@@ -958,12 +931,6 @@ ${resumeText}${jdContext}`;
   const handleImportResume = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-    if (!apiKey) {
-      toast.error("VITE_GROQ_API_KEY not configured.");
-      return;
-    }
 
     setImporting(true);
     try {

@@ -126,20 +126,26 @@ const Pricing = () => {
                       payment_id: response.razorpay_payment_id,
                       order_id: response.razorpay_order_id
                     });
-                    toast.success("Payment successful! Upgrading to Voke Elite Pro...");
+                    toast.success("Payment successful! Verifying and upgrading...");
 
-                    const { error } = await supabase.auth.updateUser({
-                        data: { is_premium: true }
+                    // SEC-01 FIX: Send payment tokens to server for HMAC signature verification.
+                    // The server uses the service role key to grant premium — client cannot replicate this.
+                    const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-razorpay-payment", {
+                        body: {
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                        },
                     });
 
-                    if (error) {
-                        console.error("Error updating user premium status:", error);
-                        toast.error("Payment recorded, but profile update failed. Please refresh.");
+                    if (verifyError || !verifyData?.success) {
+                        console.error("Payment verification failed:", verifyError, verifyData);
+                        toast.error("Payment verification failed. Please contact support with your payment ID: " + response.razorpay_payment_id);
                     } else {
-                        // Refresh the session immediately so the new user metadata is available in the local session
+                        // Refresh the session so the updated user metadata is available locally
                         await supabase.auth.refreshSession();
                         setShowConfetti(true);
-                        toast.success("Welcome to Voke Elite Pro! Payment successful.");
+                        toast.success("Welcome to Voke Elite Pro! Payment verified.");
                         setTimeout(() => {
                             setShowConfetti(false);
                             navigate("/dashboard");

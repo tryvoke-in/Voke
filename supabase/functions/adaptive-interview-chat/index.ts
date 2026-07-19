@@ -13,22 +13,36 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, userId, skillGaps, userContext } = await req.json();
+    // SEC-03 FIX: Authenticate caller. Derive userId from the JWT — ignore body userId.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // userId is now trusted — derived from the token, not from the body
+    const userId = user.id;
+    const { messages, skillGaps, userContext } = await req.json();
 
     // Input validation
     if (!messages || !Array.isArray(messages)) {
       return new Response(
         JSON.stringify({ error: "Missing or invalid 'messages' parameter" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: "Missing 'userId' parameter" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -44,13 +58,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-    if (!supabaseUrl) {
-      throw new Error("SUPABASE_URL is not configured");
-    }
-
     if (!supabaseKey) {
       throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
     }
@@ -68,6 +76,7 @@ serve(async (req) => {
     if (pastSessionsError) {
       console.error("Error fetching past sessions:", pastSessionsError);
     }
+
 
     const { data: videoSessions, error: videoSessionsError } = await supabase
       .from("video_interview_sessions")

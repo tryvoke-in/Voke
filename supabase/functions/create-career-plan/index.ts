@@ -12,21 +12,47 @@ serve(async (req) => {
     }
 
     try {
-        const { userId, targetRole, jobRecommendationId } = await req.json()
+    // SEC-03 FIX: Authenticate caller. Derive userId from the JWT — ignore body userId.
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+        return new Response(
+            JSON.stringify({ error: 'Unauthorized: missing authorization header' }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+    }
 
-        if (!userId || !targetRole) {
-            return new Response(
-                JSON.stringify({ error: 'userId and targetRole are required' }),
-                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
-        // Initialize Supabase client
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
 
-        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
-        const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Verify JWT and get the real userId from the token
+    const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+    })
+    const { data: { user }, error: authError } = await userClient.auth.getUser()
+    if (authError || !user) {
+        return new Response(
+            JSON.stringify({ error: 'Unauthorized: invalid token' }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+    }
+
+    // userId is now trusted — derived from the token, not from the body
+    const { targetRole, jobRecommendationId } = await req.json()
+    const userId = user.id
+
+    if (!targetRole) {
+        return new Response(
+            JSON.stringify({ error: 'targetRole is required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
 
         // Fetch user's interview performance
         const { data: textInterviews } = await supabase

@@ -8,7 +8,8 @@ import { LogOut, Video, StopCircle, Camera, Clock, Loader2, Play, Mic, Monitor, 
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { QuickFeedback } from "@/components/QuickFeedback";
-import Groq from 'groq-sdk';
+// SEC-04 FIX: All Groq calls now go through the authenticated groq-ai-proxy edge function.
+import { groqChatText, groqTranscribe } from "@/utils/groqProxy";
 import { motion, AnimatePresence } from "motion/react";
 import {
   TIME_LIMITS,
@@ -21,16 +22,7 @@ import { loadUserProfileContext, ProfileContext } from "@/utils/profileContext";
 import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 import { InterviewGate } from "@/components/InterviewGate";
 
-const getGroqClient = () => {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-  if (!apiKey) {
-    console.warn("VITE_GROQ_API_KEY is missing.");
-    return null;
-  }
-  return new Groq({ apiKey, dangerouslyAllowBrowser: true });
-};
-
-const groq = getGroqClient();
+// SEC-04 FIX: groq client removed from browser. Use groqTranscribe / groqChatText instead.
 
 const ROLE_SPECIFIC_QUESTIONS = {
   "General": [
@@ -315,19 +307,10 @@ const TimedVideoInterview = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Transcribe audio
+      // SEC-04 FIX: Transcribe via the secure server-side proxy (no key in browser)
       let transcribedText = "";
       try {
-        if (groq) {
-          const audioFile = new File([blob], 'answer.webm', { type: 'audio/webm' });
-          const transcription = await groq.audio.transcriptions.create({
-            file: audioFile,
-            model: 'whisper-large-v3',
-            language: 'en',
-            response_format: 'json',
-          });
-          transcribedText = transcription.text;
-        }
+        transcribedText = await groqTranscribe(blob, "en", "whisper-large-v3");
       } catch (error) {
         console.error("Transcription error:", error);
       }
@@ -401,18 +384,6 @@ const TimedVideoInterview = () => {
   };
 
   const generateNewQuestion = async () => {
-    if (!groq) {
-      // Fallback: use generic questions
-      const genericQuestions = ROLE_SPECIFIC_QUESTIONS[selectedRole as keyof typeof ROLE_SPECIFIC_QUESTIONS] || ROLE_SPECIFIC_QUESTIONS.General;
-      const unusedQuestions = genericQuestions.filter(q => !questions.includes(q));
-      if (unusedQuestions.length > 0) {
-        const randomQuestion = unusedQuestions[Math.floor(Math.random() * unusedQuestions.length)];
-        setQuestions(prev => [...prev, randomQuestion]);
-        setCurrentQuestionIndex(questions.length);
-      }
-      return;
-    }
-
     try {
       setIsAnalyzing(true);
 
@@ -460,14 +431,13 @@ Generate ONE new, creative interview question that:
 Respond with ONLY the question text, nothing else.`;
       }
 
-      const completion = await groq.chat.completions.create({
+      // SEC-04 FIX: Call through the secure proxy
+      const newQuestion = await groqChatText({
         messages: [{ role: 'user', content: prompt }],
         model: 'llama-3.3-70b-versatile',
         temperature: 0.9,
         max_tokens: 150,
       });
-
-      const newQuestion = completion.choices[0]?.message?.content?.trim();
 
       if (newQuestion) {
         // Add the new question to the list

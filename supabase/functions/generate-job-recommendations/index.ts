@@ -12,30 +12,50 @@ serve(async (req) => {
     }
 
     try {
-        console.log("Function started");
-        const { userId, forceRefresh = false } = await req.json()
+    console.log("Function started");
 
-        if (!userId) {
-            return new Response(
-                JSON.stringify({ error: 'userId is required' }),
-                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
+    // SEC-03 FIX: Authenticate caller. Derive userId from the JWT — ignore body userId.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-        // 1. Dynamic Import: Supabase Client
-        console.log("Importing Supabase...");
-        let createClient;
-        try {
-            const module = await import('https://esm.sh/@supabase/supabase-js@2');
-            createClient = module.createClient;
-        } catch (err) {
-            console.error("Failed to import Supabase:", err);
-            throw new Error(`Supabase import failed: ${err.message}`);
-        }
+    // 1. Dynamic Import: Supabase Client
+    console.log("Importing Supabase...");
+    let createClient;
+    try {
+        const module = await import('https://esm.sh/@supabase/supabase-js@2');
+        createClient = module.createClient;
+    } catch (err) {
+        console.error("Failed to import Supabase:", err);
+        throw new Error(`Supabase import failed: ${err.message}`);
+    }
 
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+
+    // Verify JWT and get the real userId from the token
+    const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    if (authError || !user) {
+        return new Response(
+            JSON.stringify({ error: "Unauthorized: invalid token" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+    }
+
+    // userId is now trusted — derived from the token, not from the body
+    const { forceRefresh = false } = await req.json();
+    const userId = user.id;
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
 
         // 2. Dynamic Import: Groq SDK
         console.log("Importing Groq...");
