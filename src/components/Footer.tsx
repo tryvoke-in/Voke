@@ -28,19 +28,23 @@ export const Footer = () => {
     };
 
     return (
-        <footer className="relative bg-background border-t border-border/40 overflow-hidden font-sans">
-            {/* Cyber Grid Background */}
-            <div className="absolute inset-0 pointer-events-none">
-                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] dark:opacity-[0.05]" />
-                 <div className="absolute -top-[50%] -left-[10%] w-[50%] h-[50%] rounded-full bg-violet-500/10 blur-[120px]" />
-                 <div className="absolute bottom-[0%] -right-[10%] w-[40%] h-[40%] rounded-full bg-fuchsia-500/10 blur-[120px]" />
+        <footer className="relative bg-background border-t border-border/10 overflow-hidden font-sans">
+            {/* Glowing top border separator line */}
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
+
+            {/* Cyber Grid & Glowing Ambient Background */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] dark:opacity-[0.05]" />
+                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-violet-600/15 blur-[130px] animate-pulse" style={{ animationDuration: "12s" }} />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-fuchsia-600/15 blur-[130px] animate-pulse" style={{ animationDuration: "16s" }} />
+                <div className="absolute top-[30%] left-[35%] w-[40%] h-[40%] rounded-full bg-indigo-500/8 blur-[110px]" />
             </div>
 
             <div className="container mx-auto px-4 py-16 relative z-10">
                 <motion.div
                     variants={containerVariants}
                     animate="visible"
-                    className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16"
+                    className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-0"
                 >
                     {/* Brand Section - Large Bento Card */}
                     <motion.div variants={itemVariants} className="lg:col-span-5 flex flex-col h-full">
@@ -67,31 +71,36 @@ export const Footer = () => {
                                 Mastering technical interviews made <span className="text-foreground font-medium">intelligent</span>. AI-driven practice, real-time feedback, and personalized roadmaps.
                             </p>
 
-                            <div className="flex items-center gap-4 mt-auto">
-                                {[
-                                    { icon: Twitter, href: "https://twitter.com", color: "hover:bg-sky-500/10 hover:text-sky-400" },
-                                    { icon: Github, href: "https://github.com", color: "hover:bg-zinc-500/10 hover:text-foreground" },
-                                    { icon: Linkedin, href: "https://www.linkedin.com/company/vokeaii/", color: "hover:bg-blue-600/10 hover:text-blue-500" },
-                                    { icon: Instagram, href: "https://www.instagram.com/tryvoke.in", color: "hover:bg-pink-600/10 hover:text-pink-500" }
-                                ].map((social, index) => (
-                                    <a
-                                        key={index}
-                                        href={social.href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className={`w-12 h-12 rounded-2xl bg-secondary/50 border border-border/50 flex items-center justify-center text-muted-foreground transition-all duration-300 hover:scale-110 hover:shadow-lg ${social.color}`}
-                                    >
-                                        <social.icon className="w-5 h-5" />
-                                    </a>
-                                ))}
-                            </div>
+                             <div className="flex flex-col gap-4 mt-auto">
+                                 <div className="flex items-center gap-4">
+                                     {[
+                                         { icon: Twitter, href: "https://twitter.com", color: "hover:bg-sky-500/10 hover:text-sky-400" },
+                                         { icon: Github, href: "https://github.com", color: "hover:bg-zinc-500/10 hover:text-foreground" },
+                                         { icon: Linkedin, href: "https://www.linkedin.com/company/vokeaii/", color: "hover:bg-blue-600/10 hover:text-blue-500" },
+                                         { icon: Instagram, href: "https://www.instagram.com/tryvoke.in", color: "hover:bg-pink-600/10 hover:text-pink-500" }
+                                     ].map((social, index) => (
+                                         <a
+                                             key={index}
+                                             href={social.href}
+                                             target="_blank"
+                                             rel="noopener noreferrer"
+                                             className={`w-12 h-12 rounded-2xl bg-secondary/50 border border-border/50 flex items-center justify-center text-muted-foreground transition-all duration-300 hover:scale-110 hover:shadow-lg ${social.color}`}
+                                         >
+                                             <social.icon className="w-5 h-5" />
+                                         </a>
+                                     ))}
+                                 </div>
+                                 <p className="text-xs text-muted-foreground/60 font-mono mt-1">
+                                     © {currentYear} Voke Inc. All rights reserved.
+                                 </p>
+                             </div>
                         </div>
                     </motion.div>
 
                     {/* Navigation - Middle Columns */}
-                    <div className="lg:col-span-4 grid grid-cols-2 gap-4 h-full">
-                        <motion.div variants={itemVariants} className="bg-card/20 backdrop-blur-md border border-border/30 rounded-3xl p-6 hover:bg-card/30 transition-colors">
-                            <h3 className="font-bold text-foreground mb-6 flex items-center gap-2">
+                    <div className="lg:col-span-4 grid grid-cols-2 gap-8 py-6 px-4">
+                        <motion.div variants={itemVariants} className="flex flex-col">
+                            <h3 className="font-bold text-foreground mb-6 flex items-center gap-2 text-sm tracking-wider uppercase opacity-90">
                                 <Layers className="w-4 h-4 text-violet-500" /> Product
                             </h3>
                             <ul className="space-y-4">
@@ -100,12 +109,12 @@ export const Footer = () => {
                                     { label: "Leaderboard", to: "/leaderboard" },
                                     { label: "Peer Sessions", to: "/peer-interviews" }
                                 ].map((link, index) => (
-                                    <li key={index}>
+                                    <li key={index} className="list-none">
                                         <Link
                                             to={link.to}
                                             className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group text-sm"
                                         >
-                                            <span className="w-1 h-1 rounded-full bg-border group-hover:bg-primary transition-colors" />
+                                            <span className="w-1 h-1 rounded-full bg-border group-hover:bg-primary transition-colors animate-pulse" />
                                             {link.label}
                                         </Link>
                                     </li>
@@ -113,8 +122,8 @@ export const Footer = () => {
                             </ul>
                         </motion.div>
 
-                         <motion.div variants={itemVariants} className="bg-card/20 backdrop-blur-md border border-border/30 rounded-3xl p-6 hover:bg-card/30 transition-colors">
-                            <h3 className="font-bold text-foreground mb-6 flex items-center gap-2">
+                        <motion.div variants={itemVariants} className="flex flex-col">
+                            <h3 className="font-bold text-foreground mb-6 flex items-center gap-2 text-sm tracking-wider uppercase opacity-90">
                                 <Zap className="w-4 h-4 text-fuchsia-500" /> Support
                             </h3>
                             <ul className="space-y-4">
@@ -123,12 +132,12 @@ export const Footer = () => {
                                     { label: "Help Center", to: "/help" },
                                     { label: "Privacy Policy", to: "/privacy" }
                                 ].map((link, index) => (
-                                    <li key={index}>
+                                    <li key={index} className="list-none">
                                         <Link
                                             to={link.to}
                                             className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group text-sm"
                                         >
-                                            <span className="w-1 h-1 rounded-full bg-border group-hover:bg-primary transition-colors" />
+                                            <span className="w-1 h-1 rounded-full bg-border group-hover:bg-primary transition-colors animate-pulse" />
                                             {link.label}
                                         </Link>
                                     </li>
@@ -165,22 +174,6 @@ export const Footer = () => {
                             </div>
                         </div>
                     </motion.div>
-                </motion.div>
-
-                {/* Bottom Bar */}
-                <motion.div
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="pt-8 border-t border-border/20 flex flex-col md:flex-row justify-between items-center gap-4 text-sm"
-                >
-                    <p className="text-muted-foreground font-mono">
-                        © {currentYear} Voke Inc. <span className="mx-2 text-border">|</span> System Status: <span className="text-green-500">Operational</span>
-                    </p>
-                    <div className="flex items-center gap-2 text-muted-foreground bg-secondary/30 px-4 py-2 rounded-full border border-border/20 backdrop-blur-sm">
-                        <span>Crafted with</span>
-                        <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 animate-pulse" />
-                        <span>in Future City</span>
-                    </div>
                 </motion.div>
             </div>
         </footer>

@@ -30,6 +30,12 @@ const GlobalAIChatbot = () => {
   }, []);
 
   useEffect(() => {
+    const handleOpenChat = () => setIsOpen(true);
+    window.addEventListener("open-ai-coach", handleOpenChat);
+    return () => window.removeEventListener("open-ai-coach", handleOpenChat);
+  }, []);
+
+  useEffect(() => {
     if (isOpen && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }

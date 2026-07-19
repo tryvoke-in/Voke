@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Mic, Bell, Check } from "lucide-react";
+import { Mic, Bell, Check, Users, LogOut, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   Popover,
@@ -146,58 +146,30 @@ export const Navbar = () => {
                     </div>
 
                     {/* Right Side - Theme Toggle & CTA */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3.5">
 
                         <UpgradeButton />
                         {userId && (
                             <>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="relative">
-                                            <Bell className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                                            {unreadCount > 0 && (
-                                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-80 p-0 mr-4 bg-white dark:bg-[#0f1117] border border-gray-200 dark:border-white/10 shadow-xl" align="end">
-                                        <div className="p-4 border-b border-gray-200 dark:border-white/10">
-                                            <h4 className="font-semibold text-gray-900 dark:text-white">Notifications</h4>
-                                        </div>
-                                        <ScrollArea className="h-[300px]">
-                                            {notifications.length === 0 ? (
-                                                <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
-                                                    No notifications yet
-                                                </div>
-                                            ) : (
-                                                <div className="divide-y divide-gray-100 dark:divide-white/5">
-                                                    {notifications.map((notification) => (
-                                                        <div 
-                                                            key={notification.id} 
-                                                            className={`p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer ${!notification.read ? 'bg-blue-50/50 dark:bg-blue-500/5' : ''}`}
-                                                            onClick={() => markAsRead(notification.id)}
-                                                        >
-                                                            <div className="flex gap-3">
-                                                                <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${!notification.read ? 'bg-blue-500' : 'bg-transparent'}`} />
-                                                                <div className="space-y-1">
-                                                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-200 leading-none">
-                                                                        {notification.title}
-                                                                    </p>
-                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                                        {notification.message}
-                                                                    </p>
-                                                                    <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                                        {new Date(notification.created_at).toLocaleDateString()}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </ScrollArea>
-                                    </PopoverContent>
-                                </Popover>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => navigate("/peer-interviews")}
+                                    className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-500/10 dark:hover:bg-violet-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center"
+                                    title="Peer Match"
+                                >
+                                    <Users className="w-5 h-5" />
+                                </Button>
+
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => navigate("/profile")}
+                                    className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-500/10 dark:hover:bg-violet-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center"
+                                    title="Settings"
+                                >
+                                    <Settings className="w-5 h-5" />
+                                </Button>
 
                                 {/* Profile Strength - Circular Ring */}
                                 {(() => {
@@ -256,6 +228,19 @@ export const Navbar = () => {
                                         </div>
                                     )
                                 })()}
+
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={async () => {
+                                        await supabase.auth.signOut();
+                                        navigate("/");
+                                    }}
+                                    className="text-red-500 hover:bg-red-500/10 hover:text-red-600 h-9 w-9 rounded-full ml-1 transition-colors flex items-center justify-center"
+                                    title="Logout"
+                                >
+                                    <LogOut className="w-5 h-5" />
+                                </Button>
                             </>
                         )}
                         <ThemeToggle />

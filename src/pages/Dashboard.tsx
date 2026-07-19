@@ -14,7 +14,6 @@ import {
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { SkillRadar } from "@/components/dashboard/SkillRadar";
 import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
-import { MarketPulse } from "@/components/dashboard/MarketPulse";
 import { ReferralButton } from "@/components/dashboard/ReferralButton";
 import { UpgradeButton } from "@/components/UpgradeButton";
 import { Sidebar } from "@/components/Sidebar";
@@ -33,6 +32,7 @@ import { getDailyQuestion } from "@/data/questions";
 import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 import { FeedbackFormDialog } from "@/components/FeedbackFormDialog";
 import { CodingProfilesDialog } from "@/components/CodingProfilesDialog";
+import { SearchDialog } from "@/components/SearchDialog";
 
 interface Notification {
   id: string;
@@ -63,6 +63,7 @@ const Dashboard = () => {
   } = useInterviewCredits();
   const totalCredits = creditsElite + creditsVoice + creditsVideo;
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     // Safety fallback to release loading screen after 1.5 seconds if query or auth hangs
@@ -439,88 +440,65 @@ const Dashboard = () => {
     <div className="min-h-screen bg-muted/30 flex flex-col">
       {/* Header */}
       <header className="bg-card/80 backdrop-blur-xl border-b border-border sticky top-0 z-50 shadow-sm w-full">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-0.5 cursor-pointer" onClick={() => navigate("/dashboard")}>
             <img
               src="/images/voke_logo.png"
               alt="Voke Logo"
-              className="w-12 h-12 object-contain"
+              className="w-14 h-14 object-contain"
             />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">Voke</h1>
+            <h1 className="text-2xl font-extrabold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">Voke</h1>
           </div>
 
-          <div className="flex-1 max-w-md mx-8 hidden md:flex items-center gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search interviews, questions, or peers..."
-                className="w-full pl-10 pr-4 py-2 rounded-full bg-muted/50 border-transparent focus:bg-background focus:border-primary/20 transition-all outline-none text-sm"
-              />
-            </div>
+          <div className="flex-1 max-w-md ml-3 mr-9 hidden md:flex items-center gap-3">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="relative flex-1 text-left w-full h-9 pl-7 pr-12 rounded-full bg-muted/50 border border-transparent hover:bg-muted/70 focus:bg-background focus:border-primary/20 transition-all outline-none text-xs text-muted-foreground cursor-pointer flex items-center"
+            >
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <span>Search questions, companies...</span>
+              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[9px] font-medium text-muted-foreground opacity-100">
+                <span className="text-[10px]">⌘</span>K
+              </kbd>
+            </button>
             <ReferralButton />
           </div>
 
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-3.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden text-muted-foreground hover:text-foreground"
+              onClick={() => setSearchOpen(true)}
+            >
+              <Search className="w-5 h-5" />
+            </Button>
             <div className="md:hidden">
               <ReferralButton iconOnly />
             </div>
             <UpgradeButton />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="w-5 h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end">
-                <div className="flex items-center justify-between p-4 border-b">
-                  <h4 className="font-semibold">Notifications</h4>
-                  {unreadCount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-violet-600 h-auto p-0 hover:bg-transparent"
-                      onClick={handleMarkAllAsRead}
-                    >
-                      Mark all as read
-                    </Button>
-                  )}
-                </div>
-                <ScrollArea className="h-[300px]">
-                  {notifications.length > 0 ? (
-                    <div className="divide-y">
-                      {notifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={`p-4 hover:bg-muted/50 transition-colors cursor-pointer ${!notification.read ? 'bg-violet-50/50 dark:bg-violet-900/10' : ''}`}
-                          onClick={() => handleMarkAsRead(notification.id)}
-                        >
-                          <div className="flex justify-between items-start gap-2 mb-1">
-                            <h5 className={`text-sm font-medium ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}>
-                              {notification.title}
-                            </h5>
-                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                              {new Date(notification.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {notification.message}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-4 text-center text-muted-foreground text-sm">
-                      No notifications
-                    </div>
-                  )}
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/peer-interviews")}
+              className="text-muted-foreground hover:text-violet-600 hover:bg-violet-500/10 dark:hover:text-violet-400 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center"
+              title="Peer Match"
+            >
+              <Users className="w-5 h-5" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/profile")}
+              className="text-muted-foreground hover:text-violet-600 hover:bg-violet-500/10 dark:hover:text-violet-400 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+
             <ThemeToggle />
+
             <div className="h-8 w-px bg-border mx-2"></div>
             <div className="flex items-center gap-3 pl-2">
               <div className="text-right hidden sm:block">
@@ -566,6 +544,16 @@ const Dashboard = () => {
                 );
               })()}
             </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="text-red-500 hover:bg-red-500/10 hover:text-red-600 h-9 w-9 rounded-full transition-colors flex items-center justify-center ml-1"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
           </nav>
         </div>
       </header>
@@ -830,8 +818,6 @@ const Dashboard = () => {
             {/* Road to Offer (Timeline) */}
             <RoadToOffer profile={profile} onUpdate={() => loadData(true)} />
 
-            {/* Market Pulse (Salary & Trends) */}
-            <MarketPulse profile={profile} />
 
           </div>
 
@@ -924,10 +910,6 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Button variant="destructive" className="w-full" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
 
           </div>
         </div>
@@ -944,6 +926,10 @@ const Dashboard = () => {
         grantFeedbackCredits={grantFeedbackCredits}
       />
       <CodingProfilesDialog profile={profile} onUpdate={() => loadData(true)} />
+      <SearchDialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+      />
     </div>
   );
 };
