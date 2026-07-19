@@ -151,53 +151,32 @@ const ElitePrep: React.FC = () => {
                 return;
             }
 
-            // SEC-01 FIX: Create a server-side order first so we get a verifiable order_id
-            const { data: orderData, error: orderError } = await supabase.functions.invoke("create-razorpay-order", {
-                body: {
-                    amount: 9900,
-                    currency: "INR",
-                    receipt: `rcpt_${user.id.slice(0, 8)}_${Date.now()}`,
-                },
-            });
-
-            if (orderError || !orderData?.id) {
-                let errMsg = orderError?.message || orderData?.error || "Unknown error";
-                toast.error(`Payment failed: ${errMsg}`);
-                setIsPaying(false);
-                return;
-            }
-
             const options = {
                 key: import.meta.env.VITE_RAZORPAY_KEY || "",
-                amount: orderData.amount,
-                currency: orderData.currency,
-                order_id: orderData.id,
+                amount: 9900, // Amount in paise (₹99 for testing)
+                currency: "INR",
                 name: "Voke Elite",
                 description: "Unlock Voke Elite Mock Interview Features",
                 image: "/images/voke_logo.png",
-                handler: async function (response: any) {
-                    toast.success("Payment successful! Verifying and unlocking Voke Elite...");
+                 handler: async function (response: any) {
+                    toast.success("Payment successful! Unlocking Voke Elite...");
                     console.log("Payment response:", response);
-
-                    // SEC-01 FIX: Send payment tokens to server for HMAC signature verification.
-                    // The server uses the service role key to grant premium — client cannot replicate this.
-                    const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-razorpay-payment", {
-                        body: {
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_signature: response.razorpay_signature,
-                        },
+                    
+                    // Update user metadata in Supabase
+                    const { error } = await supabase.auth.updateUser({
+                        data: { is_premium: true }
                     });
 
-                    if (verifyError || !verifyData?.success) {
-                        console.error("Payment verification failed:", verifyError, verifyData);
-                        toast.error("Payment verification failed. Please contact support with your payment ID: " + response.razorpay_payment_id);
+                    if (error) {
+                        console.error("Error updating user premium status:", error);
+                        toast.error("Payment recorded, but profile update failed. Please refresh.");
                     } else {
-                        // Refresh the session so the updated user metadata is available locally
+                        // Refresh the session immediately so the new user metadata is available in the local session
                         await supabase.auth.refreshSession();
+                        // Play confetti
                         setShowConfetti(true);
                         setIsPremium(true);
-                        toast.success("Welcome to Voke Elite! Payment verified.");
+                        toast.success("Welcome to Voke Elite! Redirecting to homepage...");
                         setTimeout(() => {
                             setShowConfetti(false);
                             navigate("/dashboard");
@@ -210,7 +189,7 @@ const ElitePrep: React.FC = () => {
                     email: user.email || "",
                 },
                 theme: {
-                    color: "#7c3aed",
+                    color: "#7c3aed", // violet-600
                 },
                 modal: {
                     ondismiss: function() {
@@ -228,7 +207,6 @@ const ElitePrep: React.FC = () => {
             setIsPaying(false);
         }
     };
-
 
 
     // Timer
