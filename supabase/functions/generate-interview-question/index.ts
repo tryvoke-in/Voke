@@ -13,7 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, interview_type, question_count, coding_stats, profile_context } = await req.json();
+    const { messages, interview_type, question_count, total_questions, coding_stats, profile_context } = await req.json();
+    const limit = total_questions ? Number(total_questions) : 5;
 
     // ALWAYS return the introduction question as the first question
     if (!messages || messages.length === 0) {
@@ -36,7 +37,7 @@ serve(async (req) => {
     }
 
     // Check if interview should end
-    if (question_count >= 5) {
+    if (question_count >= limit) {
       return new Response(
         JSON.stringify({
           question: "Thank you for your time. We have completed the interview questions. Please click the 'Complete Interview' button to finish the session.",
@@ -83,7 +84,7 @@ serve(async (req) => {
     
     RESPONSE FORMAT:
     
-    **CRITICAL: You MUST respond with valid JSON only.**
+    **CRITICAL: You MUST respond with valid JSON only. You MUST escape any double-quotes inside string values (use \\" instead of \"). Do not include unescaped quotes or HTML tags inside string fields.**
     
     **For the FIRST message (no history):**
     {
@@ -124,26 +125,175 @@ serve(async (req) => {
       ...messages
     ];
 
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${GROQ_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: formattedMessages,
-          temperature: 0.7,
-          response_format: { type: "json_object" },
-        }),
-      }
-    );
+    let response;
+    let success = false;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Groq API error:", response.status, errorText);
+    // Helper to query Groq
+    async function tryGroq(apiKey: string) {
+      return await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: formattedMessages,
+            temperature: 0.7,
+            response_format: { type: "json_object" },
+          }),
+        }
+      );
+    }
+
+    // Step 1: Try Primary Groq Key
+    try {
+      console.log("Trying primary Groq API key...");
+      response = await tryGroq(GROQ_API_KEY);
+      if (response && response.ok) {
+        success = true;
+      } else {
+        console.warn(`Primary Groq API failed with status ${response?.status}`);
+      }
+    } catch (err) {
+      console.error("Primary Groq API fetch threw error:", err);
+    }
+
+    // Step 2: Try Secondary Groq Key (GROQ_API_KEY1) if primary failed
+    if (!success) {
+      const GROQ_API_KEY1 = Deno.env.get("GROQ_API_KEY1");
+      if (GROQ_API_KEY1) {
+        try {
+          console.log("Trying secondary Groq API key (GROQ_API_KEY1)...");
+          response = await tryGroq(GROQ_API_KEY1);
+          if (response && response.ok) {
+            success = true;
+          } else {
+            console.warn(`Secondary Groq API failed with status ${response?.status}`);
+          }
+        } catch (err) {
+          console.error("Secondary Groq API fetch threw error:", err);
+        }
+      }
+    }
+
+    // Helper to query Gemini REST API with model fallback
+    async function tryGemini(apiKey: string, modelName: string, geminiContents: any, systemPrompt: string) {
+      return await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: geminiContents,
+            systemInstruction: {
+              parts: [{ text: systemPrompt }]
+            },
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  feedback: {
+                    type: "OBJECT",
+                    properties: {
+                      what_went_well: {
+                        type: "ARRAY",
+                        items: { type: "STRING" }
+                      },
+                      what_needs_improvement: {
+                        type: "ARRAY",
+                        items: { type: "STRING" }
+                      },
+                      model_answer: { type: "STRING" },
+                      verification_note: { type: "STRING" }
+                    },
+                    required: ["what_went_well", "what_needs_improvement", "model_answer"]
+                  },
+                  question: { type: "STRING" },
+                  is_finished: { type: "BOOLEAN" }
+                },
+                required: ["question", "is_finished"]
+              }
+            }
+          }),
+        }
+      );
+    }
+
+    // Step 3: Try Direct Google Gemini via GOOGLE_API_KEY with native JSON schema enforcement
+    if (!success) {
+      const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY");
+      if (GOOGLE_API_KEY) {
+        try {
+          const geminiContents = messages.map((msg: any) => {
+            const role = msg.role === "assistant" ? "model" : "user";
+            return {
+              role: role,
+              parts: [{ text: msg.content }]
+            };
+          });
+
+          console.log("Trying direct Google Gemini 3.5 Flash REST API...");
+          response = await tryGemini(GOOGLE_API_KEY, "gemini-3.5-flash", geminiContents, systemPrompt);
+
+          // Fall back to Gemini 3.1 Flash Lite if 3.5 is rate-limited (daily limit is only 20 requests)
+          if (response && (response.status === 429 || !response.ok)) {
+            console.warn("Gemini 3.5 Flash limit reached. Falling back to Gemini 3.1 Flash Lite (1,500 requests/day)...");
+            response = await tryGemini(GOOGLE_API_KEY, "gemini-3.1-flash-lite", geminiContents, systemPrompt);
+          }
+
+          if (response && response.ok) {
+            success = true;
+          } else {
+            console.warn(`Direct Google Gemini API failed with status ${response?.status}`);
+          }
+        } catch (err) {
+          console.error("Direct Google Gemini API fetch threw error:", err);
+        }
+      }
+    }
+
+    // Step 4: Try Gemini via Lovable AI Gateway
+    if (!success) {
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (LOVABLE_API_KEY) {
+        try {
+          console.log("Trying Lovable AI Gateway Gemini...");
+          response = await fetch(
+            "https://ai.gateway.lovable.dev/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "google/gemini-2.5-flash",
+                messages: formattedMessages,
+                temperature: 0.7,
+                response_format: { type: "json_object" },
+              }),
+            }
+          );
+          if (response && response.ok) {
+            success = true;
+          } else {
+            console.warn(`Lovable AI Gateway Gemini failed with status ${response?.status}`);
+          }
+        } catch (err) {
+          console.error("Lovable AI Gateway Gemini fetch threw error:", err);
+        }
+      }
+    }
+
+    if (!success || !response || !response.ok) {
+      const errorText = response ? await response.text() : "All LLM providers failed";
+      console.error("All AI providers failed. Last status:", response?.status, errorText);
       console.error("Request details:", {
         interview_type,
         question_count,
@@ -151,19 +301,52 @@ serve(async (req) => {
         has_profile_context: !!profile_context,
         message_count: messages?.length || 0
       });
-      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+      throw new Error(`AI Providers failed: ${response?.status || '500'} - ${errorText}`);
     }
 
     const data = await response.json();
-    let aiContent = data.choices[0]?.message?.content;
+    let aiContent = "";
+    
+    if (data.choices && data.choices[0]) {
+      aiContent = data.choices[0].message?.content;
+    } else if (data.candidates && data.candidates[0]) {
+      aiContent = data.candidates[0].content?.parts?.[0]?.text;
+    }
 
     if (!aiContent) {
-      throw new Error("No content received from Groq");
+      console.error("No content received from AI. Full response data:", JSON.stringify(data));
+      throw new Error("No content received from AI provider");
     }
 
     // Clean up potential markdown formatting
     aiContent = aiContent.replace(/```json/g, "").replace(/```/g, "").trim();
-    const result = JSON.parse(aiContent);
+    
+    let result;
+    try {
+      result = JSON.parse(aiContent);
+    } catch (parseErr) {
+      console.warn("Direct JSON parsing failed, attempting brace extraction...", parseErr);
+      try {
+        const firstBrace = aiContent.indexOf("{");
+        const lastBrace = aiContent.lastIndexOf("}");
+        if (firstBrace === -1 || lastBrace === -1) {
+          throw new Error("No JSON object structure found in response content");
+        }
+        const jsonSub = aiContent.substring(firstBrace, lastBrace + 1);
+        result = JSON.parse(jsonSub);
+      } catch (extractErr) {
+        console.error("JSON parsing/extraction completely failed. Raw AI content was:", aiContent);
+        throw new Error(`Failed to parse AI response: ${extractErr.message}`);
+      }
+    }
+
+    // Force is_finished to be false unless we have reached the limit
+    if (question_count < limit - 1) {
+      result.is_finished = false;
+    } else {
+      result.is_finished = true;
+      result.question = "Thank you for your time. We have completed the interview questions. Please click the 'Complete Interview' button to finish the session.";
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -175,10 +358,11 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: error.message || "Unknown error occurred",
-        details: "Check edge function logs for more information"
+        stack: error.stack,
+        is_error: true
       }),
       {
-        status: 500,
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );

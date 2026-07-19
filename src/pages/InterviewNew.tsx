@@ -14,7 +14,8 @@ import {
   Send, User, Mic, MicOff, LogOut,
   Settings, Menu, X, Clock, History, Sparkles,
   ArrowLeft, Activity, Loader2, Check, ChevronDown,
-  ChevronUp, Award, CheckCircle2, StopCircle
+  ChevronUp, Award, CheckCircle2, StopCircle, ArrowRight,
+  AlertTriangle, RotateCcw
 } from "lucide-react";
 import { toast } from "sonner";
 import { trackEvent } from "@/utils/analytics";
@@ -85,6 +86,8 @@ const InterviewNew = () => {
   const [codingStats, setCodingStats] = useState<any>(null);
   const [profileContext, setProfileContext] = useState<ProfileContext | null>(null);
   const [pastSessions, setPastSessions] = useState<any[]>([]);
+  const [totalQuestions, setTotalQuestions] = useState(5);
+  const [isConfiguring, setIsConfiguring] = useState(true);
   
   // Navigation tabs for mobile viewports
   const [activeTab, setActiveTab] = useState<'arena' | 'history' | 'timeline'>('arena');
@@ -92,6 +95,7 @@ const InterviewNew = () => {
   const [expandedFeedback, setExpandedFeedback] = useState<Record<number, boolean>>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { loading: creditsLoading } = useInterviewCredits('elite');
   const sessionInitializedRef = useRef(false);
 
@@ -116,10 +120,11 @@ const InterviewNew = () => {
   }, []);
 
   useEffect(() => {
-    if (!sessionInitializedRef.current) {
-      sessionInitializedRef.current = true;
-      startSession(activeCategory);
-    }
+    // Do not auto-initialize session; let user pick the number of questions on the configuration screen first
+    setSessionActive(false);
+    setMessages([]);
+    setQuestionCount(0);
+    setIsFinished(false);
   }, [activeCategory]);
 
   useEffect(() => {
@@ -130,6 +135,15 @@ const InterviewNew = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [startTime, sessionActive, isFinished]);
+
+  useEffect(() => {
+    if (!sending && !isConfiguring && !isFinished) {
+      const timer = setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [sending, isConfiguring, isFinished]);
 
   const loadPastSessions = async () => {
     try {
@@ -185,7 +199,7 @@ const InterviewNew = () => {
     }
   };
 
-  const generateAIQuestion = async (currentMessages: Message[], count: number) => {
+  const generateAIQuestion = async (currentMessages: Message[], count: number, limit = totalQuestions) => {
     try {
       setSending(true);
       const { data, error } = await supabase.functions.invoke('generate-interview-question', {
@@ -193,6 +207,7 @@ const InterviewNew = () => {
           messages: currentMessages,
           interview_type: CATEGORIES.find(c => c.id === activeCategory)?.label || "General",
           question_count: count,
+          total_questions: limit,
           coding_stats: codingStats,
           profile_context: profileContext?.context
         }
@@ -201,6 +216,11 @@ const InterviewNew = () => {
       if (error) throw error;
 
       if (data) {
+        if (data.is_error) {
+          console.error("Deno execution error:", data.error, data.stack);
+          throw new Error(data.error || "Unknown Deno error");
+        }
+
         // If there's feedback, add it as a separate message before the question
         if (data.feedback) {
           const feedbackContent = `### ✅ What Went Well
@@ -238,8 +258,8 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
     }
   };
 
-  const startSession = (category: string) => {
-    trackEvent("interview_start", "/interview/new", { category });
+  const startSession = (category: string, numQuestions = totalQuestions) => {
+    trackEvent("interview_start", "/interview/new", { category, total_questions: numQuestions });
     setMessages([]);
     setQuestionCount(0);
     setStartTime(Date.now());
@@ -248,7 +268,13 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
     setIsFinished(false);
 
     // Generate opening question
-    generateAIQuestion([], 0);
+    generateAIQuestion([], 0, numQuestions);
+  };
+
+  const handleStartInterview = (numQuestions: number) => {
+    setTotalQuestions(numQuestions);
+    setIsConfiguring(false);
+    startSession(activeCategory, numQuestions);
   };
 
   const [isCompleting, setIsCompleting] = useState(false);
@@ -330,7 +356,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
     setInput("");
 
     // Generate next question based on updated history
-    await generateAIQuestion(updatedMessages, questionCount);
+    await generateAIQuestion(updatedMessages, questionCount, totalQuestions);
   };
 
   const toggleVoiceMode = () => {
@@ -376,7 +402,6 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
   // Parsing variables
   const turns = getInterviewTurns(messages);
   const currentQuestionIndex = turns.length;
-  const totalQuestions = 5;
   const progressPercent = Math.min(100, Math.round((currentQuestionIndex / totalQuestions) * 100));
 
   // Extract active question and feedback
@@ -574,143 +599,226 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
         <div className="flex-1 overflow-y-auto p-4 md:p-8 flex items-center justify-center">
           <div className="max-w-2xl w-full space-y-6 py-6">
             
-            {/* The Active Question Card */}
-            <AnimatePresence mode="wait">
-              {activeQuestion ? (
-                <motion.div
-                  key={currentQuestionIndex}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.4 }}
-                  className="relative p-6 md:p-8 rounded-3xl bg-white/[0.02] border border-white/5 shadow-2xl overflow-hidden"
-                >
-                  {/* Decorative glowing gradient border on top */}
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-80" />
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400/70 bg-violet-500/5 px-2.5 py-1 rounded-md border border-violet-500/10">
-                      Question {currentQuestionIndex} of {totalQuestions}
-                    </span>
-                  </div>
-
-                  <div className="prose prose-invert max-w-none text-violet-100/90 text-[15px] font-sans md:text-base leading-relaxed tracking-wide font-medium">
-                    <ReactMarkdown>{activeQuestion}</ReactMarkdown>
-                  </div>
-                </motion.div>
-              ) : (
-                sending && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-8 rounded-3xl bg-white/[0.01] border border-white/5 border-dashed flex flex-col items-center justify-center py-16 gap-4 text-center"
-                  >
-                    <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-bold text-violet-200">Sarah is reviewing...</h4>
-                      <p className="text-xs text-violet-200/40">Evaluating answer depth and aligning skill metrics.</p>
-                    </div>
-                  </motion.div>
-                )
-              )}
-            </AnimatePresence>
-
-            {/* Answer Workspace Editor */}
-            {isFinished ? (
-              <Button
-                onClick={completeSession}
-                className="w-full h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-violet-500/10 rounded-2xl transition-all duration-300 hover:scale-[1.01]"
-                disabled={isCompleting}
+            {isConfiguring ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-6 md:p-8 rounded-3xl bg-white/[0.02] border border-white/5 shadow-2xl relative overflow-hidden space-y-6 text-center sm:text-left"
               >
-                {isCompleting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin text-white" />
-                    Generating Scorecard...
-                  </>
-                ) : (
-                  <>
-                    Complete Interview & View Results
-                    <Award className="w-4 h-4 ml-2" />
-                  </>
-                )}
-              </Button>
-            ) : (
-              <div className={`p-4 rounded-3xl bg-[#0e1017]/40 border ${
-                isEditorFocused 
-                  ? 'border-violet-500/30 shadow-[0_0_25px_rgba(139,92,246,0.05)]' 
-                  : 'border-white/5'
-              } transition-all duration-300 space-y-4`}>
-                <div className="flex justify-between items-center text-[10px] text-violet-300/40 font-bold uppercase tracking-wider px-1">
-                  <span>Your Response Area</span>
-                  <span className="flex items-center gap-1">
-                    <Activity className="w-3 h-3 text-violet-400" />
-                    Press Enter to submit
-                  </span>
+                {/* Glowing banner decoration */}
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-80" />
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center sm:justify-start gap-2.5">
+                    <div className="p-2 bg-violet-500/10 rounded-xl">
+                      <Sparkles className="w-5 h-5 text-violet-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-violet-100">Setup AI Mock Interview</h3>
+                  </div>
+                  <p className="text-xs text-violet-200/50">
+                    Configure your session length. A custom question set will be calibrated dynamically.
+                  </p>
                 </div>
 
-                <Textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onFocus={() => setIsEditorFocused(true)}
-                  onBlur={() => setIsEditorFocused(false)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage(input);
-                    }
-                  }}
-                  placeholder={voiceMode ? "Listening... Speak your answer now." : "Draft your detailed answer here... Connect your experience and use structural models like STAR where possible."}
-                  className="min-h-[140px] max-h-[220px] py-2 px-1 border-0 focus-visible:ring-0 bg-transparent resize-none text-[14px] leading-relaxed text-violet-100/90 focus:outline-none placeholder-violet-200/20"
-                  disabled={sending || !sessionActive || isCompleting}
-                />
-
-                <div className="flex items-center justify-between border-t border-white/5 pt-3.5 mt-2">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className={`rounded-xl h-9 w-9 shrink-0 transition-all ${
-                        voiceMode 
-                          ? 'text-red-400 bg-red-500/10 border border-red-500/20' 
-                          : 'text-violet-300/40 bg-white/5 hover:bg-white/10 hover:text-white border border-white/5'
-                      }`}
-                      onClick={toggleVoiceMode}
-                    >
-                      {voiceMode ? <Mic className="w-4.5 h-4.5 animate-pulse" /> : <Mic className="w-4.5 h-4.5" />}
-                    </Button>
-                    <div className="flex items-center gap-2 text-[11px] text-violet-200/40 font-medium">
-                      <span className="bg-white/5 px-2.5 py-0.5 rounded-md">
-                        Words: {input.trim() ? input.trim().split(/\s+/).length : 0}
-                      </span>
-                      <span className="bg-white/5 px-2.5 py-0.5 rounded-md">
-                        Chars: {input.length}
-                      </span>
-                    </div>
+                <div className="space-y-4 pt-2">
+                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-violet-300/40">Select Interview Length</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {[
+                      {value: 3, label: "Express Mock", count: "3 Questions", duration: "~10 mins" },
+                      {value: 5, label: "Standard Session", count: "5 Questions", duration: "~15 mins" },
+                      {value: 15, label: "Deep Drill", count: "15 Questions", duration: "~45 mins" }
+                    ].map((opt) => (
+                      <div
+                        key={opt.value}
+                        onClick={() => setTotalQuestions(opt.value)}
+                        className={`p-4 rounded-2xl border text-center cursor-pointer transition-all duration-200 ${
+                          totalQuestions === opt.value
+                            ? "bg-violet-500/10 border-violet-500 shadow-md shadow-violet-500/5 text-violet-100 font-bold"
+                            : "bg-white/[0.01] hover:bg-white/[0.03] border-white/5 text-violet-200/60"
+                        }`}
+                      >
+                        <h4 className="font-bold text-sm">{opt.label}</h4>
+                        <p className="text-xs font-semibold mt-1">{opt.count}</p>
+                        <p className="text-[10px] opacity-60 mt-0.5">{opt.duration}</p>
+                      </div>
+                    ))}
                   </div>
+                </div>
 
+                <div className="pt-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-left text-xs text-violet-200/30">
+                    Category: <span className="font-bold text-violet-300 capitalize">{CATEGORIES.find(c => c.id === activeCategory)?.label || "General"}</span>
+                  </div>
                   <Button
-                    onClick={() => handleSendMessage(input)}
-                    disabled={!input.trim() || sending || !sessionActive || isCompleting}
-                    className={`h-9 px-5 font-bold text-xs rounded-xl transition-all duration-300 ${
-                      input.trim() && !sending && sessionActive && !isCompleting
-                        ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-lg shadow-violet-500/10 hover:scale-[1.02]'
-                        : 'bg-white/5 text-violet-200/20 cursor-not-allowed border border-white/5'
-                    }`}
+                    onClick={() => handleStartInterview(totalQuestions)}
+                    className="w-full sm:w-auto px-6 h-10 font-bold text-xs rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-lg shadow-violet-500/15"
                   >
-                    {sending ? (
+                    Start Practice Session
+                    <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                  </Button>
+                </div>
+              </motion.div>
+            ) : (
+              <>
+                {/* The Active Question Card */}
+                <AnimatePresence mode="wait">
+                  {activeQuestion ? (
+                    <motion.div
+                      key={currentQuestionIndex}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.4 }}
+                      className="relative p-6 md:p-8 rounded-3xl bg-white/[0.02] border border-white/5 shadow-2xl overflow-hidden"
+                    >
+                      {/* Decorative glowing gradient border on top */}
+                      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-80" />
+                      
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400/70 bg-violet-500/5 px-2.5 py-1 rounded-md border border-violet-500/10">
+                          Question {currentQuestionIndex} of {totalQuestions}
+                        </span>
+                      </div>
+
+                      <div className="prose prose-invert max-w-none text-violet-100/90 text-[15px] font-sans md:text-base leading-relaxed tracking-wide font-medium">
+                        <ReactMarkdown>{activeQuestion}</ReactMarkdown>
+                      </div>
+                    </motion.div>
+                  ) : sending ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="p-8 rounded-3xl bg-white/[0.01] border border-white/5 border-dashed flex flex-col items-center justify-center py-16 gap-4 text-center"
+                    >
+                      <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-violet-200">Voke is reviewing...</h4>
+                        <p className="text-xs text-violet-200/40">Evaluating answer depth and aligning skill metrics.</p>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-8 rounded-3xl bg-red-500/5 border border-red-500/10 flex flex-col items-center justify-center text-center space-y-4"
+                    >
+                      <AlertTriangle className="w-10 h-10 text-red-400 animate-pulse" />
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-red-200">Connection Failed</h4>
+                        <p className="text-xs text-red-200/50">Voke encountered a temporary network or rate-limiting issue. Please retry to load your next question.</p>
+                      </div>
+                      <Button
+                        onClick={() => generateAIQuestion(messages, questionCount, totalQuestions)}
+                        className="h-9 px-5 font-bold text-xs rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/10 transition-all flex items-center gap-1.5 mx-auto"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        Retry Generating Question
+                      </Button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Answer Workspace Editor */}
+                {isFinished ? (
+                  <Button
+                    onClick={completeSession}
+                    className="w-full h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-violet-500/10 rounded-2xl transition-all duration-300 hover:scale-[1.01]"
+                    disabled={isCompleting}
+                  >
+                    {isCompleting ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin text-violet-300" />
-                        Analyzing...
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin text-white" />
+                        Generating Scorecard...
                       </>
                     ) : (
                       <>
-                        Submit Answer
-                        <Send className="w-3.5 h-3.5 ml-2" />
+                        Complete Interview & View Results
+                        <Award className="w-4 h-4 ml-2" />
                       </>
                     )}
                   </Button>
-                </div>
-              </div>
+                ) : (
+                  activeQuestion && (
+                    <div className={`p-4 rounded-3xl bg-[#0e1017]/40 border ${
+                      isEditorFocused 
+                        ? 'border-violet-500/30 shadow-[0_0_25px_rgba(139,92,246,0.05)]' 
+                        : 'border-white/5'
+                    } transition-all duration-300 space-y-4`}>
+                    <div className="flex justify-between items-center text-[10px] text-violet-300/40 font-bold uppercase tracking-wider px-1">
+                      <span>Your Response Area</span>
+                      <span className="flex items-center gap-1">
+                        <Activity className="w-3 h-3 text-violet-400" />
+                        Press Enter to submit
+                      </span>
+                    </div>
+
+                    <Textarea
+                      ref={textareaRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onFocus={() => setIsEditorFocused(true)}
+                      onBlur={() => setIsEditorFocused(false)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage(input);
+                        }
+                      }}
+                      placeholder={voiceMode ? "Listening... Speak your answer now." : "Draft your detailed answer here... Connect your experience and use structural models like STAR where possible."}
+                      className="min-h-[140px] max-h-[220px] py-2 px-1 border-0 focus-visible:ring-0 bg-transparent resize-none text-[14px] leading-relaxed text-violet-100/90 focus:outline-none placeholder-violet-200/20"
+                      disabled={sending || !sessionActive || isCompleting}
+                    />
+
+                    <div className="flex items-center justify-between border-t border-white/5 pt-3.5 mt-2">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className={`rounded-xl h-9 w-9 shrink-0 transition-all ${
+                            voiceMode 
+                              ? 'text-red-400 bg-red-500/10 border border-red-500/20' 
+                              : 'text-violet-300/40 bg-white/5 hover:bg-white/10 hover:text-white border border-white/5'
+                          }`}
+                          onClick={toggleVoiceMode}
+                        >
+                          {voiceMode ? <Mic className="w-4.5 h-4.5 animate-pulse" /> : <Mic className="w-4.5 h-4.5" />}
+                        </Button>
+                        <div className="flex items-center gap-2 text-[11px] text-violet-200/40 font-medium">
+                          <span className="bg-white/5 px-2.5 py-0.5 rounded-md">
+                            Words: {input.trim() ? input.trim().split(/\s+/).length : 0}
+                          </span>
+                          <span className="bg-white/5 px-2.5 py-0.5 rounded-md">
+                            Chars: {input.length}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={() => handleSendMessage(input)}
+                        disabled={!input.trim() || sending || !sessionActive || isCompleting}
+                        className={`h-9 px-5 font-bold text-xs rounded-xl transition-all duration-300 ${
+                          input.trim() && !sending && sessionActive && !isCompleting
+                            ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-lg shadow-violet-500/10 hover:scale-[1.02]'
+                            : 'bg-white/5 text-violet-200/20 cursor-not-allowed border border-white/5'
+                        }`}
+                      >
+                        {sending ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin text-violet-300" />
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            Submit Answer
+                            <Send className="w-3.5 h-3.5 ml-2" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )
+                )}
+              </>
             )}
 
           </div>

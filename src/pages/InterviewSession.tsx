@@ -556,7 +556,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                   >
                     <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
                     <div className="space-y-1">
-                      <h4 className="text-sm font-bold text-violet-200">Sarah is reviewing...</h4>
+                      <h4 className="text-sm font-bold text-violet-200">Voke is reviewing...</h4>
                       <p className="text-xs text-violet-200/40">Evaluating answer depth and aligning skill metrics.</p>
                     </div>
                   </motion.div>
