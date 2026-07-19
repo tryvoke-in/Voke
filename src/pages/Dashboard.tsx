@@ -31,8 +31,9 @@ import { Footer } from "@/components/Footer";
 import { getDailyQuestion } from "@/data/questions";
 import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 import { FeedbackFormDialog } from "@/components/FeedbackFormDialog";
-import { CodingProfilesDialog } from "@/components/CodingProfilesDialog";
 import { SearchDialog } from "@/components/SearchDialog";
+import { CodingProfilesDialog } from "@/components/CodingProfilesDialog";
+import { InteractiveTour } from "@/components/dashboard/InteractiveTour";
 
 interface Notification {
   id: string;
@@ -64,6 +65,8 @@ const Dashboard = () => {
   const totalCredits = creditsElite + creditsVoice + creditsVideo;
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [userId, setUserId] = useState<string>("");
+  const [isTourOpen, setIsTourOpen] = useState(false);
 
   useEffect(() => {
     // Safety fallback to release loading screen after 1.5 seconds if query or auth hangs
@@ -166,6 +169,13 @@ const Dashboard = () => {
       if (!user) {
         setLoading(false);
         return;
+      }
+      setUserId(user.id);
+
+      // Check onboarding tour seen status
+      const tourSeen = localStorage.getItem(`voke_tour_seen_${user.id}`);
+      if (!tourSeen) {
+        setIsTourOpen(true);
       }
 
       // 1. Fetch Profile
@@ -523,7 +533,7 @@ const Dashboard = () => {
                 const offset = circumference - (score / 100) * circumference;
 
                 return (
-                  <div className="relative flex items-center justify-center w-12 h-12 cursor-pointer group" onClick={() => navigate("/profile")}>
+                  <div id="tour-profile" className="relative flex items-center justify-center w-12 h-12 cursor-pointer group" onClick={() => navigate("/profile")}>
                     {/* Tooltip */}
                     <div className="absolute top-14 right-0 w-max px-3 py-1.5 bg-popover border border-border text-xs font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                       Profile Strength: <span style={{ color: strokeColor }}>{score}%</span>
@@ -614,7 +624,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4">
+                <div id="tour-stats" className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4">
                   {realStats.slice(0, 3).map((stat, i) => (
                     <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-2.5 sm:p-4 border border-white/5 hover:bg-white/20 transition-colors">
                       <div className="flex items-center gap-1.5 mb-1 text-white/70">
@@ -640,6 +650,8 @@ const Dashboard = () => {
                 </div>
               </div>
             </motion.div>
+
+
 
             {!isPremium && totalCredits === 0 && (
               <motion.div
@@ -687,7 +699,7 @@ const Dashboard = () => {
                 Quick Actions
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-amber-500" onClick={() => navigate("/job-recommendations")}>
+                <Card id="tour-job-matches" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-amber-500" onClick={() => navigate("/job-recommendations")}>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                     <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <Briefcase className="w-6 h-6 text-amber-600 dark:text-amber-400" />
@@ -698,7 +710,7 @@ const Dashboard = () => {
                 </Card>
 
 
-                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-violet-500" onClick={() => navigate("/interview/new")}>
+                <Card id="tour-text-interview" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-violet-500" onClick={() => navigate("/interview/new")}>
                   <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 z-10">
                     Unlimited
                   </span>
@@ -711,7 +723,7 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/voice-assistant")}>
+                <Card id="tour-voice-agent" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/voice-assistant")}>
                   <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
                       ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                       : creditsVoice > 0
@@ -733,7 +745,7 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/resume-builder")}>
+                <Card id="tour-resume-builder" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/resume-builder")}>
                   <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 z-10">
                     Free
                   </span>
@@ -746,7 +758,7 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-blue-500 overflow-hidden" onClick={() => navigate("/elite-prep")}>
+                <Card id="tour-elite-prep" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-blue-500 overflow-hidden" onClick={() => navigate("/elite-prep")}>
                   <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
                       ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                       : creditsElite > 0
@@ -768,7 +780,7 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-fuchsia-500" onClick={() => navigate("/video-interview")}>
+                <Card id="tour-video-practice" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-fuchsia-500" onClick={() => navigate("/video-interview")}>
                   <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
                       ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                       : creditsVideo > 0
@@ -791,7 +803,7 @@ const Dashboard = () => {
                 </Card>
 
 
-                <Card className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-indigo-500" onClick={() => navigate("/playground")}>
+                <Card id="tour-playground" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-indigo-500" onClick={() => navigate("/playground")}>
                   <CardContent className="p-4 flex-col items-center text-center pt-6 flex">
                     <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <Code className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
@@ -801,7 +813,7 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-orange-500" onClick={() => navigate("/question-practice")}>
+                <Card id="tour-question-practice" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-orange-500" onClick={() => navigate("/question-practice")}>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                     <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <FileQuestion className="w-6 h-6 text-orange-600 dark:text-orange-400" />
@@ -810,8 +822,6 @@ const Dashboard = () => {
                     <p className="text-xs text-muted-foreground mt-1">Daily Challenges</p>
                   </CardContent>
                 </Card>
-
-
               </div>
             </div>
 
@@ -825,21 +835,23 @@ const Dashboard = () => {
           <div className="lg:col-span-4 space-y-6">
 
             {/* AI Skill Radar (Competency Map) */}
-            <SkillRadar
-              data={sessions.length > 0 ? [
-                { subject: "Confidence", A: sessions.reduce((acc, s) => acc + (s.score || 70), 0) / (sessions.length || 1), fullMark: 100 },
-                { subject: "Technical", A: sessions.filter(s => s.type === 'Text').reduce((acc, s) => acc + (s.score || 0), 0) / (sessions.filter(s => s.type === 'Text').length || 1) || 60, fullMark: 100 },
-                { subject: "ATS Score", A: 85, fullMark: 100 }, // Mocked or derived from resume analysis
-                { subject: "Problem Solving", A: sessions.filter(s => s.topic?.includes('Code') || s.topic?.includes('System')).reduce((acc, s) => acc + (s.score || 0), 0) / (sessions.filter(s => s.topic?.includes('Code') || s.topic?.includes('System')).length || 1) || 75, fullMark: 100 },
-                { subject: "Communication", A: sessions.filter(s => s.type === 'Video').reduce((acc, s) => acc + (s.score || 0), 0) / (sessions.filter(s => s.type === 'Video').length || 1) || 80, fullMark: 100 },
-              ] : [
-                { subject: "Confidence", A: 0, fullMark: 100 },
-                { subject: "Technical", A: 0, fullMark: 100 },
-                { subject: "ATS Score", A: 0, fullMark: 100 },
-                { subject: "Problem Solving", A: 0, fullMark: 100 },
-                { subject: "Communication", A: 0, fullMark: 100 },
-              ]}
-            />
+            <div id="tour-radar">
+              <SkillRadar
+                data={sessions.length > 0 ? [
+                  { subject: "Confidence", A: sessions.reduce((acc, s) => acc + (s.score || 70), 0) / (sessions.length || 1), fullMark: 100 },
+                  { subject: "Technical", A: sessions.filter(s => s.type === 'Text').reduce((acc, s) => acc + (s.score || 0), 0) / (sessions.filter(s => s.type === 'Text').length || 1) || 60, fullMark: 100 },
+                  { subject: "ATS Score", A: 85, fullMark: 100 }, // Mocked or derived from resume analysis
+                  { subject: "Problem Solving", A: sessions.filter(s => s.topic?.includes('Code') || s.topic?.includes('System')).reduce((acc, s) => acc + (s.score || 0), 0) / (sessions.filter(s => s.topic?.includes('Code') || s.topic?.includes('System')).length || 1) || 75, fullMark: 100 },
+                  { subject: "Communication", A: sessions.filter(s => s.type === 'Video').reduce((acc, s) => acc + (s.score || 0), 0) / (sessions.filter(s => s.type === 'Video').length || 1) || 80, fullMark: 100 },
+                ] : [
+                  { subject: "Confidence", A: 0, fullMark: 100 },
+                  { subject: "Technical", A: 0, fullMark: 100 },
+                  { subject: "ATS Score", A: 0, fullMark: 100 },
+                  { subject: "Problem Solving", A: 0, fullMark: 100 },
+                  { subject: "Communication", A: 0, fullMark: 100 },
+                ]}
+              />
+            </div>
 
 
 
@@ -930,6 +942,15 @@ const Dashboard = () => {
         open={searchOpen}
         onOpenChange={setSearchOpen}
       />
+      {userId && (
+        <InteractiveTour
+          userId={userId}
+          isOpen={isTourOpen}
+          onClose={() => setIsTourOpen(false)}
+          userName={profile?.full_name}
+          onTrackSelected={() => loadData(true)}
+        />
+      )}
     </div>
   );
 };

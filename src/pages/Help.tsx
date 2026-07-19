@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowLeft, Search, HelpCircle, BookOpen, Video, MessageCircle, Mail, Sparkles, Zap, ChevronRight } from "lucide-react";
+import { ArrowLeft, Search, HelpCircle, BookOpen, Video, MessageCircle, Mail, Sparkles, Zap, ChevronRight, ArrowRight } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Help = () => {
     const navigate = useNavigate();
@@ -19,6 +20,21 @@ const Help = () => {
             navigate("/dashboard");
         } else {
             navigate("/");
+        }
+    };
+
+    const handleReplayTour = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        if (user) {
+            localStorage.removeItem(`voke_tour_seen_${user.id}`);
+            localStorage.removeItem(`voke_checklist_dismissed_${user.id}`);
+            toast.success("Welcome tour reset! Redirecting to dashboard...");
+            setTimeout(() => {
+                navigate("/dashboard");
+            }, 1000);
+        } else {
+            navigate("/auth");
         }
     };
 
@@ -210,6 +226,35 @@ const Help = () => {
                         </motion.div>
                     ))}
                 </div>
+
+                {/* Onboarding Tour CTA */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="mb-12"
+                >
+                    <Card className="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-500/20 backdrop-blur-xl overflow-hidden relative p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />
+                        <div className="space-y-2 max-w-xl">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 text-xs font-bold text-violet-600 dark:text-violet-400">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                <span>Guided Tour</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-foreground">New to the platform or want a refresher?</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Replay our feature guidance walkthrough and onboarding checklist to understand what each tool does and get recommended starting points.
+                            </p>
+                        </div>
+                        <Button
+                            onClick={handleReplayTour}
+                            className="bg-violet-600 hover:bg-violet-700 text-white shrink-0 shadow-lg shadow-violet-500/20 rounded-2xl h-11 px-6 font-bold"
+                        >
+                            Start Welcome Tour
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                    </Card>
+                </motion.div>
 
                 {/* Contact Support CTA */}
                 <motion.div
