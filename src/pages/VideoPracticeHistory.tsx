@@ -160,7 +160,7 @@ const VideoPracticeHistory = () => {
                       {session.status === "completed" && (
                         <Button
                           variant="outline"
-                          onClick={() => navigate(`/video-interview/${session.id}/results`)}
+                          onClick={() => navigate(`/video-interview/results/${session.id}`)}
                         >
                           View Results
                         </Button>

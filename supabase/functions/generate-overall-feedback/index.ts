@@ -113,7 +113,13 @@ Provide comprehensive overall feedback in the following format (strict JSON):
     "sq": <number 0-100>,
     "mq": <number 0-100>
   },
-  "personality_cluster": "<Cluster Name>"
+  "personality_cluster": "<Cluster Name>",
+  "english_analysis": {
+    "pronunciation_score": <number 0-100>,
+    "vocabulary_score": <number 0-100>,
+    "grammar_score": <number 0-100>,
+    "feedback": "<2-3 sentences evaluating spoken English, vocabulary range, and grammatical clarity>"
+  }
 }
 
 Focus on patterns across all answers, not individual questions.`;
@@ -165,6 +171,12 @@ Focus on patterns across all answers, not individual questions.`;
                 overall_score: avgScore,
                 key_strengths: ["Clear communication", "Professional demeanor", "Relevant examples"],
                 key_improvements: ["Reduce filler words", "Improve eye contact", "Structure answers better"],
+                english_analysis: {
+                    pronunciation_score: 75,
+                    vocabulary_score: 70,
+                    grammar_score: 72,
+                    feedback: "Good spoken fluency with some grammatical pauses."
+                }
             };
         }
 
@@ -179,6 +191,7 @@ Focus on patterns across all answers, not individual questions.`;
                 status: "completed",
                 six_q_score: analysis.six_q_score,
                 personality_cluster: analysis.personality_cluster,
+                analysis_result: analysis,
                 completed_at: new Date().toISOString(),
             })
             .eq("id", sessionId);

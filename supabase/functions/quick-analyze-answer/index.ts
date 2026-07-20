@@ -49,7 +49,12 @@ Provide concise feedback in the following format (strict JSON):
   "confidence_score": <number 0-100>
 }
 
-Keep feedback brief and actionable. Focus on the most important points.`;
+CRITICAL REQUIREMENT FOR BODY LANGUAGE FEEDBACK:
+- At least one point in "whats_good" MUST focus specifically on body language, posture, eye contact, facial expressions, or gestures (e.g., "Maintained steady eye contact with the camera," or "Used appropriate hand gestures to emphasize key points").
+- At least one point in "whats_wrong" MUST be a direct, concrete command on improving body language, posture, eye contact, facial expressions, or gestures (e.g., "Sit upright and stop slouching in the frame," or "Look directly at the webcam lens, not down at the screen").
+- If video metadata is missing, infer potential posture/eye contact tendencies from speaking flow/transcript cues, or provide general best-practice video interview body language advice.
+
+Keep feedback brief, direct, and actionable. Focus on the most important points.`;
 
         const response = await fetch(
             "https://api.groq.com/openai/v1/chat/completions",
