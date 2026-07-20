@@ -1,5 +1,4 @@
-
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -87,7 +86,7 @@ ${userContext ? `\n**USER CONTEXT:**\n${userContext}\n` : ""}
         if (!response.ok) {
             const errorText = await response.text();
             console.error("Groq API error:", response.status, errorText);
-            throw new Error(`Groq API error: ${response.status}`);
+            throw new Error(`Groq API error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
@@ -97,36 +96,42 @@ ${userContext ? `\n**USER CONTEXT:**\n${userContext}\n` : ""}
             throw new Error("No response from AI");
         }
 
-        // Save or update chat session
-        const { data: existingSession } = await supabase
-            .from("chat_sessions")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("updated_at", { ascending: false })
-            .limit(1)
-            .single();
-
-        const updatedMessages = [
-            ...(existingSession?.messages || []),
-            ...messages.slice(-1), // Last user message
-            { role: "assistant", content: aiResponse }
-        ];
-
-        if (existingSession) {
-            await supabase
+        // Save or update chat session — isolated try/catch so a missing/
+        // misconfigured DB table never kills the main AI response.
+        try {
+            const { data: existingSession } = await supabase
                 .from("chat_sessions")
-                .update({
-                    messages: updatedMessages,
-                    updated_at: new Date().toISOString()
-                })
-                .eq("id", existingSession.id);
-        } else {
-            await supabase
-                .from("chat_sessions")
-                .insert({
-                    user_id: user.id,
-                    messages: updatedMessages
-                });
+                .select("*")
+                .eq("user_id", user.id)
+                .order("updated_at", { ascending: false })
+                .limit(1)
+                .single();
+
+            const updatedMessages = [
+                ...(existingSession?.messages || []),
+                ...messages.slice(-1), // Last user message
+                { role: "assistant", content: aiResponse }
+            ];
+
+            if (existingSession) {
+                await supabase
+                    .from("chat_sessions")
+                    .update({
+                        messages: updatedMessages,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq("id", existingSession.id);
+            } else {
+                await supabase
+                    .from("chat_sessions")
+                    .insert({
+                        user_id: user.id,
+                        messages: updatedMessages
+                    });
+            }
+        } catch (dbError) {
+            // Non-fatal: log and continue — AI response is still valid
+            console.error("Non-fatal: Failed to save chat session to DB:", dbError);
         }
 
         return new Response(JSON.stringify({ response: aiResponse }), {
