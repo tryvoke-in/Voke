@@ -14,6 +14,7 @@ import {
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ProgressPanel } from "@/components/dashboard/ProgressPanel";
 import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
+import { DSAPreparationBanner } from "@/components/dashboard/DSAPreparationBanner";
 import { ReferralButton } from "@/components/dashboard/ReferralButton";
 import { UpgradeButton } from "@/components/UpgradeButton";
 import { Sidebar } from "@/components/Sidebar";
@@ -435,6 +436,14 @@ const Dashboard = () => {
       color: "text-orange-500",
       hoverBg: "hover:bg-orange-500/10 hover:text-orange-500",
     },
+    {
+      id: "dsa-sheet",
+      label: "DSA Sheet",
+      icon: Code,
+      path: "/dsa-sheet",
+      color: "text-fuchsia-500",
+      hoverBg: "hover:bg-fuchsia-500/10 hover:text-fuchsia-500",
+    },
   ];
 
   if (loading) {
@@ -813,6 +822,9 @@ const Dashboard = () => {
                 </Card>
               </div>
             </div>
+
+            {/* DSA Preparation Banner */}
+            <DSAPreparationBanner />
 
             {/* Road to Offer (Timeline) */}
             <RoadToOffer profile={profile} onUpdate={() => loadData(true)} />

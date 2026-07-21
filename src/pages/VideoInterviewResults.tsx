@@ -28,8 +28,9 @@ const VideoInterviewResults = () => {
 
   const loadResults = async () => {
     try {
+      // TODO: Switch back to video_interview_sessions after migration deploys
       const { data, error } = await supabase
-        .from("video_interview_sessions")
+        .from("interview_sessions")
         .select("*")
         .eq("id", id)
         .single();

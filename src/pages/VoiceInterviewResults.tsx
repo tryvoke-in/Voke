@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, ArrowLeft, TrendingUp, MessageSquare, Award, Mic, CheckCircle2, AlertCircle, RefreshCw, Languages } from "lucide-react";
+import { LogOut, ArrowLeft, TrendingUp, MessageSquare, Award, Mic, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import SixQAnalysis from "@/components/SixQAnalysis";
@@ -382,68 +382,6 @@ const VoiceInterviewResults = () => {
                 </CardContent>
               </Card>
             )}
-
-            {/* English Speaking & Fluency Analysis Section */}
-            <Card className="bg-violet-500/5 border-violet-500/20">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Languages className="w-5 h-5 text-violet-500" />
-                  English Speaking & Fluency Analysis
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {(session.analysis_result as any)?.english_analysis ? (
-                  <>
-                    {/* Scores Grid */}
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <div className="p-4 rounded-xl bg-background/50 border border-border/50">
-                        <div className="text-xs text-muted-foreground mb-1 font-semibold uppercase">Grammar & Correctness</div>
-                        <div className="flex items-end gap-1.5 mb-2">
-                          <span className={`text-2xl font-bold ${getScoreColor((session.analysis_result as any).english_analysis.grammar_score || 0)}`}>
-                            {(session.analysis_result as any).english_analysis.grammar_score || 0}
-                          </span>
-                          <span className="text-xs text-muted-foreground mb-1">/100</span>
-                        </div>
-                        <Progress value={(session.analysis_result as any).english_analysis.grammar_score || 0} className="h-1.5" />
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-background/50 border border-border/50">
-                        <div className="text-xs text-muted-foreground mb-1 font-semibold uppercase">Vocabulary Range</div>
-                        <div className="flex items-end gap-1.5 mb-2">
-                          <span className={`text-2xl font-bold ${getScoreColor((session.analysis_result as any).english_analysis.vocabulary_score || 0)}`}>
-                            {(session.analysis_result as any).english_analysis.vocabulary_score || 0}
-                          </span>
-                          <span className="text-xs text-muted-foreground mb-1">/100</span>
-                        </div>
-                        <Progress value={(session.analysis_result as any).english_analysis.vocabulary_score || 0} className="h-1.5" />
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-background/50 border border-border/50">
-                        <div className="text-xs text-muted-foreground mb-1 font-semibold uppercase">Pronunciation & Flow</div>
-                        <div className="flex items-end gap-1.5 mb-2">
-                          <span className={`text-2xl font-bold ${getScoreColor((session.analysis_result as any).english_analysis.pronunciation_score || 0)}`}>
-                            {(session.analysis_result as any).english_analysis.pronunciation_score || 0}
-                          </span>
-                          <span className="text-xs text-muted-foreground mb-1">/100</span>
-                        </div>
-                        <Progress value={(session.analysis_result as any).english_analysis.pronunciation_score || 0} className="h-1.5" />
-                      </div>
-                    </div>
-
-                    {/* Feedback summary */}
-                    {(session.analysis_result as any).english_analysis.feedback && (
-                      <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-muted-foreground text-sm leading-relaxed">
-                        {(session.analysis_result as any).english_analysis.feedback}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">
-                    Speaking analysis is not available for this session. Complete a new voice interview to generate detailed English proficiency feedback.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
 
             {/* What's Good / What's Wrong Grid */}
             <div className="grid md:grid-cols-2 gap-6">

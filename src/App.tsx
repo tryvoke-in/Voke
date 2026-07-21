@@ -39,6 +39,7 @@ import DailyChallenge from "./pages/DailyChallenge";
 import DailyChallengeLanding from "./pages/DailyChallengeLanding";
 import JobRecommendations from "./pages/JobRecommendations";
 import QuestionPractice from "./pages/QuestionPractice";
+import DSASheet from "./pages/DSASheet";
 import Companies from "./pages/Companies";
 import CompanyDetail from "./pages/CompanyDetail";
 import Playground from "./pages/Playground";
@@ -108,6 +109,7 @@ const App = () => (
                 <Route path="/daily-challenge" element={<DailyChallengeLanding />} />
                 <Route path="/daily-challenge/solve" element={<DailyChallenge />} />
                 <Route path="/question-practice" element={<QuestionPractice />} />
+                <Route path="/dsa-sheet" element={<DSASheet />} />
                 <Route path="/companies" element={<Companies />} />
                 <Route path="/companies/:slug" element={<CompanyDetail />} />
                 <Route path="/playground" element={<Playground />} />

@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-    Briefcase, MapPin, DollarSign, TrendingUp, Sparkles, RefreshCw,
+    MapPin, DollarSign, TrendingUp, Sparkles, RefreshCw,
     ArrowLeft, ExternalLink, BookmarkPlus, X, CheckCircle2, Building2,
-    Zap, Clock, Target, Search, Filter, BriefcaseBusiness, AlertTriangle
+    Target, Search, Filter, BriefcaseBusiness, AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -169,11 +168,18 @@ export default function JobRecommendations() {
         setFilteredRecs(filtered);
     };
 
-    const getMatchColor = (score: number) => {
-        if (score >= 90) return "text-emerald-400 bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
-        if (score >= 75) return "text-cyan-400 bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.3)]";
-        if (score >= 60) return "text-amber-400 bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]";
-        return "text-rose-400 bg-rose-500/10 border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.3)]";
+    const getMatchStyle = (score: number) => {
+        if (score >= 90) return "text-emerald-500 bg-emerald-500/10 border border-emerald-500/20";
+        if (score >= 75) return "text-cyan-500 bg-cyan-500/10 border border-cyan-500/20";
+        if (score >= 60) return "text-amber-500 bg-amber-500/10 border border-amber-500/20";
+        return "text-rose-500 bg-rose-500/10 border border-rose-500/20";
+    };
+
+    const getDotColor = (score: number) => {
+        if (score >= 90) return "bg-emerald-500";
+        if (score >= 75) return "bg-cyan-500";
+        if (score >= 60) return "bg-amber-500";
+        return "bg-rose-500";
     };
 
     const updateStatus = async (recId: string, status: string) => {
@@ -229,42 +235,54 @@ export default function JobRecommendations() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <motion.div
-                    animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="relative"
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+                <div className="relative w-16 h-16 flex items-center justify-center">
+                    <motion.div
+                        animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.3, 0.7, 0.3] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute inset-0 bg-violet-500/10 rounded-full blur-xl"
+                    />
+                    <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        className="w-8 h-8 border-2 border-violet-500/20 border-t-violet-500 rounded-full"
+                    />
+                </div>
+                <motion.span 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0.4, 0.8, 0.4] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-semibold"
                 >
-                    <div className="absolute inset-0 blur-xl bg-violet-500/30 rounded-full" />
-                    <RefreshCw className="h-16 w-16 text-violet-500 relative z-10" />
-                </motion.div>
+                    Curating Matches
+                </motion.span>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-violet-500/30 flex flex-col">
+        <div className="min-h-screen bg-muted/30 text-foreground selection:bg-violet-500/30 flex flex-col">
             {creatingPlan && <CreatingPlanLoader />}
             
             <AlertDialog open={showBetaAlert} onOpenChange={setShowBetaAlert}>
-                <AlertDialogContent className="bg-zinc-950/95 border border-white/10 text-white max-w-md backdrop-blur-2xl rounded-3xl shadow-2xl">
+                <AlertDialogContent className="bg-card border border-border text-foreground max-w-sm rounded-3xl p-6 shadow-2xl backdrop-blur-md">
                     <AlertDialogHeader className="flex flex-col items-center text-center">
-                        <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
-                            <AlertTriangle className="h-6 w-6 text-amber-400" />
+                        <div className="w-10 h-10 rounded-full bg-amber-500/5 border border-amber-500/10 flex items-center justify-center mb-3">
+                            <AlertTriangle className="h-5 w-5 text-amber-500" />
                         </div>
-                        <AlertDialogTitle className="text-xl font-bold bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-500 bg-clip-text text-transparent">
-                            Feature Under Development
+                        <AlertDialogTitle className="text-base font-semibold">
+                            Experimental Feature
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-zinc-400 text-sm leading-relaxed mt-2">
-                            This feature is currently under active development. Recommendation matching results are experimental and may show false or temporary information as we continue to train and refine our AI engine.
+                        <AlertDialogDescription className="text-muted-foreground text-xs leading-relaxed mt-2">
+                            Matching recommendations are currently experimental and being actively calibrated. Some results might be inaccurate.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="sm:justify-center mt-6">
+                    <AlertDialogFooter className="sm:justify-center mt-5">
                         <AlertDialogAction 
                             onClick={() => setShowBetaAlert(false)}
-                            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium rounded-full border-0 shadow-lg shadow-violet-500/20 px-8 py-2.5 transition-all duration-300 transform hover:scale-105"
+                            className="bg-muted hover:bg-muted/80 border border-border text-foreground font-medium rounded-full text-xs px-6 py-2 transition-all w-full sm:w-auto"
                         >
-                            Understood
+                            Acknowledge
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -272,44 +290,48 @@ export default function JobRecommendations() {
 
             {/* Background Effects */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-violet-900/20 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-fuchsia-900/20 rounded-full blur-[120px]" />
-                <div className="absolute top-[20%] right-[20%] w-[20%] h-[20%] bg-cyan-900/10 rounded-full blur-[100px]" />
+                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[140px]" style={{ backgroundColor: 'rgba(124, 58, 237, 0.04)' }} />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[140px]" style={{ backgroundColor: 'rgba(99, 102, 241, 0.03)' }} />
             </div>
 
             {/* Header */}
             <motion.header
-                initial={{ y: -100, opacity: 0 }}
+                initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-black/60 backdrop-blur-2xl supports-[backdrop-filter]:bg-black/30"
+                className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-card/60 backdrop-blur-md"
             >
-                <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
                         <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => navigate("/dashboard")}
-                            className="rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
+                            className="rounded-full w-8 h-8 border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300"
                         >
-                            <ArrowLeft className="h-5 w-5" />
+                            <ArrowLeft className="h-4 w-4" />
                         </Button>
-                        <div>
-                            <h1 className="text-xl font-bold bg-gradient-to-r from-white via-white to-zinc-500 bg-clip-text text-transparent">
-                                Job Market
+                        <div className="flex flex-col">
+                            <h1 className="text-sm font-semibold tracking-wide text-foreground">
+                                Market Scout
                             </h1>
-                            <p className="text-xs text-zinc-500 font-medium tracking-wide uppercase">
-                                Recommended Opportunities
-                            </p>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                                Matched Openings
+                            </span>
                         </div>
                     </div>
 
                     <Button 
                         onClick={generateRecommendations} 
                         disabled={generating}
-                        className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 border-0 shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all duration-300 transform hover:scale-105"
+                        variant="outline"
+                        className="h-8 rounded-full border-border hover:bg-muted text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground transition-all duration-300 bg-transparent px-4"
                     >
-                        <Sparkles className={`h-4 w-4 mr-2 ${generating ? "animate-spin" : ""}`} />
-                        {generating ? "AI Scouting..." : "Refresh Matches"}
+                        {generating ? (
+                            <RefreshCw className="h-3 w-3 mr-2 animate-spin text-violet-500" />
+                        ) : (
+                            <Sparkles className="h-3.5 w-3.5 mr-2 text-violet-500" />
+                        )}
+                        {generating ? "Scouting..." : "Rescout Roles"}
                     </Button>
                 </div>
             </motion.header>
@@ -319,261 +341,261 @@ export default function JobRecommendations() {
                 <Sidebar />
                 <div className="flex-1 flex flex-col min-w-0 relative z-10">
                     {/* Main Content */}
-                    <main className="container mx-auto px-4 pt-32 pb-20 max-w-7xl w-full">
+                    <main className="max-w-7xl mx-auto px-6 pt-24 pb-20 w-full">
                 
-                {/* Hero / Stats Area */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="mb-10 p-1"
-                >
-                    <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-zinc-900/50 backdrop-blur-sm">
-                        <div className="absolute top-0 right-0 p-32 bg-violet-500/20 blur-[100px] rounded-full pointer-events-none" />
-                        
-                        <div className="p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+                        {/* Hero / Stats Area */}
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-8 border-b border-border/60">
                             <div>
-                                <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                                    <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                                        Your Personalized Market
-                                    </span>
+                                <h2 className="text-2xl md:text-3xl font-light tracking-tight text-foreground mb-2">
+                                    Curated <span className="font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 bg-clip-text text-transparent">Recommendations</span>
                                 </h2>
-                                <p className="text-zinc-400 max-w-xl text-lg leading-relaxed">
-                                    Our AI has analyzed your interview performance and skills to find roles where you specifically stand out.
+                                <p className="text-xs md:text-sm text-muted-foreground max-w-xl leading-relaxed">
+                                    Openings matched with your core strengths and interview signals. Keep your resume updated for better scouting.
                                 </p>
                             </div>
-                            <div className="flex gap-4">
-                                <div className="text-center px-6 py-4 rounded-2xl bg-black/40 border border-white/5 backdrop-blur-md">
-                                    <div className="text-3xl font-bold text-white mb-1">{recommendations.length}</div>
-                                    <div className="text-xs text-zinc-500 uppercase tracking-wider">Matches</div>
+                            <div className="flex gap-6 items-center">
+                                <div className="flex flex-col items-start">
+                                    <span className="text-xl md:text-2xl font-semibold text-foreground">{recommendations.length}</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Matched Roles</span>
                                 </div>
-                                <div className="text-center px-6 py-4 rounded-2xl bg-black/40 border border-white/5 backdrop-blur-md">
-                                    <div className="text-3xl font-bold text-emerald-400 mb-1">
+                                <div className="h-8 w-px bg-border/65" />
+                                <div className="flex flex-col items-start">
+                                    <span className="text-xl md:text-2xl font-semibold text-emerald-500">
                                         {recommendations.filter(r => r.match_score > 80).length}
-                                    </div>
-                                    <div className="text-xs text-zinc-500 uppercase tracking-wider">Top Picks</div>
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Strong Fits</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </motion.div>
 
-                {recommendations.length === 0 ? (
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="min-h-[400px] flex flex-col items-center justify-center p-8 rounded-3xl border border-white/5 bg-zinc-900/30 backdrop-blur-sm text-center"
-                    >
-                        <div className="w-24 h-24 mb-6 rounded-full bg-zinc-900/80 border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(124,58,237,0.15)]">
-                            <BriefcaseBusiness className="h-10 w-10 text-violet-400" />
-                        </div>
-                        <h3 className="text-2xl font-bold mb-3 text-white">Market Analysis Empty</h3>
-                        <p className="text-zinc-400 mb-8 max-w-md mx-auto leading-relaxed">
-                            We need more data to find your perfect fit. Complete a few interview sessions to help our AI understand your unique strengths.
-                        </p>
-                        <Button 
-                            onClick={generateRecommendations} 
-                            disabled={generating} 
-                            size="lg"
-                            className="bg-white text-black hover:bg-zinc-200 transition-colors rounded-full px-8 text-base font-medium"
-                        >
-                            <Sparkles className="h-5 w-5 mr-2" />
-                            Start Analysis
-                        </Button>
-                    </motion.div>
-                ) : (
-                    <>
-                        {/* Filters & Search */}
-                        <div className="sticky top-20 z-40 mb-8">
-                             <motion.div 
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="p-2 rounded-2xl bg-zinc-900/80 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col md:flex-row gap-2"
+                        {recommendations.length === 0 ? (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="min-h-[400px] flex flex-col items-center justify-center p-8 rounded-3xl border border-border bg-card/40 text-center"
                             >
-                                <div className="relative flex-1">
-                                    <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search roles, companies, or skills..." 
-                                        className="w-full bg-black/40 border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder:text-zinc-600"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
+                                <div className="w-16 h-16 mb-4 rounded-full bg-muted/50 border border-border flex items-center justify-center">
+                                    <BriefcaseBusiness className="h-6 w-6 text-muted-foreground" />
                                 </div>
-                                <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
-                                    <Select value={filterLevel} onValueChange={setFilterLevel}>
-                                        <SelectTrigger className="w-[160px] bg-black/40 border-white/5 text-zinc-300 focus:ring-violet-500/50">
-                                            <Filter className="h-3.5 w-3.5 mr-2 text-zinc-500" />
-                                            <SelectValue placeholder="Experience" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-zinc-900 border-white/10 text-zinc-300">
-                                            <SelectItem value="all">Any Level</SelectItem>
-                                            <SelectItem value="entry">Entry Level</SelectItem>
-                                            <SelectItem value="mid">Mid Level</SelectItem>
-                                            <SelectItem value="senior">Senior Level</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                <h3 className="text-base font-semibold text-foreground mb-2">No recommendations ready</h3>
+                                <p className="text-muted-foreground text-xs mb-6 max-w-xs mx-auto leading-relaxed">
+                                    Complete more interview practices so our algorithm can map your specific profiles and skills.
+                                </p>
+                                <Button 
+                                    onClick={generateRecommendations} 
+                                    disabled={generating} 
+                                    size="sm"
+                                    className="bg-primary text-primary-foreground hover:bg-primary/95 transition-colors rounded-full px-6 text-xs font-semibold"
+                                >
+                                    <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                                    Scout Market
+                                </Button>
+                            </motion.div>
+                        ) : (
+                            <>
+                                {/* Filters & Search */}
+                                <div className="py-4 mb-8">
+                                    <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+                                        <div className="relative w-full md:max-w-md">
+                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search titles, companies, skills..." 
+                                                className="w-full bg-muted/40 hover:bg-muted/65 focus:bg-background border border-border/60 focus:border-primary/20 rounded-full py-2 pl-10 pr-4 text-xs text-foreground focus:outline-none transition-all placeholder:text-muted-foreground/60"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
+                                            <Select value={filterLevel} onValueChange={setFilterLevel}>
+                                                <SelectTrigger className="h-8 w-[130px] rounded-full bg-muted/40 border-border/60 hover:bg-muted/60 text-muted-foreground text-xs font-medium focus:ring-0 focus:ring-offset-0">
+                                                    <Filter className="h-3 w-3 mr-1.5 text-muted-foreground" />
+                                                    <SelectValue placeholder="Experience" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-card border-border text-foreground">
+                                                    <SelectItem value="all" className="text-xs">Any Level</SelectItem>
+                                                    <SelectItem value="entry" className="text-xs">Entry Level</SelectItem>
+                                                    <SelectItem value="mid" className="text-xs">Mid Level</SelectItem>
+                                                    <SelectItem value="senior" className="text-xs">Senior Level</SelectItem>
+                                                </SelectContent>
+                                            </Select>
 
-                                    <Select value={filterRemote} onValueChange={setFilterRemote}>
-                                        <SelectTrigger className="w-[160px] bg-black/40 border-white/5 text-zinc-300 focus:ring-violet-500/50">
-                                            <MapPin className="h-3.5 w-3.5 mr-2 text-zinc-500" />
-                                            <SelectValue placeholder="Location" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-zinc-900 border-white/10 text-zinc-300">
-                                            <SelectItem value="all">Any Location</SelectItem>
-                                            <SelectItem value="remote">Remote Only</SelectItem>
-                                            <SelectItem value="onsite">On-site Only</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    
-                                    <div className="flex items-center px-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-medium whitespace-nowrap ml-auto md:ml-0">
-                                        <Target className="h-3.5 w-3.5 mr-2" />
-                                        {filteredRecs.length} Matches
+                                            <Select value={filterRemote} onValueChange={setFilterRemote}>
+                                                <SelectTrigger className="h-8 w-[130px] rounded-full bg-muted/40 border-border/60 hover:bg-muted/60 text-muted-foreground text-xs font-medium focus:ring-0 focus:ring-offset-0">
+                                                    <MapPin className="h-3 w-3 mr-1.5 text-muted-foreground" />
+                                                    <SelectValue placeholder="Location" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-card border-border text-foreground">
+                                                    <SelectItem value="all" className="text-xs">Any Location</SelectItem>
+                                                    <SelectItem value="remote" className="text-xs">Remote Only</SelectItem>
+                                                    <SelectItem value="onsite" className="text-xs">On-site Only</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            
+                                            <div className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground bg-muted/40 border border-border/60 px-3 py-1.5 rounded-full whitespace-nowrap ml-auto">
+                                                {filteredRecs.length} Matches
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </motion.div>
-                        </div>
 
-                        {/* Job Cards Grid */}
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                            <AnimatePresence mode="popLayout">
-                                {filteredRecs.map((rec, index) => (
-                                    <motion.div
-                                        key={rec.id}
-                                        initial={{ opacity: 0, y: 30 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.95 }}
-                                        transition={{ delay: index * 0.05, duration: 0.4 }}
-                                        layout
-                                    >
-                                        <Card className="group h-full flex flex-col relative overflow-hidden bg-zinc-900/40 hover:bg-zinc-900/60 border-white/5 hover:border-violet-500/30 transition-all duration-500">
-                                            {/* Glow Effect on Hover */}
-                                            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                                            
-                                            <CardHeader className="relative z-10 pb-0">
-                                                <div className="flex justify-between items-start gap-4">
-                                                    <div className="flex gap-4">
-                                                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-zinc-800 to-black border border-white/10 flex items-center justify-center text-2xl font-bold text-white shadow-lg group-hover:scale-105 transition-transform duration-500">
-                                                            {rec.job_postings.company.charAt(0)}
-                                                        </div>
-                                                        <div>
-                                                            <CardTitle className="text-xl md:text-2xl font-bold text-white mb-2 group-hover:text-violet-400 transition-colors">
-                                                                {rec.job_postings.title}
-                                                            </CardTitle>
-                                                            <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                                                                <Building2 className="h-4 w-4" />
-                                                                <span className="font-medium text-zinc-300">{rec.job_postings.company}</span>
-                                                                <span className="text-zinc-600">•</span>
-                                                                <span className="capitalize">{rec.job_postings.experience_level}</span>
+                                {/* Job Cards Grid */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <AnimatePresence mode="popLayout">
+                                        {filteredRecs.map((rec, index) => (
+                                            <motion.div
+                                                key={rec.id}
+                                                initial={{ opacity: 0, y: 15 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.98 }}
+                                                transition={{ delay: index * 0.03, duration: 0.35 }}
+                                                layout
+                                            >
+                                                <Card className="group h-full flex flex-col bg-card/60 hover:bg-card border border-border/50 hover:border-border transition-all duration-300 rounded-2xl p-5 shadow-sm">
+                                                    
+                                                    {/* Card Header */}
+                                                    <div className="flex justify-between items-start gap-4">
+                                                        <div className="flex gap-3">
+                                                            <div className="w-10 h-10 rounded-xl bg-muted/60 border border-border/60 flex items-center justify-center text-sm font-semibold text-foreground font-mono select-none shrink-0">
+                                                                {rec.job_postings.company.charAt(0)}
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="text-sm font-semibold text-foreground group-hover:text-violet-500 transition-colors">
+                                                                    {rec.job_postings.title}
+                                                                </h3>
+                                                                <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground">
+                                                                    <Building2 className="h-3 w-3 text-muted-foreground" />
+                                                                    <span className="font-medium text-muted-foreground">{rec.job_postings.company}</span>
+                                                                    <span>•</span>
+                                                                    <span className="capitalize">{rec.job_postings.experience_level}</span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div className={`flex flex-col items-center justify-center w-16 h-16 rounded-2xl border backdrop-blur-md transition-all duration-300 ${getMatchColor(rec.match_score)}`}>
-                                                        <span className="text-xl font-bold">{rec.match_score}%</span>
-                                                        <span className="text-[10px] font-semibold uppercase tracking-widest opacity-70">Fit</span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex flex-wrap gap-2 mt-6">
-                                                    <Badge variant="outline" className="bg-white/5 border-white/10 hover:border-white/20 text-zinc-300 transition-colors py-1.5">
-                                                        <MapPin className="h-3 w-3 mr-1.5 text-zinc-500" />
-                                                        {rec.job_postings.location}
-                                                    </Badge>
-                                                    {rec.job_postings.salary_range && (
-                                                        <Badge variant="outline" className="bg-white/5 border-white/10 hover:border-white/20 text-emerald-400 transition-colors py-1.5">
-                                                            <DollarSign className="h-3 w-3 mr-1" />
-                                                            {rec.job_postings.salary_range}
-                                                        </Badge>
-                                                    )}
-                                                    {rec.job_postings.remote_ok && (
-                                                        <Badge className="bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 border-violet-500/20 py-1.5">
-                                                            Remote
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                            </CardHeader>
-
-                                            <CardContent className="relative z-10 flex-1 flex flex-col pt-6 gap-6">
-                                                {/* Match Analysis */}
-                                                <div className="space-y-4">
-                                                    <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-900/10 to-transparent border-l-2 border-emerald-500/30">
-                                                        <h4 className="text-sm font-semibold text-emerald-400 mb-3 flex items-center gap-2">
-                                                            <CheckCircle2 className="h-4 w-4" />
-                                                            Why You Match
-                                                        </h4>
-                                                        <div className="space-y-2">
-                                                            {rec.match_reasons.slice(0, 3).map((reason, idx) => (
-                                                                <div key={idx} className="flex items-start gap-2.5 text-sm text-zinc-300">
-                                                                    <div className="min-w-[4px] h-[4px] mt-2 rounded-full bg-emerald-500/50" />
-                                                                    <span className="leading-snug">{reason}</span>
-                                                                </div>
-                                                            ))}
+                                                        
+                                                        {/* Fit Badge */}
+                                                        <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide shrink-0 ${getMatchStyle(rec.match_score)}`}>
+                                                            <span className="relative flex h-1.5 w-1.5">
+                                                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${getDotColor(rec.match_score)}`}></span>
+                                                                <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${getDotColor(rec.match_score)}`}></span>
+                                                            </span>
+                                                            <span>{rec.match_score}% Fit</span>
                                                         </div>
                                                     </div>
 
-                                                    {rec.skill_gaps && rec.skill_gaps.length > 0 && (
-                                                        <div className="p-4 rounded-xl bg-gradient-to-r from-amber-900/10 to-transparent border-l-2 border-amber-500/30">
-                                                            <h4 className="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
-                                                                <TrendingUp className="h-4 w-4" />
-                                                                Growth Areas
-                                                            </h4>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {rec.skill_gaps.slice(0, 3).map((gap, idx) => (
-                                                                    <Badge key={idx} variant="secondary" className="bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border-0">
-                                                                        {gap.skill}
-                                                                        <span className="ml-1.5 opacity-50 text-[10px]">
-                                                                             • {gap.estimated_time}
-                                                                        </span>
-                                                                    </Badge>
+                                                    {/* Details Metadata */}
+                                                    <div className="flex flex-wrap gap-x-3 gap-y-1.5 items-center mt-3 text-[11px] text-muted-foreground">
+                                                        <span className="flex items-center gap-1">
+                                                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                                                            {rec.job_postings.location}
+                                                        </span>
+                                                        {rec.job_postings.salary_range && (
+                                                            <>
+                                                                <span className="text-muted-foreground/40">•</span>
+                                                                <span className="flex items-center gap-1 text-emerald-500 font-medium">
+                                                                    <DollarSign className="h-3 w-3" />
+                                                                    {rec.job_postings.salary_range}
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                        {rec.job_postings.remote_ok && (
+                                                            <>
+                                                                <span className="text-muted-foreground/40">•</span>
+                                                                <span className="px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-500 dark:text-violet-400 border border-violet-500/20 font-medium">
+                                                                    Remote
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Details / Gaps Analysis */}
+                                                    <div className="space-y-4 py-4 border-t border-border/50 mt-4 flex-1">
+                                                        {/* Why Match */}
+                                                        <div className="space-y-2">
+                                                            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 select-none">
+                                                                <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                                                Match Analysis
+                                                            </span>
+                                                            <div className="space-y-1.5 pl-5">
+                                                                {rec.match_reasons.slice(0, 2).map((reason, idx) => (
+                                                                    <div key={idx} className="flex items-start gap-2 text-xs text-foreground/80 leading-relaxed">
+                                                                        <div className="w-1 h-1 rounded-full bg-border mt-1.5 shrink-0" />
+                                                                        <span>{reason}</span>
+                                                                    </div>
                                                                 ))}
                                                             </div>
                                                         </div>
-                                                    )}
-                                                </div>
 
-                                                <div className="mt-auto pt-6 flex flex-wrap gap-3 border-t border-white/5">
-                                                    <Button 
-                                                        onClick={() => createCareerPlan(rec)} 
-                                                        className="flex-1 bg-white text-black hover:bg-zinc-200"
-                                                    >
-                                                        <TrendingUp className="h-4 w-4 mr-2" />
-                                                        Career Plan
-                                                    </Button>
-                                                    {rec.job_postings.application_url && (
-                                                        <Button variant="outline" asChild className="flex-1 border-white/10 hover:bg-white/5 text-white">
-                                                            <a href={rec.job_postings.application_url} target="_blank" rel="noopener noreferrer">
-                                                                <ExternalLink className="h-4 w-4 mr-2" />
-                                                                Apply
-                                                            </a>
-                                                        </Button>
-                                                    )}
-                                                    <div className="flex gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="icon"
-                                                            onClick={() => updateStatus(rec.id, "saved")}
-                                                            className={`border-white/10 hover:bg-white/5 ${rec.status === 'saved' ? 'text-violet-400 border-violet-500/30 bg-violet-500/10' : 'text-zinc-400'}`}
-                                                        >
-                                                            <BookmarkPlus className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="icon"
-                                                            onClick={() => updateStatus(rec.id, "rejected")}
-                                                            className="border-white/10 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 text-zinc-400"
-                                                        >
-                                                            <X className="h-4 w-4" />
-                                                        </Button>
+                                                        {/* Growth Areas */}
+                                                        {rec.skill_gaps && rec.skill_gaps.length > 0 && (
+                                                            <div className="space-y-2 pt-2 border-t border-border/30">
+                                                                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 select-none">
+                                                                    <Target className="h-3 w-3 text-amber-500" />
+                                                                    Growth Signals
+                                                                </span>
+                                                                <div className="flex flex-wrap gap-1.5 pl-5">
+                                                                    {rec.skill_gaps.slice(0, 3).map((gap, idx) => (
+                                                                        <span 
+                                                                            key={idx} 
+                                                                            className="inline-flex items-center gap-1 text-[10px] text-foreground/85 bg-muted/40 border border-border/60 px-2 py-0.5 rounded-md"
+                                                                        >
+                                                                            {gap.skill}
+                                                                            <span className="text-[9px] text-muted-foreground/60">({gap.estimated_time})</span>
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                        </div>
-                    </>
-                )}
+
+                                                    {/* Actions Block */}
+                                                    <div className="pt-4 border-t border-border/50 flex gap-2 items-center">
+                                                        <Button 
+                                                            onClick={() => createCareerPlan(rec)} 
+                                                            variant="outline"
+                                                            className="flex-1 h-9 rounded-lg border-border/80 hover:bg-muted text-xs font-semibold text-muted-foreground hover:text-foreground transition-all bg-card/40"
+                                                        >
+                                                            <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-violet-500" />
+                                                            Career Path
+                                                        </Button>
+                                                        {rec.job_postings.application_url && (
+                                                            <Button 
+                                                                variant="outline" 
+                                                                asChild 
+                                                                className="flex-1 h-9 rounded-lg border-border/80 hover:bg-muted text-xs font-semibold text-muted-foreground hover:text-foreground transition-all bg-card/40"
+                                                            >
+                                                                <a href={rec.job_postings.application_url} target="_blank" rel="noopener noreferrer">
+                                                                    <ExternalLink className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                                                                    Apply
+                                                                </a>
+                                                            </Button>
+                                                        )}
+                                                        <div className="flex items-center gap-1.5 ml-1 shrink-0">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => updateStatus(rec.id, "saved")}
+                                                                className={`w-9 h-9 rounded-lg border border-border/80 hover:bg-muted hover:text-foreground ${rec.status === 'saved' ? 'text-violet-500 border-violet-500/20 bg-violet-500/5' : 'text-muted-foreground'}`}
+                                                            >
+                                                                <BookmarkPlus className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => updateStatus(rec.id, "rejected")}
+                                                                className="w-9 h-9 rounded-lg border border-border/80 hover:bg-red-500/5 hover:text-red-500 hover:border-red-500/10 text-muted-foreground transition-colors"
+                                                            >
+                                                                <X className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+
+                                                </Card>
+                                            </motion.div>
+                                        ))}
+                                    </AnimatePresence>
+                                </div>
+                            </>
+                        )}
                     </main>
                 </div>
             </div>

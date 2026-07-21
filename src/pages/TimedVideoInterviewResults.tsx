@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { LogOut, ArrowLeft, Clock, Award, CheckCircle2, AlertCircle, Play, Eye, TrendingUp, Mic, Languages } from "lucide-react";
+import { LogOut, ArrowLeft, Clock, Award, CheckCircle2, AlertCircle, Play } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
@@ -16,9 +16,6 @@ interface InterviewSession {
     overall_score: number;
     status: string;
     created_at: string;
-    body_language_summary?: string;
-    eye_contact_summary?: string;
-    confidence_summary?: string;
 }
 
 interface InterviewAnswer {
@@ -237,115 +234,6 @@ const TimedVideoInterviewResults = () => {
                                 </div>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
-
-                {/* Overall Summary Details */}
-                {(session.body_language_summary || session.eye_contact_summary || session.confidence_summary) && (
-                    <div className="grid md:grid-cols-3 gap-6 mb-8">
-                        <Card className="bg-purple-500/5 border-purple-500/20 backdrop-blur-xl">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-base flex items-center gap-2">
-                                    <Eye className="w-5 h-5 text-purple-500" />
-                                    Eye Contact
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {session.eye_contact_summary || "No eye contact feedback available."}
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-blue-500/5 border-blue-500/20 backdrop-blur-xl">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-base flex items-center gap-2">
-                                    <TrendingUp className="w-5 h-5 text-blue-500" />
-                                    Body Language
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {session.body_language_summary || "No body language feedback available."}
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-green-500/5 border-green-500/20 backdrop-blur-xl">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-base flex items-center gap-2">
-                                    <Mic className="w-5 h-5 text-green-500" />
-                                    Confidence & Delivery
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {session.confidence_summary || "No confidence feedback available."}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                )}
-
-                {/* English Speaking & Fluency Analysis Section */}
-                <Card className="bg-violet-500/5 border-violet-500/20 mb-8">
-                    <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <Languages className="w-5 h-5 text-violet-500" />
-                            English Speaking & Fluency Analysis
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {session.analysis_result && (session.analysis_result as any).english_analysis ? (
-                            <>
-                                {/* Scores Grid */}
-                                <div className="grid md:grid-cols-3 gap-4">
-                                    <div className="p-4 rounded-xl bg-background/50 border border-border/50">
-                                        <div className="text-xs text-muted-foreground mb-1 font-semibold uppercase">Grammar & Correctness</div>
-                                        <div className="flex items-end gap-1.5 mb-2">
-                                            <span className={`text-2xl font-bold ${getScoreColor((session.analysis_result as any).english_analysis.grammar_score || 0)}`}>
-                                                {(session.analysis_result as any).english_analysis.grammar_score || 0}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground mb-1">/100</span>
-                                        </div>
-                                        <Progress value={(session.analysis_result as any).english_analysis.grammar_score || 0} className="h-1.5" />
-                                    </div>
-
-                                    <div className="p-4 rounded-xl bg-background/50 border border-border/50">
-                                        <div className="text-xs text-muted-foreground mb-1 font-semibold uppercase">Vocabulary Range</div>
-                                        <div className="flex items-end gap-1.5 mb-2">
-                                            <span className={`text-2xl font-bold ${getScoreColor((session.analysis_result as any).english_analysis.vocabulary_score || 0)}`}>
-                                                {(session.analysis_result as any).english_analysis.vocabulary_score || 0}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground mb-1">/100</span>
-                                        </div>
-                                        <Progress value={(session.analysis_result as any).english_analysis.vocabulary_score || 0} className="h-1.5" />
-                                    </div>
-
-                                    <div className="p-4 rounded-xl bg-background/50 border border-border/50">
-                                        <div className="text-xs text-muted-foreground mb-1 font-semibold uppercase">Pronunciation & Flow</div>
-                                        <div className="flex items-end gap-1.5 mb-2">
-                                            <span className={`text-2xl font-bold ${getScoreColor((session.analysis_result as any).english_analysis.pronunciation_score || 0)}`}>
-                                                {(session.analysis_result as any).english_analysis.pronunciation_score || 0}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground mb-1">/100</span>
-                                        </div>
-                                        <Progress value={(session.analysis_result as any).english_analysis.pronunciation_score || 0} className="h-1.5" />
-                                    </div>
-                                </div>
-
-                                {/* Feedback summary */}
-                                {(session.analysis_result as any).english_analysis.feedback && (
-                                    <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-muted-foreground text-sm leading-relaxed">
-                                        {(session.analysis_result as any).english_analysis.feedback}
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <p className="text-sm text-muted-foreground italic">
-                                Speaking analysis is not available for this session. Complete a new video interview to generate detailed English proficiency feedback.
-                            </p>
-                        )}
                     </CardContent>
                 </Card>
 

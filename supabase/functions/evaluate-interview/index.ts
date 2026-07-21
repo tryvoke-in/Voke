@@ -113,15 +113,6 @@ Deno.serve(async (req: Request) => {
     - High-Output Collaborator (IQ+SQ+AQ)
     - The Stabiliser (EQ+SQ+AQ)
 
-    **STEP 4: ENGLISH SPEAKING & FLUENCY ANALYSIS (MANDATORY)**
-    Evaluate the candidate's spoken English skills from the transcript.
-    Analyze grammatical correctness, vocabulary range, and fluency/coherence.
-    Include these details under the "english_analysis" key:
-    - pronunciation_score: number (0-100) for speaking flow, pause structures, and phonetics.
-    - vocabulary_score: number (0-100) for vocabulary range and correctness of term usage.
-    - grammar_score: number (0-100) for sentence structure and grammatical correctness.
-    - feedback: A 2-3 sentence summary evaluating their speaking strengths and specific tips to improve.
-
     **OUTPUT SCHEMA (JSON Only):**
     {
       "score": number (0-100),
@@ -136,13 +127,7 @@ Deno.serve(async (req: Request) => {
       "six_q_score": {
         "iq": number, "eq": number, "cq": number, "aq": number, "sq": number, "mq": number
       },
-      "personality_cluster": "Cluster Name from list",
-      "english_analysis": {
-        "pronunciation_score": number,
-        "vocabulary_score": number,
-        "grammar_score": number,
-        "feedback": "string"
-      }
+      "personality_cluster": "Cluster Name from list"
     }`;
 
     // Format messages for Groq
@@ -224,19 +209,9 @@ Deno.serve(async (req: Request) => {
                     },
                     required: ["iq", "eq", "cq", "aq", "sq", "mq"]
                   },
-                  personality_cluster: { type: "STRING" },
-                  english_analysis: {
-                    type: "OBJECT",
-                    properties: {
-                      pronunciation_score: { type: "INTEGER" },
-                      vocabulary_score: { type: "INTEGER" },
-                      grammar_score: { type: "INTEGER" },
-                      feedback: { type: "STRING" }
-                    },
-                    required: ["pronunciation_score", "vocabulary_score", "grammar_score", "feedback"]
-                  }
+                  personality_cluster: { type: "STRING" }
                 },
-                required: ["score", "feedback", "strengths", "weaknesses", "metrics", "six_q_score", "personality_cluster", "english_analysis"]
+                required: ["score", "feedback", "strengths", "weaknesses", "metrics", "six_q_score", "personality_cluster"]
               }
             }
           }),

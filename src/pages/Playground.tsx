@@ -192,9 +192,13 @@ const Playground = () => {
     const [searchParams] = useSearchParams();
     const questionTitle = searchParams.get("title");
     const questionCompany = searchParams.get("company");
+    const questionIdParam = searchParams.get("questionId");
+    const fromDsaSheet = searchParams.get("from") === "dsa-sheet";
     const [questionDifficulty] = useState(searchParams.get("difficulty"));
     const [problemDescription, setProblemDescription] = useState<string>("");
     const [activeTab, setActiveTab] = useState<"problem" | "chat">("problem");
+    const [isSolvedLocally, setIsSolvedLocally] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [language, setLanguage] = useState<Language>('python');
     const [code, setCode] = useState("print('Hello from Python!')");
@@ -509,52 +513,107 @@ It seems I couldn't reach the main server, but here is a static analysis based o
         }
     };
 
+    // Mark as Solved (for DSA Sheet flow)
+    const handleMarkAsSolved = async () => {
+        if (!questionIdParam) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { toast.error("Please login first"); return; }
+
+        const { error } = await supabase
+            .from('solved_questions' as any)
+            .upsert({
+                user_id: user.id,
+                question_id: parseInt(questionIdParam),
+                question_title: questionTitle || "",
+                difficulty: questionDifficulty || "Medium",
+                platform_url: ""
+            }, { onConflict: 'user_id,question_id' });
+
+        if (!error) {
+            setIsSolvedLocally(true);
+            toast.success(`✅ "${questionTitle}" marked as solved!`, {
+                description: "Your progress has been saved. Returning to DSA Sheet...",
+                duration: 3000,
+            });
+            setTimeout(() => navigate("/dsa-sheet"), 1500);
+        } else {
+            toast.error("Failed to save progress. Please try again.");
+        }
+    };
+
+    // AI Judge to Verify Solution
+    const handleSubmitCode = async () => {
+        if (!questionIdParam || isSubmitting) return;
+        setIsSubmitting(true);
+        setActiveTab("chat");
+        
+        toast.info("🤖 AI Judge is verifying your solution...");
+        
+        try {
+            const { data, error } = await supabase.functions.invoke("interview-coach-chat", {
+                body: {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `You are a strict automated code judge (like LeetCode).
+                            The user is trying to solve the problem: "${questionTitle}".
+                            Their code is written in ${language}:
+                            \`\`\`
+                            ${code}
+                            \`\`\`
+                            
+                            Evaluate if the code correctly solves the problem for all typical test cases and edge cases.
+                            Return ONLY a JSON response in this exact format, with no markdown formatting or extra text:
+                            {"passed": true/false, "feedback": "Brief explanation of why it passed or failed, including specific test cases if it failed."}
+                            `
+                        }
+                    ]
+                }
+            });
+
+            if (error) throw error;
+            
+            let result;
+            try {
+                // Parse the response which should be JSON
+                const cleanResponse = data.response.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+                result = JSON.parse(cleanResponse);
+            } catch (e) {
+                console.error("Failed to parse judge response", data.response);
+                throw new Error("Invalid judge response");
+            }
+
+            if (result.passed) {
+                // Add success message to chat
+                setMessages(prev => [...prev, { 
+                    role: 'assistant', 
+                    content: `🎉 **Success!** Your solution passed all test cases.\n\n**Judge Feedback:** ${result.feedback}` 
+                }]);
+                
+                // Mark as solved
+                await handleMarkAsSolved();
+            } else {
+                // Add failure message to chat
+                setMessages(prev => [...prev, { 
+                    role: 'assistant', 
+                    content: `❌ **Test Cases Failed.**\n\n**Judge Feedback:** ${result.feedback}` 
+                }]);
+                toast.error("Code did not pass all test cases. Check the AI Assistant tab for details.");
+            }
+        } catch (err) {
+            console.error("Verification error:", err);
+            toast.error("Failed to verify code. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-[#0d1117] flex flex-col items-center justify-center relative overflow-hidden font-mono">
-                {/* Background Effects */}
-                <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/10 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/10 rounded-full blur-[120px]" />
-                </div>
-
-                <div className="relative z-10 flex flex-col items-center">
-                    <div className="w-24 h-24 mb-8 relative flex items-center justify-center">
-                        {/* Hexagon Frame */}
-                        <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-0 border-2 border-dashed border-indigo-500/30 rounded-full"
-                        />
-                        <motion.div
-                            animate={{ scale: [1, 1.1, 1] }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                            className="relative z-10 p-4 bg-[#161b22] rounded-xl border border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.2)]"
-                        >
-                            <Terminal className="w-10 h-10 text-indigo-400" />
-                        </motion.div>
-                    </div>
-
-                    <h2 className="text-2xl font-bold text-gray-200 mb-2 tracking-tight">
-                        VOKE <span className="text-indigo-400">DEV</span>
-                    </h2>
-
-                    <div className="flex flex-col items-center gap-1 text-xs text-gray-400">
-                        <motion.div
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            {'>'} INITIALIZING_CONTAINER...
-                        </motion.div>
-                        <motion.div
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.8, duration: 0.5 }}
-                        >
-                            {'>'} LOADING_RUNTIMES... [OK]
-                        </motion.div>
-                    </div>
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 border-t-2 border-violet-500 rounded-full animate-spin"></div>
+                    <div className="absolute inset-3 border-t-2 border-fuchsia-500 rounded-full animate-spin-reverse"></div>
                 </div>
             </div>
         );
@@ -572,7 +631,7 @@ It seems I couldn't reach the main server, but here is a static analysis based o
                         variant="ghost"
                         size="icon"
                         className="h-9 w-9 text-gray-400 hover:text-white hover:bg-[#2d333b] rounded-full transition-all duration-300"
-                        onClick={() => navigate("/dashboard")}
+                        onClick={() => navigate(fromDsaSheet ? "/dsa-sheet" : "/dashboard")}
                     >
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
@@ -597,6 +656,29 @@ It seems I couldn't reach the main server, but here is a static analysis based o
                 </div>
 
                 <div className="flex items-center gap-3 relative z-10">
+                    {/* Submit & Verify Button — only shown when coming from DSA Sheet */}
+                    {fromDsaSheet && questionIdParam && (
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleSubmitCode}
+                            disabled={isSolvedLocally || isSubmitting}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                                isSolvedLocally
+                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
+                                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] border border-emerald-500/30'
+                            }`}
+                        >
+                            {isSubmitting ? (
+                                <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Verifying...</>
+                            ) : (
+                                <><Check className="w-3.5 h-3.5" /> {isSolvedLocally ? 'Solved! ✓' : 'Run & Verify Tests'}</>
+                            )}
+                        </motion.button>
+                    )}
+
                     <div className="flex items-center bg-[#21262d] rounded-lg p-1 border border-[#30363d]">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#30363d] rounded-md transition-colors" onClick={() => setCode(TEMPLATES[language])}>
                             <RotateCcw className="h-4 w-4" />
