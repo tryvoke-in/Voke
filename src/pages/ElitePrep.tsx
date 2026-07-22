@@ -99,11 +99,11 @@ const ElitePrep: React.FC = () => {
         return;
       }
 
-      // Add timeout to prevent hanging if auth is stuck
-      const userPromise = supabase.auth.getUser();
+      // Use getSession for instant local resolution instead of network-dependent getUser
+      const userPromise = supabase.auth.getSession();
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000));
       const authResult = await Promise.race([userPromise, timeoutPromise]) as any;
-      const user = authResult?.data?.user;
+      const user = authResult?.data?.session?.user;
 
       if (!user) {
         toast.error('You must be logged in to proceed.');
