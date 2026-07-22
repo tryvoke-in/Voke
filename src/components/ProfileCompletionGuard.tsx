@@ -38,11 +38,13 @@ export const ProfileCompletionGuard = ({ children }: { children: React.ReactNode
                 if (error) throw error;
 
                 if (active) {
+                    clearTimeout(timeoutId); // FIX: Prevent the timeout from firing if session resolved!
                     setLoading(false);
                 }
             } catch (error) {
                 console.error("[ProfileCompletionGuard] Error checking session:", error);
                 if (active) {
+                    clearTimeout(timeoutId); // FIX: Prevent the timeout from firing on error too!
                     setLoading(false);
                 }
             }
