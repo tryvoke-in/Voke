@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { AudioVisualizerSimple } from '@/components/AudioVisualizerSimple';
 import { LiveStatus, MessageLog } from '@/types/voice';
-import { Mic, X, MessageSquare, Sparkles, AlertCircle, ArrowLeft, Code, Play, Send, Maximize2, Minimize2, FileText, LogOut } from 'lucide-react';
+import { Mic, X, MessageSquare, Sparkles, AlertCircle, ArrowLeft, Code, Play, Send, Maximize2, Minimize2, FileText, LogOut, Video, VideoOff, Camera, User, Briefcase, Building, Layers, Award, Target, Settings, ChevronRight, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,29 @@ const VoiceAssistant: React.FC = () => {
     const [loadingContext, setLoadingContext] = useState(true);
     const [interviewMode, setInterviewMode] = useState<'voice' | 'coding'>('voice');
 
+    // Pre-Interview Setup / Configuration State
+    const [isConfigured, setIsConfigured] = useState<boolean>(false);
+    const [targetRole, setTargetRole] = useState<string>("Software Engineer");
+    const [customRole, setCustomRole] = useState<string>("");
+    const [selectedDomain, setSelectedDomain] = useState<string>("Full Stack & Web");
+    const [interviewType, setInterviewType] = useState<string>("Full Mock Interview");
+    const [targetCompany, setTargetCompany] = useState<string>("Top Tech Company");
+    const [customCompany, setCustomCompany] = useState<string>("");
+    const [experienceLevel, setExperienceLevel] = useState<string>("Mid-Level (2-5 yrs)");
+    const [candidateProfileName, setCandidateProfileName] = useState<string>("Candidate");
+    const [githubProjectsText, setGithubProjectsText] = useState<string>("");
+
+    // Video & Camera state
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const miniVideoRef = useRef<HTMLVideoElement>(null);
+    const mediaStreamRef = useRef<MediaStream | null>(null);
+    const videoRecorderRef = useRef<MediaRecorder | null>(null);
+    const videoChunksRef = useRef<Blob[]>([]);
+    
+    const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
+    const [hasCameraPermission, setHasCameraPermission] = useState<boolean>(false);
+    const [isRecordingVideo, setIsRecordingVideo] = useState<boolean>(false);
+
     // Coding State
     const [code, setCode] = useState<string>("# Write your solution here\ndef solve():\n    pass");
     const [codeOutput, setCodeOutput] = useState<string>("");
@@ -54,12 +77,111 @@ const VoiceAssistant: React.FC = () => {
         scrollToBottom();
     }, [logs]);
 
-    // Cleanup on unmount (e.g. browser back button)
+    // Camera setup & stream management
+    const startCamera = async () => {
+        try {
+            console.log('[VoiceAssistant] Requesting camera and mic access...');
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+                audio: true
+            });
+            mediaStreamRef.current = stream;
+            setHasCameraPermission(true);
+            setIsCameraOn(true);
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+            if (miniVideoRef.current) {
+                miniVideoRef.current.srcObject = stream;
+            }
+        } catch (err) {
+            console.warn('[VoiceAssistant] Camera/Mic access denied or error:', err);
+            setHasCameraPermission(false);
+        }
+    };
+
+    const stopCamera = () => {
+        if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach(track => track.stop());
+            mediaStreamRef.current = null;
+        }
+        setHasCameraPermission(false);
+    };
+
+    const toggleCamera = () => {
+        if (mediaStreamRef.current) {
+            const videoTracks = mediaStreamRef.current.getVideoTracks();
+            if (videoTracks.length > 0) {
+                const nextState = !videoTracks[0].enabled;
+                videoTracks[0].enabled = nextState;
+                setIsCameraOn(nextState);
+            }
+        }
+    };
+
+    const startVideoRecording = () => {
+        if (!mediaStreamRef.current) return;
+        try {
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                ? 'video/webm;codecs=vp9'
+                : MediaRecorder.isTypeSupported('video/webm')
+                ? 'video/webm'
+                : 'video/mp4';
+
+            const recorder = new MediaRecorder(mediaStreamRef.current, { mimeType });
+            videoChunksRef.current = [];
+
+            recorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    videoChunksRef.current.push(e.data);
+                }
+            };
+
+            recorder.start(1000);
+            videoRecorderRef.current = recorder;
+            setIsRecordingVideo(true);
+            console.log('[VoiceAssistant] Video recording started.');
+        } catch (e) {
+            console.error('Failed to start candidate video recorder:', e);
+        }
+    };
+
+    const stopVideoRecording = (): Blob | null => {
+        if (videoRecorderRef.current && videoRecorderRef.current.state !== 'inactive') {
+            videoRecorderRef.current.stop();
+            setIsRecordingVideo(false);
+            if (videoChunksRef.current.length > 0) {
+                const mimeType = videoRecorderRef.current.mimeType || 'video/webm';
+                return new Blob(videoChunksRef.current, { type: mimeType });
+            }
+        }
+        return null;
+    };
+
     useEffect(() => {
         return () => {
+            stopCamera();
             disconnect();
         };
     }, [disconnect]);
+
+    useEffect(() => {
+        if (videoRef.current && mediaStreamRef.current) {
+            videoRef.current.srcObject = mediaStreamRef.current;
+        }
+        if (miniVideoRef.current && mediaStreamRef.current) {
+            miniVideoRef.current.srcObject = mediaStreamRef.current;
+        }
+    }, [hasCameraPermission, interviewMode, status, isConfigured]);
+
+    // Handle recording trigger on status change
+    useEffect(() => {
+        if (status === LiveStatus.CONNECTED) {
+            startVideoRecording();
+        } else if (status === LiveStatus.DISCONNECTED) {
+            stopVideoRecording();
+        }
+    }, [status]);
 
     // Monitor logs for transition tokens and feedback
     useEffect(() => {
@@ -96,11 +218,10 @@ const VoiceAssistant: React.FC = () => {
                     if (parts.length > 1) {
                         const feedbackContent = parts[1].trim();
                         setFeedback(feedbackContent);
-                        // Optional: automatically show feedback panel or toast
                         toast("New feedback available!", {
                             action: {
                                 label: "View",
-                                onClick: () => console.log("Feedback clicked") // Could open a modal
+                                onClick: () => console.log("Feedback clicked")
                             }
                         });
                     }
@@ -143,7 +264,6 @@ const VoiceAssistant: React.FC = () => {
         try {
             console.log('[VoiceAssistant] Starting loadUserContext...');
             const { data: { user } } = await supabase.auth.getUser();
-            console.log('[VoiceAssistant] User:', user?.id);
 
             if (!user) {
                 console.error('[VoiceAssistant] No user found, redirecting to auth');
@@ -151,14 +271,14 @@ const VoiceAssistant: React.FC = () => {
                 return;
             }
 
-            const { data: profile, error: profileError } = await supabase
+            const { data: profile } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
                 .single();
 
             if (profile) {
-                let context = `User Name: ${profile.full_name || 'Candidate'}\n`;
+                setCandidateProfileName(profile.full_name || 'Candidate');
 
                 if (profile.github_url) {
                     try {
@@ -177,7 +297,6 @@ const VoiceAssistant: React.FC = () => {
                             );
 
                             if ((reposResponse.status === 401 || reposResponse.status === 403) && githubToken) {
-                                console.warn('[VoiceAssistant] Public request failed or token required. Retrying with token...');
                                 const authHeaders = { ...headers, 'Authorization': `token ${githubToken}` };
                                 reposResponse = await fetch(
                                     `https://api.github.com/users/${username}/repos?sort=updated&per_page=3`,
@@ -192,24 +311,46 @@ const VoiceAssistant: React.FC = () => {
                                         return `Project: ${repo.name}\n- Description: ${repo.description || 'No description'}\n- Tech: ${repo.language || 'Not specified'}`;
                                     })
                                 );
-                                context += `\nGITHUB PROJECTS:\n${projectSummaries.join('\n\n')}\n`;
+                                setGithubProjectsText(`GITHUB PROJECTS:\n${projectSummaries.join('\n\n')}`);
                             }
                         }
                     } catch (e) {
                         console.error('GitHub fetch failed', e);
                     }
                 }
-
-                context += `\nINSTRUCTION: You are conducting a technical interview. Start with introductions and behavioral questions. When you feel ready to test their coding skills, say "[START_CODING]" and present a problem.`;
-                setUserContext(context);
             }
         } catch (error) {
             console.error('[VoiceAssistant] Error loading context:', error);
             toast.error('Failed to load profile context');
-            setUserContext('User Name: Candidate\nINSTRUCTION: Greet the user and ask them a creative, unconventional interview question.');
         } finally {
             setLoadingContext(false);
         }
+    };
+
+    const handleStartConfiguredInterview = async () => {
+        const activeRole = customRole.trim() || targetRole;
+        const activeCompany = customCompany.trim() || targetCompany;
+
+        let context = `Candidate Name: ${candidateProfileName}\n`;
+        context += `TARGET JOB ROLE: ${activeRole}\n`;
+        context += `DOMAIN/SPECIALIZATION: ${selectedDomain}\n`;
+        context += `INTERVIEW FOCUS: ${interviewType}\n`;
+        context += `TARGET COMPANY: ${activeCompany}\n`;
+        context += `EXPERIENCE LEVEL: ${experienceLevel}\n`;
+
+        if (githubProjectsText) {
+            context += `\n${githubProjectsText}\n`;
+        }
+
+        context += `\nINSTRUCTION: You are an expert lead interviewer at ${activeCompany}. You are conducting a realistic ${interviewType} for a candidate applying as a ${experienceLevel} ${activeRole} specializing in ${selectedDomain}. Conduct a professional, realistic interview: start with warm introductions and 2-3 tailored behavioral/screening questions for this exact role and level. When you feel ready to test their coding skills, say "[START_CODING]" and present a coding challenge suitable for a ${activeRole}.`;
+
+        setUserContext(context);
+        setIsConfigured(true);
+
+        if (!hasCameraPermission) {
+            await startCamera();
+        }
+        connect(context);
     };
 
     const handleEndInterview = async () => {
@@ -219,8 +360,12 @@ const VoiceAssistant: React.FC = () => {
         }
 
         disconnect();
+        const videoBlob = stopVideoRecording();
         const toastId = toast.loading("Saving session...");
         setIsSaving(true);
+
+        const activeRole = customRole.trim() || targetRole;
+        const activeCompany = customCompany.trim() || targetCompany;
 
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -230,11 +375,11 @@ const VoiceAssistant: React.FC = () => {
                 .from('interview_sessions')
                 .insert({
                     user_id: user.id,
-                    role: 'Voice Interviewer',
-                    time_limit_minutes: 0,
+                    role: `${activeRole} (${activeCompany})`,
+                    time_limit_minutes: Math.ceil(duration / 60) || 1,
                     status: 'completed',
-                    interview_type: 'voice',
-                    interview_mode: 'voice', // could update to 'mixed' if coding happened
+                    interview_type: 'pro_interview',
+                    interview_mode: interviewMode === 'coding' ? 'mixed' : 'pro_interview',
                     transcript: logs,
                     total_duration_seconds: duration,
                     created_at: new Date().toISOString()
@@ -244,7 +389,7 @@ const VoiceAssistant: React.FC = () => {
 
             if (error) throw error;
 
-            toast.loading("Analyzing session...", { id: toastId });
+            toast.loading("Analyzing session performance...", { id: toastId });
 
             // Trigger analysis
             try {
@@ -278,7 +423,7 @@ const VoiceAssistant: React.FC = () => {
                     const { data: remoteEval, error: evalError } = await supabase.functions.invoke('evaluate-interview', {
                         body: { 
                             messages: formattedMessages,
-                            interview_type: "Voice Interview"
+                            interview_type: `Pro Interview - ${activeRole}`
                         }
                     });
 
@@ -287,7 +432,6 @@ const VoiceAssistant: React.FC = () => {
                 }
 
                 if (evaluation) {
-                    // Update the session with the evaluation results
                     await supabase
                         .from('interview_sessions')
                         .update({
@@ -305,13 +449,11 @@ const VoiceAssistant: React.FC = () => {
                 }
             } catch (evalError) {
                 console.error("Evaluation trigger failed:", evalError);
-                // Continue anyway so user can see what IS there
             }
 
             toast.dismiss(toastId);
-            toast.success("Session saved!");
+            toast.success("Pro Interview session saved successfully!");
             
-            // Navigate first so we don't display the InterviewGate lock screen prematurely
             navigate(`/voice-interview/results/${data.id}`);
             await consumeCredit();
 
@@ -324,18 +466,13 @@ const VoiceAssistant: React.FC = () => {
         }
     };
 
-    const handleConnect = () => {
-        connect(userContext);
-    };
-
-    // Code Execution
     const handleRunCode = async () => {
         setIsRunning(true);
         setCodeOutput("Running...");
         try {
             await executeCode(code, 'python',
                 (log) => setCodeOutput(prev => prev === "Running..." ? log : prev + log),
-                () => { }, // No input support for now in this mini-editor
+                () => { },
                 ""
             );
         } catch (err: any) {
@@ -358,18 +495,23 @@ const VoiceAssistant: React.FC = () => {
         }
     };
 
-    const isError = status === LiveStatus.ERROR;
     const isConnected = status === LiveStatus.CONNECTED;
 
     return (
         <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
 
             {/* Header / Nav */}
-            <div className="absolute top-4 left-4 z-50">
+            <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
                 <Button variant="ghost" className="text-white hover:text-white/80 hover:bg-white/10" onClick={() => navigate('/dashboard')}>
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to Dashboard
                 </Button>
+                {isConfigured && (
+                    <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10 text-xs" onClick={() => { disconnect(); setIsConfigured(false); }}>
+                        <Settings className="w-3.5 h-3.5 mr-1.5" />
+                        Setup
+                    </Button>
+                )}
             </div>
 
             {/* Background Decoration */}
@@ -395,54 +537,297 @@ const VoiceAssistant: React.FC = () => {
                             grantFeedbackCredits={grantFeedbackCredits}
                         />
                     </div>
-                ) : (
-                    <>
-                        {interviewMode === 'voice' ? (
-                    // === VOICE MODE LAYOUT ===
-                    <div className="flex-1 flex flex-col items-center justify-center p-4">
-                        <div className="w-full max-w-md flex flex-col gap-6">
-                            {/* Header Info */}
-                            <div className="text-center space-y-2">
-                                <div className="flex items-center justify-center gap-3">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground">
-                                        <Sparkles className="w-3 h-3 text-purple-400" />
-                                        <span>AI Interviewer</span>
-                                    </div>
-                                    {status === LiveStatus.CONNECTED && (
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground font-mono">
-                                            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                            <span>{formatTime(duration)}</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <h1 className="text-3xl font-bold tracking-tight text-foreground">Voice Interview</h1>
-                                <p className="text-muted-foreground text-sm">
-                                    {loadingContext ? "Loading profile..." : "Ready to interview you based on your profile."}
+                ) : !isConfigured ? (
+                    // === PRE-INTERVIEW SETUP CONFIGURATION SCREEN ===
+                    <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-4xl mx-auto w-full my-10">
+                        <div className="w-full bg-card/60 backdrop-blur-xl border border-border/80 rounded-3xl p-6 md:p-10 shadow-2xl space-y-8 animate-in fade-in zoom-in-95">
+                            
+                            {/* Header */}
+                            <div className="text-center space-y-3">
+                                
+                                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-400 via-purple-300 to-fuchsia-400 bg-clip-text text-transparent">
+                                    Pro Interview
+                                </h1>
+                                <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
+                                    Specify your target job, domain, and interview focus so your AI interviewer can conduct a realistic, tailored interview.
                                 </p>
                             </div>
 
-                            {/* Visualizer */}
-                            <div className="relative bg-card/50 border border-border rounded-3xl overflow-hidden backdrop-blur-sm shadow-2xl transition-all duration-500 min-h-[320px]">
-                                {status === LiveStatus.CONNECTING && (
-                                    <div className="absolute inset-0 flex items-center justify-center z-20 bg-background/80 backdrop-blur-sm">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                                            <span className="text-sm font-medium text-muted-foreground">Connecting...</span>
-                                        </div>
+                            {/* Form Options */}
+                            <div className="space-y-6">
+
+                                {/* 1. Target Job Role */}
+                                <div className="space-y-3">
+                                    <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                                        <Briefcase className="w-4 h-4 text-violet-400" />
+                                        Target Job Role
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[
+                                            "Software Engineer",
+                                            "Frontend Developer",
+                                            "Backend Engineer",
+                                            "Full Stack Engineer",
+                                            "Product Manager",
+                                            "Data Scientist / AI",
+                                            "DevOps & SRE",
+                                            "System Architect"
+                                        ].map((role) => (
+                                            <button
+                                                key={role}
+                                                type="button"
+                                                onClick={() => { setTargetRole(role); setCustomRole(""); }}
+                                                className={`px-3.5 py-2 rounded-xl text-xs font-medium border transition-all ${
+                                                    targetRole === role && !customRole
+                                                        ? "bg-violet-600 text-white border-violet-500 shadow-md shadow-violet-500/20"
+                                                        : "bg-muted/40 text-muted-foreground border-border hover:bg-muted/80 hover:text-foreground"
+                                                }`}
+                                            >
+                                                {role}
+                                            </button>
+                                        ))}
                                     </div>
-                                )}
-                                <AudioVisualizerSimple
-                                    isUserSpeaking={isUserSpeaking}
-                                    isAiSpeaking={isAiSpeaking}
-                                    volume={volume}
-                                />
+                                    <div className="mt-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Or type custom role (e.g. Senior iOS Developer)..."
+                                            value={customRole}
+                                            onChange={(e) => setCustomRole(e.target.value)}
+                                            className="w-full h-10 px-4 rounded-xl bg-background/50 border border-border text-sm focus:border-violet-500 outline-none transition-colors placeholder:text-muted-foreground/60 text-foreground"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* 2. Domain & Field Focus */}
+                                <div className="space-y-3">
+                                    <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                                        <Layers className="w-4 h-4 text-fuchsia-400" />
+                                        Domain & Specialization
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                        {[
+                                            { name: "Full Stack & Web", desc: "React, Node, Web Architecture" },
+                                            { name: "Backend & Systems", desc: "Microservices, Databases, Scaling" },
+                                            { name: "Frontend & UI", desc: "UI Architecture, Performance, JS/TS" },
+                                            { name: "AI, ML & Data", desc: "LLMs, Pipelines, ML Engineering" },
+                                            { name: "Product Management", desc: "Roadmaps, Metrics, User Strategy" },
+                                            { name: "System Design", desc: "Distributed Systems, High Availability" }
+                                        ].map((dom) => (
+                                            <div
+                                                key={dom.name}
+                                                onClick={() => setSelectedDomain(dom.name)}
+                                                className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                                                    selectedDomain === dom.name
+                                                        ? "bg-fuchsia-500/10 border-fuchsia-500 text-foreground shadow-md shadow-fuchsia-500/10"
+                                                        : "bg-muted/30 border-border hover:bg-muted/50 text-muted-foreground"
+                                                }`}
+                                            >
+                                                <div className="font-semibold text-xs text-foreground flex items-center justify-between">
+                                                    <span>{dom.name}</span>
+                                                    {selectedDomain === dom.name && <Check className="w-3.5 h-3.5 text-fuchsia-400" />}
+                                                </div>
+                                                <div className="text-[11px] text-muted-foreground mt-1.5">{dom.desc}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* 3. Interview Focus / Type */}
+                                <div className="space-y-3">
+                                    <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                                        <Target className="w-4 h-4 text-indigo-400" />
+                                        Interview Focus
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {[
+                                            { title: "Full Mock Interview", desc: "Behavioral screening + technical discussion + live coding" },
+                                            { title: "Technical & System Design", desc: "Deep dive into system architecture and technical concepts" },
+                                            { title: "Behavioral & Leadership", desc: "STAR method behavioral, situational, and culture questions" },
+                                            { title: "Coding Challenge Focus", desc: "Hands-on data structures, algorithms, and code review" }
+                                        ].map((type) => (
+                                            <div
+                                                key={type.title}
+                                                onClick={() => setInterviewType(type.title)}
+                                                className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                                                    interviewType === type.title
+                                                        ? "bg-indigo-500/10 border-indigo-500 text-foreground shadow-md shadow-indigo-500/10"
+                                                        : "bg-muted/30 border-border hover:bg-muted/50 text-muted-foreground"
+                                                }`}
+                                            >
+                                                <div className="font-semibold text-xs text-foreground flex items-center justify-between">
+                                                    <span>{type.title}</span>
+                                                    {interviewType === type.title && <Check className="w-3.5 h-3.5 text-indigo-400" />}
+                                                </div>
+                                                <div className="text-[11px] text-muted-foreground mt-1">{type.desc}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* 4. Target Company & Experience Level */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                                            <Building className="w-4 h-4 text-amber-400" />
+                                            Target Company / Industry
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Google, Amazon, Startup..."
+                                            value={customCompany}
+                                            onChange={(e) => setCustomCompany(e.target.value)}
+                                            className="w-full h-10 px-4 rounded-xl bg-background/50 border border-border text-sm focus:border-amber-500 outline-none transition-colors placeholder:text-muted-foreground/60 text-foreground"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                                            <Award className="w-4 h-4 text-emerald-400" />
+                                            Experience Level
+                                        </label>
+                                        <select
+                                            value={experienceLevel}
+                                            onChange={(e) => setExperienceLevel(e.target.value)}
+                                            className="w-full h-10 px-4 rounded-xl bg-background/50 border border-border text-sm focus:border-emerald-500 outline-none transition-colors text-foreground"
+                                        >
+                                            <option value="Entry Level (0-2 yrs)">Entry Level (0-2 yrs)</option>
+                                            <option value="Mid-Level (2-5 yrs)">Mid-Level (2-5 yrs)</option>
+                                            <option value="Senior Level (5+ yrs)">Senior Level (5+ yrs)</option>
+                                            <option value="Lead / Engineering Manager">Lead / Engineering Manager</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            {/* Action Submit Button */}
+                            <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/50">
+                                <div className="text-xs text-muted-foreground flex items-center gap-2">
+                                    <Video className="w-4 h-4 text-green-400" />
+                                    Webcam video and audio recording enabled.
+                                </div>
+                                <Button
+                                    onClick={handleStartConfiguredInterview}
+                                    size="lg"
+                                    className="w-full sm:w-auto bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-bold text-sm px-8 py-3 rounded-2xl shadow-xl shadow-purple-500/25 transition-all hover:scale-105"
+                                >
+                                    <Play className="w-4 h-4 mr-2 fill-white" />
+                                    Start Pro Interview
+                                </Button>
+                            </div>
+
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {interviewMode === 'voice' ? (
+                    // === VOICE & VIDEO MODE LAYOUT ===
+                    <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-6xl mx-auto w-full">
+                        <div className="w-full flex flex-col gap-6">
+                            {/* Header Info */}
+                            <div className="text-center space-y-2">
+                                <div className="flex items-center justify-center gap-3">
+                                    {status === LiveStatus.CONNECTED && (
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground font-mono shadow-sm">
+                                            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                            <span>REC {formatTime(duration)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-400 via-purple-300 to-fuchsia-400 bg-clip-text text-transparent">
+                                    Pro Interview
+                                </h1>
+                                <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                                    {customRole.trim() || targetRole} • {selectedDomain}
+                                </p>
+                            </div>
+
+                            {/* 1-on-1 Video Call Container Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl mx-auto">
+                                
+                                {/* Card 1: AI Interviewer */}
+                                <div className="relative bg-card/60 border border-border/80 rounded-3xl overflow-hidden backdrop-blur-md shadow-2xl flex flex-col items-center justify-center min-h-[340px] p-6 border-violet-500/20 group hover:border-violet-500/40 transition-all duration-300">
+                                    <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs font-medium text-white">
+                                        <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                                        <span>AI Interviewer</span>
+                                    </div>
+
+                                    {status === LiveStatus.CONNECTING && (
+                                        <div className="absolute inset-0 flex items-center justify-center z-30 bg-background/80 backdrop-blur-sm">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                                <span className="text-sm font-medium text-muted-foreground">Connecting AI agent...</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <AudioVisualizerSimple
+                                        isUserSpeaking={isUserSpeaking}
+                                        isAiSpeaking={isAiSpeaking}
+                                        volume={volume}
+                                    />
+                                    
+                                    <div className="mt-4 text-xs text-muted-foreground font-medium flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${isAiSpeaking ? 'bg-green-400 animate-ping' : 'bg-muted'}`} />
+                                        {isAiSpeaking ? "Interviewer Speaking..." : isUserSpeaking ? "Listening to you..." : "Ready"}
+                                    </div>
+                                </div>
+
+                                {/* Card 2: Candidate Video Feed (Webcam) */}
+                                <div className="relative bg-card/60 border border-border/80 rounded-3xl overflow-hidden backdrop-blur-md shadow-2xl flex flex-col items-center justify-center min-h-[340px] border-fuchsia-500/20 group hover:border-fuchsia-500/40 transition-all duration-300">
+                                    <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs font-medium text-white">
+                                        <User className="w-3.5 h-3.5 text-fuchsia-400" />
+                                        <span>Candidate (You)</span>
+                                    </div>
+
+                                    {isConnected && (
+                                        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-red-500/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider animate-pulse">
+                                            REC
+                                        </div>
+                                    )}
+
+                                    {hasCameraPermission && isCameraOn ? (
+                                        <video
+                                            ref={videoRef}
+                                            autoPlay
+                                            playsInline
+                                            muted
+                                            className="w-full h-full object-cover min-h-[340px] rounded-3xl transform -scale-x-100"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center gap-3 p-8 text-center min-h-[340px]">
+                                            <div className="w-16 h-16 rounded-full bg-muted/60 border border-border flex items-center justify-center text-muted-foreground">
+                                                <VideoOff className="w-8 h-8" />
+                                            </div>
+                                            <p className="text-sm font-medium text-muted-foreground">
+                                                Camera disabled or permission needed
+                                            </p>
+                                            <Button size="sm" variant="outline" onClick={startCamera} className="text-xs rounded-xl gap-2">
+                                                <Camera className="w-3.5 h-3.5" /> Enable Camera
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {/* Video Controls Overlay */}
+                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-white/10">
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            onClick={toggleCamera}
+                                            className="h-8 w-8 rounded-full text-white hover:bg-white/20"
+                                            title={isCameraOn ? "Turn Camera Off" : "Turn Camera On"}
+                                        >
+                                            {isCameraOn ? <Video className="w-4 h-4 text-green-400" /> : <VideoOff className="w-4 h-4 text-red-400" />}
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Controls */}
-                            <div className="flex items-center justify-center gap-6 mb-6">
+                            <div className="flex items-center justify-center gap-6 my-2">
                                 {!isConnected ? (
                                     <button
-                                        onClick={handleConnect}
+                                        onClick={handleStartConfiguredInterview}
                                         disabled={status === LiveStatus.CONNECTING || loadingContext}
                                         className="group relative flex items-center justify-center w-20 h-20 bg-primary hover:bg-primary/90 rounded-full shadow-lg hover:shadow-primary/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
@@ -462,7 +847,7 @@ const VoiceAssistant: React.FC = () => {
                             </div>
 
                             {/* Transcript Display */}
-                            <div className="w-full max-h-48 overflow-y-auto mb-4 p-4 rounded-xl bg-background/50 backdrop-blur border border-white/10 shadow-inner">
+                            <div className="w-full max-w-5xl mx-auto max-h-48 overflow-y-auto p-4 rounded-2xl bg-background/50 backdrop-blur border border-white/10 shadow-inner">
                                 <div className="space-y-3">
                                     {logs.map((log) => (
                                         <div
@@ -486,7 +871,7 @@ const VoiceAssistant: React.FC = () => {
 
                             {/* Feedback Display (Voice Mode) */}
                             {feedback && (
-                                <div className="mt-6 w-full bg-card/80 border border-green-500/30 rounded-xl p-4 animate-in slide-in-from-bottom-5">
+                                <div className="mt-4 w-full max-w-5xl mx-auto bg-card/80 border border-green-500/30 rounded-xl p-4 animate-in slide-in-from-bottom-5">
                                     <h3 className="text-green-400 font-semibold mb-2 flex items-center gap-2">
                                         <FileText className="w-4 h-4" /> Feedback from Last Challenge
                                     </h3>
@@ -503,14 +888,35 @@ const VoiceAssistant: React.FC = () => {
                     // === CODING MODE LAYOUT ===
                     <div className="flex-1 flex flex-col h-screen pt-16 px-4 pb-4 gap-4">
                         <ResizablePanelGroup direction="horizontal" className="flex-1 rounded-xl border border-border bg-card/50 backdrop-blur-sm overflow-hidden">
-                            {/* Left Panel: Problem & Chat */}
+                            {/* Left Panel: Problem & Candidate Video Preview & Chat */}
                             <ResizablePanel defaultSize={30} minSize={20} className="flex flex-col border-r border-border bg-[#1e1e1e]">
-                                <div className="p-4 border-b border-border bg-[#252526]">
-                                    <h2 className="font-semibold text-white flex items-center gap-2">
+                                <div className="p-4 border-b border-border bg-[#252526] flex items-center justify-between">
+                                    <h2 className="font-semibold text-white flex items-center gap-2 text-sm">
                                         <Code className="w-4 h-4 text-blue-400" />
                                         Coding Challenge
                                     </h2>
                                 </div>
+
+                                {/* Compact Candidate Video preview box in side panel */}
+                                <div className="relative w-full h-36 bg-black border-b border-border overflow-hidden">
+                                    {hasCameraPermission && isCameraOn ? (
+                                        <video
+                                            ref={miniVideoRef}
+                                            autoPlay
+                                            playsInline
+                                            muted
+                                            className="w-full h-full object-cover transform -scale-x-100"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                                            Camera stream paused
+                                        </div>
+                                    )}
+                                    <div className="absolute top-2 left-2 bg-black/60 text-[10px] px-2 py-0.5 rounded text-white font-mono">
+                                        Candidate Cam
+                                    </div>
+                                </div>
+
                                 <div className="flex-1 overflow-auto p-4 text-sm text-gray-300 font-sans leading-relaxed">
                                     <div className="space-y-4">
                                         {!feedback ? (
@@ -589,14 +995,13 @@ const VoiceAssistant: React.FC = () => {
                         <div className="h-16 bg-card border border-border rounded-xl flex items-center px-4 justify-between shadow-lg">
                             <div className="flex items-center gap-4">
                                 <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                                <div className="text-sm font-medium">Live Interview</div>
+                                <div className="text-sm font-medium">Live Interview & Cam</div>
                                 <div className="text-xs text-muted-foreground font-mono">{formatTime(duration)}</div>
                             </div>
 
                             <div className="flex-1 max-w-xs mx-4 h-8 bg-black/20 rounded-lg overflow-hidden relative">
                                 {/* Mini Visualizer */}
                                 <div className="absolute inset-0 flex items-center justify-center gap-0.5">
-                                    {/* Simplified visualizer bars */}
                                     {[...Array(10)].map((_, i) => (
                                         <div
                                             key={i}

@@ -105,7 +105,7 @@ export const Footer = () => {
                             </h3>
                             <ul className="space-y-4">
                                 {[
-                                    { label: "Video Practice", to: "/video-interview" },
+                                    { label: "Pro Interview", to: "/voice-assistant" },
                                     { label: "Leaderboard", to: "/leaderboard" },
                                     { label: "Peer Sessions", to: "/peer-interviews" }
                                 ].map((link, index) => (

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -15,7 +15,6 @@ import AdminUserDetails from "./pages/AdminUserDetails";
 import InterviewNew from "./pages/InterviewNew";
 import InterviewResults from "./pages/InterviewResults";
 import InterviewSession from "./pages/InterviewSession";
-import VideoInterview from "./pages/VideoInterview";
 import VoiceAssistant from "./pages/VoiceAssistant";
 import VideoInterviewResults from "./pages/VideoInterviewResults";
 import TimedVideoInterviewResults from "./pages/TimedVideoInterviewResults";
@@ -84,7 +83,7 @@ const App = () => (
               <Route path="/interview/new" element={<InterviewNew />} />
               <Route path="/interview/results/:id" element={<InterviewResults />} />
               <Route path="/interview/:id" element={<InterviewSession />} />
-              <Route path="/video-interview" element={<VideoInterview />} />
+              <Route path="/video-interview" element={<Navigate to="/voice-assistant" replace />} />
               <Route path="/video-interview/results/:id" element={<VideoInterviewResults />} />
               <Route path="/timed-interview/results/:id" element={<TimedVideoInterviewResults />} />
               <Route path="/voice-interview/results/:id" element={<VoiceInterviewResults />} />

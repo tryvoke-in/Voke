@@ -123,18 +123,10 @@ export const Navbar = () => {
                     <div className="hidden md:flex items-center gap-1">
                         <Button
                             variant="ghost"
-                            onClick={() => navigate("/video-interview")}
-                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
-                        >
-                            Video Practice
-                        </Button>
-
-                        <Button
-                            variant="ghost"
                             onClick={() => navigate("/voice-assistant")}
                             className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
                         >
-                            AI Voice Agent
+                            Pro Interview
                         </Button>
                         <Button
                             variant="ghost"

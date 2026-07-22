@@ -724,22 +724,22 @@ const Dashboard = () => {
                 <Card id="tour-voice-agent" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/voice-assistant")}>
                   <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
                       ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                      : creditsVoice > 0
+                      : (creditsVoice + creditsVideo) > 0
                         ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25'
                         : 'bg-red-500/10 text-red-500 border border-red-500/20'
                     }`}>
                     {isPremium
                       ? 'Unlimited'
-                      : creditsVoice > 0
-                        ? `${creditsVoice} ${creditsVoice === 1 ? 'Credit' : 'Credits'}`
+                      : (creditsVoice + creditsVideo) > 0
+                        ? `${creditsVoice + creditsVideo} ${(creditsVoice + creditsVideo) === 1 ? 'Credit' : 'Credits'}`
                         : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
                   </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                     <div className="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <Mic className="w-6 h-6 text-pink-600 dark:text-pink-400" />
                     </div>
-                    <h4 className="font-semibold text-sm">AI Voice Agent</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Real-time Interview</p>
+                    <h4 className="font-semibold text-sm">Pro Interview</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Voice & Video AI</p>
                   </CardContent>
                 </Card>
 
@@ -775,28 +775,6 @@ const Dashboard = () => {
                     </div>
                     <h4 className="font-semibold text-sm">Elite Prep</h4>
                     <p className="text-xs text-muted-foreground mt-1">Premium Interview Prep</p>
-                  </CardContent>
-                </Card>
-
-                <Card id="tour-video-practice" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-fuchsia-500" onClick={() => navigate("/video-interview")}>
-                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
-                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                      : creditsVideo > 0
-                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25'
-                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                    }`}>
-                    {isPremium
-                      ? 'Unlimited'
-                      : creditsVideo > 0
-                        ? `${creditsVideo} ${creditsVideo === 1 ? 'Credit' : 'Credits'}`
-                        : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
-                  </span>
-                  <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                    <div className="w-12 h-12 rounded-full bg-fuchsia-100 dark:bg-fuchsia-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      <Play className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-400" />
-                    </div>
-                    <h4 className="font-semibold text-sm">Video Practice</h4>
-                    <p className="text-xs text-muted-foreground mt-1">AI Video Feedback</p>
                   </CardContent>
                 </Card>
 
