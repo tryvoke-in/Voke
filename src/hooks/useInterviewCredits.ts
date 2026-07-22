@@ -81,7 +81,22 @@ export const useInterviewCredits = (type: PrepType = 'elite') => {
 
       const metadata = user.user_metadata || {};
       
-      const isPremium = !!metadata.is_premium;
+      // Query protected server entitlement table
+      let isPremium = false;
+      try {
+        const { data: subData } = await supabase
+          .from("user_subscriptions" as any)
+          .select("is_premium")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (subData) {
+          isPremium = !!subData.is_premium;
+        }
+      } catch (subErr) {
+        console.warn("Could not fetch user_subscriptions:", subErr);
+      }
+
       const hasGivenFeedback = !!metadata.has_given_feedback;
 
       // Extract specific credits (or fallback to old general interview_credits / defaults)

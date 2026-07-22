@@ -113,7 +113,7 @@ export const InterviewGate = ({
                 <h4 className="text-white font-bold text-sm flex items-center gap-1.5">
                   Upgrade to Voke Elite
                   <span className="text-[10px] bg-amber-500/20 text-amber-300 font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                    ₹99 ONLY
+                    ₹1 ONLY
                   </span>
                 </h4>
                 <p className="text-zinc-400 text-xs leading-relaxed">
@@ -129,7 +129,7 @@ export const InterviewGate = ({
                 navigate("/pricing");
               }}
             >
-              Unlock Unlimited for ₹99
+              Unlock Unlimited for ₹1
             </Button>
           </motion.div>
         )}

@@ -24,7 +24,12 @@ const Pricing = () => {
         const checkPremiumStatus = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                setIsPremium(!!user.user_metadata?.is_premium);
+                const { data: subData } = await supabase
+                    .from("user_subscriptions" as any)
+                    .select("is_premium")
+                    .eq("user_id", user.id)
+                    .maybeSingle();
+                setIsPremium(subData ? !!subData.is_premium : false);
             }
         };
         checkPremiumStatus();
@@ -43,29 +48,27 @@ const Pricing = () => {
                 existing.addEventListener('load', () => resolve(true));
                 existing.addEventListener('error', () => resolve(false));
                 // In case it already loaded between our check
-                setTimeout(() => {
-                    if ((window as any).Razorpay) resolve(true);
-                }, 500);
-                return;
+                if ((window as any).Razorpay) {
+                    resolve(true);
+                    return;
+                }
+            } else {
+                // Dynamically inject
+                const script = document.createElement("script");
+                script.src = "https://checkout.razorpay.com/v1/checkout.js";
+                script.onload = () => resolve(true);
+                script.onerror = () => resolve(false);
+                document.body.appendChild(script);
             }
-            // Dynamically inject
-            const script = document.createElement("script");
-            script.src = "https://checkout.razorpay.com/v1/checkout.js";
-            script.async = true;
-            script.onload = () => resolve(true);
-            script.onerror = () => resolve(false);
-            document.head.appendChild(script);
         });
     };
 
     const handleUpgrade = async () => {
         setIsPaying(true);
-        trackEvent("pricing_upgrade_click", "/pricing");
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                toast.error("Please login to upgrade your plan.");
-                navigate("/auth");
+                toast.error("You must be logged in to upgrade.");
                 setIsPaying(false);
                 return;
             }
@@ -87,7 +90,7 @@ const Pricing = () => {
             // Create a Razorpay order on the server to get a valid order_id
             const { data: orderData, error: orderError } = await supabase.functions.invoke("create-razorpay-order", {
                 body: {
-                    amount: 9900, // ₹99 in paise
+                    amount: 100, // ₹1 in paise
                     currency: "INR",
                     receipt: `rcpt_${user.id.slice(0, 8)}_${Date.now()}`, // max 40 chars
                 },
@@ -126,20 +129,24 @@ const Pricing = () => {
                       payment_id: response.razorpay_payment_id,
                       order_id: response.razorpay_order_id
                     });
-                    toast.success("Payment successful! Upgrading to Voke Elite Pro...");
+                    toast.success("Verifying payment with server...");
 
-                    const { error } = await supabase.auth.updateUser({
-                        data: { is_premium: true }
+                    const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-razorpay-payment", {
+                        body: {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        }
                     });
 
-                    if (error) {
-                        console.error("Error updating user premium status:", error);
-                        toast.error("Payment recorded, but profile update failed. Please refresh.");
+                    if (verifyError || !verifyData?.success) {
+                        console.error("Error verifying user payment signature:", verifyError, verifyData);
+                        toast.error("Payment verification failed: " + (verifyError?.message || verifyData?.error || "Invalid signature"));
                     } else {
-                        // Refresh the session immediately so the new user metadata is available in the local session
                         await supabase.auth.refreshSession();
+                        setIsPremium(true);
                         setShowConfetti(true);
-                        toast.success("Welcome to Voke Elite Pro! Payment successful.");
+                        toast.success("Welcome to Voke Elite Pro! Payment verified successfully.");
                         setTimeout(() => {
                             setShowConfetti(false);
                             navigate("/dashboard");
@@ -216,9 +223,9 @@ const Pricing = () => {
         {
             name: "Voke Elite",
             description: "Complete power for serious job hunters.",
-            price: "₹99",
+            price: "₹1",
             priceLabel: "/ month",
-            originalPrice: "₹199",
+            originalPrice: "₹99",
             features: [
                 "Everything in Basic",
                 "Unlimited AI Mock Interviews",
@@ -461,7 +468,7 @@ const Pricing = () => {
                     >
                          {[
                             { q: "Can I upgrade later?", a: "Yes, you can upgrade from Basic to Voke Elite at any time to unlock unlimited mock interviews and coding compiler environments instantly." },
-                            { q: "Is there a student discount?", a: "We do not offer separate student discounts. Voke Elite is priced extremely affordably at ₹99/month for everyone, including students, to ensure high-quality prep is accessible." },
+                            { q: "Is there a student discount?", a: "We do not offer separate student discounts. Voke Elite is priced extremely affordably at ₹1/month for everyone, including students, to ensure high-quality prep is accessible." },
                             { q: "What's the Enterprise limit?", a: "Enterprise plans support custom limits, custom interview templates, and LMS integration options. Contact teamtryvoke@gmail.com to request custom seating setups." },
                             { q: "Do you offer refunds?", a: "No, we do not offer refunds once premium features are activated or credits are used. You can cancel your monthly subscription at any time to prevent renewals." },
                             { q: "Can I pause my subscription?", a: "We do not support pausing. However, you can cancel your subscription from your profile page anytime with no penalties, and restart when you resume prep." },

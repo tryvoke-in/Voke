@@ -684,7 +684,7 @@ const Dashboard = () => {
                     onClick={() => navigate("/pricing")}
                     className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-xl"
                   >
-                    Upgrade for ₹99
+                    Upgrade for ₹1
                   </Button>
                 )}
               </motion.div>
