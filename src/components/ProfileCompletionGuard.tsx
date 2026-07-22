@@ -10,13 +10,12 @@ export const ProfileCompletionGuard = ({ children }: { children: React.ReactNode
     useEffect(() => {
         let active = true;
 
-        // Force disable loading after 1.2 seconds max to guarantee the site never hangs
+        // Force disable loading after 500ms max to guarantee the site never hangs
         const timeoutId = setTimeout(() => {
             if (active) {
-                console.warn("[ProfileCompletionGuard] Auth resolution timed out, bypassing loading screen.");
                 setLoading(false);
             }
-        }, 1200);
+        }, 500);
 
         const checkProfile = async () => {
             try {
@@ -41,7 +40,7 @@ export const ProfileCompletionGuard = ({ children }: { children: React.ReactNode
             active = false;
             clearTimeout(timeoutId);
         };
-    }, [location.pathname]);
+    }, []);
 
     if (loading) {
         return (
