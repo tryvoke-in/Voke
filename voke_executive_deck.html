@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voke AI - Free vs Paid Offerings & Cost Breakdown</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 12mm 12mm 12mm 12mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #0f172a;
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #ffffff;
+      padding: 20px 24px;
+      border-radius: 10px;
+      margin-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-title h1 {
+      margin: 0 0 4px 0;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+    .header-title p {
+      margin: 0;
+      color: #a5b4fc;
+      font-size: 12.5px;
+      font-weight: 500;
+    }
+    .header-badge {
+      background: rgba(99, 102, 241, 0.25);
+      border: 1px solid #818cf8;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #e0e7ff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .section-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: #e0e7ff;
+      color: #4338ca;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      margin-bottom: 10px;
+      font-size: 11.5px;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      text-align: left;
+      padding: 9px 11px;
+      border-bottom: 2px solid #cbd5e1;
+    }
+    td {
+      padding: 8.5px 11px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #334155;
+    }
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    
+    .cost-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .cost-red { background: #fee2e2; color: #991b1b; }
+    .cost-green { background: #dcfce7; color: #166534; }
+    .cost-blue { background: #dbeafe; color: #1e40af; }
+    .cost-purple { background: #f3e8ff; color: #6b21a8; }
+    
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    
+    .metric-hero {
+      text-align: center;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .metric-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .metric-val.green { color: #15803d; }
+    .metric-val.red { color: #b91c1c; }
+    .metric-lbl {
+      font-size: 10px;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .page-break {
+      page-break-before: always;
+    }
+    
+    .footer {
+      margin-top: 16px;
+      padding-top: 8px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      font-size: 10px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-title">
+      <h1>Voke AI — Free vs Paid Offerings & Cost Analysis</h1>
+      <p>Complete Deliverables List, Internal AI Costs & 4,000 User Revenue Projections</p>
+    </div>
+    <div class="header-badge">MASTER COST AUDIT</div>
+  </div>
+
+  <!-- SECTION 1: OUR INTERNAL AI DELIVERY COSTS -->
+  <div class="section-card">
+    <div class="section-title"><span class="icon">⚡</span> 1. What Each Feature Costs Voke to Run (Our Internal AI Cost)</div>
+    <p style="margin: 0 0 8px 0; color: #475569; font-size: 11.5px;">
+      Calculated at $1 USD = ₹96.00 INR using Gemini 3.1 Flash Lite & Gemini 2.5 Flash.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Interview Feature / Type</th>
+          <th>AI Models Used</th>
+          <th>What Is Analyzed</th>
+          <th>Internal AI Cost to Voke</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1 Text Interview</strong></td>
+          <td>Gemini 3.1 Flash Lite</td>
+          <td>Text Q&A, transcript feedback, formatting</td>
+          <td><span class="cost-badge cost-blue">₹0.17 INR</span> ($0.0018 USD)</td>
+        </tr>
+        <tr>
+          <td><strong>1 Pro Video Interview</strong> (10 mins)</td>
+          <td>3.1 Flash Lite + 2.5 Flash</td>
+          <td>Full Video body language, voice, posture, gestures</td>
+          <td><span class="cost-badge cost-red">₹2.72 INR</span> ($0.0283 USD)</td>
+        </tr>
+        <tr>
+          <td><strong>1 Elite Credit</strong> (4 Rounds)</td>
+          <td>2.5 Flash (R1 & HR) + 3.1 Flash Lite</td>
+          <td>4 rounds total (Body language in R1 & HR)</td>
+          <td><span class="cost-badge cost-purple">₹6.44 INR</span> ($0.0670 USD)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 2: WHAT WE OFFER FOR FREE -->
+  <div class="section-card">
+    <div class="section-title"><span class="icon">🎁</span> 2. What We Offer For FREE (Free Tier Deliverables & Our Cost)</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Free Deliverable / Feature</th>
+          <th>Quantity Included</th>
+          <th>Description</th>
+          <th>Internal Cost to Voke</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Free Text Interview Credits</strong></td>
+          <td>2 Credits</td>
+          <td>Interactive Text Q&A with basic evaluation</td>
+          <td>₹0.34 INR ($2 \times ₹0.17$)</td>
+        </tr>
+        <tr>
+          <td><strong>Free Pro Video Credits</strong></td>
+          <td>2 Credits</td>
+          <td>10-min Voice/Video with Gemini 2.5 Flash Body Language</td>
+          <td>₹5.44 INR ($2 \times ₹2.72$)</td>
+        </tr>
+        <tr>
+          <td><strong>Question Bank Access</strong></td>
+          <td>Basic Access</td>
+          <td>General domain & role interview questions</td>
+          <td>₹0.00 (Hosted content)</td>
+        </tr>
+        <tr>
+          <td><strong>Basic Score & 6Q Summary</strong></td>
+          <td>Included</td>
+          <td>IQ, EQ, CQ, AQ, SQ, MQ personality overview</td>
+          <td>Included in interview cost</td>
+        </tr>
+        <tr style="background: #fee2e2; font-weight: bold;">
+          <td>OUR TOTAL FREE GIFT COST / USER</td>
+          <td>4 Free Credits</td>
+          <td>Given to every 1st-time user on onboarding</td>
+          <td style="color: #991b1b;">₹5.78 INR / user ($0.060 USD)</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="background: #fff1f2; border: 1px solid #fecdd3; padding: 10px; border-radius: 6px; font-size: 11px; color: #9f1239;">
+      <strong>Total Free Onboarding Expense for 4,000 Users:</strong> 4,000 users × ₹5.78 = <strong>₹23,120 INR ($240.83 USD)</strong> total free onboarding expense.
+    </div>
+  </div>
+
+  <!-- PAGE BREAK -->
+  <div class="page-break"></div>
+
+  <!-- SECTION 3: WHAT WE OFFER FOR PAID -->
+  <div class="section-card">
+    <div class="section-title"><span class="icon">💎</span> 3. What We Offer For PAID (Plans, Retail Price & Our Internal AI Cost)</div>
+    
+    <div class="grid-2">
+      <!-- PLAN 1: VOKE PRO -->
+      <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px;">
+        <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 14px;">Plan 1: Voke Pro (₹399 Retail)</h4>
+        <p style="font-size: 11px; color: #64748b; margin: 0 0 8px 0;">Targeted practice for active job applicants</p>
+        <strong style="font-size: 11px; color: #334155;">What User Receives:</strong>
+        <ul style="margin: 4px 0 8px 0; padding-left: 16px; font-size: 11px; color: #334155; line-height: 1.5;">
+          <li>✓ <strong>4 Pro Video Credits</strong> (Voice + Video Merged)</li>
+          <li>✓ <strong>3 Text Interview Credits</strong></li>
+          <li>✓ Full Gemini 2.5 Flash Body Language Analysis</li>
+          <li>✓ Detailed Audio/Video Performance Reports</li>
+        </ul>
+        <table style="margin-bottom: 0;">
+          <tr><td>Retail Price Charged to User</td><td><strong>₹399.00</strong></td></tr>
+          <tr><td>Payment Gateway Fee (~2%)</td><td>-₹7.98</td></tr>
+          <tr style="background: #fee2e2; font-weight: bold;">
+            <td>OUR INTERNAL AI COST TO DELIVER</td>
+            <td style="color: #991b1b;">-₹11.39 INR</td>
+          </tr>
+          <tr style="font-size: 10px; color: #64748b;">
+            <td colspan="2">↳ 4 Pro Video ($4 \times ₹2.72$) + 3 Text ($3 \times ₹0.17$)</td>
+          </tr>
+          <tr style="background: #e2e8f0; font-weight: bold;">
+            <td>OUR TOTAL COST PER SALE</td>
+            <td>-₹19.37 INR</td>
+          </tr>
+          <tr style="background: #dcfce7; font-weight: bold;">
+            <td>OUR NET PROFIT PER SALE</td>
+            <td style="color: #15803d; font-size: 13px;">₹379.63 INR</td>
+          </tr>
+          <tr><td><strong>OUR GROSS MARGIN %</strong></td><td><span class="cost-badge cost-green">95.1% MARGIN</span></td></tr>
+        </table>
+      </div>
+
+      <!-- PLAN 2: VOKE ELITE -->
+      <div style="background: #f8fafc; border: 1px solid #6366f1; padding: 12px; border-radius: 8px;">
+        <h4 style="margin: 0 0 4px 0; color: #4338ca; font-size: 14px;">Plan 2: Voke Elite (₹599 Retail)</h4>
+        <p style="font-size: 11px; color: #64748b; margin: 0 0 8px 0;">Complete power for serious job hunters</p>
+        <strong style="font-size: 11px; color: #334155;">What User Receives:</strong>
+        <ul style="margin: 4px 0 8px 0; padding-left: 16px; font-size: 11px; color: #334155; line-height: 1.5;">
+          <li>✓ <strong>4 Elite Company Credits</strong> (Up to 16 rounds)</li>
+          <li>✓ <strong>2 Pro Video Interview Credits</strong></li>
+          <li>✓ Body Language for Round 1 & HR Round</li>
+          <li>✓ Code IDE & Resume Optimization</li>
+        </ul>
+        <table style="margin-bottom: 0;">
+          <tr><td>Retail Price Charged to User</td><td><strong>₹599.00</strong></td></tr>
+          <tr><td>Payment Gateway Fee (~2%)</td><td>-₹11.98</td></tr>
+          <tr style="background: #fee2e2; font-weight: bold;">
+            <td>OUR INTERNAL AI COST TO DELIVER</td>
+            <td style="color: #991b1b;">-₹31.20 INR</td>
+          </tr>
+          <tr style="font-size: 10px; color: #64748b;">
+            <td colspan="2">↳ 4 Elite ($4 \times ₹6.44$) + 2 Pro Video ($2 \times ₹2.72$)</td>
+          </tr>
+          <tr style="background: #e2e8f0; font-weight: bold;">
+            <td>OUR TOTAL COST PER SALE</td>
+            <td>-₹43.18 INR</td>
+          </tr>
+          <tr style="background: #dcfce7; font-weight: bold;">
+            <td>OUR NET PROFIT PER SALE</td>
+            <td style="color: #15803d; font-size: 13px;">₹555.82 INR</td>
+          </tr>
+          <tr><td><strong>OUR GROSS MARGIN %</strong></td><td><span class="cost-badge cost-green">92.8% MARGIN</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: COMPLETE 4,000 USER MASTER FINANCIAL TABLE -->
+  <div class="section-card" style="background: #f0fdf4; border-color: #86efac;">
+    <div class="section-title" style="color: #166534;"><span class="icon" style="background: #dcfce7; color: #15803d;">📊</span> 4. 4,000 User Business Master Financial Projection (200 Pro + 200 Elite)</div>
+    <p style="margin: 0 0 10px 0; color: #166534; font-size: 11.5px;">
+      Calculation for a 4,000 registered user base with 10% paid conversion (200 Voke Pro sales + 200 Voke Elite sales):
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Revenue / Cost Line Item</th>
+          <th>User Volume & Math</th>
+          <th>Financial Amount (INR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Voke Pro Sales Revenue</td>
+          <td>200 paid users × ₹399</td>
+          <td><strong>₹79,800 INR</strong></td>
+        </tr>
+        <tr>
+          <td>Voke Elite Sales Revenue</td>
+          <td>200 paid users × ₹599</td>
+          <td><strong>₹1,19,800 INR</strong></td>
+        </tr>
+        <tr style="background: #ffffff; font-weight: bold;">
+          <td>TOTAL GROSS REVENUE</td>
+          <td>400 Paid Users Total</td>
+          <td>₹1,99,600 INR</td>
+        </tr>
+        <tr>
+          <td>Payment Gateway Fees (~2%)</td>
+          <td>2% of ₹1,99,600</td>
+          <td>-₹3,992 INR</td>
+        </tr>
+        <tr>
+          <td>Free User Onboarding AI Cost</td>
+          <td>4,000 free users × ₹5.78 (2 Text + 2 Pro)</td>
+          <td>-₹23,120 INR</td>
+        </tr>
+        <tr style="background: #fee2e2;">
+          <td>OUR PAID PRO AI DELIVERY COST</td>
+          <td>200 paid users × ₹11.39 AI cost</td>
+          <td style="color: #991b1b; font-weight: bold;">-₹2,278 INR</td>
+        </tr>
+        <tr style="background: #fee2e2;">
+          <td>OUR PAID ELITE AI DELIVERY COST</td>
+          <td>200 paid users × ₹31.20 AI cost</td>
+          <td style="color: #991b1b; font-weight: bold;">-₹6,240 INR</td>
+        </tr>
+        <tr style="background: #dcfce7; font-weight: bold;">
+          <td>OUR NET PROFIT (AFTER ALL FREE & PAID COSTS)</td>
+          <td>Gross Revenue - All Expenses</td>
+          <td style="color: #15803d; font-size: 14px;">₹1,63,970 INR ($1,708 USD)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="grid-2" style="margin-top: 10px; margin-bottom: 0;">
+      <div class="metric-hero">
+        <div class="metric-val green">82.15%</div>
+        <div class="metric-lbl">Overall Net Profit Margin</div>
+      </div>
+      <div class="metric-hero">
+        <div class="metric-val">61 Paid Users</div>
+        <div class="metric-lbl">Break-Even Point (1.5% Conversion)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Voke AI Master Cost Audit & Financial Deck • Generated for Executive Review • Exchange Rate: $1 USD = ₹96.00 INR
+  </div>
+
+</body>
+</html>
