@@ -42,31 +42,30 @@ const Pricing = () => {
                 resolve(true);
                 return;
             }
-            // Check if script tag already exists but hasn't loaded yet
+            // Check if script tag already exists
             const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
             if (existing) {
-                existing.addEventListener('load', () => resolve(true));
-                existing.addEventListener('error', () => resolve(false));
-                // In case it already loaded between our check
-                if ((window as any).Razorpay) {
-                    resolve(true);
-                    return;
-                }
-            } else {
-                // Dynamically inject
-                const script = document.createElement("script");
-                script.src = "https://checkout.razorpay.com/v1/checkout.js";
-                script.onload = () => resolve(true);
-                script.onerror = () => resolve(false);
-                document.body.appendChild(script);
+                existing.remove(); // Remove stuck script and recreate to ensure events fire
             }
+            // Dynamically inject
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
         });
     };
 
     const handleUpgrade = async () => {
         setIsPaying(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
+            // Add a timeout to prevent hanging if Supabase Auth is stuck
+            const userPromise = supabase.auth.getUser();
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000));
+            
+            const authResult = await Promise.race([userPromise, timeoutPromise]) as any;
+            const user = authResult?.data?.user;
+
             if (!user) {
                 toast.error("You must be logged in to upgrade.");
                 setIsPaying(false);

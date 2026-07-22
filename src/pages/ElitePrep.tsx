@@ -24,6 +24,8 @@ type ViewMode = 'notebook_mindmap' | 'in_interview';
 const ensureRazorpay = (): Promise<boolean> =>
   new Promise((resolve) => {
     if ((window as any).Razorpay) { resolve(true); return; }
+    const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
+    if (existing) existing.remove();
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.onload = () => resolve(true);
@@ -97,7 +99,12 @@ const ElitePrep: React.FC = () => {
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      // Add timeout to prevent hanging if auth is stuck
+      const userPromise = supabase.auth.getUser();
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000));
+      const authResult = await Promise.race([userPromise, timeoutPromise]) as any;
+      const user = authResult?.data?.user;
+
       if (!user) {
         toast.error('You must be logged in to proceed.');
         setIsPaying(false);
