@@ -10,12 +10,26 @@ export const ProfileCompletionGuard = ({ children }: { children: React.ReactNode
     useEffect(() => {
         let active = true;
 
-        // Force disable loading after 500ms max to guarantee the site never hangs
+        // Force disable loading after 1500ms max to guarantee the site never hangs
         const timeoutId = setTimeout(() => {
             if (active) {
-                setLoading(false);
+                // If it takes this long, the Supabase Auth client is deadlocked.
+                // We MUST clear the corrupted local session to unfreeze the app.
+                console.warn("[ProfileCompletionGuard] Auth resolution deadlocked. Clearing corrupt session...");
+                let cleared = false;
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('sb-') && key.includes('-auth-token')) {
+                        localStorage.removeItem(key);
+                        cleared = true;
+                    }
+                });
+                if (cleared) {
+                    window.location.reload();
+                } else {
+                    setLoading(false);
+                }
             }
-        }, 500);
+        }, 1500);
 
         const checkProfile = async () => {
             try {
