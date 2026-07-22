@@ -1,0 +1,7 @@
+{
+    "imports": {
+        "supabase": "https://esm.sh/@supabase/supabase-js@2",
+        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
+        "groq-sdk": "npm:groq-sdk@0.8.0"
+    }
+}
