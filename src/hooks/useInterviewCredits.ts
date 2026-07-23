@@ -81,7 +81,24 @@ export const useInterviewCredits = (type: PrepType = 'elite') => {
 
       const metadata = user.user_metadata || {};
       
-      const isPremium = !!metadata.is_premium;
+      // Fetch verified premium status from DB to prevent self-granting
+      let isPremium = !!metadata.is_premium; // Fallback
+      try {
+        const { data: subData, error: subError } = await supabase
+          .from('user_subscriptions')
+          .select('is_premium')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (!subError && subData) {
+          isPremium = subData.is_premium;
+        } else if (!subError && !subData) {
+          isPremium = false; // If no subscription record, they are not premium
+        }
+      } catch (err) {
+        console.error("Error verifying premium status from DB:", err);
+      }
+
       const hasGivenFeedback = !!metadata.has_given_feedback;
 
       // Extract specific credits (or fallback to old general interview_credits / defaults)

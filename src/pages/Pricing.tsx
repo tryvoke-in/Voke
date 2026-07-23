@@ -126,20 +126,24 @@ const Pricing = () => {
                       payment_id: response.razorpay_payment_id,
                       order_id: response.razorpay_order_id
                     });
-                    toast.success("Payment successful! Upgrading to Voke Elite Pro...");
+                    toast.success("Payment successful! Verifying with server...");
 
-                    const { error } = await supabase.auth.updateUser({
-                        data: { is_premium: true }
+                    const { error } = await supabase.functions.invoke("verify-razorpay-payment", {
+                        body: {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        },
                     });
 
                     if (error) {
-                        console.error("Error updating user premium status:", error);
-                        toast.error("Payment recorded, but profile update failed. Please refresh.");
+                        console.error("Error verifying payment signature:", error);
+                        toast.error("Verification failed. Please contact support.");
                     } else {
                         // Refresh the session immediately so the new user metadata is available in the local session
                         await supabase.auth.refreshSession();
                         setShowConfetti(true);
-                        toast.success("Welcome to Voke Elite Pro! Payment successful.");
+                        toast.success("Welcome to Voke Elite Pro! Payment verified.");
                         setTimeout(() => {
                             setShowConfetti(false);
                             navigate("/dashboard");

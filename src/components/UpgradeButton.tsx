@@ -10,16 +10,45 @@ export const UpgradeButton = () => {
     const [isPremium, setIsPremium] = useState(false);
 
     useEffect(() => {
-        const updatePremiumStatus = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setIsPremium(!!session?.user?.user_metadata?.is_premium);
+        const updatePremiumStatus = async (session: any) => {
+            if (!session?.user) {
+                setIsPremium(false);
+                return;
+            }
+            
+            // Fallback to metadata
+            let isUserPremium = !!session.user.user_metadata?.is_premium;
+            
+            try {
+                // Verify with DB
+                const { data, error } = await supabase
+                    .from('user_subscriptions')
+                    .select('is_premium')
+                    .eq('user_id', session.user.id)
+                    .maybeSingle();
+                
+                if (!error && data) {
+                    isUserPremium = data.is_premium;
+                } else if (!error && !data) {
+                    isUserPremium = false;
+                }
+            } catch (err) {
+                console.error("Error checking premium status:", err);
+            }
+            
+            setIsPremium(isUserPremium);
         };
 
-        updatePremiumStatus();
+        const init = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            updatePremiumStatus(session);
+        };
+        
+        init();
 
         // Listen for auth state changes to dynamically update status
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            setIsPremium(!!session?.user?.user_metadata?.is_premium);
+            updatePremiumStatus(session);
         });
 
         return () => {
