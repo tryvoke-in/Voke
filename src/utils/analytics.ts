@@ -32,14 +32,16 @@ export const trackEvent = async (
     const sessionId = getSessionId();
     const userAgent = navigator.userAgent;
 
-    const { error } = await supabase.from("user_activities").insert({
-      user_id: userId,
-      user_email: userEmail,
-      session_id: sessionId,
-      event_type: eventType,
-      page_path: pagePath,
-      action_details: actionDetails,
-      user_agent: userAgent,
+    const { error } = await supabase.functions.invoke("track-analytics", {
+      body: {
+        user_id: userId,
+        user_email: userEmail,
+        session_id: sessionId,
+        event_type: eventType,
+        page_path: pagePath,
+        action_details: actionDetails,
+        user_agent: userAgent,
+      }
     });
 
     if (error) {

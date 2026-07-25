@@ -11,6 +11,20 @@ serve(async (req) => {
         return new Response('ok', { headers: corsHeaders })
     }
 
+    // Helper to canonicalize URLs (strip tracking params)
+    const canonicalizeUrl = (url: string | null): string | null => {
+        if (!url) return null;
+        try {
+            const u = new URL(url);
+            u.searchParams.delete('utm_source');
+            u.searchParams.delete('utm_medium');
+            u.searchParams.delete('utm_campaign');
+            return u.href;
+        } catch {
+            return url;
+        }
+    };
+
     try {
         console.log("Function started");
         const { userId, forceRefresh = false } = await req.json()
@@ -190,14 +204,15 @@ serve(async (req) => {
                         remote_ok: job.locations?.some((loc: any) => loc.name.toLowerCase().includes('remote')) || false,
                         experience_level: inferExperienceLevel(job.name, job.contents || ''),
                         skills_required: extractSkills(job.contents || ''),
-                        application_url: job.refs?.landing_page || null,
+                        application_url: canonicalizeUrl(job.refs?.landing_page || null),
                         source: 'themuse',
+                        source_id: String(job.id),
                         posted_date: new Date(job.publication_date || Date.now()).toISOString()
                     }))
 
                     const { error: jobInsertError } = await supabase
                         .from('job_postings')
-                        .upsert(realJobs, { onConflict: 'title,company', ignoreDuplicates: true })
+                        .upsert(realJobs, { onConflict: 'source,source_id', ignoreDuplicates: true })
 
                     if (jobInsertError) console.error("Job insert error:", jobInsertError);
                 }
