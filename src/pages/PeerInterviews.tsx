@@ -91,7 +91,7 @@ const PeerInterviews = () => {
       });
       
       const { data: profiles } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, full_name')
         .in('id', Array.from(userIds));
 
