@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import Groq from 'groq-sdk';
+import { supabase } from "@/integrations/supabase/client";
 import { LiveStatus, MessageLog } from '../types/voice';
 import { toast } from 'sonner';
 
@@ -63,19 +63,6 @@ interface UseGroqVoiceProps {
 
 export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const [status, setStatus] = useState<LiveStatus>(LiveStatus.DISCONNECTED);
-    const [groqClient, setGroqClient] = useState<Groq | null>(null);
-
-    useEffect(() => {
-        const apiKey = props?.apiKey || import.meta.env.VITE_GROQ_API_KEY;
-        if (apiKey) {
-            setGroqClient(new Groq({
-                apiKey: apiKey,
-                dangerouslyAllowBrowser: true
-            }));
-        } else {
-            console.warn("Groq API Key missing. Voice unavailable.");
-        }
-    }, [props?.apiKey]);
     const [errorDetails, setErrorDetails] = useState<string | null>(null);
     const [isUserSpeaking, setIsUserSpeaking] = useState(false);
     const [isAiSpeaking, setIsAiSpeaking] = useState(false);
@@ -103,47 +90,36 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
     // Helper to send messages to Groq
     const sendToGroq = async (fullMessages: any[]) => {
-        if (!groqClient) {
-            const errorText = "I cannot process your request because my API key is missing.";
-            speakResponse(errorText);
-            return;
-        }
-
         let completion;
-        try {
-            completion = await groqClient.chat.completions.create({
-                messages: fullMessages,
-                model: 'llama-3.3-70b-versatile',
-                temperature: 0.7,
-                max_tokens: 800, // Increased for detailed feedback
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        if (!token) return speakResponse("I cannot process your request because you are not logged in.");
+
+        const makeRequest = async (model: string) => {
+            const res = await fetch(`${supabase.supabaseUrl}/functions/v1/groq-proxy`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ messages: fullMessages, model: model, temperature: 0.7, max_tokens: 800 })
             });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
+        };
+
+        try {
+            completion = await makeRequest('llama-3.3-70b-versatile');
         } catch (error: any) {
             // Level 1 Fallback: Llama 3.1 8B
-            if (error?.status === 429) {
+            if (error?.message?.includes('429')) {
                 console.log('DEBUG: Rate limit on 70b, waiting 1s and switching to 8b...');
-                // toast.warning("Optimizing connection (1/2)..."); 
                 await new Promise(resolve => setTimeout(resolve, 1000));
-
                 try {
-                    completion = await groqClient.chat.completions.create({
-                        messages: fullMessages,
-                        model: 'llama-3.1-8b-instant',
-                        temperature: 0.7,
-                        max_tokens: 800,
-                    });
+                    completion = await makeRequest('llama-3.1-8b-instant');
                 } catch (retryError: any) {
                     // Level 2 Fallback: Mixtral
-                    if (retryError?.status === 429) {
+                    if (retryError?.message?.includes('429')) {
                         console.log('DEBUG: Rate limit on 8b, waiting 2s and switching to Mixtral...');
-                        // toast.warning("Optimizing connection (2/2)...");
                         await new Promise(resolve => setTimeout(resolve, 2000));
-
-                        completion = await groqClient.chat.completions.create({
-                            messages: fullMessages,
-                            model: 'mixtral-8x7b-32768',
-                            temperature: 0.7,
-                            max_tokens: 800,
-                        });
+                        completion = await makeRequest('mixtral-8x7b-32768');
                     } else {
                         throw retryError;
                     }
@@ -272,18 +248,24 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             // Convert blob to File
             const audioFile = new File([audioBlob], 'audio.webm', { type: 'audio/webm' });
 
-            if (!groqClient) {
-                console.error('DEBUG: Groq client not initialized (missing API key)');
-                toast.error("Voice Error: Groq API Key missing");
-                return '';
-            }
+            const session = await supabase.auth.getSession();
+            const token = session.data.session?.access_token;
+            if (!token) return '';
 
-            const transcription = await groqClient.audio.transcriptions.create({
-                file: audioFile,
-                model: 'whisper-large-v3-turbo', // Reverting to turbo as distil is decommissioned
-                temperature: 0,
-                response_format: 'verbose_json',
+            const formData = new FormData();
+            formData.append('file', audioFile);
+            formData.append('model', 'whisper-large-v3-turbo');
+            formData.append('temperature', '0');
+            formData.append('response_format', 'verbose_json');
+
+            const res = await fetch(`${supabase.supabaseUrl}/functions/v1/groq-proxy`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData
             });
+            
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const transcription = await res.json();
 
             console.log('DEBUG: Transcription:', transcription.text);
 
@@ -569,42 +551,33 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             // Generate personalized greeting using Groq
             try {
                 console.log('DEBUG: Generating personalized greeting...');
-                if (!groqClient) {
-                    throw new Error("Groq client not initialized");
-                }
+                const session = await supabase.auth.getSession();
+                const token = session.data.session?.access_token;
+                if (!token) throw new Error("Not authenticated");
+
+                const makeGreetingReq = async (model: string, msgs: any[], max: number) => {
+                    const res = await fetch(`${supabase.supabaseUrl}/functions/v1/groq-proxy`, {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ messages: msgs, model, temperature: 0.8, max_tokens: max })
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return await res.json();
+                };
 
                 let greetingCompletion;
                 try {
-                    greetingCompletion = await groqClient.chat.completions.create({
-                        messages: [
-                            {
-                                role: 'system',
-                                content: SYSTEM_INSTRUCTION + '\n\nCONTEXT:\n' + contextRef.current
-                            },
-                            {
-                                role: 'user',
-                                content: 'Generate a warm, personalized greeting for the user. Address them by name if available in the context. Keep it to 1-2 sentences and invite them to introduce themselves or talk about their experience.'
-                            }
-                        ],
-                        model: 'llama-3.3-70b-versatile',
-                        temperature: 0.8,
-                        max_tokens: 100,
-                    });
+                    greetingCompletion = await makeGreetingReq('llama-3.3-70b-versatile', [
+                        { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCONTEXT:\n' + contextRef.current },
+                        { role: 'user', content: 'Generate a warm, personalized greeting for the user. Address them by name if available in the context. Keep it to 1-2 sentences and invite them to introduce themselves or talk about their experience.' }
+                    ], 100);
                 } catch (error: any) {
-                    if (error?.status === 429) {
+                    if (error?.message?.includes('429')) {
                         console.log('DEBUG: Rate limit reached during greeting, switching to fallback...');
-                        greetingCompletion = await groqClient.chat.completions.create({
-                            messages: [
-                                {
-                                    role: 'system',
-                                    content: SYSTEM_INSTRUCTION + '\n\nCONTEXT:\n' + contextRef.current
-                                },
-                                { role: 'user', content: 'Say hello and ask for introduction.' }
-                            ],
-                            model: 'llama-3.1-8b-instant',
-                            temperature: 0.7,
-                            max_tokens: 60,
-                        });
+                        greetingCompletion = await makeGreetingReq('llama-3.1-8b-instant', [
+                            { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCONTEXT:\n' + contextRef.current },
+                            { role: 'user', content: 'Say hello and ask for introduction.' }
+                        ], 60);
                     } else {
                         throw error;
                     }
@@ -639,7 +612,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             setErrorDetails("Failed to access microphone. Please allow microphone access.");
             setStatus(LiveStatus.ERROR);
         }
-    }, [status, groqClient]);
+    }, [status]);
 
     const disconnect = useCallback(() => {
         console.log('DEBUG: Disconnect called');

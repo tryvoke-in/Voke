@@ -199,8 +199,9 @@ const ResumeBuilder = () => {
 
   // Helper to handle Groq API calls with rate-limit retries and model fallbacks
   const fetchGroqWithRetry = async (body: any, maxRetries = 2) => {
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-    if (!apiKey) throw new Error("GROQ_API_KEY not configured.");
+    const session = await supabase.auth.getSession();
+    const token = session.data.session?.access_token;
+    if (!token) throw new Error("You must be logged in to use AI features.");
 
     const models = [
       body.model || "llama-3.3-70b-versatile",
@@ -217,9 +218,9 @@ const ResumeBuilder = () => {
 
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
-          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          const res = await fetch(`${supabase.supabaseUrl}/functions/v1/groq-proxy`, {
             method: "POST",
-            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
             body: JSON.stringify(attemptBody),
           });
 
@@ -295,7 +296,7 @@ const ResumeBuilder = () => {
     }
     setIsAiEnhancing(true);
     try {
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      const apiKey = "proxy-enabled";
       if (!apiKey) throw new Error("Missing API Key");
 
       const response = await fetchGroqWithRetry({
@@ -323,7 +324,7 @@ const ResumeBuilder = () => {
     }
     setEnhancingExpId(id);
     try {
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      const apiKey = "proxy-enabled";
       const response = await fetchGroqWithRetry({
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
@@ -363,7 +364,7 @@ Original Text: ${description}`
     }
     setEnhancingProjId(id);
     try {
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      const apiKey = "proxy-enabled";
       const response = await fetchGroqWithRetry({
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
@@ -402,7 +403,7 @@ Original Text: ${description}`
       return;
     }
 
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    const apiKey = "proxy-enabled";
     if (!apiKey) {
       toast.error("VITE_GROQ_API_KEY not configured.");
       return;
@@ -525,7 +526,7 @@ CRITICAL RULES:
 
   // === Make ATS Friendly: full resume auto-optimize ===
   const handleMakeAtsFriendly = async () => {
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    const apiKey = "proxy-enabled";
     if (!apiKey) { toast.error("GROQ_API_KEY not configured."); return; }
     setMakingAtsFriendly(true);
 
@@ -742,7 +743,7 @@ Original description: ${proj.description}`
       toast.error("Please paste a Job Description first.");
       return;
     }
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    const apiKey = "proxy-enabled";
     if (!apiKey) { toast.error("GROQ_API_KEY not configured."); return; }
     setExtractingJd(true);
     try {
@@ -847,7 +848,7 @@ ${sanitized}`;
         return;
       }
 
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      const apiKey = "proxy-enabled";
       if (!apiKey) {
         throw new Error("GROQ_API_KEY is not configured in this environment.");
       }
@@ -959,7 +960,7 @@ ${resumeText}${jdContext}`;
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    const apiKey = "proxy-enabled";
     if (!apiKey) {
       toast.error("VITE_GROQ_API_KEY not configured.");
       return;

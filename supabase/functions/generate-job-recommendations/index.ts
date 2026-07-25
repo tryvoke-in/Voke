@@ -37,6 +37,37 @@ serve(async (req) => {
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+        // 1b. Authenticate the caller securely
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader) {
+            return new Response(JSON.stringify({ error: "Missing authorization header" }), { 
+                status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            });
+        }
+
+        const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+        if (!supabaseAnonKey) {
+            throw new Error("SUPABASE_ANON_KEY is not configured");
+        }
+        
+        const supabaseAuthClient = createClient(supabaseUrl, supabaseAnonKey, {
+            global: { headers: { Authorization: authHeader } }
+        });
+
+        const { data: { user }, error: authError } = await supabaseAuthClient.auth.getUser();
+
+        if (authError || !user) {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), { 
+                status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            });
+        }
+
+        if (user.id !== userId) {
+            return new Response(JSON.stringify({ error: "Forbidden: userId mismatch" }), { 
+                status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            });
+        }
+
         // 2. Dynamic Import: Groq SDK
         console.log("Importing Groq...");
         let Groq;

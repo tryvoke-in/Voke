@@ -57,6 +57,37 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // 1. Authenticate the caller securely
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization header" }), { 
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supabaseAnonKey) {
+      throw new Error("SUPABASE_ANON_KEY is not configured");
+    }
+    
+    const supabaseAuthClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: authError } = await supabaseAuthClient.auth.getUser();
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { 
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
+    if (user.id !== userId) {
+      return new Response(JSON.stringify({ error: "Forbidden: userId mismatch" }), { 
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
     // Get user's interview history for context (non-critical, continue on error)
     const { data: pastSessions, error: pastSessionsError } = await supabase
       .from("interview_sessions")

@@ -28,6 +28,37 @@ serve(async (req) => {
         const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+        // 1. Authenticate the caller securely
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader) {
+            return new Response(JSON.stringify({ error: "Missing authorization header" }), { 
+                status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            });
+        }
+
+        const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+        if (!supabaseAnonKey) {
+            throw new Error("SUPABASE_ANON_KEY is not configured");
+        }
+        
+        const supabaseAuthClient = createClient(supabaseUrl, supabaseAnonKey, {
+            global: { headers: { Authorization: authHeader } }
+        });
+
+        const { data: { user }, error: authError } = await supabaseAuthClient.auth.getUser();
+
+        if (authError || !user) {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), { 
+                status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            });
+        }
+
+        if (user.id !== userId) {
+            return new Response(JSON.stringify({ error: "Forbidden: userId mismatch" }), { 
+                status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            });
+        }
+
         // Fetch user's interview performance
         const { data: textInterviews } = await supabase
             .from('interview_sessions')

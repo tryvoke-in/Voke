@@ -84,12 +84,10 @@ const Pricing = () => {
                 return;
             }
 
-            // Create a Razorpay order on the server to get a valid order_id
+            // Create a Razorpay order on the server based on the chosen plan
             const { data: orderData, error: orderError } = await supabase.functions.invoke("create-razorpay-order", {
                 body: {
-                    amount: 9900, // ₹99 in paise
-                    currency: "INR",
-                    receipt: `rcpt_${user.id.slice(0, 8)}_${Date.now()}`, // max 40 chars
+                    plan: "elite_pro"
                 },
             });
 
@@ -126,24 +124,24 @@ const Pricing = () => {
                       payment_id: response.razorpay_payment_id,
                       order_id: response.razorpay_order_id
                     });
-                    toast.success("Payment successful! Verifying with server...");
+                    toast.success("Payment successful! Verifying and upgrading...");
 
-                    const { error } = await supabase.functions.invoke("verify-razorpay-payment", {
+                    const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-razorpay-payment", {
                         body: {
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                        },
+                            razorpay_signature: response.razorpay_signature
+                        }
                     });
 
-                    if (error) {
-                        console.error("Error verifying payment signature:", error);
-                        toast.error("Verification failed. Please contact support.");
+                    if (verifyError || !verifyData?.success) {
+                        console.error("Payment verification failed:", verifyError || verifyData);
+                        toast.error("Payment recorded, but profile update failed. Please contact support.");
                     } else {
                         // Refresh the session immediately so the new user metadata is available in the local session
                         await supabase.auth.refreshSession();
                         setShowConfetti(true);
-                        toast.success("Welcome to Voke Elite Pro! Payment verified.");
+                        toast.success("Welcome to Voke Elite Pro! Payment successful.");
                         setTimeout(() => {
                             setShowConfetti(false);
                             navigate("/dashboard");

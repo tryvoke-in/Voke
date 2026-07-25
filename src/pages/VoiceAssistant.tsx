@@ -283,36 +283,31 @@ const VoiceAssistant: React.FC = () => {
 
         if (profile.github_url) {
           try {
-            const githubToken = import.meta.env.VITE_GITHUB_TOKEN;
             const usernameMatch = profile.github_url.match(/github\.com\/([^\/]+)/);
             if (usernameMatch) {
               const username = usernameMatch[1];
-              const headers: Record<string, string> = {
-                'Accept': 'application/vnd.github.v3+json',
-                'User-Agent': 'Voke-Interview-App'
-              };
+              const session = await supabase.auth.getSession();
+              const token = session.data.session?.access_token;
+              
+              if (token) {
+                const reposResponse = await fetch(`${supabase.supabaseUrl}/functions/v1/github-proxy`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ username, per_page: 3 })
+                });
 
-              let reposResponse = await fetch(
-                `https://api.github.com/users/${username}/repos?sort=updated&per_page=3`,
-                { headers }
-              );
-
-              if ((reposResponse.status === 401 || reposResponse.status === 403) && githubToken) {
-                const authHeaders = { ...headers, 'Authorization': `token ${githubToken}` };
-                reposResponse = await fetch(
-                  `https://api.github.com/users/${username}/repos?sort=updated&per_page=3`,
-                  { headers: authHeaders }
-                );
-              }
-
-              if (reposResponse.ok) {
-                const repos = await reposResponse.json();
-                const projectSummaries = await Promise.all(
-                  repos.map(async (repo: any) => {
-                    return `Project: ${repo.name}\n- Description: ${repo.description || 'No description'}\n- Tech: ${repo.language || 'Not specified'}`;
-                  })
-                );
-                setGithubProjectsText(`GITHUB PROJECTS:\n${projectSummaries.join('\n\n')}`);
+                if (reposResponse.ok) {
+                  const repos = await reposResponse.json();
+                  const projectSummaries = await Promise.all(
+                    repos.map(async (repo: any) => {
+                      return `Project: ${repo.name}\n- Description: ${repo.description || 'No description'}\n- Tech: ${repo.language || 'Not specified'}`;
+                    })
+                  );
+                  setGithubProjectsText(`GITHUB PROJECTS:\n${projectSummaries.join('\n\n')}`);
+                }
               }
             }
           } catch (e) {

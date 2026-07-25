@@ -75,69 +75,50 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
         let hasResume = false;
 
         // Fetch GitHub context
+        // Fetch GitHub context
         if (userProfile.github_url) {
             try {
-                const githubToken = import.meta.env.VITE_GITHUB_TOKEN;
                 const usernameMatch = userProfile.github_url.match(/github\.com\/([^\/]+)/);
                 if (usernameMatch) {
                     const username = usernameMatch[1];
-                    const headers: Record<string, string> = {
-                        'Accept': 'application/vnd.github.v3+json',
-                        'User-Agent': 'Voke-Interview-App'
-                    };
+                    const session = await supabase.auth.getSession();
+                    const token = session.data.session?.access_token;
 
-                    let reposResponse = await fetch(
-                        `https://api.github.com/users/${username}/repos?sort=updated&per_page=5`,
-                        { headers }
-                    );
+                    if (token) {
+                        const reposResponse = await fetch(`${supabase.supabaseUrl}/functions/v1/github-proxy`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ username, per_page: 5 })
+                        });
 
-                    if ((reposResponse.status === 401 || reposResponse.status === 403) && githubToken) {
-                        console.warn('[ProfileContext] Public request failed or token required. Retrying with token...');
-                        const authHeaders = { ...headers, 'Authorization': `token ${githubToken}` };
-                        reposResponse = await fetch(
-                            `https://api.github.com/users/${username}/repos?sort=updated&per_page=5`,
-                            { headers: authHeaders }
-                        );
-                    }
-
-                    if (reposResponse.ok) {
-                        const repos = await reposResponse.json();
-                        projectCount = repos.length;
-
-                        const projectSummaries = await Promise.all(
-                            repos.map(async (repo: any) => {
-                                let readmeSummary = 'No README available';
-
-                                try {
-                                    let readmeResponse = await fetch(
-                                        `https://api.github.com/repos/${username}/${repo.name}/readme`,
-                                        { headers }
-                                    );
-
-                                    if ((readmeResponse.status === 401 || readmeResponse.status === 403) && githubToken) {
-                                        const authHeaders = { ...headers, 'Authorization': `token ${githubToken}` };
-                                        readmeResponse = await fetch(
-                                            `https://api.github.com/repos/${username}/${repo.name}/readme`,
-                                            { headers: authHeaders }
-                                        );
+                        if (reposResponse.ok) {
+                            const repos = await reposResponse.json();
+                            projectCount = repos.length;
+                            
+                            const projectSummaries = await Promise.all(
+                                repos.map(async (repo: any) => {
+                                    let readmeSummary = 'No README available';
+                                    try {
+                                        const readmeResponse = await fetch(`https://api.github.com/repos/${username}/${repo.name}/readme`);
+                                        if (readmeResponse.ok) {
+                                            const readmeData = await readmeResponse.json();
+                                            const decodedContent = atob(readmeData.content);
+                                            readmeSummary = decodedContent.substring(0, 300).replace(/[#*`\n]/g, ' ').trim();
+                                        }
+                                    } catch (e) {
+                                        console.log(`[ProfileContext] No README for ${repo.name}`);
                                     }
-
-                                    if (readmeResponse.ok) {
-                                        const readmeData = await readmeResponse.json();
-                                        const decodedContent = atob(readmeData.content);
-                                        readmeSummary = decodedContent.substring(0, 300).replace(/[#*`\n]/g, ' ').trim();
-                                    }
-                                } catch (e) {
-                                    console.log(`[ProfileContext] No README for ${repo.name}`);
-                                }
-
-                                return `Project: ${repo.name}\n- Description: ${repo.description || 'No description'}\n- Tech: ${repo.language || 'Not specified'}\n- Stars: ${repo.stargazers_count}\n- Summary: ${readmeSummary}`;
-                            })
-                        );
-
-                        context += `\nGITHUB PROJECTS:\n${projectSummaries.join('\n\n')}\n`;
-                        hasGithub = true;
-                        console.log('[ProfileContext] ✓ GitHub projects loaded:', projectCount);
+                                    return `Project: ${repo.name}\n- Description: ${repo.description || 'No description'}\n- Tech: ${repo.language || 'Not specified'}\n- Stars: ${repo.stargazers_count}\n- Summary: ${readmeSummary}`;
+                                })
+                            );
+                            
+                            context += `\nGITHUB PROJECTS:\n${projectSummaries.join('\n\n')}\n`;
+                            hasGithub = true;
+                            console.log('[ProfileContext] ✓ GitHub projects loaded:', projectCount);
+                        }
                     }
                 }
             } catch (e) {
