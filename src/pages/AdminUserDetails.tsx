@@ -265,13 +265,13 @@ const AdminUserDetails = () => {
     }
     setSending(true);
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
+      const { error } = await supabase.functions.invoke('admin-send-notification', {
+        body: {
           user_id: userId,
           title: notificationForm.title,
           message: notificationForm.message,
-        });
+        }
+      });
 
       if (error) throw error;
       
