@@ -3,6 +3,8 @@
 
 const PISTON_API_URL = 'https://emkc.org/api/v2/piston';
 
+import { supabase } from '../integrations/supabase/client';
+
 // Language mapping for Piston API
 export const PISTON_LANGUAGES = {
   python: { language: 'python', version: '3.10.0', aliases: ['py', 'py3'] },
@@ -143,21 +145,19 @@ export async function executePistonCode(
   };
 
   try {
-    // Make API request
-    const response = await fetch(`${PISTON_API_URL}/execute`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
+    // Make API request through Supabase Edge Function to avoid CORS
+    const { data: result, error: invokeError } = await supabase.functions.invoke('execute-code', {
+      body: payload
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(errorData.message || `API request failed: ${response.statusText}`);
+    if (invokeError) {
+      throw new Error(invokeError.message || 'Supabase Edge Function invocation failed');
     }
 
-    const result: PistonExecuteResponse = await response.json();
+    if (!result) {
+      throw new Error('No response returned from Edge Function');
+    }
+
     const executionTime = Date.now() - startTime;
 
     // Check for compilation errors

@@ -117,10 +117,12 @@ const ElitePrep: React.FC = () => {
   };
 
   const handleStartRound = async (round: InterviewRoundDef) => {
-    setActiveRound(round);
-    if (credits > 0 || isPremium) {
-      await consumeCredit();
+    if (credits <= 0 && !isPremium) {
+      navigate('/pricing');
+      return;
     }
+    setActiveRound(round);
+    await consumeCredit();
     setViewMode('in_interview');
   };
 
