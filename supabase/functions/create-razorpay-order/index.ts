@@ -75,6 +75,9 @@ Deno.serve(async (req: Request) => {
         amount,
         currency,
         receipt,
+        notes: {
+          user_id: user.id
+        }
       }),
     });
 
