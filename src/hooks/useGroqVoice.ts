@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { LiveStatus, MessageLog } from '../types/voice';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const SYSTEM_INSTRUCTION = `YOU ARE:
 A real-time voice-based conversational assistant designed to conduct a professional yet friendly interview.
@@ -88,49 +89,108 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     // Forward declaration for use in speakResponse
     const startListeningRef = useRef<() => Promise<void>>();
 
-    // Helper to send messages to Groq
+    // Helper to send messages to Gemini 3.1 Flash Lite Edge Function (Primary) with Groq fallback
     const sendToGroq = async (fullMessages: any[]) => {
-        let completion;
-        const session = await supabase.auth.getSession();
-        const token = session.data.session?.access_token;
-        if (!token) return speakResponse("I cannot process your request because you are not logged in.");
+        let aiText = "";
 
-        const makeRequest = async (model: string) => {
-            const res = await fetch(`${supabase.supabaseUrl}/functions/v1/groq-proxy`, {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ messages: fullMessages, model: model, temperature: 0.7, max_tokens: 800 })
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return await res.json();
-        };
-
+        // PRIMARY ENGINE: Call Gemini 3.1 Flash Lite via interview-chat Edge Function
         try {
-            completion = await makeRequest('llama-3.3-70b-versatile');
-        } catch (error: any) {
-            // Level 1 Fallback: Llama 3.1 8B
-            if (error?.message?.includes('429')) {
-                console.log('DEBUG: Rate limit on 70b, waiting 1s and switching to 8b...');
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                try {
-                    completion = await makeRequest('llama-3.1-8b-instant');
-                } catch (retryError: any) {
-                    // Level 2 Fallback: Mixtral
-                    if (retryError?.message?.includes('429')) {
-                        console.log('DEBUG: Rate limit on 8b, waiting 2s and switching to Mixtral...');
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        completion = await makeRequest('mixtral-8x7b-32768');
-                    } else {
-                        throw retryError;
-                    }
-                }
-            } else {
-                throw error;
+            console.log('DEBUG: Primary - Generating question with Gemini 3.1 Flash Lite via interview-chat Edge Function...');
+            const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('interview-chat', {
+                body: { messages: fullMessages }
+            });
+
+            const responseText = edgeData?.question || edgeData?.content || edgeData?.response;
+            if (!edgeErr && responseText && typeof responseText === 'string' && responseText.trim().length > 0) {
+                aiText = responseText.trim();
+                console.log('DEBUG: Gemini 3.1 Flash Lite response:', aiText);
+            } else if (edgeErr) {
+                console.warn('interview-chat Edge Function note:', edgeErr);
+            }
+        } catch (edgeEx) {
+            console.warn('interview-chat Edge Function exception:', edgeEx);
+        }
+
+        // SECONDARY FALLBACK: Groq Llama 3.3 70B
+        if (!aiText && groqClient) {
+            try {
+                console.log('DEBUG: Secondary Fallback - Generating question with Groq Llama 3.3 70B...');
+                const completion = await groqClient.chat.completions.create({
+                    messages: fullMessages,
+                    model: 'llama-3.3-70b-versatile',
+                    temperature: 0.7,
+                    max_tokens: 800,
+                });
+                aiText = completion.choices[0]?.message?.content || "";
+            } catch (groqErr) {
+                console.error("Groq fallback error:", groqErr);
             }
         }
 
-        const aiText = completion.choices[0]?.message?.content || "I didn't catch that.";
-        console.log('DEBUG: Groq response:', aiText);
+        if (!aiText) {
+            const assistantTurnCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
+
+            // Extract candidate's target repos dynamically from prompt context
+            const promptMsg = fullMessages.find((m: any) => m.role === 'system')?.content || '';
+            const repoMatches = Array.from(promptMsg.matchAll(/([A-Z][a-zA-Z0-9_-]{2,})/g)).map((m: any) => m[1]);
+            const targetRepos = Array.from(new Set(repoMatches.filter((r: string) => 
+                !['CRITICAL', 'MANDATE', 'ROUND', 'STRICT', 'QUESTION', 'EXACT', 'REQUIREMENT', 'COMPANY', 'ROLE', 'VOICE', 'RULES', 'CHECKING', 'RESUME', 'GITHUB', 'VERDICT', 'REASON', 'PASSED', 'FAILED', 'GOOGLE', 'META', 'MICROSOFT', 'AMAZON', 'APPLE'].includes(r)
+            )));
+            const repo1 = targetRepos[0] || 'your repository';
+            const repo2 = targetRepos[1] || repo1;
+
+            const dynamicQuestionBank = [
+                [
+                    "Hello! Could you introduce yourself briefly and summarize your background?",
+                    "Welcome! Please introduce yourself and highlight your core technical experience.",
+                    "Hello! Let's start with a quick introduction about yourself and your primary engineering background."
+                ],
+                [
+                    `Regarding your repository ${repo1}, how did you organize the component structure and manage data flow?`,
+                    `In your project ${repo1}, what key design decisions did you make when setting up the initial architecture?`,
+                    `Looking at ${repo1}, how did you handle state management and UI responsiveness?`
+                ],
+                [
+                    `For ${repo2}, how did you structure the backend API integration and handle server responses?`,
+                    `In ${repo2}, how did you design the data models and manage asynchronous data fetching?`,
+                    `Regarding ${repo2}, what architectural approach did you take for scalability and performance?`
+                ],
+                [
+                    `In ${repo1}, how did you handle error boundary management and edge cases during execution?`,
+                    `In ${repo1}, how did you optimize rendering performance and minimize unneeded re-renders?`,
+                    `Looking at ${repo1}, what testing or validation strategies did you implement?`
+                ],
+                [
+                    `What was the most challenging technical bottleneck you encountered in ${repo2}, and how did you resolve it?`,
+                    `In ${repo2}, what was the most difficult bug or technical constraint you faced and fixed?`,
+                    `Regarding ${repo2}, what complex problem did you solve during its development?`
+                ],
+                [
+                    `In ${repo1}, what trade-offs did you make between development speed and code maintainability?`,
+                    `For ${repo1}, how did you balance feature delivery speed against architectural elegance?`,
+                    `In ${repo1}, what trade-offs did you evaluate regarding third-party dependencies vs custom code?`
+                ],
+                [
+                    `In your projects like ${repo1}, how do you ensure clean code standards, modularity, and security?`,
+                    `How do you approach refactoring and maintaining code quality in projects like ${repo2}?`,
+                    `In ${repo1}, how did you enforce consistent code patterns and maintainable project structure?`
+                ],
+                [
+                    `Why do you want to join this company for this specific role?`,
+                    `What excites you most about working at this company in this role?`,
+                    `How does your technical background align with this company's engineering goals?`
+                ],
+                [
+                    `Where do you see yourself in a few years?`,
+                    `What are your primary technical growth goals over the next few years?`,
+                    `Where do you aim to evolve your software engineering skills in the coming years?`
+                ]
+            ];
+
+            const turnIndex = Math.min(assistantTurnCount, dynamicQuestionBank.length - 1);
+            const options = dynamicQuestionBank[turnIndex];
+            aiText = options[Math.floor(Math.random() * options.length)];
+        }
 
         const aiMsg: MessageLog = {
             id: Date.now().toString() + '-ai',
@@ -142,7 +202,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         conversationHistoryRef.current.push({ role: 'assistant', content: aiText });
 
         speakResponse(aiText);
-    }
+    };
 
     const speakResponse = async (text: string) => {
         if (!text) return;
@@ -158,86 +218,56 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         }
 
         speechText = speechText.trim();
+        if (!speechText || statusRef.current === LiveStatus.DISCONNECTED) {
+            window.speechSynthesis.cancel();
+            return;
+        }
 
         try {
-            console.log('DEBUG: Generating speech with Local macOS TTS...');
+            console.log('DEBUG: Speaking AI response via Web Speech API:', speechText);
             setIsAiSpeaking(true);
             setVolume(0.8);
 
-            // Call local TTS server
-            const response = await fetch('http://localhost:5001', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ text: speechText }),
-            });
+            window.speechSynthesis.cancel(); // Cancel any previous active speech
+            const utterance = new SpeechSynthesisUtterance(speechText);
 
-            if (!response.ok) {
-                throw new Error(`TTS Server error: ${response.statusText}`);
+            // Select natural english voice if available
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => 
+                v.lang.startsWith('en') && 
+                (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Karen'))
+            ) || voices.find(v => v.lang.startsWith('en'));
+
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
             }
 
-            const blob = await response.blob();
-            const audioUrl = URL.createObjectURL(blob);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
 
-            // STOP: Check if we are still connected before playing
-            if (statusRef.current !== LiveStatus.CONNECTED) {
-                console.log('DEBUG: Disconnected while generating speech, cancelling playback.');
-                URL.revokeObjectURL(audioUrl);
-                return;
-            }
-
-            // Play the audio
-            if (audioRef.current) {
-                audioRef.current.pause();
-                audioRef.current = null;
-            }
-            const audio = new Audio(audioUrl);
-            audioRef.current = audio;
-
-            audio.onplay = () => {
-                console.log('DEBUG: Audio started');
-            };
-
-            audio.onended = () => {
-                console.log('DEBUG: Audio finished');
+            utterance.onend = () => {
+                console.log('DEBUG: AI speech finished.');
                 setIsAiSpeaking(false);
                 setVolume(0);
-                URL.revokeObjectURL(audioUrl);
-                audioRef.current = null;
 
-                // Resume listening after speaking
+                // Resume candidate microphone listening after AI finishes speaking
                 if (statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
                     setTimeout(() => startListeningRef.current!(), 500);
                 }
             };
 
-            audio.onerror = (e) => {
-                console.error("DEBUG: Audio playback error:", e);
+            utterance.onerror = (e) => {
+                console.warn('DEBUG: Speech synthesis note:', e);
                 setIsAiSpeaking(false);
                 setVolume(0);
-                audioRef.current = null;
             };
 
-            console.log('DEBUG: Playing audio for:', speechText);
-            await audio.play();
+            window.speechSynthesis.speak(utterance);
 
         } catch (error) {
-            console.error('DEBUG: Local TTS error:', error);
+            console.error('DEBUG: Speech synthesis error:', error);
             setIsAiSpeaking(false);
             setVolume(0);
-
-            // Fallback to browser TTS
-            console.log('DEBUG: Falling back to browser TTS');
-            window.speechSynthesis.cancel(); // Cancel any previous speech
-            const utterance = new SpeechSynthesisUtterance(speechText);
-            utterance.onend = () => {
-                setIsAiSpeaking(false);
-                if (statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
-                    setTimeout(() => startListeningRef.current!(), 500);
-                }
-            };
-            window.speechSynthesis.speak(utterance);
         }
     };
 
@@ -296,8 +326,9 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         try {
             console.log('DEBUG: Sending to Groq...');
 
+            const systemPromptContent = contextRef.current ? contextRef.current : SYSTEM_INSTRUCTION;
             const messages = [
-                { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCONTEXT:\n' + contextRef.current },
+                { role: 'system', content: systemPromptContent },
                 ...conversationHistoryRef.current
             ];
 
@@ -617,7 +648,15 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const disconnect = useCallback(() => {
         console.log('DEBUG: Disconnect called');
         setStatus(LiveStatus.DISCONNECTED);
+        statusRef.current = LiveStatus.DISCONNECTED;
         isListeningRef.current = false;
+
+        // Stop browser speech synthesis immediately
+        try {
+            window.speechSynthesis.cancel();
+        } catch (e) {
+            console.log('DEBUG: speechSynthesis cancel note:', e);
+        }
 
         // Stop media recorder
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
 import { CompanyRoleProgress } from '@/utils/eliteInterviewStorage';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +31,7 @@ export const EliteRoundsHub: React.FC<EliteRoundsHubProps> = ({
   onChangeCompany,
   onChangeRole
 }) => {
+  const navigate = useNavigate();
   const passedCount = progress.rounds.filter(r => r.status === 'passed').length;
   const progressPercent = Math.round((passedCount / rounds.length) * 100);
 
@@ -238,6 +240,80 @@ export const EliteRoundsHub: React.FC<EliteRoundsHubProps> = ({
                               </span>
                             ))}
                           </div>
+
+                          {/* Persistent Post-Round AI Feedback Report */}
+                          {(isPassed || isFailed) && (
+                            <div className="mt-4 p-4 rounded-2xl bg-zinc-900/90 border border-white/15 space-y-3 shadow-inner">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                                  <Sparkles className="w-4 h-4 text-amber-400" />
+                                  AI Round Performance & Feedback Report
+                                </span>
+                                {roundProgress.score && (
+                                  <span className={`text-xs font-black font-mono px-2 py-0.5 rounded-md ${
+                                    isPassed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                  }`}>
+                                    Score: {roundProgress.score}%
+                                  </span>
+                                )}
+                              </div>
+
+                              {roundProgress.feedback && (
+                                <p className="text-xs text-zinc-300 italic leading-relaxed bg-zinc-950/70 p-3 rounded-xl border border-white/10">
+                                  "{roundProgress.feedback}"
+                                </p>
+                              )}
+
+                              {roundProgress.feedbackDetails && (
+                                <div className="space-y-3 pt-1">
+                                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    <div className="bg-zinc-950 p-2.5 rounded-xl border border-white/10 text-center">
+                                      <div className="text-[9px] font-bold text-zinc-400 uppercase">Communication</div>
+                                      <div className="text-xs font-black text-violet-300 mt-0.5">{roundProgress.feedbackDetails.communicationScore}%</div>
+                                    </div>
+                                    <div className="bg-zinc-950 p-2.5 rounded-xl border border-white/10 text-center">
+                                      <div className="text-[9px] font-bold text-zinc-400 uppercase">Confidence</div>
+                                      <div className="text-xs font-black text-amber-300 mt-0.5">{roundProgress.feedbackDetails.confidenceScore}%</div>
+                                    </div>
+                                    <div className="bg-zinc-950 p-2.5 rounded-xl border border-white/10 text-center">
+                                      <div className="text-[9px] font-bold text-zinc-400 uppercase">Technical Depth</div>
+                                      <div className="text-xs font-black text-emerald-300 mt-0.5">{roundProgress.feedbackDetails.technicalScore}%</div>
+                                    </div>
+                                    <div className="bg-zinc-950 p-2.5 rounded-xl border border-white/10 text-center">
+                                      <div className="text-[9px] font-bold text-zinc-400 uppercase">Authenticity</div>
+                                      <div className="text-xs font-black text-sky-300 mt-0.5">{roundProgress.feedbackDetails.resumeAuthenticityScore}%</div>
+                                    </div>
+                                  </div>
+
+                                  {roundProgress.feedbackDetails.strengths && roundProgress.feedbackDetails.strengths.length > 0 && (
+                                    <div className="bg-emerald-950/30 border border-emerald-500/20 p-3 rounded-xl space-y-1 text-left">
+                                      <div className="text-[10px] font-extrabold text-emerald-400 uppercase">Key Strengths</div>
+                                      <ul className="space-y-1">
+                                        {roundProgress.feedbackDetails.strengths.map((str, sIdx) => (
+                                          <li key={sIdx} className="text-[11px] text-zinc-300 flex items-start gap-1.5">
+                                            <span className="text-emerald-400 font-bold">•</span> {str}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+
+                                  {roundProgress.feedbackDetails.improvements && roundProgress.feedbackDetails.improvements.length > 0 && (
+                                    <div className="bg-amber-950/30 border border-amber-500/20 p-3 rounded-xl space-y-1 text-left">
+                                      <div className="text-[10px] font-extrabold text-amber-400 uppercase">Areas for Improvement</div>
+                                      <ul className="space-y-1">
+                                        {roundProgress.feedbackDetails.improvements.map((imp, iIdx) => (
+                                          <li key={iIdx} className="text-[11px] text-zinc-300 flex items-start gap-1.5">
+                                            <span className="text-amber-400 font-bold">•</span> {imp}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -266,6 +342,17 @@ export const EliteRoundsHub: React.FC<EliteRoundsHubProps> = ({
                           >
                             <RefreshCw className="w-4 h-4 mr-2" />
                             Re-give Round {roundDef.roundNumber} Interview
+                          </Button>
+                        )}
+
+                        {(isPassed || isFailed) && roundProgress?.sessionId && (
+                          <Button
+                            size="lg"
+                            onClick={() => navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`)}
+                            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-black text-sm px-7 h-12 rounded-2xl shadow-xl shadow-purple-600/25 hover:scale-[1.03] active:scale-[0.97] transition-all"
+                          >
+                            <Sparkles className="w-4 h-4 mr-2 text-amber-300" />
+                            View Score & Analysis
                           </Button>
                         )}
 

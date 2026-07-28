@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callGeminiPipeline } from "../_shared/gemini-pipeline.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,13 +24,8 @@ serve(async (req) => {
       );
     }
 
-    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    console.log("DEBUG: GROQ_API_KEY present:", !!GROQ_API_KEY);
-    console.log("DEBUG: sessionId:", sessionId);
-
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get session
@@ -43,7 +39,6 @@ serve(async (req) => {
       console.error("Session fetch error:", JSON.stringify(sessionError));
       throw sessionError;
     }
-    console.log("Session loaded:", session.role);
 
     // Get all answers
     const { data: answers, error: answersError } = await supabase
@@ -56,9 +51,7 @@ serve(async (req) => {
       console.error("Answers fetch error:", JSON.stringify(answersError));
       throw answersError;
     }
-    console.log("Answers loaded:", answers?.length || 0);
 
-    // Build fallback analysis
     const answerCount = answers?.length || 0;
     const avgScore = answerCount > 0
       ? Math.round(
@@ -69,40 +62,33 @@ serve(async (req) => {
       : 72;
 
     let analysis = {
-      body_language_summary: "Maintained a professional posture throughout the interview. Good use of hand gestures when emphasizing points. Facial expressions were engaged and appropriate.",
-      eye_contact_summary: "Maintained consistent eye contact with the camera, demonstrating confidence. Looking directly at the lens helped create a connection with the interviewer.",
-      confidence_summary: `Demonstrated solid confidence across ${answerCount} question${answerCount !== 1 ? 's' : ''}. Voice was clear and steady. Overall presence was professional and engaged.`,
+      body_language_summary: "Maintained a professional posture throughout the interview. Good use of hand gestures when emphasizing points.",
+      eye_contact_summary: "Maintained consistent eye contact with the camera, demonstrating confidence.",
+      confidence_summary: `Demonstrated solid confidence across ${answerCount} question${answerCount !== 1 ? 's' : ''}.`,
       overall_score: avgScore,
       key_strengths: ["Clear communication style", "Professional demeanor", "Thoughtful responses"],
-      key_improvements: ["Add more specific examples with measurable outcomes", "Use the STAR method consistently", "Reduce filler words to improve delivery"],
+      key_improvements: ["Add more specific examples", "Use STAR method", "Reduce filler words"],
       six_q_score: { iq: 72, eq: 70, cq: 68, aq: 71, sq: 73, mq: 74 },
       personality_cluster: "Balanced Thinker",
     };
 
-    // Try AI if key is available and there are answers
-    if (GROQ_API_KEY && answerCount > 0) {
-      try {
-        const answersSummary = answers.map((a: any, idx: number) => `
+    if (answerCount > 0) {
+      const answersSummary = answers.map((a: any, idx: number) => `
 Question ${idx + 1}: ${a.question}
 Transcript: ${a.transcript || "N/A"}
 Scores: Delivery=${a.delivery_score || "N/A"}, Body Language=${a.body_language_score || "N/A"}, Confidence=${a.confidence_score || "N/A"}
+Body Language Details: ${JSON.stringify(a.video_analysis_details || {})}
 `).join("\n");
 
-        const analysisPrompt = `You are an expert interview coach. Analyze this complete interview session for a ${session.role} position.
+      const systemPrompt = `You are an expert interview coach. Analyze this complete interview session for a ${session?.role || "General"} position and produce the final report using the Questions, Transcript, Body language JSON, and Scores.
 
 INTERVIEW SUMMARY:
 ${answersSummary}
 
 6Q PERSONALITY FRAMEWORK - score each (0-100) and determine top cluster:
-- IQ: Problem solving, logic, concept grasping
-- EQ: Emotional awareness, empathy, self-reflection
-- CQ: Creativity, novel thinking, "what if" mindset
-- AQ: Handling adversity, resilience, staying calm under pressure
-- SQ: Social skills, collaboration, communication
-- MQ: Integrity, honesty, moral reasoning
+- IQ, EQ, CQ, AQ, SQ, MQ
 
-Provide comprehensive feedback in JSON only (no markdown):
-
+Provide comprehensive feedback in JSON only:
 {
   "body_language_summary": "<2-3 sentences>",
   "eye_contact_summary": "<2-3 sentences>",
@@ -114,58 +100,107 @@ Provide comprehensive feedback in JSON only (no markdown):
   "personality_cluster": "<cluster name>"
 }`;
 
-        console.log("Calling Groq API for overall feedback...");
-        const response = await fetch(
-          "https://api.groq.com/openai/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${GROQ_API_KEY}`,
-              "Content-Type": "application/json",
+      const geminiContents = [
+        {
+          role: "user",
+          parts: [{ text: systemPrompt }]
+        }
+      ];
+
+      const responseSchema = {
+        type: "OBJECT",
+        properties: {
+          body_language_summary: { type: "STRING" },
+          eye_contact_summary: { type: "STRING" },
+          confidence_summary: { type: "STRING" },
+          overall_score: { type: "INTEGER" },
+          key_strengths: {
+            type: "ARRAY",
+            items: { type: "STRING" }
+          },
+          key_improvements: {
+            type: "ARRAY",
+            items: { type: "STRING" }
+          },
+          six_q_score: {
+            type: "OBJECT",
+            properties: {
+              iq: { type: "INTEGER" },
+              eq: { type: "INTEGER" },
+              cq: { type: "INTEGER" },
+              aq: { type: "INTEGER" },
+              sq: { type: "INTEGER" },
+              mq: { type: "INTEGER" }
             },
-            body: JSON.stringify({
-              model: "llama-3.1-8b-instant",
-              messages: [{ role: "user", content: analysisPrompt }],
-              temperature: 0.3,
-              max_tokens: 800,
-            }),
+            required: ["iq", "eq", "cq", "aq", "sq", "mq"]
+          },
+          personality_cluster: { type: "STRING" }
+        },
+        required: [
+          "body_language_summary",
+          "eye_contact_summary",
+          "confidence_summary",
+          "overall_score",
+          "key_strengths",
+          "key_improvements",
+          "six_q_score",
+          "personality_cluster"
+        ]
+      };
+
+      console.log("Calling Gemini 3.1 Flash Lite for overall feedback via Gemini Pipeline...");
+      const geminiRes = await callGeminiPipeline({
+        modelName: "gemini-3.1-flash-lite",
+        geminiContents,
+        systemPrompt: "You are an expert overall interview evaluator. Return JSON only.",
+        responseSchema,
+        temperature: 0.3,
+      });
+
+      if (geminiRes.ok && geminiRes.aiContent) {
+        try {
+          const jsonMatch = geminiRes.aiContent.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+          const jsonStr = jsonMatch ? jsonMatch[1] : geminiRes.aiContent;
+          const parsed = JSON.parse(jsonStr);
+          if (parsed.overall_score !== undefined) {
+            analysis = parsed;
+            console.log("AI overall analysis parsed successfully from Gemini 3.1 Flash Lite");
           }
-        );
-
-        console.log("Groq API response status:", response.status);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Groq API error:", response.status, errorText);
-        } else {
-          const aiData = await response.json();
-          const aiResponse = aiData.choices?.[0]?.message?.content || "";
-          console.log("Groq response length:", aiResponse.length);
-
+        } catch (parseErr) {
+          console.error("Failed to parse Gemini response:", parseErr);
+        }
+      } else {
+        console.warn("Gemini 3.1 Flash Lite failed. Trying Groq fallback...");
+        const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
+        if (GROQ_API_KEY) {
           try {
-            const jsonMatch = aiResponse.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) ||
-                              aiResponse.match(/(\{[\s\S]*\})/);
-            const jsonStr = jsonMatch ? jsonMatch[1] : aiResponse;
-            const parsed = JSON.parse(jsonStr);
-            if (parsed.overall_score !== undefined) {
-              analysis = parsed;
-              console.log("AI overall analysis parsed successfully");
+            const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${GROQ_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "llama-3.1-8b-instant",
+                messages: [{ role: "user", content: systemPrompt }],
+                temperature: 0.3,
+              }),
+            });
+            if (groqRes.ok) {
+              const groqData = await groqRes.json();
+              const text = groqData.choices?.[0]?.message?.content || "";
+              const match = text.match(/(\{[\s\S]*\})/);
+              if (match) {
+                analysis = JSON.parse(match[1]);
+              }
             }
-          } catch (parseError) {
-            console.error("Failed to parse AI response:", parseError);
+          } catch (groqErr) {
+            console.error("Groq fallback error:", groqErr);
           }
         }
-      } catch (groqError) {
-        console.error("Groq overall feedback call failed:", groqError);
-        // Use fallback analysis
       }
-    } else if (answerCount === 0) {
-      console.warn("No answers found for session - using fallback");
-    } else {
-      console.warn("GROQ_API_KEY not set - using fallback analysis");
     }
 
-    // Update session with feedback
     console.log("Updating interview_sessions with overall feedback...");
     const { error: updateError } = await supabase
       .from("interview_sessions")
@@ -191,10 +226,10 @@ Provide comprehensive feedback in JSON only (no markdown):
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in generate-overall-feedback:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: error.message || "Unknown error" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

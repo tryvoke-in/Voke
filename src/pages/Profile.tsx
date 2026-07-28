@@ -20,6 +20,7 @@ import InterviewAnalytics from "@/components/InterviewAnalytics";
 import AICoachChat from "@/components/AICoachChat";
 import ResumeAnalyzer from "@/components/ResumeAnalyzer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { loadUserProfileContext } from "@/utils/profileContext";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -43,6 +44,20 @@ const Profile = () => {
     leetcode_id: "",
     github_url: "",
   });
+  const [userRepos, setUserRepos] = useState<{ name: string; description: string; language: string; summary: string }[]>([]);
+  const [loadingRepos, setLoadingRepos] = useState(false);
+
+  useEffect(() => {
+    if (formData.github_url || profile?.github_url) {
+      setLoadingRepos(true);
+      loadUserProfileContext().then(ctx => {
+        if (ctx.githubRepos) {
+          setUserRepos(ctx.githubRepos);
+        }
+        setLoadingRepos(false);
+      });
+    }
+  }, [formData.github_url, profile?.github_url]);
   const [codingStats, setCodingStats] = useState<any>(null);
   const [syncing, setSyncing] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -656,11 +671,20 @@ const Profile = () => {
                     {/* Social/External Links */}
                     <div className="mt-8 pt-6 border-t border-border/50 grid grid-cols-2 gap-3">
                       <button 
-                        className="w-full border border-border/50 bg-secondary/20 hover:bg-secondary/40 text-foreground hover:text-foreground justify-start h-10 px-4 py-2 inline-flex items-center gap-2 rounded-md text-sm font-medium transition-colors" 
-                        onClick={() => window.open(profile.github_url || '#', '_blank')}
+                        className={`w-full border justify-start h-10 px-3.5 py-2 inline-flex items-center gap-2 rounded-xl text-xs font-bold transition-all ${
+                          formData.github_url || profile?.github_url
+                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 shadow-sm hover:bg-emerald-500/20'
+                            : 'border-border/50 bg-secondary/20 hover:bg-secondary/40 text-foreground'
+                        }`} 
+                        onClick={() => window.open(formData.github_url || profile?.github_url || 'https://github.com', '_blank')}
                       >
-                        <Github className="w-4 h-4" />
-                        GitHub
+                        <Github className={`w-4 h-4 ${formData.github_url || profile?.github_url ? 'text-emerald-400' : ''}`} />
+                        <span>GitHub</span>
+                        {(formData.github_url || profile?.github_url) && (
+                          <span className="ml-auto text-[10px] font-black bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                            ✓ Connected
+                          </span>
+                        )}
                       </button>
                       <button 
                         className="w-full border border-border/50 bg-secondary/20 hover:bg-secondary/40 text-foreground hover:text-foreground justify-start h-10 px-4 py-2 inline-flex items-center gap-2 rounded-md text-sm font-medium transition-colors"
@@ -819,12 +843,63 @@ const Profile = () => {
                               <Input value={profile?.email} disabled className="bg-background/30 border-input text-muted-foreground h-11" />
                             </div>
                             <div className="space-y-2">
-                              <Label>GitHub URL</Label>
-                              <Input
-                                value={formData.github_url}
-                                onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
-                                className="bg-background/50 border-input focus:border-violet-500 transition-colors h-11"
-                              />
+                              <Label>GitHub Integration</Label>
+                              <div className="p-3.5 rounded-xl border border-border/50 bg-secondary/20 flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+                                    <Github className="w-4 h-4" />
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-bold text-foreground">GitHub Account</div>
+                                    <div className="text-[11px] text-muted-foreground">
+                                      {formData.github_url || profile?.github_url
+                                        ? `@${(formData.github_url || profile?.github_url || '').replace(/\/$/, '').split('/').pop()} linked`
+                                        : '1-Click Direct Connect'}
+                                    </div>
+                                  </div>
+                                </div>
+                                {formData.github_url || profile?.github_url ? (
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 font-extrabold flex items-center gap-1.5 shadow-sm">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                      Connected
+                                    </Badge>
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        const { error } = await supabase.auth.signInWithOAuth({
+                                          provider: 'github',
+                                          options: {
+                                            scopes: 'read:user repo read:org',
+                                            redirectTo: `${window.location.origin}/profile`
+                                          }
+                                        });
+                                        if (error) toast.error(error.message);
+                                      }}
+                                      className="text-[11px] font-bold text-violet-400 hover:text-violet-300 underline cursor-pointer ml-1"
+                                    >
+                                      Re-connect
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const { error } = await supabase.auth.signInWithOAuth({
+                                        provider: 'github',
+                                        options: {
+                                          scopes: 'read:user repo',
+                                          redirectTo: `${window.location.origin}/profile`
+                                        }
+                                      });
+                                      if (error) toast.error(error.message);
+                                    }}
+                                    className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1.5 cursor-pointer transition-colors bg-violet-500/10 px-3 py-1.5 rounded-lg border border-violet-500/20 hover:bg-violet-500/20"
+                                  >
+                                    <Github className="w-3.5 h-3.5" /> ⚡ Connect GitHub
+                                  </button>
+                                )}
+                              </div>
                             </div>
                             <div className="space-y-2">
                               <Label>LeetCode Username</Label>
@@ -870,6 +945,82 @@ const Profile = () => {
                               </Button>
                             </div>
                           </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* CONNECTED GITHUB REPOSITORIES GRID CARD */}
+                      <Card className="bg-card/50 backdrop-blur-xl border-border/50 shadow-xl overflow-hidden mt-6">
+                        <CardHeader className="border-b border-border/50 bg-secondary/10 pb-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center text-violet-400 font-bold">
+                                <Github className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <CardTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
+                                  Connected GitHub Repositories
+                                </CardTitle>
+                                <CardDescription className="text-xs text-muted-foreground">
+                                  All public repositories linked to your account for AI technical evaluation
+                                </CardDescription>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs px-3 py-1 font-bold">
+                              {userRepos.length} Repositories
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                          {loadingRepos ? (
+                            <div className="py-8 text-center text-xs text-muted-foreground font-mono flex items-center justify-center gap-2">
+                              <Zap className="w-4 h-4 text-violet-400 animate-spin" />
+                              Fetching public repositories from GitHub...
+                            </div>
+                          ) : userRepos.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-96 overflow-y-auto pr-1">
+                              {userRepos.map((repo) => {
+                                const username = (formData.github_url || profile?.github_url || '').replace(/\/$/, '').split('/').pop() || '';
+                                const repoUrl = `https://github.com/${username}/${repo.name}`;
+                                return (
+                                  <div
+                                    key={repo.name}
+                                    className="p-4 rounded-2xl border border-border/50 bg-secondary/20 hover:border-violet-500/40 hover:bg-secondary/40 transition-all flex flex-col justify-between group"
+                                  >
+                                    <div>
+                                      <div className="flex items-start justify-between gap-2 mb-2">
+                                        <h4 className="text-xs font-bold text-foreground group-hover:text-violet-400 transition-colors tracking-wide truncate">
+                                          {repo.name}
+                                        </h4>
+                                        <Badge variant="outline" className="text-[9px] font-mono border-violet-500/20 bg-violet-500/10 text-violet-300 px-1.5 py-0">
+                                          {repo.language || 'Code'}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                                        {repo.description || 'GitHub repository project'}
+                                      </p>
+                                    </div>
+                                    <div className="pt-3 mt-3 border-t border-border/30 flex items-center justify-between text-[10px]">
+                                      <span className="text-emerald-400 font-bold flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Active Target
+                                      </span>
+                                      <a
+                                        href={repoUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1"
+                                      >
+                                        View on GitHub <ChevronRight className="w-3 h-3" />
+                                      </a>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="py-8 text-center text-xs text-muted-foreground">
+                              No public repositories found for @{(formData.github_url || profile?.github_url || '').split('/').pop()}.
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     </motion.div>
@@ -999,14 +1150,32 @@ const Profile = () => {
             </DialogHeader>
             <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
               <div className="space-y-2">
-                <Label htmlFor="modal_github_url" className="text-right">GitHub URL <span className="text-red-500">*</span></Label>
-                <Input
-                  id="modal_github_url"
-                  value={formData.github_url}
-                  onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
-                  placeholder="https://github.com/yourusername"
-                  className="bg-background/50 border-input"
-                />
+                <Label className="text-right">GitHub Account <span className="text-red-500">*</span></Label>
+                {formData.github_url || profile?.github_url ? (
+                  <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-bold">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      GitHub Account Connected (@{(formData.github_url || profile?.github_url || '').replace(/\/$/, '').split('/').pop()})
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      const { error } = await supabase.auth.signInWithOAuth({
+                        provider: 'github',
+                        options: {
+                          scopes: 'read:user repo read:org',
+                          redirectTo: `${window.location.origin}/profile`
+                        }
+                      });
+                      if (error) toast.error(error.message);
+                    }}
+                    className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold flex items-center justify-center gap-2 h-11 rounded-xl"
+                  >
+                    <Github className="w-4 h-4" /> ⚡ Connect GitHub Account
+                  </Button>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="modal_leetcode_id" className="text-right">LeetCode Username</Label>

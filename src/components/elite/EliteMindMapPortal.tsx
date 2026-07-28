@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   INTERVIEW_TYPES, ELITE_ROLES, TOP_COMPANIES,
   InterviewTypeItem, RoleItem, CompanyItem, InterviewRoundDef, getInterviewRounds
@@ -37,6 +38,7 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
   onSelectRole,
   onStartRound
 }) => {
+  const navigate = useNavigate();
   const [activeNode, setActiveNode] = useState<'track' | 'company' | 'role' | 'rounds'>('company');
   const [companySearch, setCompanySearch] = useState('');
 
@@ -349,16 +351,28 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
                         </Button>
                       )}
 
-                      {isPassed && (
-                        <Button
-                          size="sm"
-                          onClick={() => onStartRound(roundDef)}
-                          variant="outline"
-                          className="border-emerald-500/40 text-emerald-300 text-xs rounded-xl"
-                        >
-                          Retake Round
-                        </Button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {(isPassed || isFailed) && roundProgress?.sessionId && (
+                          <Button
+                            size="sm"
+                            onClick={() => navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`)}
+                            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-extrabold text-xs rounded-xl px-3"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 mr-1 text-amber-300" /> View Analysis
+                          </Button>
+                        )}
+
+                        {isPassed && (
+                          <Button
+                            size="sm"
+                            onClick={() => onStartRound(roundDef)}
+                            variant="outline"
+                            className="border-emerald-500/40 text-emerald-300 text-xs rounded-xl"
+                          >
+                            Retake Round
+                          </Button>
+                        )}
+                      </div>
 
                       {isLocked && (
                         <Button size="sm" disabled variant="outline" className="border-white/10 text-zinc-500 text-xs rounded-xl">

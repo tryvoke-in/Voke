@@ -757,17 +757,8 @@ const Dashboard = () => {
                 </Card>
 
                 <Card id="tour-elite-prep" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-blue-500 overflow-hidden" onClick={() => navigate("/elite-prep")}>
-                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
-                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                      : creditsElite > 0
-                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25'
-                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                    }`}>
-                    {isPremium
-                      ? 'Unlimited'
-                      : creditsElite > 0
-                        ? `${creditsElite} ${creditsElite === 1 ? 'Credit' : 'Credits'}`
-                        : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
+                  <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 bg-amber-500/10 text-amber-400 border-amber-500/25">
+                    Unlimited
                   </span>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                     <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   INTERVIEW_TYPES, ELITE_ROLES, TOP_COMPANIES,
   InterviewTypeItem, RoleItem, CompanyItem, InterviewRoundDef, getInterviewRounds
@@ -43,6 +44,7 @@ export const EliteCommandStudio: React.FC<EliteCommandStudioProps> = ({
   onSelectRole,
   onStartRound
 }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredCompanies = TOP_COMPANIES.filter(c =>
@@ -330,6 +332,16 @@ export const EliteCommandStudio: React.FC<EliteCommandStudioProps> = ({
                             className="bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-black text-xs px-5 h-10 rounded-xl shadow-lg shadow-rose-500/20"
                           >
                             <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Re-give Stage {roundDef.roundNumber}
+                          </Button>
+                        )}
+
+                        {(isPassed || isFailed) && roundProgress?.sessionId && (
+                          <Button
+                            size="sm"
+                            onClick={() => navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`)}
+                            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-black text-xs px-5 h-10 rounded-xl shadow-lg shadow-purple-600/20"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-300" /> View Analysis
                           </Button>
                         )}
 

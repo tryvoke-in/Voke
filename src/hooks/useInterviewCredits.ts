@@ -100,7 +100,7 @@ export const useInterviewCredits = (type: PrepType = 'elite') => {
       // Determine credits for active type
       let currentCredits = 1;
       if (type === 'elite') {
-        currentCredits = creditsElite;
+        currentCredits = 999; // Unlimited access for initial launch
       } else if (type === 'voice') {
         currentCredits = creditsVoice;
       } else if (type === 'video') {
@@ -112,8 +112,8 @@ export const useInterviewCredits = (type: PrepType = 'elite') => {
         hasGivenFeedback,
         isPremium,
         loading: false,
-        canTakeInterview: isPremium || currentCredits > 0,
-        creditsElite,
+        canTakeInterview: type === 'elite' || isPremium || currentCredits > 0,
+        creditsElite: 999, // Free & Unlimited for all users
         creditsVoice,
         creditsVideo,
       });
@@ -150,7 +150,8 @@ export const useInterviewCredits = (type: PrepType = 'elite') => {
   }, [type]); // Refetch if the type changes
 
   const consumeCredit = async () => {
-    if (state.isPremium) return true;
+    // Elite Prep is 100% free & unlimited for all users at initial stage
+    if (type === 'elite' || state.isPremium) return true;
     if (state.credits <= 0) {
       toast({
         title: "No credits remaining",

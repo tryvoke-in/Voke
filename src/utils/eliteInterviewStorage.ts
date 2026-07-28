@@ -1,5 +1,15 @@
 export type RoundStatus = 'locked' | 'unlocked' | 'passed' | 'failed';
 
+export interface RoundFeedbackDetails {
+  communicationScore: number;
+  confidenceScore: number;
+  technicalScore: number;
+  resumeAuthenticityScore: number;
+  strengths: string[];
+  improvements: string[];
+  summary: string;
+}
+
 export interface RoundProgress {
   roundId: string;
   roundNumber: number;
@@ -7,6 +17,8 @@ export interface RoundProgress {
   status: RoundStatus;
   score?: number;
   feedback?: string;
+  feedbackDetails?: RoundFeedbackDetails;
+  sessionId?: string;
   completedAt?: string;
   attempts: number;
 }
@@ -109,7 +121,9 @@ export const updateRoundResult = (
   roundNumber: number,
   verdict: 'PASSED' | 'FAILED',
   feedbackReason?: string,
-  score?: number
+  score?: number,
+  feedbackDetails?: RoundFeedbackDetails,
+  sessionId?: string
 ): CompanyRoleProgress => {
   const currentProgress = getCompanyRoleProgress(typeId, companyId, roleId);
   if (!currentProgress) throw new Error("No progress record found");
@@ -122,6 +136,8 @@ export const updateRoundResult = (
         status: (isPass ? 'passed' : 'failed') as RoundStatus,
         score: score ?? (isPass ? 85 : 45),
         feedback: feedbackReason || (isPass ? "Passed benchmark expectations" : "Needs re-attempt"),
+        feedbackDetails,
+        sessionId: sessionId || round.sessionId,
         completedAt: new Date().toISOString(),
         attempts: round.attempts + 1
       };

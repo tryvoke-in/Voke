@@ -200,12 +200,12 @@ export const getInterviewRounds = (typeId: string, companyId: string, roleId: st
     {
       roundId: `${typeId}_${companyId}_${roleId}_r1`,
       roundNumber: 1,
-      title: 'Round 1: Screening & Core Fundamentals',
-      subtitle: '8-9 Questions • Initial Technical & Behavioral Screening',
-      questionCount: 9,
+      title: 'Round 1 — Introduction & Resume Screening',
+      subtitle: '10 Questions (15 Mins) • Resume Walkthrough & Foundational Validation',
+      questionCount: 10,
       durationMins: 15,
-      focusAreas: ['Background & Projects', 'Data Structures Fundamentals', 'Problem Solving Logic', 'Company Values'],
-      description: `First round ${typeItem.title} screening at ${company.name} for ${role.title}. Focuses on verifying resume skills, fundamental CS concepts, and communication over 8-9 voice/video questions.`
+      focusAreas: ['Self Introduction', 'Resume Walkthrough & Strongest Project', 'Skills Verification & Confidence', 'Motivation & Career Goals'],
+      description: `First round ${typeItem.title} screening at ${company.name} for ${role.title}. Objective: Validate resume authenticity, evaluate communication clarity, test understanding of listed skills, and determine role fit & learning mindset.`
     },
     {
       roundId: `${typeId}_${companyId}_${roleId}_r2`,

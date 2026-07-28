@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   INTERVIEW_TYPES, ELITE_ROLES, TOP_COMPANIES,
   InterviewTypeItem, RoleItem, CompanyItem, InterviewRoundDef, getInterviewRounds
@@ -45,6 +46,7 @@ export const EliteNotebookLMMindMap: React.FC<EliteNotebookLMMindMapProps> = ({
   onResetSelection,
   onNavigateDashboard
 }) => {
+  const navigate = useNavigate();
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Zoom & Scale control (Defaults to 1.0 = 100% on initial load)
@@ -411,42 +413,55 @@ export const EliteNotebookLMMindMap: React.FC<EliteNotebookLMMindMapProps> = ({
                         <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
                           <span className="text-[9px] text-slate-400 font-mono font-bold">{roundDef.questionCount} Questions</span>
 
-                          {isUnlocked && (
-                            <Button
-                              size="sm"
-                              onClick={() => onStartRound(roundDef)}
-                              className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-extrabold text-xs h-8 rounded-xl px-3.5 shadow-lg shadow-amber-500/20"
-                            >
-                              <Play className="w-3.5 h-3.5 mr-1 fill-current" /> Start Interview
-                            </Button>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {(isPassed || isFailed) && roundProgress?.sessionId && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`)}
+                                className="border-violet-500/40 text-violet-300 hover:bg-violet-500/10 text-xs h-8 rounded-xl px-2.5"
+                              >
+                                <Sparkles className="w-3 h-3 mr-1 text-violet-400" /> View Analysis
+                              </Button>
+                            )}
 
-                          {isFailed && (
-                            <Button
-                              size="sm"
-                              onClick={() => onStartRound(roundDef)}
-                              className="bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs h-8 rounded-xl px-3.5 shadow-lg shadow-rose-500/20"
-                            >
-                              <RefreshCw className="w-3.5 h-3.5 mr-1" /> Re-give Round
-                            </Button>
-                          )}
+                            {isUnlocked && (
+                              <Button
+                                size="sm"
+                                onClick={() => onStartRound(roundDef)}
+                                className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-black font-extrabold text-xs h-8 rounded-xl px-3.5 shadow-lg shadow-amber-500/20"
+                              >
+                                <Play className="w-3.5 h-3.5 mr-1 fill-current" /> Start Interview
+                              </Button>
+                            )}
 
-                          {isPassed && (
-                            <Button
-                              size="sm"
-                              onClick={() => onStartRound(roundDef)}
-                              variant="outline"
-                              className="border-emerald-500/40 text-emerald-300 text-xs h-8 rounded-xl px-3.5"
-                            >
-                              Retake
-                            </Button>
-                          )}
+                            {isFailed && (
+                              <Button
+                                size="sm"
+                                onClick={() => onStartRound(roundDef)}
+                                className="bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs h-8 rounded-xl px-3.5 shadow-lg shadow-rose-500/20"
+                              >
+                                <RefreshCw className="w-3.5 h-3.5 mr-1" /> Re-give Round
+                              </Button>
+                            )}
 
-                          {isLocked && (
-                            <Button size="sm" disabled variant="outline" className="border-slate-800 text-slate-500 text-xs h-8 rounded-xl px-3.5 cursor-not-allowed">
-                              <Lock className="w-3.5 h-3.5 mr-1" /> Locked
-                            </Button>
-                          )}
+                            {isPassed && (
+                              <Button
+                                size="sm"
+                                onClick={() => onStartRound(roundDef)}
+                                variant="outline"
+                                className="border-emerald-500/40 text-emerald-300 text-xs h-8 rounded-xl px-3.5"
+                              >
+                                Retake
+                              </Button>
+                            )}
+
+                            {isLocked && (
+                              <Button size="sm" disabled variant="outline" className="border-slate-800 text-slate-500 text-xs h-8 rounded-xl px-3.5 cursor-not-allowed">
+                                <Lock className="w-3.5 h-3.5 mr-1" /> Locked
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

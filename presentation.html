@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voke AI - Presentation Deck</title>
+  <style>
+    :root {
+      --bg-dark: #0f1123;
+      --bg-card: #1a1c38;
+      --accent-purple: #6366f1;
+      --accent-light: #a5b4fc;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #2e325a;
+      --green-accent: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* Container & Slide Controller */
+    .deck-container {
+      width: 100vw;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      background: rgba(15, 17, 35, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      z-index: 1000;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-badge {
+      background: var(--accent-purple);
+      color: white;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      background: #25284c;
+      color: #ffffff;
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--accent-purple);
+      border-color: var(--accent-purple);
+    }
+
+    .slide-counter {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .slide-viewport {
+      margin-top: 50px;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Individual Slide */
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1100px;
+      min-height: 620px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      position: relative;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Slide Typography & Elements */
+    .slide-header {
+      margin-bottom: 24px;
+    }
+
+    .slide-subtitle {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent-light);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .slide-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 20px;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-purple);
+    }
+
+    .card-num {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--accent-light);
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .highlight-pill {
+      display: inline-block;
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--accent-light);
+      border: 1px solid var(--accent-purple);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .badge-green {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      border-color: var(--green-accent);
+    }
+
+    /* Step Timeline */
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .step-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent-purple);
+      color: white;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    th {
+      background: rgba(255,255,255,0.05);
+      color: var(--accent-light);
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: #e2e8f0;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(255,255,255,0.02);
+    }
+
+    /* Print Styles */
+    @media print {
+      .toolbar { display: none; }
+      .slide-viewport { margin-top: 0; padding: 0; }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        break-after: page;
+        box-shadow: none;
+        border: none;
+        background: #ffffff;
+        color: #000000;
+        width: 100%;
+        min-height: 100vh;
+      }
+      .slide-title { color: #000; }
+      .card { background: #f8fafc; border: 1px solid #cbd5e1; }
+      .card-title { color: #0f172a; }
+      .card-desc { color: #475569; }
+      td { color: #000; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="deck-container">
+  <!-- Top Navigation Bar -->
+  <div class="toolbar">
+    <div class="brand-title">
+      <span>VOKE AI</span>
+      <span class="brand-badge">PRESENTATION DECK</span>
+    </div>
+    <div class="controls">
+      <button class="btn" onclick="prevSlide()">❮ Prev</button>
+      <span class="slide-counter" id="slideNum">Slide 1 / 14</span>
+      <button class="btn" onclick="nextSlide()">Next ❯</button>
+      <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
+    </div>
+  </div>
+
+  <!-- Slide Viewport -->
+  <div class="slide-viewport">
+
+    <!-- SLIDE 1: COVER -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-header">
+        <div class="slide-subtitle">Construct Hackathon • Team: JUST A BYTE</div>
+        <h1 class="slide-title" style="font-size: 48px; margin-top: 10px;">Voke AI Interview Agent</h1>
+        <p style="font-size: 20px; color: var(--accent-light); margin-top: 10px;">Master Your Interview With AI Precision</p>
+      </div>
+      <div class="slide-body" style="align-items: center; text-align: center;">
+        <div style="background: rgba(99, 102, 241, 0.15); border: 1px solid var(--accent-purple); padding: 24px 40px; border-radius: 16px; max-width: 600px;">
+          <h3 style="color: #fff; font-size: 18px; margin-bottom: 12px;">Multi-Modal Real-Time Interview Preparation</h3>
+          <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">
+            Combining Gemini 2.5 Flash video body language analysis, voice coaching, and personalized profile synthesis for candidates.
+          </p>
+          <div style="margin-top: 16px; display: flex; justify-content: center; gap: 8px;">
+            <span class="highlight-pill">Real-Time Body Language</span>
+            <span class="highlight-pill">Voice & Text Modes</span>
+            <span class="highlight-pill">Resume & Profile Integration</span>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>TEAM JUST A BYTE • Yatharth Khandelwal, Anurag Sonawane, Priyanshu Sharma, Saumya Madan, Akash Pansari</div>
+        <div>voke.ai</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: MASTERY REQUIRES PRACTICE -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="slide-subtitle">Core Philosophy</div>
+        <h2 class="slide-title">Mastery Requires Practice</h2>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2" style="align-items: center;">
+          <div>
+            <p style="font-size: 18px; color: #e2e8f0; line-height: 1.6; margin-bottom: 16px;">
+              Mastery in any field demands consistent, realistic practice.
+            </p>
+            <p style="font-size: 15px; color: var(--text-muted); line-height: 1.6;">
+              Just like elite athletes and musicians, aspiring job candidates must repeatedly refine their verbal delivery, posture, and answer structure to tackle high-stakes interviews confidently and effectively.
+            </p>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px stroke var(--border-color); border-radius: 12px; padding: 24px;">
+            <div style="font-size: 14px; font-weight: 700; color: var(--accent-light); margin-bottom: 8px;">The Reality of Job Seekers</div>
+            <ul style="color: var(--text-muted); font-size: 13px; line-height: 1.8; padding-left: 18px;">
+              <li>Over 75% of candidates suffer from interview anxiety.</li>
+              <li>Non-verbal cues (posture, eye contact) make up 55% of interview impact.</li>
+              <li>Static question banks cannot simulate live pressure.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 2 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: THE PREPARATION GAP -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <div class="slide-subtitle">Problem Definition</div>
+        <h2 class="slide-title">The Preparation Gap — Why Current Solutions Fall Short</h2>
+      </div>
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-num">01</div>
+            <div class="card-title">Friends Unavailable</div>
+            <div class="card-desc">Relying on friends or peers for mock practice is highly inconsistent, scheduling is difficult, and feedback is non-objective.</div>
+          </div>
+          <div class="card">
+            <div class="card-num">02</div>
+            <div class="card-title">YouTube Limitations</div>
+            <div class="card-desc">YouTube videos are passive learning resources. They lack interactive practice, real-time evaluation, and personalized feedback.</div>
+          </div>
+          <div class="card">
+            <div class="card-num">03</div>
+            <div class="card-title">No Personalization</div>
+            <div class="card-desc">Generic question banks fail to adapt to candidate resumes, LinkedIn profiles, GitHub repos, or specific job roles.</div>
+          </div>
+          <div class="card">
+            <div class="card-num">04</div>
+            <div class="card-title">Lack of Structure</div>
+            <div class="card-desc">Most existing tools provide unorganized feedback without measurable scoring across body language, technical accuracy, and tone.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 3 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: INTRODUCING VOKE -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <div class="slide-subtitle">Product Solution</div>
+        <h2 class="slide-title">Introducing Voke</h2>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2" style="align-items: center;">
+          <div>
+            <h3 style="font-size: 22px; color: var(--accent-light); margin-bottom: 12px;">Your Personalized Interview Prep Partner</h3>
+            <p style="font-size: 15px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px;">
+              Voke offers reliable 24/7 training support with intelligent multi-modal feedback to help candidates build genuine confidence and land their dream jobs.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #e2e8f0;">
+                <span style="color: var(--green-accent);">✓</span> 24/7 AI Mock Interviewer available on demand
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #e2e8f0;">
+                <span style="color: var(--green-accent);">✓</span> Real-time video body language & posture tracking
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #e2e8f0;">
+                <span style="color: var(--green-accent);">✓</span> Instant multi-dimensional score report (IQ, EQ, CQ, AQ, SQ, MQ)
+              </div>
+            </div>
+          </div>
+          <div style="background: #111326; border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; text-align: center;">
+            <div style="font-size: 12px; color: var(--accent-light); font-weight: 700; margin-bottom: 10px;">VOKE DASHBOARD PREVIEW</div>
+            <div style="background: #1e2142; padding: 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+              <div style="font-size: 14px; font-weight: 700; color: #fff;">Interactive Mock Session</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Gemini 2.5 Flash Vision + Voice Audio Engine</div>
+              <div class="highlight-pill badge-green" style="margin-top: 12px;">Body Language Score: 92% • Posture: Optimal</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 4 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: WHAT MAKES US STAND OUT -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <div class="slide-subtitle">Key Features</div>
+        <h2 class="slide-title">What Makes Us Stand OUT</h2>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-num">01</div>
+            <div class="card-title">Video Practice</div>
+            <div class="card-desc">Real-time computer vision feedback on body language, posture, eye contact, and facial expressions powered by Gemini 2.5 Flash.</div>
+            <span class="highlight-pill">Vision Analysis</span>
+          </div>
+          <div class="card">
+            <div class="card-num">02</div>
+            <div class="card-title">Voice & Text Modes</div>
+            <div class="card-desc">Flexibility to practice in various formats — real-time conversational voice interviews or structured timed text Q&A sessions.</div>
+            <span class="highlight-pill">Multi-Modal Flexibility</span>
+          </div>
+          <div class="card">
+            <div class="card-num">03</div>
+            <div class="card-title">Profile Personalization</div>
+            <div class="card-desc">Tailored mock interviews contextually generated from candidate Resume, LinkedIn, GitHub, CodeForces, and LeetCode profiles.</div>
+            <span class="highlight-pill">Deep Context Ingestion</span>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 5 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: ANURAG'S JOURNEY -->
+    <div class="slide" id="slide-6">
+      <div class="slide-header">
+        <div class="slide-subtitle">User Flow</div>
+        <h2 class="slide-title">Anurag's Journey — From Prep to Dream Job</h2>
+      </div>
+      <div class="slide-body">
+        <div class="timeline">
+          <div class="card">
+            <div class="step-circle">1</div>
+            <div class="card-title">Login to Voke</div>
+            <div class="card-desc">Anurag signs up to the Voke AI platform with hope and target interview goals.</div>
+          </div>
+          <div class="card">
+            <div class="step-circle">2</div>
+            <div class="card-title">Profile Upload</div>
+            <div class="card-desc">He uploads his resume and connects LinkedIn, GitHub, CodeForces & LeetCode profiles for tailored practice.</div>
+          </div>
+          <div class="card">
+            <div class="step-circle">3</div>
+            <div class="card-title">Personalized Mock</div>
+            <div class="card-desc">Anurag completes real-like AI video sessions and receives granular performance & body language reports.</div>
+          </div>
+          <div class="card">
+            <div class="step-circle">4</div>
+            <div class="card-title">Gets Dream Job</div>
+            <div class="card-desc">He receives automated job recommendations based on performance analytics, sits for interviews, and lands his dream role.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 6 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: WHAT DIFFERENTIATES US -->
+    <div class="slide" id="slide-7">
+      <div class="slide-header">
+        <div class="slide-subtitle">Core Advantages</div>
+        <h2 class="slide-title">What Differentiates Us?</h2>
+      </div>
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-title" style="color: var(--accent-light);">Reliable</div>
+            <div class="card-desc">Our platform provides consistent 24/7 replies around the clock with zero downtime or scheduling delays.</div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="color: var(--accent-light);">Consistent</div>
+            <div class="card-desc">Practice sessions ensure uniform high quality in feedback received, eliminating peer subjectivity.</div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="color: var(--accent-light);">Integrated</div>
+            <div class="card-desc">Seamlessly combines multi-modal AI technology with real-world hiring & evaluation standards.</div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="color: var(--accent-light);">Intelligent</div>
+            <div class="card-desc">Utilizes advanced LLM context injection for hyper-personalized, role-specific question streams.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 7 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: COMPETITOR DISADVANTAGES -->
+    <div class="slide" id="slide-8">
+      <div class="slide-header">
+        <div class="slide-subtitle">Competitive Analysis</div>
+        <h2 class="slide-title">Where Existing Solutions Can't Deliver</h2>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Too Generic</div>
+            <div class="card-desc">Existing market solutions are not personalized to candidate experience or specific job descriptions, failing to simulate real interviews.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Inconsistent</div>
+            <div class="card-desc">Basic wrapper tools hallucinate responses, provide contradictory feedback, and lack rigorous scoring models.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Selective Offering</div>
+            <div class="card-desc">Competitors don't provide every tool under one roof — some offer video chat only, while others offer audio or text only.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Expensive & Demo Barriers</div>
+            <div class="card-desc">High pricing ($150-$300/hr) and forced sales demo calls create massive friction for freshers and entry-level applicants.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 8 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: MARKET OPPORTUNITY -->
+    <div class="slide" id="slide-9">
+      <div class="slide-header">
+        <div class="slide-subtitle">TAM & Market Potential</div>
+        <h2 class="slide-title">Market Opportunity</h2>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card" style="text-align: center; padding: 32px 20px;">
+            <div style="font-size: 42px; font-weight: 800; color: var(--accent-light);">10-15 M</div>
+            <div class="card-title" style="margin-top: 12px;">Graduates Annually</div>
+            <div class="card-desc">Graduates entering the workforce annually — a vast addressable market in urgent need of interview preparation.</div>
+          </div>
+          <div class="card" style="text-align: center; padding: 32px 20px;">
+            <div style="font-size: 42px; font-weight: 800; color: var(--accent-light);">1.5 M+</div>
+            <div class="card-title" style="margin-top: 12px;">CS & Tech Engineers</div>
+            <div class="card-desc">Engineering graduates with Computer Science and Tech as their career path needing high-stakes practice.</div>
+          </div>
+          <div class="card" style="text-align: center; padding: 32px 20px;">
+            <div style="font-size: 42px; font-weight: 800; color: var(--accent-light);">60-75%</div>
+            <div class="card-title" style="margin-top: 12px;">Outdated Methods</div>
+            <div class="card-desc">Job seekers currently relying on outdated or ineffective training resources like passive reading.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 9 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: REVENUE MODEL -->
+    <div class="slide" id="slide-10">
+      <div class="slide-header">
+        <div class="slide-subtitle">Business Model</div>
+        <h2 class="slide-title">Revenue Model: Freemium Service & Paid Plans</h2>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-title">Free Tier (Starter)</div>
+            <div style="font-size: 20px; font-weight: 800; color: #fff; margin: 8px 0;">₹0 / Free</div>
+            <div class="card-desc">
+              • 4 Free Credits (2 Text + 2 Pro Video)<br>
+              • Given to every user on onboarding<br>
+              • Internal gift cost: <b>₹5.78 / user</b><br>
+              • High conversion onboarding hook
+            </div>
+          </div>
+          <div class="card" style="border-color: var(--accent-purple);">
+            <div class="card-title" style="color: var(--accent-light);">Voke Pro</div>
+            <div style="font-size: 20px; font-weight: 800; color: #fff; margin: 8px 0;">₹399 Retail</div>
+            <div class="card-desc">
+              • 4 Pro Video + 3 Text Credits<br>
+              • Gemini 2.5 Flash Body Language<br>
+              • Delivery AI cost: ₹11.39<br>
+              • Net Profit: <b>₹379.63</b> (<span class="badge-green highlight-pill">95.1% Margin</span>)
+            </div>
+          </div>
+          <div class="card" style="border-color: var(--green-accent);">
+            <div class="card-title" style="color: #4ade80;">Voke Elite</div>
+            <div style="font-size: 20px; font-weight: 800; color: #fff; margin: 8px 0;">₹599 Retail</div>
+            <div class="card-desc">
+              • 4 Elite Credits (up to 16 rounds) + 2 Pro Video<br>
+              • Code IDE & Resume Optimization<br>
+              • Delivery AI cost: ₹31.20<br>
+              • Net Profit: <b>₹555.82</b> (<span class="badge-green highlight-pill">92.8% Margin</span>)
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 16px; background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 8px; font-size: 12px; color: var(--text-muted);">
+          <b>B2B Institutional Model:</b> Colleges and Universities purchase bundled packages as student career prep tools.
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 10 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: MASTER COST AUDIT & FINANCIAL PROJECTIONS -->
+    <div class="slide" id="slide-11">
+      <div class="slide-header">
+        <div class="slide-subtitle">Master Cost Audit & Projections</div>
+        <h2 class="slide-title">4,000 User Business Master Financial Projection</h2>
+      </div>
+      <div class="slide-body">
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          Financial audit for a 4,000 registered user base with 10% paid conversion (200 Voke Pro + 200 Voke Elite sales):
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Line Item</th>
+              <th>Volume & Calculation</th>
+              <th>Financial Amount (INR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Voke Pro Revenue</td>
+              <td>200 paid users × ₹399</td>
+              <td><strong>₹79,800 INR</strong></td>
+            </tr>
+            <tr>
+              <td>Voke Elite Revenue</td>
+              <td>200 paid users × ₹599</td>
+              <td><strong>₹1,19,800 INR</strong></td>
+            </tr>
+            <tr style="background: rgba(99, 102, 241, 0.1);">
+              <td><strong>TOTAL GROSS REVENUE</strong></td>
+              <td>400 Paid Users Total</td>
+              <td><strong>₹1,99,600 INR ($2,079 USD)</strong></td>
+            </tr>
+            <tr>
+              <td>Payment Gateway Fees (~2%)</td>
+              <td>2% of ₹1,99,600</td>
+              <td>-₹3,992 INR</td>
+            </tr>
+            <tr>
+              <td>Free Onboarding AI Cost</td>
+              <td>4,000 free users × ₹5.78 gift cost</td>
+              <td>-₹23,120 INR</td>
+            </tr>
+            <tr>
+              <td>Paid Pro & Elite AI Delivery Cost</td>
+              <td>(200 × ₹11.39) + (200 × ₹31.20)</td>
+              <td>-₹8,518 INR</td>
+            </tr>
+            <tr style="background: rgba(34, 197, 94, 0.15);">
+              <td><strong style="color: #4ade80;">NET PROFIT (AFTER ALL EXPENSES)</strong></td>
+              <td>Gross Revenue - All Costs</td>
+              <td><strong style="color: #4ade80; font-size: 15px;">₹1,63,970 INR ($1,708 USD)</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="card" style="text-align: center; padding: 12px;">
+            <div style="font-size: 22px; font-weight: 800; color: #4ade80;">82.15%</div>
+            <div style="font-size: 11px; color: var(--text-muted);">OVERALL NET PROFIT MARGIN</div>
+          </div>
+          <div class="card" style="text-align: center; padding: 12px;">
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-light);">61 Paid Users</div>
+            <div style="font-size: 11px; color: var(--text-muted);">BREAK-EVEN POINT (1.5% CONVERSION)</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck • Exchange Rate: $1 USD = ₹96.00 INR</div>
+        <div>Slide 11 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: ROADMAP TO EXPANSION -->
+    <div class="slide" id="slide-12">
+      <div class="slide-header">
+        <div class="slide-subtitle">Growth Strategy</div>
+        <h2 class="slide-title">Roadmap to Expansion</h2>
+      </div>
+      <div class="slide-body">
+        <div class="timeline">
+          <div class="card">
+            <div class="step-circle">1</div>
+            <div class="card-title">Mentor Program</div>
+            <div class="card-desc">Launching video mock interviews and 1-on-1 coaching sessions with verified industry mentors.</div>
+          </div>
+          <div class="card">
+            <div class="step-circle">2</div>
+            <div class="card-title">Community Platform</div>
+            <div class="card-desc">Building a community platform for freshers and companies that also acts like an active Job Marketplace.</div>
+          </div>
+          <div class="card">
+            <div class="step-circle">3</div>
+            <div class="card-title">Role Variety</div>
+            <div class="card-desc">Expanding specialized interview preparation for diverse job roles (SWE, PM, Data Science, Finance).</div>
+          </div>
+          <div class="card">
+            <div class="step-circle">4</div>
+            <div class="card-title">Mobile App</div>
+            <div class="card-desc">Developing a seamless, user-friendly mobile application for iOS and Android on-the-go practice.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 12 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: TECH STACK -->
+    <div class="slide" id="slide-13">
+      <div class="slide-header">
+        <div class="slide-subtitle">Architecture</div>
+        <h2 class="slide-title">Tech Stack That Helped Us Build This</h2>
+      </div>
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-num">1</div>
+            <div class="card-title">Frontend</div>
+            <div class="card-desc"><b>React.JS & Tailwind CSS</b><br>Responsive, high-performance web interface with real-time audio/video rendering.</div>
+          </div>
+          <div class="card">
+            <div class="card-num">2</div>
+            <div class="card-title">Backend & Auth</div>
+            <div class="card-desc"><b>Supabase</b><br>Database, authentication, real-time subscriptions, and video storage buckets.</div>
+          </div>
+          <div class="card">
+            <div class="card-num">3</div>
+            <div class="card-title">AI Engine</div>
+            <div class="card-desc"><b>Groq & Gemini</b><br>Gemini 3.1 Flash Lite (text/transcript) + Gemini 2.5 Flash (real-time video vision & body language).</div>
+          </div>
+          <div class="card">
+            <div class="card-num">4</div>
+            <div class="card-title">AI Logic</div>
+            <div class="card-desc"><b>Python</b><br>Custom scoring algorithms, resume context ingestion, and evaluation analytics pipeline.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck</div>
+        <div>Slide 13 of 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: TEAM DETAILS -->
+    <div class="slide" id="slide-14">
+      <div class="slide-header">
+        <div class="slide-subtitle">Team Just A Byte</div>
+        <h2 class="slide-title">Multiply Your Preparation With VOKE</h2>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2" style="align-items: center;">
+          <div>
+            <h3 style="font-size: 20px; color: var(--accent-light); margin-bottom: 16px;">Team Details</h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div class="card" style="padding: 12px 16px;">
+                <strong style="color: #fff;">Yatharth Khandelwal</strong> — <span style="color: var(--accent-light);">Team Lead</span>
+              </div>
+              <div class="card" style="padding: 12px 16px;">
+                <strong style="color: #fff;">Anurag Sonawane</strong> — <span style="color: var(--accent-light);">AI Integration</span>
+              </div>
+              <div class="card" style="padding: 12px 16px;">
+                <strong style="color: #fff;">Priyanshu Sharma</strong> — <span style="color: var(--accent-light);">Frontend Development</span>
+              </div>
+              <div class="card" style="padding: 12px 16px;">
+                <strong style="color: #fff;">Saumya Madan</strong> — <span style="color: var(--accent-light);">Presentation</span>
+              </div>
+              <div class="card" style="padding: 12px 16px;">
+                <strong style="color: #fff;">Akash Pansari</strong> — <span style="color: var(--accent-light);">Research & Presentation</span>
+              </div>
+            </div>
+          </div>
+          <div style="text-align: center; background: rgba(99, 102, 241, 0.1); border: 1px solid var(--accent-purple); padding: 32px; border-radius: 16px;">
+            <div style="font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 12px;">VOKE AI</div>
+            <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
+              Ready to transform job interview preparation with high-margin AI precision.
+            </p>
+            <div style="margin-top: 24px; font-weight: 700; color: var(--green-accent); font-size: 16px;">
+              Thank You!
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Voke AI Presentation Deck • Team JUST A BYTE</div>
+        <div>Slide 14 of 14</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let currentSlide = 1;
+  const totalSlides = 14;
+
+  function showSlide(n) {
+    if (n < 1) currentSlide = 1;
+    else if (n > totalSlides) currentSlide = totalSlides;
+    else currentSlide = n;
+
+    document.querySelectorAll('.slide').forEach((slide, idx) => {
+      slide.classList.remove('active');
+      if (idx === currentSlide - 1) {
+        slide.classList.add('active');
+      }
+    });
+
+    document.getElementById('slideNum').innerText = `Slide ${currentSlide} / ${totalSlides}`;
+  }
+
+  function nextSlide() {
+    showSlide(currentSlide + 1);
+  }
+
+  function prevSlide() {
+    showSlide(currentSlide - 1);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'Space') {
+      nextSlide();
+    } else if (e.key === 'ArrowLeft') {
+      prevSlide();
+    }
+  });
+</script>
+
+</body>
+</html>

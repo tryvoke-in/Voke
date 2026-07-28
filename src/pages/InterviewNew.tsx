@@ -88,6 +88,12 @@ const InterviewNew = () => {
   const [pastSessions, setPastSessions] = useState<any[]>([]);
   const [totalQuestions, setTotalQuestions] = useState(5);
   const [isConfiguring, setIsConfiguring] = useState(true);
+  const [activeApiInfo, setActiveApiInfo] = useState<{
+    provider: string;
+    model: string;
+    keyLabel: string;
+    isFallbackKey: boolean;
+  } | null>(null);
   
   // Navigation tabs for mobile viewports
   const [activeTab, setActiveTab] = useState<'arena' | 'history' | 'timeline'>('arena');
@@ -219,6 +225,11 @@ const InterviewNew = () => {
         if (data.is_error) {
           console.error("Deno execution error:", data.error, data.stack);
           throw new Error(data.error || "Unknown Deno error");
+        }
+
+        if (data.provider_info) {
+          setActiveApiInfo(data.provider_info);
+          console.log("%c[Active Question API]", "color: #10b981; font-weight: bold;", data.provider_info);
         }
 
         // If there's feedback, add it as a separate message before the question
@@ -473,6 +484,19 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                 </div>
                 <Progress value={progressPercent} className="h-1.5 bg-white/5 [&>div]:bg-gradient-to-r [&>div]:from-violet-500 [&>div]:to-fuchsia-500" />
               </div>
+
+              {activeApiInfo && (
+                <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                  <span className="text-xs text-violet-200/50 font-medium font-sans">Active AI API</span>
+                  <Badge className={`text-[10px] py-0.5 px-2 font-mono border-0 ${
+                    activeApiInfo.isFallbackKey 
+                      ? 'bg-amber-500/20 text-amber-300' 
+                      : 'bg-emerald-500/20 text-emerald-300'
+                  }`}>
+                    ✨ {activeApiInfo.model} ({activeApiInfo.isFallbackKey ? 'Secondary Key' : 'Primary Key'})
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
         </div>

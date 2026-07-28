@@ -131,193 +131,82 @@
 
 ---
 
-## 4. Revenue Model
+## 4. Master Financial Audit & Revenue Model
 
-### 4.1 Pricing Tiers (B2C)
+### 4.1 Internal AI Delivery Costs to Voke
+Calculated at exchange rate $1 USD = ₹96.00 INR using Gemini 3.1 Flash Lite & Gemini 2.5 Flash:
 
-#### 🆓 Free Tier - "Starter"
-**Price**: $0/month
-
-**Features**:
-- 3 video interviews/month
-- 5 text interview sessions/month
-- 2 voice AI sessions/month (10 min each)
-- 3 peer practice sessions/month
-- Basic analytics
-- Community access
-- Standard question bank
-
-**Purpose**: User acquisition, product trial, community building
-
-**Conversion Target**: 10-15% to paid tiers
+| Interview Feature / Type | AI Models Used | What Is Analyzed | Internal AI Cost to Voke |
+| :--- | :--- | :--- | :--- |
+| **1 Text Interview** | Gemini 3.1 Flash Lite | Text Q&A, transcript feedback, formatting | **₹0.17 INR** ($0.0018 USD) |
+| **1 Pro Video Interview** (10 mins) | 3.1 Flash Lite + 2.5 Flash | Full Video body language, voice, posture, gestures | **₹2.72 INR** ($0.0283 USD) |
+| **1 Elite Credit** (4 Rounds) | 2.5 Flash (R1 & HR) + 3.1 Flash Lite | 4 rounds total (Body language in R1 & HR) | **₹6.44 INR** ($0.0670 USD) |
 
 ---
 
-#### ⭐ Pro Tier - "Career Accelerator"
-**Price**: $29/month or $290/year (17% discount)
+### 4.2 Free Tier Deliverables & Onboarding Gift Cost
+Every 1st-time registered user receives 4 Free Credits on onboarding:
 
-**Features**:
-- **Unlimited** video interviews
-- **Unlimited** text interviews
-- **Unlimited** voice AI sessions
-- **Unlimited** peer practice
-- Advanced analytics & insights
-- Resume + GitHub integration
-- Priority question generation
-- Interview recordings download
-- Email support
-- Ad-free experience
-
-**Target Audience**: Serious job seekers, active candidates
-
-**Expected Conversion**: 60% of paid users
+- **2 Free Text Interview Credits**: ₹0.34 INR (2 × ₹0.17)
+- **2 Free Pro Video Credits**: ₹5.44 INR (2 × ₹2.72)
+- **Question Bank Access**: ₹0.00 (Hosted content)
+- **Basic Score & 6Q Summary**: Included in interview cost
+- **Total Free Gift Cost per User**: **₹5.78 INR / user** ($0.060 USD)
+- **Total Free Onboarding Expense (4,000 Users)**: 4,000 × ₹5.78 = **₹23,120 INR** ($240.83 USD)
 
 ---
 
-#### 💎 Premium Tier - "Executive Coach"
-**Price**: $79/month or $790/year (17% discount)
+### 4.3 Paid B2C Offerings & Unit Margins
 
-**Features**:
-- **Everything in Pro**, plus:
-- 1-on-1 human coach session (30 min/month)
-- Custom learning paths
-- Industry-specific question banks
-- Company-specific interview prep
-- Priority AI processing
-- Advanced body language analysis
-- Detailed performance reports (PDF)
-- LinkedIn profile optimization
-- Salary negotiation guidance
-- Priority support (24h response)
-- Early access to new features
+#### 1. Voke Pro (₹399 Retail)
+Targeted practice for active job applicants.
+- **User Receives**: 4 Pro Video Credits (Voice + Video Merged), 3 Text Interview Credits, Full Gemini 2.5 Flash Body Language Analysis, Detailed Audio/Video Performance Reports.
+- **Retail Price**: ₹399.00 INR
+- **Payment Gateway Fee (~2%)**: -₹7.98 INR
+- **Internal AI Delivery Cost**: -₹11.39 INR (4 × ₹2.72 + 3 × ₹0.17)
+- **Total Cost per Sale**: -₹19.37 INR
+- **Net Profit per Sale**: **₹379.63 INR**
+- **Gross Margin**: **95.1% MARGIN**
 
-**Target Audience**: Senior professionals, high-stakes interviews
-
-**Expected Conversion**: 25% of paid users
-
----
-
-#### 🚀 Ultimate Tier - "Career Mastery"
-**Price**: $149/month or $1,490/year (17% discount)
-
-**Features**:
-- **Everything in Premium**, plus:
-- 4 human coach sessions/month (30 min each)
-- Unlimited mock interviews with experts
-- Resume writing service
-- Cover letter templates
-- Portfolio review (for designers/devs)
-- Job search strategy consultation
-- Offer negotiation support
-- Career roadmap planning
-- White-glove support
-- Dedicated success manager
-
-**Target Audience**: C-suite, executives, career switchers
-
-**Expected Conversion**: 15% of paid users
+#### 2. Voke Elite (₹599 Retail)
+Complete power for serious job hunters.
+- **User Receives**: 4 Elite Company Credits (up to 16 rounds), 2 Pro Video Credits, Body Language for Round 1 & HR Round, Code IDE & Resume Optimization.
+- **Retail Price**: ₹599.00 INR
+- **Payment Gateway Fee (~2%)**: -₹11.98 INR
+- **Internal AI Delivery Cost**: -₹31.20 INR (4 × ₹6.44 + 2 × ₹2.72)
+- **Total Cost per Sale**: -₹43.18 INR
+- **Net Profit per Sale**: **₹555.82 INR**
+- **Gross Margin**: **92.8% MARGIN**
 
 ---
 
-### 4.2 B2B Pricing (Enterprise)
+### 4.4 4,000 User Master Financial Projection (200 Pro + 200 Elite)
+Calculation for a 4,000 registered user base with 10% paid conversion (200 Voke Pro + 200 Voke Elite):
 
-#### 🏢 Team Plan
-**Price**: $499/month (up to 25 users)
-- All Pro features for team members
-- Admin dashboard
-- Team analytics
-- Bulk user management
-- Custom branding (optional)
+| Revenue / Cost Line Item | User Volume & Math | Financial Amount (INR) |
+| :--- | :--- | :--- |
+| Voke Pro Sales Revenue | 200 paid users × ₹399 | ₹79,800 INR |
+| Voke Elite Sales Revenue | 200 paid users × ₹599 | ₹1,19,800 INR |
+| **TOTAL GROSS REVENUE** | **400 Paid Users Total** | **₹1,99,600 INR** ($2,079 USD) |
+| Payment Gateway Fees (~2%) | 2% of ₹1,99,600 | -₹3,992 INR |
+| Free User Onboarding AI Cost | 4,000 free users × ₹5.78 | -₹23,120 INR |
+| Paid Pro AI Delivery Cost | 200 paid users × ₹11.39 | -₹2,278 INR |
+| Paid Elite AI Delivery Cost | 200 paid users × ₹31.20 | -₹6,240 INR |
+| **OUR NET PROFIT (AFTER ALL EXPENSES)** | Gross Revenue - All Costs | **₹1,63,970 INR** ($1,708 USD) |
 
-#### 🏛️ Enterprise Plan
-**Price**: Custom (100+ users)
-- All Premium features
-- Dedicated account manager
-- Custom integrations (ATS, HRIS)
-- SSO/SAML authentication
-- API access
-- White-label option
-- SLA guarantees
-- Custom training programs
-- On-premise deployment (optional)
-
-**Target Clients**:
-- Universities (career centers)
-- Bootcamps (coding, MBA)
-- Recruitment agencies
-- Corporate HR departments
-- Consulting firms
+#### Key Business Metrics:
+- **Overall Net Profit Margin**: **82.15%**
+- **Break-Even Point**: **61 Paid Users** (1.5% conversion rate)
 
 ---
 
-### 4.3 Additional Revenue Streams
-
-#### 1. Pay-Per-Session (À La Carte)
-- Single video analysis: $9.99
-- Single voice session (30 min): $14.99
-- Human coach session (30 min): $49.99
-- **Target**: Non-subscribers, one-time users
-
-#### 2. Certification Programs
-- Industry-specific certifications: $199-499
-- Verified skill badges for LinkedIn
-- Completion certificates
-- **Target**: Credential seekers
-
-#### 3. Job Board Integration
-- Featured job postings: $99-499/post
-- Sponsored company profiles: $999/month
-- Recruitment partnerships (commission)
-- **Target**: Employers, recruiters
-
-#### 4. Affiliate Partnerships
-- Resume services: 20-30% commission
-- Career coaching: 15-25% commission
-- Online courses: 10-20% commission
-- **Target**: Passive income
-
-#### 5. Data & Insights (Anonymized)
-- Industry hiring trends reports: $999-4,999
-- Skill demand analytics: $1,999-9,999
-- Market research partnerships
-- **Target**: Recruiters, analysts, researchers
-
----
-
-### 4.4 Revenue Projections (Year 1-3)
-
-#### Year 1 Assumptions
-- 10,000 registered users
-- 8% conversion to paid (800 users)
-- Average revenue per user (ARPU): $35/month
-- B2B: 5 clients @ $500/month average
-
-**Year 1 Revenue**: ~$366,000
-- B2C Subscriptions: $336,000
-- B2B: $30,000
-- Other: $10,000 (certifications, à la carte)
-
-#### Year 2 Projections
-- 50,000 registered users
-- 10% conversion (5,000 paid)
-- ARPU: $42/month
-- B2B: 25 clients @ $750/month
-
-**Year 2 Revenue**: ~$2,745,000
-- B2C: $2,520,000
-- B2B: $225,000
-- Other: $100,000
-
-#### Year 3 Projections
-- 200,000 registered users
-- 12% conversion (24,000 paid)
-- ARPU: $48/month
-- B2B: 100 clients @ $1,000/month
-
-**Year 3 Revenue**: ~$15,024,000
-- B2C: $13,824,000
-- B2B: $1,200,000
-- Other: $500,000
+### 4.5 Team Details & Presentation Deck Structure
+- **Team Name**: JUST A BYTE
+- **Team Lead**: Yatharth Khandelwal
+- **AI Integration**: Anurag Sonawane
+- **Frontend Development**: Priyanshu Sharma
+- **Presentation**: Saumya Madan
+- **Research & Presentation**: Akash Pansari
 
 ---
 

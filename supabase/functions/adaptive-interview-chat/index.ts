@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callGeminiPipeline } from "../_shared/gemini-pipeline.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +16,6 @@ serve(async (req) => {
   try {
     const { messages, userId, skillGaps, userContext } = await req.json();
 
-    // Input validation
     if (!messages || !Array.isArray(messages)) {
       return new Response(
         JSON.stringify({ error: "Missing or invalid 'messages' parameter" }),
@@ -38,69 +38,23 @@ serve(async (req) => {
 
     console.log("Adaptive interview request for user:", userId, "with", messages.length, "messages");
 
-    // Environment variable validation
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!supabaseUrl) {
-      throw new Error("SUPABASE_URL is not configured");
-    }
-
-    if (!supabaseKey) {
-      throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not configured");
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 1. Authenticate the caller securely
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization header" }), { 
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      });
-    }
-
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    if (!supabaseAnonKey) {
-      throw new Error("SUPABASE_ANON_KEY is not configured");
-    }
-    
-    const supabaseAuthClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    const { data: { user }, error: authError } = await supabaseAuthClient.auth.getUser();
-
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { 
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      });
-    }
-
-    if (user.id !== userId) {
-      return new Response(JSON.stringify({ error: "Forbidden: userId mismatch" }), { 
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      });
-    }
-
-    // Get user's interview history for context (non-critical, continue on error)
-    const { data: pastSessions, error: pastSessionsError } = await supabase
+    const { data: pastSessions } = await supabase
       .from("interview_sessions")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(5);
 
-    if (pastSessionsError) {
-      console.error("Error fetching past sessions:", pastSessionsError);
-    }
-
-    const { data: videoSessions, error: videoSessionsError } = await supabase
+    const { data: videoSessions } = await supabase
       .from("video_interview_sessions")
       .select("*")
       .eq("user_id", userId)
@@ -108,13 +62,14 @@ serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(5);
 
-    if (videoSessionsError) {
-      console.error("Error fetching video sessions:", videoSessionsError);
-    }
-
-    // Build context-aware system prompt
     const safeSkillGaps = skillGaps || { note: "No specific skill gaps identified yet. Conduct a general assessment." };
     const systemPrompt = `You are an expert technical interviewer conducting an adaptive interview simulation. Your goal is to help the candidate improve their skills based on their identified gaps and verify their profile claims.
+
+=== CRITICAL ROUND 1 / RESUME VERIFICATION MANDATE ===
+- IF CONDUCTING ROUND 1 OR RESUME SCREENING: THIS ENTIRE ROUND IS STRICTLY FOR RESUME CHECKING AND VERIFICATION.
+- Ask questions directly checking and verifying candidate's RESUME (experiences, projects, skills, tools, and achievements listed on their resume).
+- Ask EXACTLY ONE (1) question across the whole interview about candidate's GitHub projects (referencing GitHub repos in context).
+- ALL OTHER questions MUST be specifically drawn from checking and verifying candidate's RESUME content.
 
 CANDIDATE PROFILE & CONTEXT:
 ${userContext || "No specific profile context provided."}
@@ -125,23 +80,8 @@ ${JSON.stringify(safeSkillGaps, null, 2)}
 INTERVIEW HISTORY CONTEXT:
 - Completed ${pastSessions?.length || 0} text interview sessions
 - Completed ${videoSessions?.length || 0} video interview sessions
-- Average video score: ${videoSessions && videoSessions.length > 0
-        ? Math.round(videoSessions.reduce((sum: number, s: any) => sum + (s.overall_score || 0), 0) / videoSessions.length)
-        : "N/A"}
 
-YOUR APPROACH:
-1. **FIRST INTERACTION RULES**:
-   - IF the user says "Start the interview..." or if this is the very first message:
-   - YOU MUST ASK: "Tell me about yourself." (or a slight variation like "Let's start with an introduction. Tell me about yourself and your background.")
-   - DO NOT evaluate the user's "Start" command. Just ask the question.
-
-2. **SUBSEQUENT INTERACTIONS**:
-   - Focus on the identified skill gaps systematically.
-   - VERIFY PROFILE CLAIMS (GitHub, Resume, LeetCode).
-   - Provide immediate feedback.
-
-RESPONSE STRUCTURE (Strict JSON-like markdown):
-
+RESPONSE STRUCTURE (Strict Markdown):
 ### ✅ What You Did Well
 [2-3 specific positive points]
 
@@ -149,80 +89,62 @@ RESPONSE STRUCTURE (Strict JSON-like markdown):
 [2-3 specific improvements]
 
 ### 📝 Model Answer
-[CRITICAL: Write a CONCISE, PERFECT EXAMPLE ANSWER in the FIRST PERSON ("I").]
-[DO NOT write: "The candidate should mention..." or "A good answer would be..."]
-[WRITE IT LIKE THIS: "To manage a project with tight deadlines, I would prioritize tasks based on impact and urgency, allocate resources efficiently, and maintain clear communication with stakeholders to ensure successful delivery."]
-[Keep it to 2-3 sentences maximum. Be direct, specific, and actionable. Focus on the key approach/strategy, not lengthy explanations.]
+[Write a CONCISE, PERFECT EXAMPLE ANSWER in the FIRST PERSON ("I"). Keep it to 2-3 sentences.]
 
 ### 🎯 Skill Gap Analysis
 [Brief note on progress]
 
-### ⚠️ Verification Note (ONLY include this section if the user mentioned a project, skill, or experience that is NOT found in their GitHub/Resume context above)
-[Example: "I did not find any project named 'blockchain app' in your GitHub profile or resume. Please provide specific implementation details to verify this claim."]
-[If everything they mentioned is verified in their profile, DO NOT include this section at all.]
-
 ### ❓ Next Question
-[Your next adaptive question]
+[Your next adaptive question]`;
 
-ADAPTIVE DIFFICULTY RULES:
-- If they struggle with basics: Focus on fundamentals.
-- If they show strength: Increase complexity.
-- Always tie questions back to their specific skill gaps.
+    const geminiContents = messages.map((msg: any) => ({
+      role: msg.role === "assistant" ? "model" : "user",
+      parts: [{ text: msg.content }]
+    }));
 
-Keep your tone professional, encouraging, and educational.`;
+    // STEP 1: Try Direct Gemini REST API (gemini-3.1-flash-lite) with Primary -> Secondary Failover
+    const geminiRes = await callGeminiPipeline({
+      modelName: "gemini-3.1-flash-lite",
+      geminiContents,
+      systemPrompt,
+      temperature: 0.7,
+    });
 
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...messages,
-          ],
-          stream: false,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({
-            error: "Rate limit exceeded. Please try again in a moment.",
-          }),
+    let content = "";
+    if (geminiRes.ok && geminiRes.aiContent) {
+      content = geminiRes.aiContent;
+    } else {
+      console.warn("Direct Gemini pipeline failed. Falling back to Lovable gateway...");
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (LOVABLE_API_KEY) {
+        const response = await fetch(
+          "https://ai.gateway.lovable.dev/v1/chat/completions",
           {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                { role: "system", content: systemPrompt },
+                ...messages,
+              ],
+              stream: false,
+            }),
           }
         );
+        if (response.ok) {
+          const data = await response.json();
+          content = data.choices?.[0]?.message?.content ?? "";
+        }
       }
-
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({
-            error: "AI credits depleted. Please contact support.",
-          }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-
-      throw new Error(`AI gateway error: ${response.status}`);
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content ?? "";
+    if (!content) {
+      throw new Error("All AI adaptive chat providers failed");
+    }
 
     return new Response(
       JSON.stringify({ content }),
@@ -233,11 +155,10 @@ Keep your tone professional, encouraging, and educational.`;
         },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in adaptive-interview-chat function:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: error.message || "Unknown error" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
