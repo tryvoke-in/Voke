@@ -3,7 +3,7 @@
 
 const PISTON_API_URL = 'https://emkc.org/api/v2/piston';
 
-import { supabase } from '../integrations/supabase/client';
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '../integrations/supabase/client';
 
 // Language mapping for Piston API
 export const PISTON_LANGUAGES = {
@@ -145,17 +145,30 @@ export async function executePistonCode(
   };
 
   try {
-    // Make API request through Supabase Edge Function to avoid CORS
-    const { data: result, error: invokeError } = await supabase.functions.invoke('execute-code', {
-      body: payload
+    // Make API request through Supabase Edge Function to avoid CORS and IP blocks
+    // Using direct fetch with Anon key to prevent expired user JWTs from causing 401s
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/execute-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+      },
+      body: JSON.stringify(payload)
     });
 
-    if (invokeError) {
-      throw new Error(invokeError.message || 'Supabase Edge Function invocation failed');
+    if (!response.ok) {
+      let errMsg = `API request failed: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        errMsg = errorData.error || errorData.message || errMsg;
+      } catch (e) {}
+      throw new Error(errMsg);
     }
 
-    if (!result) {
-      throw new Error('No response returned from Edge Function');
+    const result = await response.json();
+
+    if (!result || !result.run) {
+      throw new Error('Invalid response from Edge Function');
     }
 
     const executionTime = Date.now() - startTime;
@@ -216,7 +229,9 @@ export async function executePistonCode(
  * Check if a language is supported by Piston
  */
 export function isPistonLanguageSupported(language: string): language is PistonLanguage {
-  return language in PISTON_LANGUAGES;
+  // Public Piston API requires whitelist/auth as of Feb 2026.
+  // Disabled here to force local browser execution fallbacks (Pyodide / JS).
+  return false; 
 }
 
 /**

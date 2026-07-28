@@ -932,32 +932,35 @@ It seems I couldn't reach the main server, but here is a static analysis based o
                                         <SelectContent className="bg-[#161b22] border-[#30363d] text-gray-200">
                                             <SelectItem value="python">Python</SelectItem>
                                             <SelectItem value="javascript">JavaScript</SelectItem>
-                                            <SelectItem value="typescript">TypeScript</SelectItem>
                                             <SelectItem value="java">Java</SelectItem>
                                             <SelectItem value="cpp">C++</SelectItem>
                                             <SelectItem value="c">C</SelectItem>
-                                            <SelectItem value="rust">Rust</SelectItem>
-                                            <SelectItem value="go">Go</SelectItem>
-                                            <SelectItem value="ruby">Ruby</SelectItem>
-                                            <SelectItem value="php">PHP</SelectItem>
-                                            <SelectItem value="swift">Swift</SelectItem>
-                                            <SelectItem value="kotlin">Kotlin</SelectItem>
-                                            <SelectItem value="scala">Scala</SelectItem>
-                                            <SelectItem value="bash">Bash</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                             </div>
 
-                            {/* Context Banner */}
-                            {questionCompany && (
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#21262d] border border-[#30363d] text-[10px] text-gray-400">
-                                    <Briefcase className="w-3 h-3" />
-                                    <span>{questionCompany}</span>
-                                </div>
-                            )}
+                            {/* Verify Button in Middle */}
+                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                                <Button
+                                    size="sm"
+                                    onClick={handleSubmitCode}
+                                    disabled={isSubmitting}
+                                    className="h-7 text-[10px] bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 font-bold px-6 rounded-full transition-all hover:scale-105 active:scale-95"
+                                >
+                                    {isSubmitting ? <Cpu className="w-3 h-3 mr-1 animate-spin" /> : <Check className="w-3 h-3 mr-1" />}
+                                    Verify Code with AI
+                                </Button>
+                            </div>
 
                             <div className="flex items-center gap-3">
+                                {/* Context Banner */}
+                                {questionCompany && (
+                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#21262d] border border-[#30363d] text-[10px] text-gray-400 mr-2">
+                                        <Briefcase className="w-3 h-3" />
+                                        <span>{questionCompany}</span>
+                                    </div>
+                                )}
                                 <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{FILE_NAMES[language]}</span>
                                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
                             </div>
