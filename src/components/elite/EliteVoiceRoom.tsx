@@ -47,7 +47,8 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
     isUserSpeaking,
     isAiSpeaking,
     volume,
-    logs
+    logs,
+    apiLabel
   } = useGroqVoice();
 
   // Video & Audio state
@@ -986,6 +987,10 @@ ${isRound1 ? round1CategoryFlow : ''}
               <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] py-0.5 font-semibold">
                 {interviewType.title}
               </Badge>
+              <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-[10px] py-0.5 px-2 font-mono font-black tracking-wide shadow-sm flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{apiLabel || '(primary 3.1)'}</span>
+              </Badge>
             </div>
             <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
               {round.title}
@@ -1070,7 +1075,12 @@ ${isRound1 ? round1CategoryFlow : ''}
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-xs font-extrabold text-white">{company.name} AI Technical Lead</div>
+                <div className="text-xs font-extrabold text-white flex items-center gap-2">
+                  <span>{company.name} AI Technical Lead</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] font-black tracking-wide">
+                    {apiLabel || '(primary 3.1)'}
+                  </span>
+                </div>
                 <div className="text-[10px] text-zinc-400 font-mono">Interviewer</div>
               </div>
             </div>

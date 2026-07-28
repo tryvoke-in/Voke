@@ -15,12 +15,13 @@ serve(async (req) => {
   try {
     const { messages, interviewType, resumeContent } = await req.json();
 
-    let systemPrompt = `You are a world-class Elite Technical Interviewer conducting a live voice/video interview.
+    let systemPrompt = `You are a world-class Elite Technical Interviewer conducting a live voice interview.
 
-CRITICAL VOICE CONVERSATION MANDATES:
-1. EXTREMELY SHORT & CONCISE: Ask EXACTLY ONE question per turn. Keep your response to 1-2 SHORT SENTENCES MAXIMUM (under 20 words total).
-2. NO FLUFF OR COMPLIMENTS: NEVER say "Congratulations...", "That's awesome...", "Great job...", or repeat candidate answers/achievements. Move directly to the question.
-3. SINGLE FOCUSED QUESTION: Ask one specific, clear technical question at a time. Never ask multi-part or compound questions.`;
+CRITICAL MANDATES:
+1. YOUR RESPONSE MUST END WITH A QUESTION MARK (?). You MUST ask exactly ONE interview question per turn.
+2. Keep your response to 1-3 sentences. A brief acknowledgment followed by your question.
+3. NO FLUFF: NEVER say "Congratulations", "That's awesome", "Great job". Move directly to the question.
+4. SINGLE FOCUSED QUESTION: Ask one specific, clear technical question. Never ask compound questions.`;
 
     if (interviewType === "technical") {
       systemPrompt += "\n\nFocus on technical skills: data structures, algorithms, system design, and programming concepts.";
@@ -73,19 +74,12 @@ STRICT QUESTIONING INSTRUCTION:
       }
     }
 
+
+    // Ensure conversation starts with user turn (Gemini requirement)
     if (geminiContents.length === 0 || geminiContents[0].role !== 'user') {
       geminiContents.unshift({
         role: 'user',
         parts: [{ text: 'Hello! I am ready to start the interview session.' }]
-      });
-    }
-
-    // SPEED OPTIMIZATION: Keep last 6 recent turns to minimize prompt processing latency
-    const recentContents = geminiContents.slice(-6);
-    if (recentContents[0].role !== 'user') {
-      recentContents.unshift({
-        role: 'user',
-        parts: [{ text: 'Continuing interview session...' }]
       });
     }
 
@@ -95,42 +89,80 @@ STRICT QUESTIONING INSTRUCTION:
       .map((m: any) => (m.content || '').trim().toLowerCase())
       .filter(Boolean);
 
+    const assistantTurnCount = conversationMessages.filter((m: any) => m.role === 'assistant').length;
+
+    // Inject explicit Turn Directive based on Round 1 Resume Screening Allocation
+    let turnDirective = "";
+    if (assistantTurnCount === 1) {
+      turnDirective = "CURRENT TURN DIRECTIVE (TURN 2 OF 10 - EDUCATION & ACADEMIC FOCUS): Ask about candidate's EDUCATION, DEGREE, or RELEVANT ACADEMIC COURSEWORK (e.g., 'You're studying B.Tech CS & AI at Newton School of Technology — what specific frontend or web development coursework have you focused on?'). DO NOT ask about projects yet!";
+    } else if (assistantTurnCount === 2) {
+      turnDirective = "CURRENT TURN DIRECTIVE (TURN 3 OF 10 - CORE RESUME SKILLS): Ask about candidate's CORE TECHNICAL SKILLS listed on their resume (e.g. React, JavaScript, HTML/CSS). Ask which skill or framework they feel most proficient in!";
+    } else if (assistantTurnCount === 3) {
+      turnDirective = "CURRENT TURN DIRECTIVE (TURN 4 OF 10 - PRACTICAL SKILL APPLICATION): Ask about how they learned or applied those specific resume skills in their practical coursework or initial study projects!";
+    } else if (assistantTurnCount === 4) {
+      turnDirective = "CURRENT TURN DIRECTIVE (TURN 5 OF 10 - PROJECT QUESTION 1 OF 2): Ask a targeted technical question about candidate's FIRST project BY NAME (e.g. HirePath, CodeCompass, or their main repo). Ask about UI component architecture or state management!";
+    } else if (assistantTurnCount === 5) {
+      turnDirective = "CURRENT TURN DIRECTIVE (TURN 6 OF 10 - PROJECT QUESTION 2 OF 2): Ask a targeted technical question about candidate's SECOND project BY NAME (e.g. Prodex or Truthlens). Ask about API integration, error handling, or performance optimization!";
+    } else if (assistantTurnCount === 6) {
+      turnDirective = "CURRENT TURN DIRECTIVE (TURN 7 OF 10 - TOOLS & WORKFLOW): Ask about DEVELOPMENT TOOLS, version control (Git), build tools (Vite/Webpack), or testing utilities listed on their resume!";
+    } else if (assistantTurnCount === 7) {
+      turnDirective = "CURRENT TURN DIRECTIVE (TURN 8 OF 10 - ROLE MOTIVATION): Ask why their background and resume skills make them excited to apply for this specific frontend engineering position!";
+    } else if (assistantTurnCount === 8) {
+      turnDirective = "CURRENT TURN DIRECTIVE (TURN 9 OF 10 - SKILL GROWTH): Ask what new web technologies, performance concepts, or frameworks they are currently learning to expand their resume!";
+    } else if (assistantTurnCount >= 9) {
+      turnDirective = "CURRENT TURN DIRECTIVE (TURN 10 OF 10 - OUTRO): Ask a brief wrap-up question on their long-term technical career goals, then speak a warm closing goodbye thanking them for their time!";
+    }
+
+    // Build focused system prompt with turn directive as the FIRST instruction
+    const fullSystemPrompt = `${turnDirective ? '*** MOST IMPORTANT INSTRUCTION: ' + turnDirective + ' ***\n\n' : ''}${systemPrompt}${previousAssistantQuestions.length > 0 ? '\n\nNO-REPEAT RULE: You have already asked these questions. DO NOT repeat them:\n' + previousAssistantQuestions.map(q => `- "${q}"`).join('\n') : ''}`;
+
     let content = "";
 
-    // STEP 1: Primary - Gemini 3.1 Flash Lite via Gemini Pipeline for Dynamic Question Generation
-    console.log("Executing Step 1: Gemini 3.1 Flash Lite for Question Generation...");
+    // STEP 1: Primary - Gemini 3.1 Flash Lite via Gemini Pipeline (with automatic failover to 2nd Gemini API key on rate limits)
+    console.log(`Executing Step 1: Gemini 3.1 Flash Lite for Question Generation (Turn ${assistantTurnCount + 1})...`);
+    const recentContents = geminiContents.slice(-8);
+    if (recentContents.length === 0 || recentContents[0].role !== 'user') {
+      recentContents.unshift({ role: 'user', parts: [{ text: 'Continuing interview...' }] });
+    }
+
     const geminiRes = await callGeminiPipeline({
       modelName: "gemini-3.1-flash-lite",
       geminiContents: recentContents,
-      systemPrompt: systemPrompt + (previousAssistantQuestions.length > 0 ? `\n\nNO-REPEAT RULE: DO NOT repeat any of these previously asked questions:\n${previousAssistantQuestions.map(q => `- "${q}"`).join('\n')}` : ''),
-      temperature: 0.6,
+      systemPrompt: fullSystemPrompt,
+      temperature: 0.7,
     });
 
     if (geminiRes.ok && geminiRes.aiContent) {
       content = geminiRes.aiContent.trim();
-      console.log("✓ Success with Gemini 3.1 Flash Lite for Question Generation:", content);
+      console.log(`✓ Gemini 3.1 Flash Lite generated question (Turn ${assistantTurnCount + 1}):`, content);
     }
 
-    // STRICT REPETITION CHECK & RETRY FAILSAFE
+    // STRICT REPETITION CHECK & RETRY FAILSAFE (only if we got content)
     if (content && previousAssistantQuestions.some(prevQ => 
       prevQ === content.toLowerCase() || 
       (prevQ.length > 15 && (prevQ.includes(content.toLowerCase()) || content.toLowerCase().includes(prevQ))) ||
-      prevQ.slice(0, 35) === content.toLowerCase().slice(0, 35)
+      (prevQ.length > 25 && prevQ.slice(0, 30) === content.toLowerCase().slice(0, 30))
     )) {
-      console.warn(`[Anti-Repetition Alert] Question "${content}" was repeated! Retrying with anti-duplication override...`);
+      console.warn(`[Anti-Repetition Alert] Question "${content}" was repeated! Retrying...`);
       const retryRes = await callGeminiPipeline({
-        modelName: "gemini-3.1-flash-lite",
+        modelName: "gemini-2.0-flash-lite",
         geminiContents: recentContents,
-        systemPrompt: systemPrompt + `\n\nCRITICAL OVERRIDE: The question "${content}" WAS ALREADY ASKED. YOU MUST ASK A COMPLETELY DIFFERENT SPECIFIC QUESTION ABOUT A SPECIFIC RESUME SKILL, TECH STACK TOOL, OR EXPERIENCE!`,
+        systemPrompt: fullSystemPrompt + `\n\nCRITICAL OVERRIDE: The question "${content}" WAS ALREADY ASKED. YOU MUST ASK A COMPLETELY DIFFERENT QUESTION MATCHING THE TURN DIRECTIVE!`,
         temperature: 0.85,
       });
 
       if (retryRes.ok && retryRes.aiContent) {
         content = retryRes.aiContent.trim();
-        console.log("✓ Success retry with fresh non-repeated question:", content);
+        console.log("✓ Retry success with fresh question:", content);
+      } else {
+        // Clear the duplicate content so fallbacks can generate fresh one
+        content = "";
       }
-    } else {
-      console.warn("Direct Gemini pipeline note. Trying Lovable Gateway fallback...");
+    }
+
+    // LOVABLE GATEWAY FALLBACK: Only if Gemini produced no content at all
+    if (!content) {
+      console.warn("Gemini pipeline produced no content. Trying Lovable Gateway fallback...");
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
       if (LOVABLE_API_KEY) {
         try {
@@ -145,7 +177,7 @@ STRICT QUESTIONING INSTRUCTION:
               body: JSON.stringify({
                 model: "google/gemini-2.5-flash",
                 messages: [
-                  { role: "system", content: systemPrompt },
+                  { role: "system", content: fullSystemPrompt },
                   ...conversationMessages,
                 ],
                 stream: false,
@@ -154,29 +186,45 @@ STRICT QUESTIONING INSTRUCTION:
           );
           if (response.ok) {
             const data = await response.json();
-            content = data.choices?.[0]?.message?.content ?? "";
+            const lovableContent = data.choices?.[0]?.message?.content ?? "";
+            if (lovableContent.trim()) {
+              content = lovableContent.trim();
+              console.log("✓ Lovable Gateway generated question:", content);
+            }
           }
         } catch (lErr) {
-          console.warn("Lovable gateway chat note:", lErr);
+          console.warn("Lovable gateway error:", lErr);
         }
       }
     }
 
+    // EMERGENCY TURN-BASED FALLBACK: Only if ALL AI engines failed
     if (!content) {
+      console.error("⚠️ ALL AI engines failed! Using emergency turn-based question.");
       const turnCount = conversationMessages.filter((m: any) => m.role === "assistant").length;
-      const lastUserMsg = conversationMessages.filter((m: any) => m.role === "user").pop()?.content || "";
-
-      if (turnCount === 0) {
-        content = "Welcome to the interview! Could you start by giving a brief introduction of yourself and your core technical background?";
-      } else if (lastUserMsg.length > 25) {
-        content = `Thanks for sharing that overview. Could you elaborate on which specific tools or frameworks in your stack you feel most confident using, and why?`;
-      } else {
-        content = `Thanks for sharing. Moving forward, what core technical skills or frameworks are you currently focusing on mastering next?`;
-      }
+      const emergencyQuestions: Record<number, string> = {
+        0: "Welcome! Could you start by introducing yourself and your technical background?",
+        1: "What specific academic coursework or modules have shaped your skills as a developer?",
+        2: "Which programming languages or frameworks listed on your resume are you most confident with?",
+        3: "Can you walk me through how you've applied those skills in a real coding project?",
+        4: "Tell me about the technical architecture behind your first project. What were the key engineering decisions?",
+        5: "In your second project, what was the most challenging technical problem you solved?",
+        6: "What development tools and workflow practices do you use for version control and testing?",
+        7: "What excites you most about this role and how does it align with your career goals?",
+        8: "What new technologies or concepts are you currently learning to grow as an engineer?",
+        9: "Thank you for a great conversation! Where do you see your engineering career heading next?"
+      };
+      content = emergencyQuestions[Math.min(turnCount, 9)] || "Could you tell me about a technical challenge you've solved recently?";
     }
 
+    const apiLabel = geminiRes?.providerInfo?.apiLabel || "(primary 3.1)";
     return new Response(
-      JSON.stringify({ question: content, content }),
+      JSON.stringify({ 
+        question: content, 
+        content,
+        apiLabel,
+        providerInfo: geminiRes?.providerInfo 
+      }),
       {
         headers: {
           ...corsHeaders,
@@ -185,11 +233,11 @@ STRICT QUESTIONING INSTRUCTION:
       }
     );
   } catch (error: any) {
-    console.error("Error in interview-chat function:", error);
+    console.error("Error in interview-chat function:", error?.message, error?.stack);
     return new Response(
       JSON.stringify({ 
-        question: "Could you please tell me more about your recent project experience and technical contributions?", 
-        content: "Could you please tell me more about your recent project experience and technical contributions?" 
+        question: "That's interesting. Could you walk me through a specific technical challenge you've solved in one of your projects?", 
+        content: "That's interesting. Could you walk me through a specific technical challenge you've solved in one of your projects?"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

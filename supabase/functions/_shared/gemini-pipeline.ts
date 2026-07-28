@@ -39,13 +39,13 @@ export async function callGeminiPipeline({
   geminiContents,
   systemPrompt,
   responseSchema,
-  temperature = 0.2,
+  temperature = 0.6,
 }: GeminiPipelineOptions): Promise<GeminiPipelineResult> {
   const keys = getGeminiApiKeys();
   const modelsToTry = Array.from(new Set([
-    "gemini-3.1-flash-lite",
-    "gemini-2.0-flash-lite",
+    modelName,
     "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
     "gemini-flash-latest"
   ]));
 
@@ -54,7 +54,7 @@ export async function callGeminiPipeline({
 
     for (let i = 0; i < keys.length; i++) {
       const apiKey = keys[i];
-      const isFallbackKey = apiKey === SECONDARY_GEMINI_API_KEY || i > 0;
+      const isFallbackKey = apiKey === (Deno.env.get("GEMINI_API_KEY_FALLBACK") || "") || i > 0;
       const keyLabel = isFallbackKey ? "Secondary Fallback Key" : "Primary GOOGLE_API_KEY";
 
       console.log(`[Gemini Pipeline] Trying model '${currentModel}' with API key index ${i} (${keyLabel})...`);
@@ -67,7 +67,7 @@ export async function callGeminiPipeline({
           },
           generationConfig: {
             temperature,
-            maxOutputTokens: responseSchema ? 500 : 60,
+            maxOutputTokens: responseSchema ? 500 : 200,
           },
         };
 
@@ -93,20 +93,27 @@ export async function callGeminiPipeline({
             aiContent = data.candidates[0].content?.parts?.[0]?.text || "";
           }
 
-          console.log(`[Gemini Pipeline] Success with model '${currentModel}' using ${keyLabel}`);
-          return {
-            ok: true,
-            status: response.status,
-            data,
-            aiContent,
-            usedKeyIndex: i,
-            providerInfo: {
-              provider: "Google Gemini REST API",
-              model: currentModel,
-              keyLabel,
-              isFallbackKey,
-            },
-          };
+          // Only return success if we actually got content
+          if (aiContent && aiContent.trim().length > 0) {
+            const finishReason = data.candidates[0].finishReason || "unknown";
+            console.log(`[Gemini Pipeline] ✓ Success with model '${currentModel}' using ${keyLabel} (finishReason: ${finishReason}): "${aiContent.trim().slice(0, 120)}"`);
+            return {
+              ok: true,
+              status: response.status,
+              data,
+              aiContent: aiContent.trim(),
+              usedKeyIndex: i,
+              providerInfo: {
+                provider: "Google Gemini REST API",
+                model: currentModel,
+                keyLabel,
+                isFallbackKey,
+                apiLabel: `(${isFallbackKey ? "secondary" : "primary"} ${currentModel.includes("3.1") ? "3.1" : (currentModel.includes("2.0") ? "2.0" : "flash")})`,
+              },
+            };
+          } else {
+            console.warn(`[Gemini Pipeline] Model '${currentModel}' returned empty content. Trying next...`);
+          }
         }
 
         const errorText = await response.text();

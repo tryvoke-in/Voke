@@ -56,6 +56,7 @@ interface UseGroqVoiceReturn {
     logs: MessageLog[];
     errorDetails: string | null;
     sendHiddenContext: (text: string) => Promise<void>;
+    apiLabel: string;
 }
 
 interface UseGroqVoiceProps {
@@ -69,6 +70,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const [isAiSpeaking, setIsAiSpeaking] = useState(false);
     const [volume, setVolume] = useState(0);
     const [logs, setLogs] = useState<MessageLog[]>([]);
+    const [apiLabel, setApiLabel] = useState<string>('(primary 3.1)');
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -101,9 +103,14 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             });
 
             const responseText = edgeData?.question || edgeData?.content || edgeData?.response;
+            const detectedLabel = edgeData?.apiLabel || edgeData?.providerInfo?.apiLabel;
+            if (detectedLabel) {
+                setApiLabel(detectedLabel);
+            }
+
             if (!edgeErr && responseText && typeof responseText === 'string' && responseText.trim().length > 0) {
                 aiText = responseText.trim();
-                console.log('DEBUG: Gemini 3.1 Flash Lite response:', aiText);
+                console.log('DEBUG: Gemini 3.1 Flash Lite response:', aiText, 'API:', detectedLabel || '(primary 3.1)');
             } else if (edgeErr) {
                 console.warn('interview-chat Edge Function note:', edgeErr);
             }
@@ -111,10 +118,84 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             console.warn('interview-chat Edge Function exception:', edgeEx);
         }
 
-        // SECONDARY FALLBACK: Groq Llama 3.3 70B
+        // SECONDARY AI ENGINE: Direct Gemini 3.1 Flash Lite API via VITE_GEMINI_API_KEY
+        if (!aiText) {
+            const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            if (geminiApiKey) {
+                try {
+                    console.log('DEBUG: Secondary - Generating question with direct Gemini 3.1 Flash Lite API...');
+                    const systemPromptMsg = fullMessages.find((m: any) => m.role === 'system')?.content || '';
+                    const userLogs = fullMessages.filter((m: any) => m.role !== 'system');
+                    
+                    const contents: any[] = [];
+                    for (const m of userLogs) {
+                        const role = m.role === 'assistant' || m.role === 'model' ? 'model' : 'user';
+                        const text = m.content || m.text || '';
+                        if (!text.trim()) continue;
+
+                        if (contents.length > 0 && contents[contents.length - 1].role === role) {
+                            contents[contents.length - 1].parts[0].text += `\n${text}`;
+                        } else {
+                            contents.push({ role, parts: [{ text }] });
+                        }
+                    }
+
+                    if (contents.length === 0 || contents[0].role !== 'user') {
+                        contents.unshift({ role: 'user', parts: [{ text: 'Hello! I am ready for the interview.' }] });
+                    }
+
+                    const assistantTurnCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
+                    let turnHint = "";
+                    if (assistantTurnCount === 1) {
+                        turnHint = "\n\nTURN 2 DIRECTIVE: Ask about candidate's EDUCATION or DEGREE at Newton School of Technology (B.Tech CS & AI). Ask what specific web development coursework they focused on!";
+                    } else if (assistantTurnCount === 2) {
+                        turnHint = "\n\nTURN 3 DIRECTIVE: Ask about candidate's CORE CLAIMED SKILLS (React, JavaScript, HTML/CSS) listed on their resume!";
+                    } else if (assistantTurnCount === 3) {
+                        turnHint = "\n\nTURN 4 DIRECTIVE: Ask about PRACTICAL SKILL APPLICATION in coursework or projects!";
+                    } else if (assistantTurnCount === 4) {
+                        turnHint = "\n\nTURN 5 DIRECTIVE: Ask a targeted question about candidate's FIRST project BY NAME (e.g. HirePath)!";
+                    } else if (assistantTurnCount === 5) {
+                        turnHint = "\n\nTURN 6 DIRECTIVE: Ask a targeted question about candidate's SECOND project BY NAME (e.g. Prodex)!";
+                    } else if (assistantTurnCount === 6) {
+                        turnHint = "\n\nTURN 7 DIRECTIVE: Ask about DEVELOPMENT TOOLS, Git workflow, or build tools!";
+                    } else if (assistantTurnCount === 7) {
+                        turnHint = "\n\nTURN 8 DIRECTIVE: Ask about ROLE MOTIVATION for this position!";
+                    } else if (assistantTurnCount === 8) {
+                        turnHint = "\n\nTURN 9 DIRECTIVE: Ask about SKILL GROWTH & new concepts they are studying!";
+                    } else if (assistantTurnCount >= 9) {
+                        turnHint = "\n\nTURN 10 DIRECTIVE: Ask about career vision and speak a warm closing goodbye speech!";
+                    }
+
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${geminiApiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: contents.slice(-6),
+                            systemInstruction: { parts: [{ text: systemPromptMsg + turnHint }] },
+                            generationConfig: { temperature: 0.6, maxOutputTokens: 100 }
+                        })
+                    });
+
+                    if (res.ok) {
+                        const json = await res.json();
+                        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (text && text.trim()) {
+                            aiText = text.trim();
+                            console.log('✓ Success with Direct Gemini 3.1 Flash Lite API question generation:', aiText);
+                        }
+                    } else {
+                        console.warn('Direct Gemini API status:', res.status);
+                    }
+                } catch (directGeminiErr) {
+                    console.warn('Direct Gemini API exception:', directGeminiErr);
+                }
+            }
+        }
+
+        // TERTIARY FALLBACK: Groq Llama 3.3 70B
         if (!aiText && groqClient) {
             try {
-                console.log('DEBUG: Secondary Fallback - Generating question with Groq Llama 3.3 70B...');
+                console.log('DEBUG: Tertiary Fallback - Generating question with Groq Llama 3.3 70B...');
                 const completion = await groqClient.chat.completions.create({
                     messages: fullMessages,
                     model: 'llama-3.3-70b-versatile',
@@ -127,69 +208,80 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             }
         }
 
+        // LAST RESORT: Only reached if Edge Function + Direct Gemini API + Groq ALL failed
         if (!aiText) {
+            console.error('⚠️ ALL AI ENGINES FAILED! Using emergency last-resort question.');
             const assistantTurnCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
+            
+            // Extract candidate details from system prompt for contextual emergency questions
+            const sysPrompt = fullMessages.find((m: any) => m.role === 'system')?.content || '';
+            
+            // Try to extract project names from the system prompt
+            const projectNameRegex = /(?:project|repo|repository)\s*(?:name)?\s*[:=]?\s*["\']?([A-Z][a-zA-Z0-9_-]+)/gi;
+            const projectMatches = [...sysPrompt.matchAll(projectNameRegex)].map(m => m[1]);
+            const proj1 = projectMatches[0] || 'your main project';
+            const proj2 = projectMatches[1] || 'your second project';
+            
+            // Emergency turn-based questions (only used if ALL 3 AI engines fail)
+            const emergencyQuestions: Record<number, string> = {
+                0: "Welcome! Could you introduce yourself and tell me about your technical background?",
+                1: "What specific coursework or academic modules have shaped your skills as a developer?",
+                2: "Which programming languages or frameworks on your resume are you most confident with?",
+                3: "Can you walk me through how you've applied those skills in a real coding scenario?",
+                4: `Tell me about the technical architecture behind ${proj1}. What were the key engineering decisions?`,
+                5: `In ${proj2}, what was the most challenging technical problem you solved?`,
+                6: "What development tools and workflow practices do you use for version control and testing?",
+                7: "What excites you most about this role and how does it align with your career goals?",
+                8: "What new technologies or concepts are you currently learning to grow as an engineer?",
+                9: "Thank you for a great conversation! Where do you see your engineering career in the next few years?"
+            };
+            
+            const turnKey = Math.min(assistantTurnCount, 9);
+            aiText = emergencyQuestions[turnKey] || "Could you tell me more about your technical experience?";
+        }
 
-            // Extract candidate's target repos dynamically from prompt context
-            const promptMsg = fullMessages.find((m: any) => m.role === 'system')?.content || '';
-            const repoMatches = Array.from(promptMsg.matchAll(/([A-Z][a-zA-Z0-9_-]{2,})/g)).map((m: any) => m[1]);
-            const targetRepos = Array.from(new Set(repoMatches.filter((r: string) => 
-                !['CRITICAL', 'MANDATE', 'ROUND', 'STRICT', 'QUESTION', 'EXACT', 'REQUIREMENT', 'COMPANY', 'ROLE', 'VOICE', 'RULES', 'CHECKING', 'RESUME', 'GITHUB', 'VERDICT', 'REASON', 'PASSED', 'FAILED', 'GOOGLE', 'META', 'MICROSOFT', 'AMAZON', 'APPLE'].includes(r)
-            )));
-            const repo1 = targetRepos[0] || 'your repository';
-            const repo2 = targetRepos[1] || repo1;
+        // STRICT CLIENT-SIDE ANTI-REPETITION INTERCEPTOR
+        const previousAssistantQuestions = conversationHistoryRef.current
+            .filter(m => m.role === 'assistant')
+            .map(m => m.content.trim().toLowerCase())
+            .filter(Boolean);
 
-            const dynamicQuestionBank = [
-                [
-                    "Hello! Could you introduce yourself briefly and summarize your background?",
-                    "Welcome! Please introduce yourself and highlight your core technical experience.",
-                    "Hello! Let's start with a quick introduction about yourself and your primary engineering background."
-                ],
-                [
-                    `Regarding your repository ${repo1}, how did you organize the component structure and manage data flow?`,
-                    `In your project ${repo1}, what key design decisions did you make when setting up the initial architecture?`,
-                    `Looking at ${repo1}, how did you handle state management and UI responsiveness?`
-                ],
-                [
-                    `For ${repo2}, how did you structure the backend API integration and handle server responses?`,
-                    `In ${repo2}, how did you design the data models and manage asynchronous data fetching?`,
-                    `Regarding ${repo2}, what architectural approach did you take for scalability and performance?`
-                ],
-                [
-                    `In ${repo1}, how did you handle error boundary management and edge cases during execution?`,
-                    `In ${repo1}, how did you optimize rendering performance and minimize unneeded re-renders?`,
-                    `Looking at ${repo1}, what testing or validation strategies did you implement?`
-                ],
-                [
-                    `What was the most challenging technical bottleneck you encountered in ${repo2}, and how did you resolve it?`,
-                    `In ${repo2}, what was the most difficult bug or technical constraint you faced and fixed?`,
-                    `Regarding ${repo2}, what complex problem did you solve during its development?`
-                ],
-                [
-                    `In ${repo1}, what trade-offs did you make between development speed and code maintainability?`,
-                    `For ${repo1}, how did you balance feature delivery speed against architectural elegance?`,
-                    `In ${repo1}, what trade-offs did you evaluate regarding third-party dependencies vs custom code?`
-                ],
-                [
-                    `In your projects like ${repo1}, how do you ensure clean code standards, modularity, and security?`,
-                    `How do you approach refactoring and maintaining code quality in projects like ${repo2}?`,
-                    `In ${repo1}, how did you enforce consistent code patterns and maintainable project structure?`
-                ],
-                [
-                    `Why do you want to join this company for this specific role?`,
-                    `What excites you most about working at this company in this role?`,
-                    `How does your technical background align with this company's engineering goals?`
-                ],
-                [
-                    `Where do you see yourself in a few years?`,
-                    `What are your primary technical growth goals over the next few years?`,
-                    `Where do you aim to evolve your software engineering skills in the coming years?`
-                ]
-            ];
+        const isDuplicate = previousAssistantQuestions.some(prev => 
+            prev === aiText.trim().toLowerCase() ||
+            (prev.length > 15 && (prev.includes(aiText.trim().toLowerCase()) || aiText.trim().toLowerCase().includes(prev))) ||
+            (prev.length > 25 && prev.slice(0, 30) === aiText.trim().toLowerCase().slice(0, 30))
+        );
 
-            const turnIndex = Math.min(assistantTurnCount, dynamicQuestionBank.length - 1);
-            const options = dynamicQuestionBank[turnIndex];
-            aiText = options[Math.floor(Math.random() * options.length)];
+        if (isDuplicate) {
+            console.warn(`[Client Anti-Repetition] Detected duplicate: "${aiText}". Requesting fresh AI question...`);
+            
+            // Try one more direct Gemini call with explicit anti-duplication
+            const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            if (geminiApiKey) {
+                try {
+                    const sysPrompt = fullMessages.find((m: any) => m.role === 'system')?.content || '';
+                    const assistantCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ role: 'user', parts: [{ text: `Generate a single fresh interview question for turn ${assistantCount + 1} of 10. Previously asked: ${previousAssistantQuestions.join('; ')}. Context: ${sysPrompt.slice(0, 500)}` }] }],
+                            systemInstruction: { parts: [{ text: 'You are a professional interviewer. Generate exactly ONE short interview question (under 40 words). Do NOT repeat any previously asked questions.' }] },
+                            generationConfig: { temperature: 0.9, maxOutputTokens: 100 }
+                        })
+                    });
+                    if (res.ok) {
+                        const json = await res.json();
+                        const freshQ = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (freshQ?.trim()) {
+                            aiText = freshQ.trim();
+                            console.log('✓ Anti-repetition recovery: Fresh AI question generated:', aiText);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Anti-repetition recovery failed:', e);
+                }
+            }
         }
 
         const aiMsg: MessageLog = {
@@ -711,6 +803,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         volume,
         logs,
         errorDetails,
-        sendHiddenContext
+        sendHiddenContext,
+        apiLabel
     };
 }
