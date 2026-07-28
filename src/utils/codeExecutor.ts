@@ -1,4 +1,4 @@
-import { executePistonCode, isPistonLanguageSupported, type PistonLanguage } from './pistonExecutor';
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '../integrations/supabase/client';
 
 // Definition for singly-linked list.
 class ListNode {
@@ -26,7 +26,7 @@ function arrayToList(arr: number[]): ListNode | null {
 function listToArray(head: ListNode | null): number[] {
   const result: number[] = [];
   let current = head;
-  while (current !== null && result.length < 1000) { // Safety break
+  while (current !== null && result.length < 1000) {
     result.push(current.val);
     current = current.next;
   }
@@ -34,7 +34,7 @@ function listToArray(head: ListNode | null): number[] {
 }
 
 export type ExecutionResult = {
-  passed: boolean; // Keep for JS tests compat
+  passed: boolean;
   logs: string[];
   results: {
     caseId: number;
@@ -46,7 +46,7 @@ export type ExecutionResult = {
   error?: string;
 };
 
-// --- Pyodide Setup (Main Thread Fallback) ---
+// ─── Pyodide Setup (Main Thread Fallback) ───────────────────────────────────
 declare global {
   interface Window {
     loadPyodide: (config?: any) => Promise<any>;
@@ -60,35 +60,37 @@ const loadPyodideMain = async () => {
   if (pyodideMain) return pyodideMain;
   if (pyodideLoadingPromise) return pyodideLoadingPromise;
 
-  pyodideLoadingPromise = new Promise((resolve, reject) => {
-    // ... (Similar loading logic as before) ...
-    // Reusing the simple loading logic or we can just rely on the script being there?
-    // Let's implement robust loading again for fallback.
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js';
-    script.type = 'text/javascript';
-    script.async = true;
+  pyodideLoadingPromise = new Promise(async (resolve, reject) => {
+    try {
+      const response = await fetch('https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js');
+      const code = await response.text();
 
-    script.onload = async () => {
-      try {
-        // @ts-ignore
-        const p = await window.loadPyodide({
-          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.1/full/"
-        });
-        pyodideMain = p;
-        resolve(p);
-      } catch (e) {
-        reject(e);
-      }
-    };
-    script.onerror = (e) => reject(e);
-    document.body.appendChild(script);
+      // Temporarily hide AMD define (Monaco) to force Pyodide into global mode
+      const oldDefine = (window as any).define;
+      (window as any).define = undefined;
+
+      const script = document.createElement('script');
+      script.textContent = code;
+      document.body.appendChild(script);
+
+      // Restore AMD define immediately after synchronous execution
+      (window as any).define = oldDefine;
+
+      // @ts-ignore
+      const p = await window.loadPyodide({
+        indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.1/full/"
+      });
+      pyodideMain = p;
+      resolve(p);
+    } catch (e) {
+      reject(e);
+    }
   });
   return pyodideLoadingPromise;
 };
 
 
-// --- Pyodide Worker Controller ---
+// ─── Pyodide Worker Controller ───────────────────────────────────────────────
 class PyodideController {
   worker: Worker | null = null;
   sharedBuffer: SharedArrayBuffer | null = null;
@@ -161,7 +163,55 @@ class PyodideController {
 
 export const pyodideController = new PyodideController();
 
-// --- Main Execution Function ---
+// ─── JDoodle Executor (Java, C, C++ via Supabase Edge Function) ──────────────
+const JDOODLE_LANGUAGES = ['java', 'c', 'cpp'];
+
+const executeViaJDoodle = async (
+  language: string,
+  code: string,
+  stdin: string,
+  onLog: (msg: string) => void
+): Promise<ExecutionResult> => {
+  onLog(`⚡ Compiling ${language.toUpperCase()} code...\n`);
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/execute-code`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({ language, code, stdin }),
+  });
+
+  if (!response.ok) {
+    let errMsg = `Server error: ${response.statusText}`;
+    try {
+      const errData = await response.json();
+      errMsg = errData.error || errMsg;
+    } catch (_) {}
+    onLog(`\n❌ ${errMsg}\n`);
+    return { passed: false, logs: [], results: [], error: errMsg };
+  }
+
+  const result = await response.json();
+  const output: string = result?.run?.output ?? '';
+  const stderr: string = result?.run?.stderr ?? '';
+
+  if (output) onLog(output);
+  if (stderr) onLog(`\nSTDERR:\n${stderr}`);
+
+  const cpuTime = result?.cpuTime ? `\n✨ Done! CPU: ${result.cpuTime}s` : '\n✨ Done!';
+  onLog(cpuTime);
+
+  return {
+    passed: !stderr && result?.run?.code === 0,
+    logs: [output],
+    results: [],
+    error: stderr || undefined,
+  };
+};
+
+// ─── Main Execution Function ─────────────────────────────────────────────────
 export const executeCode = async (
   userCode: string,
   language: 'javascript' | 'python' | 'bash' | 'typescript' | 'java' | 'cpp' | 'c' | 'rust' | 'go' | 'ruby' | 'php' | 'swift' | 'kotlin' | 'scala',
@@ -175,195 +225,102 @@ export const executeCode = async (
     onLog?.(msg);
   };
 
-  // --- Piston Execution for Supported Languages ---
-  if (isPistonLanguageSupported(language)) {
-    captureLog(`⚡ Running your code...\n\n`);
-
-    try {
-      const result = await executePistonCode(
-        language as PistonLanguage,
-        userCode,
-        stdin,
-        {
-          onLog: captureLog,
-          runTimeout: 5000,
-          compileTimeout: 10000,
-        }
-      );
-
-      if (result.success) {
-        captureLog(`\n✨ Done! (${result.executionTime}ms)`);
-        return {
-          passed: true,
-          logs,
-          results: [],
-        };
-      } else {
-        captureLog(`\n❌ ${result.error}`);
-        return {
-          passed: false,
-          logs,
-          results: [],
-          error: result.error,
-        };
-      }
-    } catch (error: any) {
-      captureLog(`\n❌ ${error.message}`);
-      return {
-        passed: false,
-        logs,
-        results: [],
-        error: error.message,
-      };
-    }
+  // ── Java / C / C++ → JDoodle via Supabase Edge Function ──
+  if (JDOODLE_LANGUAGES.includes(language)) {
+    return executeViaJDoodle(language, userCode, stdin ?? '', captureLog);
   }
 
-  // --- Python Execution (Pyodide Fallback) ---
+  // ── Python → Pyodide (browser WebAssembly) ──────────────
   if (language === 'python') {
-
-    // CHECK: Can we use the worker?
+    // Happy path: Use Worker with SharedArrayBuffer (supports real input())
     if (window.crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined') {
-      // Happy path: Use Worker
       return new Promise((resolve) => {
         pyodideController.run(userCode, {
           onLog: captureLog,
-          onInput: (prompt) => {
-            if (onInputRequest) {
-              onInputRequest(prompt);
-            }
-          },
-          onFinished: () => {
-            resolve({ passed: true, logs, results: [] });
-          },
-          onError: (err) => {
-            resolve({ passed: false, logs, results: [], error: err });
-          }
+          onInput: (prompt) => { onInputRequest?.(prompt); },
+          onFinished: () => resolve({ passed: true, logs, results: [] }),
+          onError: (err) => resolve({ passed: false, logs, results: [], error: err }),
         });
       });
     } else {
-      // Fallback: Run on main thread (with window.prompt)
-      captureLog("⚠️ Running in Legacy Mode (Worker disabled). Input will be via popup.");
+      // Fallback: Main thread (input via window.prompt)
+      captureLog("⚡ Running Python...\n");
       try {
         const py = await loadPyodideMain();
         py.setStdout({ batched: (msg: string) => captureLog(msg) });
+        py.setStderr({ batched: (msg: string) => captureLog(`[stderr] ${msg}`) });
 
-        // Input override for main thread
         const jsInput = (text: string) => {
-          const result = window.prompt(text || "Input required:");
-          return result || "";
+          return window.prompt(text || "Input:") || "";
         };
         py.globals.set("js_input_main", jsInput);
 
         await py.runPythonAsync(`
-                import builtins
-                def input(prompt=""):
-                    return js_input_main(prompt)
-                builtins.input = input
-              `);
+import builtins
+def input(prompt=""):
+    return js_input_main(prompt)
+builtins.input = input
+        `);
 
         await py.runPythonAsync(userCode);
-
+        captureLog('\n✨ Done!');
         return { passed: true, logs, results: [] };
       } catch (err: any) {
-        return { passed: false, logs, results: [], error: err.toString() };
+        const errMsg = err?.toString() ?? 'Unknown Python error';
+        captureLog(`\n❌ ${errMsg}`);
+        return { passed: false, logs, results: [], error: errMsg };
       }
     }
   }
 
-  // --- Bash Execution (Simulated) ---
+  // ── Bash (simulated) ────────────────────────────────────
   if (language === 'bash') {
     if (userCode.trim().startsWith("echo")) {
       const output = userCode.replace("echo", "").replace(/"/g, "").replace(/'/g, "").trim();
       captureLog(output);
-      return {
-        passed: true,
-        logs: [output],
-        results: []
-      };
+      return { passed: true, logs: [output], results: [] };
     }
     return {
       passed: false,
-      logs: ["Execution for Bash is currently simulated (try 'echo hello')"],
+      logs: ["Bash execution is simulated (try 'echo hello')"],
       results: [],
-      error: "Full Bash support requires a backend system."
+      error: "Full Bash support requires a backend.",
     };
   }
 
-  // --- JavaScript Execution ---
+  // ── JavaScript / TypeScript → Browser native ────────────
+  captureLog("⚡ Running JavaScript...\n");
+
   const mockConsole = {
     log: (...args: any[]) => {
-      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-      captureLog(msg);
+      captureLog(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
     },
     error: (...args: any[]) => {
-      const msg = "Error: " + args.map(a => String(a)).join(' ');
-      captureLog(msg);
-    }
+      captureLog("Error: " + args.map(a => String(a)).join(' '));
+    },
+    warn: (...args: any[]) => {
+      captureLog("Warn: " + args.map(a => String(a)).join(' '));
+    },
+    info: (...args: any[]) => {
+      captureLog(args.map(a => String(a)).join(' '));
+    },
   };
-
-  const testCases = [
-    { input: [1, 2, 3, 4, 5], expected: [5, 4, 3, 2, 1] },
-    { input: [1, 2], expected: [2, 1] },
-    { input: [], expected: [] }
-  ];
-
-  const results: ExecutionResult['results'] = [];
-  let allPassed = true;
 
   try {
-    const factory = new Function('ListNode', 'console', `
-      ${userCode}
-      if (typeof reverseList !== 'function') {
-        return null; 
-      }
-      return reverseList;
-    `);
-
-    const userFunction = factory(ListNode, mockConsole);
-
-    if (userFunction) {
-      testCases.forEach((tc, index) => {
-        const inputList = arrayToList(tc.input);
-        try {
-          const outputList = userFunction(inputList);
-          const outputArray = listToArray(outputList);
-
-          const passed = JSON.stringify(outputArray) === JSON.stringify(tc.expected);
-          if (!passed) allPassed = false;
-
-          results.push({
-            caseId: index + 1,
-            input: JSON.stringify(tc.input),
-            expected: JSON.stringify(tc.expected),
-            actual: JSON.stringify(outputArray),
-            passed
-          });
-        } catch (err: any) {
-          allPassed = false;
-          captureLog(`Error in Test Case ${index + 1}: ${err.message}`);
-          results.push({
-            caseId: index + 1,
-            input: JSON.stringify(tc.input),
-            expected: JSON.stringify(tc.expected),
-            actual: "Error: " + err.message,
-            passed: false
-          });
-        }
-      });
-    }
-
+    // Try to detect if user defined a main function or it's a script
+    const wrappedCode = `
+      (function() {
+        ${userCode}
+      })();
+    `;
+    // eslint-disable-next-line no-new-func
+    const fn = new Function('console', wrappedCode);
+    fn(mockConsole);
+    captureLog('\n✨ Done!');
+    return { passed: true, logs, results: [] };
   } catch (err: any) {
-    return {
-      passed: false,
-      logs: [...logs, `Runtime Error: ${err.message}`],
-      results: [],
-      error: err.message
-    };
+    const errMsg = err?.message ?? 'Runtime error';
+    captureLog(`\n❌ ${errMsg}`);
+    return { passed: false, logs, results: [], error: errMsg };
   }
-
-  return {
-    passed: allPassed,
-    logs,
-    results
-  };
 };
