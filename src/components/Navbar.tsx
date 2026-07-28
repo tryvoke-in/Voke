@@ -101,17 +101,24 @@ export const Navbar = () => {
     };
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl transition-colors duration-300">
+        <nav aria-label="Main Navigation" className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl transition-colors duration-300">
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo/Brand */}
                     <div
-                        className="flex items-center gap-0 cursor-pointer group"
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Go to Voke Homepage"
+                        className="flex items-center gap-0 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-lg p-1"
                         onClick={handleLogoClick}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleLogoClick(); }}
                     >
                         <img
                             src={logoSrc}
                             alt={`${brandName} Logo`}
+                            width={48}
+                            height={48}
+                            decoding="async"
                             className="w-12 h-12 object-contain group-hover:scale-110 transition-transform duration-300"
                         />
                         <span className="text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 dark:from-violet-400 dark:via-purple-400 dark:to-fuchsia-400 bg-clip-text text-transparent">
@@ -124,16 +131,44 @@ export const Navbar = () => {
                         <Button
                             variant="ghost"
                             onClick={() => navigate("/voice-assistant")}
-                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
+                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors focus-visible:ring-2 focus-visible:ring-violet-500 text-sm font-medium"
                         >
-                            Pro Interview
+                            AI Practice
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => navigate("/companies")}
+                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors focus-visible:ring-2 focus-visible:ring-violet-500 text-sm font-medium"
+                        >
+                            Companies
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => navigate("/dsa-sheet")}
+                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors focus-visible:ring-2 focus-visible:ring-violet-500 text-sm font-medium"
+                        >
+                            DSA Sheet
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => navigate("/pricing")}
+                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors focus-visible:ring-2 focus-visible:ring-violet-500 text-sm font-medium"
+                        >
+                            Pricing
                         </Button>
                         <Button
                             variant="ghost"
                             onClick={() => navigate("/community")}
-                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
+                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors focus-visible:ring-2 focus-visible:ring-violet-500 text-sm font-medium"
                         >
                             Community
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => navigate("/about")}
+                            className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors focus-visible:ring-2 focus-visible:ring-violet-500 text-sm font-medium"
+                        >
+                            About
                         </Button>
                     </div>
 
@@ -147,20 +182,24 @@ export const Navbar = () => {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => navigate("/peer-interviews")}
-                                    className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-500/10 dark:hover:bg-violet-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center"
+                                    aria-label="Peer Match"
+                                    className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-500/10 dark:hover:bg-violet-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center focus-visible:ring-2 focus-visible:ring-violet-500"
                                     title="Peer Match"
                                 >
-                                    <Users className="w-5 h-5" />
+                                    <Users className="w-5 h-5" aria-hidden="true" />
+                                    <span className="sr-only">Peer Match</span>
                                 </Button>
 
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => navigate("/profile")}
-                                    className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-500/10 dark:hover:bg-violet-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center"
+                                    aria-label="Settings and Profile"
+                                    className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-500/10 dark:hover:bg-violet-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center focus-visible:ring-2 focus-visible:ring-violet-500"
                                     title="Settings"
                                 >
-                                    <Settings className="w-5 h-5" />
+                                    <Settings className="w-5 h-5" aria-hidden="true" />
+                                    <span className="sr-only">Settings</span>
                                 </Button>
 
                                 {/* Profile Strength - Circular Ring */}

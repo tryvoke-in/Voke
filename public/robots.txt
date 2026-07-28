@@ -1,16 +1,80 @@
+# Voke SEO & Web Crawler Policy (https://www.tryvoke.in)
+
+# -------------------------------------------------------------------
+# 1. Standard Web Search Crawlers (Googlebot, Bingbot, Yahoo, DuckDuckGo)
+# -------------------------------------------------------------------
 User-agent: *
 Allow: /
 
+# Block Authentication & Onboarding
+Disallow: /auth
+Disallow: /login
+Disallow: /signup
+Disallow: /waitlist
+
+# Block Protected User Dashboards & Admin Portals
+Disallow: /dashboard
+Disallow: /admin
+
+# Block Internal APIs & Server Endpoint Proxies
+Disallow: /api/
+Disallow: /functions/
+
+# Block Private User Sessions, Active Practice & Personal Data
+Disallow: /profile
+Disallow: /interview
+Disallow: /video-interview
+Disallow: /timed-interview
+Disallow: /voice-interview
+Disallow: /multi-question-results
+Disallow: /voice-assistant
+Disallow: /video-practice
+Disallow: /progress-analytics
+Disallow: /adaptive-interview
+Disallow: /peer-interviews
+Disallow: /job-recommendations
+Disallow: /career-plan
+Disallow: /daily-challenge/solve
+Disallow: /playground
+Disallow: /resume-builder
+
+# -------------------------------------------------------------------
+# 2. Google-Specific Crawler Directives
+# -------------------------------------------------------------------
 User-agent: Googlebot
 Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api/
 
-User-agent: Bingbot
+# -------------------------------------------------------------------
+# 3. AI & Search Answer Engines (GPTBot, PerplexityBot, ClaudeBot)
+# Allow AI agents to index public marketing pages & company questions
+# while protecting private endpoints.
+# -------------------------------------------------------------------
+User-agent: GPTBot
 Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api/
 
-User-agent: Twitterbot
+User-agent: PerplexityBot
 Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api/
 
-User-agent: facebookexternalhit
+User-agent: ClaudeBot
 Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api/
 
-Sitemap: https://tryvoke.in/sitemap.xml
+# -------------------------------------------------------------------
+# 4. XML Sitemap Index Location
+# -------------------------------------------------------------------
+Sitemap: https://www.tryvoke.in/sitemap.xml

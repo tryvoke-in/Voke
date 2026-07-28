@@ -12,7 +12,7 @@ import {
     Search, ArrowLeft, ExternalLink, Loader2, Calendar,
     TrendingUp, Award, Layers, AlertCircle, Code2
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { SEO } from "@/components/SEO";
 
 const PERIODS = ["Thirty Days", "Three Months", "Six Months", "More Than Six Months"];
 
@@ -166,6 +166,11 @@ const CompanyDetail = () => {
 
     return (
         <div className="min-h-screen bg-background">
+            <SEO
+                title={`${company.name} Technical & Behavioral Interview Questions | Voke`}
+                description={`Practice top ${company.name} technical interview questions. Master ${company.name} coding problems, system design questions, and mock interview practice on Voke.`}
+                canonicalPath={`/companies/${company.slug}`}
+            />
             <Navbar />
 
             <main className="container mx-auto px-4 py-8 max-w-5xl">

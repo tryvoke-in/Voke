@@ -155,7 +155,11 @@ const Index = () => {
             >
               <img 
                 src="/images/voke_logo.png" 
-                alt="Voke Logo" 
+                alt="Voke AI Tech Interview Preparation Logo" 
+                width={40}
+                height={40}
+                loading="eager"
+                decoding="async"
                 className="w-10 h-10 object-contain group-hover:rotate-[15deg] transition-transform duration-300"
               />
               <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/50">
@@ -1119,7 +1123,11 @@ const Index = () => {
               <div className="flex items-center gap-2">
                 <img 
                   src="/images/voke_logo.png" 
-                  alt="Voke Logo" 
+                  alt="Voke AI Interview Preparation Platform" 
+                  width={32}
+                  height={32}
+                  loading="lazy"
+                  decoding="async"
                   className="w-8 h-8 object-contain"
                 />
                 <span className="text-2xl font-bold text-white">Voke</span>

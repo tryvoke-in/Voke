@@ -4,8 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Brain } from "lucide-react";
 
 export const ProfileCompletionGuard = ({ children }: { children: React.ReactNode }) => {
-    const [loading, setLoading] = useState(true);
     const location = useLocation();
+    const isSSR = typeof window === "undefined";
+    const isPublicPage = [
+        "/", "/pricing", "/companies", "/dsa-sheet", "/question-practice",
+        "/daily-challenge", "/elite-prep", "/community", "/leaderboard",
+        "/help", "/privacy", "/waitlist"
+    ].includes(location.pathname) || location.pathname.startsWith("/companies/");
+
+    const [loading, setLoading] = useState(!isSSR && !isPublicPage);
 
     useEffect(() => {
         let active = true;
