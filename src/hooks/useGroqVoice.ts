@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { LiveStatus, MessageLog } from '../types/voice';
 import { toast } from 'sonner';
-
+import { supabase } from '@/integrations/supabase/client';
 
 const SYSTEM_INSTRUCTION = `YOU ARE:
 A real-time voice-based conversational assistant designed to conduct a professional yet friendly interview.

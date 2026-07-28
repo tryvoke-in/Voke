@@ -210,12 +210,18 @@ export const getInterviewRounds = (typeId: string, companyId: string, roleId: st
     {
       roundId: `${typeId}_${companyId}_${roleId}_r2`,
       roundNumber: 2,
-      title: 'Round 2: Technical & Problem Solving',
-      subtitle: '8-9 Questions • Practical Coding & Logic Deep Dive',
-      questionCount: 8,
-      durationMins: 20,
-      focusAreas: [`${role.title} Technical Depth`, 'Algorithms & Complexity', 'Edge Case Reasoning', 'Code Architecture'],
-      description: `Deep technical evaluation for ${role.title} at ${company.name}. Assesses core algorithms, coding logic, and technical problem-solving across 8-9 voice/video questions.`
+      title: 'Round 2 — Technical & Project Deep Dive',
+      subtitle: '12–15 Questions (20–30 Mins) • Adaptive Difficulty • Voice Only',
+      questionCount: 12,
+      durationMins: 25,
+      focusAreas: [
+        'Project Ownership & Architecture',
+        'Technical Decision Reasoning',
+        'Implementation Deep Dive',
+        'Edge Cases & Debugging',
+        'Scalability Thinking'
+      ],
+      description: `Deep technical interrogation of your chosen GitHub project at ${company.name}. The AI adapts difficulty in real-time based on your answers — Easy → Medium → Hard. Voice-only round: no coding required, verbal explanations only. Pass threshold: 75%.`
     },
     {
       roundId: `${typeId}_${companyId}_${roleId}_r3`,

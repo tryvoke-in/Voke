@@ -12,6 +12,7 @@ import {
 } from '@/utils/eliteInterviewStorage';
 import { EliteNotebookLMMindMap } from '@/components/elite/EliteNotebookLMMindMap';
 import { EliteVoiceRoom } from '@/components/elite/EliteVoiceRoom';
+import { EliteProjectDeepDive } from '@/components/elite/EliteProjectDeepDive';
 import { useInterviewCredits } from '@/hooks/useInterviewCredits';
 import { loadUserProfileContext, ProfileContext } from '@/utils/profileContext';
 import { Crown, AlertTriangle, Sparkles, Wrench } from 'lucide-react';
@@ -218,8 +219,22 @@ const ElitePrep: React.FC = () => {
           />
         )}
 
-        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && (
+        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 1 && (
           <EliteVoiceRoom
+            interviewType={selectedType}
+            company={selectedCompany}
+            role={selectedRole}
+            round={activeRound}
+            candidateProfileContext={profileContext?.context}
+            githubRepos={profileContext?.githubRepos}
+            isLoadingRepos={loadingProfile}
+            onCompleteRound={handleCompleteRound}
+            onExit={() => setViewMode('notebook_mindmap')}
+          />
+        )}
+
+        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 2 && (
+          <EliteProjectDeepDive
             interviewType={selectedType}
             company={selectedCompany}
             role={selectedRole}
