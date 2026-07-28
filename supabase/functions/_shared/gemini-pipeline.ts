@@ -39,7 +39,7 @@ export async function callGeminiPipeline({
   geminiContents,
   systemPrompt,
   responseSchema,
-  temperature = 0.3,
+  temperature = 0.2,
 }: GeminiPipelineOptions): Promise<GeminiPipelineResult> {
   const keys = getGeminiApiKeys();
   const modelsToTry = Array.from(new Set([
@@ -67,7 +67,7 @@ export async function callGeminiPipeline({
           },
           generationConfig: {
             temperature,
-            maxOutputTokens: responseSchema ? 500 : 120,
+            maxOutputTokens: responseSchema ? 500 : 60,
           },
         };
 

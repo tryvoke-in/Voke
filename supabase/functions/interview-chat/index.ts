@@ -80,15 +80,24 @@ STRICT QUESTIONING INSTRUCTION:
       });
     }
 
+    // SPEED OPTIMIZATION: Keep last 6 recent turns to minimize prompt processing latency
+    const recentContents = geminiContents.slice(-6);
+    if (recentContents[0].role !== 'user') {
+      recentContents.unshift({
+        role: 'user',
+        parts: [{ text: 'Continuing interview session...' }]
+      });
+    }
+
     let content = "";
 
-    // STEP 1: Primary - Gemini 3.1 Flash Lite via Gemini Pipeline for Dynamic Question Generation
+    // STEP 1: Primary - Gemini 3.1 Flash Lite via Gemini Pipeline for Ultra-Fast Dynamic Question Generation
     console.log("Executing Step 1: Gemini 3.1 Flash Lite for Question Generation...");
     const geminiRes = await callGeminiPipeline({
       modelName: "gemini-3.1-flash-lite",
-      geminiContents,
+      geminiContents: recentContents,
       systemPrompt,
-      temperature: 0.7,
+      temperature: 0.2,
     });
 
     if (geminiRes.ok && geminiRes.aiContent) {
