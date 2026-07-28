@@ -89,20 +89,46 @@ STRICT QUESTIONING INSTRUCTION:
       });
     }
 
+    // Collect all previous assistant questions to prevent any duplicate questions
+    const previousAssistantQuestions = conversationMessages
+      .filter((m: any) => m.role === 'assistant')
+      .map((m: any) => (m.content || '').trim().toLowerCase())
+      .filter(Boolean);
+
     let content = "";
 
-    // STEP 1: Primary - Gemini 3.1 Flash Lite via Gemini Pipeline for Ultra-Fast Dynamic Question Generation
+    // STEP 1: Primary - Gemini 3.1 Flash Lite via Gemini Pipeline for Dynamic Question Generation
     console.log("Executing Step 1: Gemini 3.1 Flash Lite for Question Generation...");
     const geminiRes = await callGeminiPipeline({
       modelName: "gemini-3.1-flash-lite",
       geminiContents: recentContents,
-      systemPrompt,
-      temperature: 0.2,
+      systemPrompt: systemPrompt + (previousAssistantQuestions.length > 0 ? `\n\nNO-REPEAT RULE: DO NOT repeat any of these previously asked questions:\n${previousAssistantQuestions.map(q => `- "${q}"`).join('\n')}` : ''),
+      temperature: 0.6,
     });
 
     if (geminiRes.ok && geminiRes.aiContent) {
-      content = geminiRes.aiContent;
-      console.log("✓ Success with Gemini 2.0 Flash for Question Generation");
+      content = geminiRes.aiContent.trim();
+      console.log("✓ Success with Gemini 3.1 Flash Lite for Question Generation:", content);
+    }
+
+    // STRICT REPETITION CHECK & RETRY FAILSAFE
+    if (content && previousAssistantQuestions.some(prevQ => 
+      prevQ === content.toLowerCase() || 
+      (prevQ.length > 15 && (prevQ.includes(content.toLowerCase()) || content.toLowerCase().includes(prevQ))) ||
+      prevQ.slice(0, 35) === content.toLowerCase().slice(0, 35)
+    )) {
+      console.warn(`[Anti-Repetition Alert] Question "${content}" was repeated! Retrying with anti-duplication override...`);
+      const retryRes = await callGeminiPipeline({
+        modelName: "gemini-3.1-flash-lite",
+        geminiContents: recentContents,
+        systemPrompt: systemPrompt + `\n\nCRITICAL OVERRIDE: The question "${content}" WAS ALREADY ASKED. YOU MUST ASK A COMPLETELY DIFFERENT SPECIFIC QUESTION ABOUT A SPECIFIC RESUME SKILL, TECH STACK TOOL, OR EXPERIENCE!`,
+        temperature: 0.85,
+      });
+
+      if (retryRes.ok && retryRes.aiContent) {
+        content = retryRes.aiContent.trim();
+        console.log("✓ Success retry with fresh non-repeated question:", content);
+      }
     } else {
       console.warn("Direct Gemini pipeline note. Trying Lovable Gateway fallback...");
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
