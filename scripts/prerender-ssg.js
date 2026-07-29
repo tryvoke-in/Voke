@@ -672,6 +672,7 @@ async function main() {
   } catch (e) {}
 
   console.log('🎉 Full SSG Marketing Page Prerendering Complete!');
+  process.exit(0);
 }
 
 main().catch(err => {
