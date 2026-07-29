@@ -444,6 +444,14 @@ const Dashboard = () => {
       color: "text-fuchsia-500",
       hoverBg: "hover:bg-fuchsia-500/10 hover:text-fuchsia-500",
     },
+    {
+      id: "community",
+      label: "Community",
+      icon: Users,
+      path: "/community",
+      color: "text-teal-500",
+      hoverBg: "hover:bg-teal-500/10 hover:text-teal-500",
+    },
   ];
 
   if (loading) {
@@ -787,6 +795,19 @@ const Dashboard = () => {
                     </div>
                     <h4 className="font-semibold text-sm">Question Practice</h4>
                     <p className="text-xs text-muted-foreground mt-1">Daily Challenges</p>
+                  </CardContent>
+                </Card>
+
+                <Card id="tour-community" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-teal-500" onClick={() => navigate("/community")}>
+                  <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20 z-10">
+                    Feed
+                  </span>
+                  <CardContent className="p-4 flex flex-col items-center text-center pt-6">
+                    <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <Users className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    <h4 className="font-semibold text-sm">Community</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Connect & Discuss</p>
                   </CardContent>
                 </Card>
               </div>
