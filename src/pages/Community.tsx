@@ -15,13 +15,19 @@ import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Community = () => {
+  const { toast } = useToast();
   const [view, setView] = useState<'feed' | 'trending' | 'events'>('feed');
   const [aiInsights, setAiInsights] = useState<{ trending_topics: any[], suggested_events: any[] } | null>(null);
   const [user, setUser] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
+  const [topContributors, setTopContributors] = useState<any[]>([]);
   const [newPost, setNewPost] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [showImageInput, setShowImageInput] = useState(false);
+  const [registeredEvents, setRegisteredEvents] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [postComments, setPostComments] = useState<any[]>([]);
@@ -34,11 +40,16 @@ const Community = () => {
     checkAuth();
     fetchPosts();
     fetchAIInsights();
+    fetchTopContributors();
 
-    // Realtime subscription for posts
+    // Realtime subscription for posts and likes
     const channel = supabase
-      .channel('public:posts')
+      .channel('public:community')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, () => {
+        fetchPosts();
+        fetchTopContributors();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, () => {
         fetchPosts();
       })
       .subscribe();
@@ -60,6 +71,58 @@ const Community = () => {
       setAiInsights(data);
     } catch (error) {
       console.error('Error fetching AI insights:', error);
+    }
+  };
+
+  const fetchTopContributors = async () => {
+    try {
+      // Fetch all posts grouped by user, then join with profiles
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts' as any)
+        .select('user_id');
+
+      if (postsError) throw postsError;
+
+      // Count posts per user
+      const countMap: Record<string, number> = {};
+      (postsData || []).forEach((p: any) => {
+        countMap[p.user_id] = (countMap[p.user_id] || 0) + 1;
+      });
+
+      // Sort by count and take top 5
+      const topUserIds = Object.entries(countMap)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5);
+
+      if (topUserIds.length === 0) {
+        setTopContributors([]);
+        return;
+      }
+
+      // Fetch profiles for top users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles' as any)
+        .select('id, full_name, avatar_url, target_role')
+        .in('id', topUserIds.map(([id]) => id));
+
+      if (profilesError) throw profilesError;
+
+      // Merge counts with profiles and sort
+      const contributors = topUserIds.map(([userId, count], index) => {
+        const profile = (profiles || []).find((p: any) => p.id === userId);
+        return {
+          id: userId,
+          name: profile?.full_name || 'Anonymous',
+          avatar_url: profile?.avatar_url || null,
+          title: profile?.target_role || 'Community Member',
+          postCount: count,
+          rank: index === 0 ? 'Top 1%' : index === 1 ? 'Top 3%' : index === 2 ? 'Top 5%' : index === 3 ? 'Top 10%' : 'Top 15%',
+        };
+      });
+
+      setTopContributors(contributors);
+    } catch (error) {
+      console.error('Error fetching top contributors:', error);
     }
   };
 
@@ -95,7 +158,18 @@ const Community = () => {
   };
 
   const handlePost = async () => {
-    if (!newPost.trim() || !user) return;
+    if (!newPost.trim()) return;
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to post in the community.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Extract any #hashtags typed in the post body, or default to ["InterviewPrep"]
+    const extractedTags = newPost.match(/#[\w]+/g)?.map(tag => tag.substring(1)) || ["InterviewPrep"];
 
     try {
       const { error } = await supabase
@@ -103,19 +177,38 @@ const Community = () => {
         .insert({
           user_id: user.id,
           content: newPost,
-          tags: ["InterviewPrep"]
+          image_url: imageUrl.trim() || null,
+          tags: extractedTags
         });
 
       if (error) throw error;
       setNewPost("");
+      setImageUrl("");
+      setShowImageInput(false);
+      toast({
+        title: "Post Published!",
+        description: "Your discussion has been shared with the community.",
+      });
       fetchPosts();
     } catch (error) {
       console.error('Error creating post:', error);
+      toast({
+        title: "Error",
+        description: "Failed to publish post. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleLike = async (postId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to like discussions.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const post = posts.find(p => p.id === postId);
     const isLiked = post?.likes?.some((l: any) => l.user_id === user.id);
@@ -130,6 +223,24 @@ const Community = () => {
     } catch (error) {
       console.error('Error toggling like:', error);
     }
+  };
+
+  const handleShare = (postId: string) => {
+    const shareUrl = `${window.location.origin}/community#post-${postId}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast({
+      title: "Link Copied!",
+      description: "Discussion link copied to clipboard.",
+    });
+  };
+
+  const handleRegisterEvent = (eventTitle: string) => {
+    setRegisteredEvents(prev => ({ ...prev, [eventTitle]: !prev[eventTitle] }));
+    const isReg = !registeredEvents[eventTitle];
+    toast({
+      title: isReg ? "Registered!" : "Unregistered",
+      description: isReg ? `You are registered for "${eventTitle}".` : `Registration cancelled for "${eventTitle}".`,
+    });
   };
 
   const handleToggleComments = async (postId: string) => {
@@ -201,7 +312,7 @@ const Community = () => {
   });
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col text-foreground selection:bg-violet-500/30">
+    <div className="min-h-screen bg-muted/30 flex flex-col text-foreground selection:bg-violet-500/30 pt-16">
       <Navbar />
 
       {/* Beta Development Modal */}
@@ -257,44 +368,6 @@ const Community = () => {
         <div className="flex-1 flex flex-col min-w-0">
           <main className="container mx-auto px-4 py-8">
             
-            {/* Hero Header Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-700 text-white p-8 mb-8 shadow-xl"
-            >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-fuchsia-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
-
-              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <Badge variant="outline" className="bg-white/20 text-white border-white/20 backdrop-blur-md px-3 py-1">
-                      <Sparkles className="w-3.5 h-3.5 mr-1 text-amber-300 animate-pulse" /> Voke Lounge
-                    </Badge>
-                    <Badge variant="outline" className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 backdrop-blur-md px-3 py-1">
-                      Active Engineers
-                    </Badge>
-                  </div>
-                  <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Community Feed</h1>
-                  <p className="text-white/80 text-sm sm:text-base mt-1 max-w-xl">
-                    Share interview experiences, ask technical questions, and collaborate with software engineers preparing for top tech companies.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="bg-white/10 backdrop-blur-md border border-white/15 px-4 py-3 rounded-2xl flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-400/20 flex items-center justify-center text-amber-300">
-                      <Flame className="w-5 h-5 fill-amber-300" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-white/70">Community Active</p>
-                      <p className="text-sm font-bold">{posts.length} Discussions</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
 
             {/* Layout Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -339,26 +412,27 @@ const Community = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {[
-                      { name: "Alex Chen", title: "FAANG Prep Lead", points: "2.4k pts", rank: "Top 1%" },
-                      { name: "Priya Sharma", title: "Full Stack Engineer", points: "1.9k pts", rank: "Top 3%" },
-                      { name: "David Kim", title: "Backend Specialist", points: "1.5k pts", rank: "Top 5%" },
-                    ].map((member, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 border border-border/50">
-                          <AvatarFallback className="bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-xs font-bold">
-                            {member.name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{member.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{member.title}</p>
+                    {topContributors.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">No contributors yet. Be the first to post!</p>
+                    ) : (
+                      topContributors.map((member, i) => (
+                        <div key={member.id} className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9 border border-border/50">
+                            <AvatarImage src={member.avatar_url} />
+                            <AvatarFallback className="bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-xs font-bold">
+                              {member.name?.[0]?.toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{member.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{member.title} • {member.postCount} posts</p>
+                          </div>
+                          <Badge variant="outline" className="text-[10px] bg-violet-500/10 text-violet-500 border-violet-500/20">
+                            {member.rank}
+                          </Badge>
                         </div>
-                        <Badge variant="outline" className="text-[10px] bg-violet-500/10 text-violet-500 border-violet-500/20">
-                          {member.rank}
-                        </Badge>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -385,9 +459,22 @@ const Community = () => {
                               onChange={(e) => setNewPost(e.target.value)}
                               className="bg-muted/40 border-border/60 min-h-[90px] resize-none focus:border-violet-500/50 focus:ring-violet-500/20 text-sm rounded-xl"
                             />
+                            {showImageInput && (
+                              <Input
+                                placeholder="Paste image URL (optional)..."
+                                value={imageUrl}
+                                onChange={(e) => setImageUrl(e.target.value)}
+                                className="bg-muted/40 border-border/60 h-9 text-xs rounded-xl"
+                              />
+                            )}
                             <div className="flex justify-between items-center pt-1">
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-violet-500 hover:bg-violet-500/10 rounded-lg text-xs gap-1.5">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setShowImageInput(!showImageInput)}
+                                  className={`text-xs gap-1.5 rounded-lg ${showImageInput ? 'text-violet-600 bg-violet-500/10 font-bold' : 'text-muted-foreground hover:text-violet-500 hover:bg-violet-500/10'}`}
+                                >
                                   <ImageIcon className="h-4 w-4" /> Media
                                 </Button>
                               </div>
@@ -457,7 +544,12 @@ const Community = () => {
                                 )}
                                 <div className="flex flex-wrap gap-1.5">
                                   {post.tags?.map((tag: string) => (
-                                    <Badge key={tag} variant="secondary" className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border-0 text-[11px]">
+                                    <Badge
+                                      key={tag}
+                                      variant="secondary"
+                                      className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border-0 text-[11px] cursor-pointer hover:bg-violet-500/20 transition-colors"
+                                      onClick={() => setSearchQuery(tag)}
+                                    >
                                       #{tag}
                                     </Badge>
                                   ))}
@@ -484,7 +576,12 @@ const Community = () => {
                                   <MessageSquare className="h-4 w-4" /> {post.comments?.[0]?.count || 0} Comments
                                 </Button>
 
-                                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground gap-1.5">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
+                                  onClick={() => handleShare(post.id)}
+                                >
                                   <Share2 className="h-4 w-4" /> Share
                                 </Button>
                               </CardFooter>
@@ -608,7 +705,14 @@ const Community = () => {
                           >
                             <div className="flex justify-between items-start mb-3">
                               <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">{event.type}</Badge>
-                              <Button size="sm" variant="outline" className="text-xs rounded-xl border-border">Register Interest</Button>
+                              <Button
+                                size="sm"
+                                variant={registeredEvents[event.title] ? "default" : "outline"}
+                                className={`text-xs rounded-xl ${registeredEvents[event.title] ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'border-border'}`}
+                                onClick={() => handleRegisterEvent(event.title)}
+                              >
+                                {registeredEvents[event.title] ? "Registered ✓" : "Register Interest"}
+                              </Button>
                             </div>
                             <h4 className="text-base font-bold text-foreground mb-1">{event.title}</h4>
                             <p className="text-xs text-muted-foreground">{event.description}</p>
@@ -646,7 +750,10 @@ const Community = () => {
                         <div
                           key={topic.tag}
                           className="flex justify-between items-center group cursor-pointer p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
-                          onClick={() => setView('trending')}
+                          onClick={() => {
+                            setSearchQuery(topic.tag);
+                            setView('feed');
+                          }}
                         >
                           <div>
                             <p className="font-medium text-xs text-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">#{topic.tag}</p>
