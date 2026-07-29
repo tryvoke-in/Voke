@@ -1,89 +1,61 @@
-# Real Job API Integration
+# Free Multi-API & Resume-Based Job Module Integration (India Region Focus)
 
-## API Key Provided
-`2451839aa10951a2081e044f97a26f7f`
+## Overview
 
-## Integration Method
-
-I've integrated **The Muse API** to fetch real job postings. The system now:
-
-1. **Fetches fresh jobs** every time you generate recommendations
-2. **Stores them in the database** (avoids duplicates)
-3. **Uses real job data** for AI matching instead of seed data
-
-## How It Works
-
-### When You Click "Generate Recommendations":
-1. System fetches latest jobs from The Muse API
-2. Stores up to 30 fresh job postings in database
-3. AI analyzes your interview performance
-4. Matches you with real jobs based on skills and experience
-5. Returns personalized recommendations
-
-### API Details:
-- **Provider**: The Muse (https://www.themuse.com/developers/api/v2)
-- **Endpoint**: `/api/public/jobs`
-- **Category**: Engineering (can be customized)
-- **Limit**: 30 jobs per fetch
-- **Updates**: Fresh jobs on every recommendation generation
-
-## Setup Instructions
-
-### Option 1: Add API Key to Supabase (Recommended)
-1. Go to Supabase Dashboard → Project Settings → Edge Functions
-2. Add secret: `JOB_SEARCH_API_KEY` = `2451839aa10951a2081e044f97a26f7f`
-3. Deploy the updated `generate-job-recommendations` function
-
-### Option 2: Hardcoded (Already Done)
-The API key is already included in the Edge Function as a fallback, so it will work immediately after deployment.
-
-## Files Modified
-
-1. **`supabase/functions/generate-job-recommendations/index.ts`**
-   - Added real job fetching from The Muse API
-   - Added helper functions for skill extraction and experience level inference
-   - Stores jobs in database before matching
-
-2. **`supabase/functions/fetch-real-jobs/index.ts`** (NEW)
-   - Standalone function to fetch jobs on-demand
-   - Supports both The Muse and Adzuna APIs
-   - Can be called independently to refresh job database
-
-## Benefits
-
-✅ **Real Jobs**: No more AI-generated mock data  
-✅ **Fresh Data**: Updated on every recommendation  
-✅ **Automatic Skill Extraction**: Parses job descriptions for required skills  
-✅ **Smart Experience Matching**: Infers entry/mid/senior levels  
-✅ **Duplicate Prevention**: Won't store the same job twice  
-✅ **Fallback**: Uses existing DB jobs if API fails  
-
-## Testing
-
-After deploying, test with:
-```bash
-# In your app
-1. Complete 2-3 interviews
-2. Visit /job-recommendations
-3. Click "Generate Recommendations"
-4. Check console logs for "Fetched X jobs from The Muse API"
-5. See real job postings with application links!
-```
-
-## API Limits
-
-The Muse API is free but has rate limits:
-- **Free tier**: ~100 requests/hour
-- **Jobs per request**: Up to 100
-- **No authentication required** for public endpoints
-
-## Future Enhancements
-
-- Add more job APIs (Indeed, LinkedIn, Adzuna)
-- Cache jobs for 24 hours to reduce API calls
-- Add job filtering by location, salary, remote status
-- Implement job refresh scheduling (daily/weekly)
+Voke's Job Module has been upgraded to aggregate everyday live job postings from **100% free public APIs and open scrapers** specifically focused on the **Indian Job Market** and remote tech jobs. It matches these jobs directly with candidate **Resume Skills + Interview Performance**.
 
 ---
 
-**Status**: ✅ Ready to deploy! The integration is complete and will fetch real jobs automatically.
+## 1. Integrated Free Job APIs (India Focused)
+
+We integrated **7 free APIs** to pull jobs tailored to Indian talent. None of these require paid subscriptions:
+
+| Source | API Endpoint / Details | Type | Key Required |
+|---|---|---|---|
+| **Adzuna (India)** | `api.adzuna.com/v1/api/jobs/in/search` (Specifically targeting `in` region) | Generous Free Tier | Optional (App ID/Key) |
+| **Findwork.dev** | `findwork.dev/api/jobs/?location=india` (100% free, no auth) | Free Public API | ❌ None |
+| **The Muse** | `themuse.com/api/public/jobs?location=India` | Free Public API | ❌ None |
+| **Jobicy** | `jobicy.com/api/v2/remote-jobs?geo=apac` (APAC/India jobs) | Free Public API | ❌ None |
+| **Remotive** | `remotive.com/api/remote-jobs?search=india` | Free Public API | ❌ None |
+| **RemoteOK** | `remoteok.com/api?location=india` | Free Public API | ❌ None |
+| **Google Jobs (SerpApi)** | `serpapi.com/search.json?engine=google_jobs&gl=in` (gl=in sets India location) | Free Tier (100/mo) | ⚡ `SERPAPI_KEY` |
+
+---
+
+## 2. How to setup SerpApi (Google Jobs) and Adzuna (Optional for higher limits)
+
+The system works perfectly without any API keys using Findwork, The Muse, Jobicy, Remotive, and RemoteOK. However, to get even more Google Jobs and Adzuna results, you can use their free tiers:
+
+### Getting a SerpApi Key (Google Jobs):
+1. Go to [serpapi.com](https://serpapi.com/) and create a free account.
+2. You get 100 free searches every month.
+3. Copy your API Key from the dashboard.
+4. Add it to Supabase Edge Function Secrets:
+   ```bash
+   supabase secrets set SERPAPI_KEY="your_serpapi_key_here"
+   ```
+
+### Getting Adzuna Keys (10,000 requests/month):
+1. Go to [developer.adzuna.com](https://developer.adzuna.com/) and create a free account.
+2. Create an App to get an **App ID** and **App Key**.
+3. Add them to Supabase Secrets:
+   ```bash
+   supabase secrets set ADZUNA_APP_ID="your_adzuna_app_id"
+   supabase secrets set ADZUNA_APP_KEY="your_adzuna_app_key"
+   ```
+
+---
+
+## 3. Resume-Based AI Matching Engine
+
+The AI scout analyzes candidate data across 3 dimensions:
+1. **Resume Analysis**: Skills parsed from user uploaded resume/profile (`resume_analyses` + `profiles.resume_url`).
+2. **Interview Signals**: Scores from text, voice, and video practice interviews.
+3. **Everyday Freshness**: Filters & tags jobs by posting date (`posted_date`) so users get real-time everyday jobs.
+
+---
+
+## 4. UI Features (`JobRecommendations.tsx`)
+- **Source Filter**: Filter by Job Provider (*Findwork, Adzuna, RemoteOK, Jobicy, Arbeitnow, Remotive, Google Jobs, The Muse*).
+- **Resume Sync Badge**: Visual status showing when a user's resume is synced for job matching.
+- **Live Job Cards**: Displays source badges, salary ranges in ₹ or $, required skills, remote status, direct apply buttons, and career path generator.

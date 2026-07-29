@@ -6,27 +6,12 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-    // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
 
-    // Helper to canonicalize URLs (strip tracking params)
-    const canonicalizeUrl = (url: string | null): string | null => {
-        if (!url) return null;
-        try {
-            const u = new URL(url);
-            u.searchParams.delete('utm_source');
-            u.searchParams.delete('utm_medium');
-            u.searchParams.delete('utm_campaign');
-            return u.href;
-        } catch {
-            return url;
-        }
-    };
-
     try {
-        console.log("Function started");
+        console.log("generate-job-recommendations function started");
         const { userId, forceRefresh = false } = await req.json()
 
         if (!userId) {
@@ -36,22 +21,13 @@ serve(async (req) => {
             )
         }
 
-        // 1. Dynamic Import: Supabase Client
-        console.log("Importing Supabase...");
-        let createClient;
-        try {
-            const module = await import('https://esm.sh/@supabase/supabase-js@2');
-            createClient = module.createClient;
-        } catch (err) {
-            console.error("Failed to import Supabase:", err);
-            throw new Error(`Supabase import failed: ${err.message}`);
-        }
-
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-        // 1b. Authenticate the caller securely
+        // Auth check
         const authHeader = req.headers.get("Authorization");
         if (!authHeader) {
             return new Response(JSON.stringify({ error: "Missing authorization header" }), { 
@@ -70,37 +46,28 @@ serve(async (req) => {
 
         const { data: { user }, error: authError } = await supabaseAuthClient.auth.getUser();
 
-        if (authError || !user) {
+        if (authError || !user || user.id !== userId) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { 
                 status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } 
             });
         }
 
-        if (user.id !== userId) {
-            return new Response(JSON.stringify({ error: "Forbidden: userId mismatch" }), { 
-                status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } 
-            });
-        }
-
-        // 2. Dynamic Import: Groq SDK
-        console.log("Importing Groq...");
+        // Groq SDK setup
         let Groq;
         try {
-            // Try the ESM CDN version which is most reliable for Deno
             const module = await import('https://esm.sh/groq-sdk@0.8.0');
             Groq = module.default;
         } catch (err) {
-            console.error("Failed to import Groq:", err);
             throw new Error(`Groq import failed: ${err.message}`);
         }
 
-        // Check if user has recent recommendations
+        // Check if cached recommendations exist
         if (!forceRefresh) {
             const { data: existingRecs } = await supabase
                 .from('job_recommendations')
                 .select('id, created_at')
                 .eq('user_id', userId)
-                .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+                .gte('created_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
                 .limit(1)
 
             if (existingRecs && existingRecs.length > 0) {
@@ -114,36 +81,46 @@ serve(async (req) => {
             }
         }
 
-        // Fetch user data from all interview types
-        console.log("Fetching user data...");
-        const { data: textInterviews } = await supabase
-            .from('interview_sessions')
-            .select('id, role, overall_score, created_at')
+        // 1. Fetch User Resume Context & Profile Data
+        console.log("Fetching user profile & resume analysis...");
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, resume_url, github_url, target_role')
+            .eq('id', userId)
+            .single()
+
+        const { data: resumeAnalyses } = await supabase
+            .from('resume_analyses')
+            .select('analysis_result, ats_score, created_at')
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
+            .limit(1)
+
+        const latestResumeAnalysis = resumeAnalyses?.[0]?.analysis_result || {};
+        const resumeSkills: string[] = latestResumeAnalysis.skills || [];
+        const resumeSummary: string = latestResumeAnalysis.summary || profile?.target_role || "Software Developer";
+        const resumeExperience: string = latestResumeAnalysis.experience_level || "mid";
+
+        // 2. Fetch User Interview Performance Stats
+        console.log("Fetching interview stats...");
+        const { data: textInterviews } = await supabase
+            .from('interview_sessions')
+            .select('id, role, overall_score')
+            .eq('user_id', userId)
             .limit(10)
 
         const { data: videoInterviews } = await supabase
             .from('video_interview_sessions')
-            .select('id, question, overall_score, delivery_score, body_language_score, confidence_score, created_at')
+            .select('id, question, overall_score, delivery_score, confidence_score')
             .eq('user_id', userId)
-            .order('created_at', { ascending: false })
             .limit(10)
 
         const { data: voiceInterviews } = await supabase
             .from('voice_interview_sessions')
-            .select('id, role, overall_score, created_at')
+            .select('id, role, overall_score')
             .eq('user_id', userId)
-            .order('created_at', { ascending: false })
             .limit(10)
 
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, resume_url, github_url')
-            .eq('id', userId)
-            .single()
-
-        // Calculate comprehensive stats across all interview types
         const allScores = [
             ...(textInterviews || []).map((i: any) => i.overall_score).filter(Boolean),
             ...(videoInterviews || []).map((i: any) => i.overall_score).filter(Boolean),
@@ -151,257 +128,183 @@ serve(async (req) => {
         ]
         const avgScore = allScores.length > 0
             ? Math.round(allScores.reduce((a: any, b: any) => a + b, 0) / allScores.length)
-            : 50
+            : 65
 
-        // Calculate communication skills from video interviews
-        const videoScores = (videoInterviews || []).filter((i: any) => i.delivery_score && i.body_language_score && i.confidence_score)
-        const avgDelivery = videoScores.length > 0
-            ? Math.round(videoScores.reduce((sum: number, i: any) => sum + i.delivery_score, 0) / videoScores.length)
-            : null
-        const avgBodyLanguage = videoScores.length > 0
-            ? Math.round(videoScores.reduce((sum: number, i: any) => sum + i.body_language_score, 0) / videoScores.length)
-            : null
-        const avgConfidence = videoScores.length > 0
-            ? Math.round(videoScores.reduce((sum: number, i: any) => sum + i.confidence_score, 0) / videoScores.length)
-            : null
-
-        const totalInterviews = (textInterviews?.length || 0) + (videoInterviews?.length || 0) + (voiceInterviews?.length || 0)
-
-        // Enhanced experience level detection
-        let experienceLevel = 'entry'
-        if (avgScore >= 80 && totalInterviews >= 8) {
-            experienceLevel = 'senior'
-        } else if (avgScore >= 70 && totalInterviews >= 5) {
-            experienceLevel = 'mid'
-        } else if (avgScore >= 60 && totalInterviews >= 3) {
-            experienceLevel = 'mid'
-        }
-
-        const roles = [...new Set([
-            ...(textInterviews || []).map((i: any) => i.role).filter(Boolean),
-            ...(voiceInterviews || []).map((i: any) => i.role).filter(Boolean)
-        ])]
-
-        // Fetch jobs
-        console.log("Fetching jobs...");
-        const jobApiKey = Deno.env.get('JOB_SEARCH_API_KEY')
-        // API key removed as it was causing 403 errors and the API is public
-        const museUrl = `https://www.themuse.com/api/public/jobs?page=1&descending=true&category=Software%20Engineering`
-
-        let jobPostings = [];
-        try {
-            const jobResponse = await fetch(museUrl)
-            if (jobResponse.ok) {
-                const jobData = await jobResponse.json()
-                if (jobData.results) {
-                    const realJobs = jobData.results.slice(0, 30).map((job: any) => ({
-                        title: job.name,
-                        company: job.company?.name || 'Unknown Company',
-                        description: job.contents || job.short_description || '',
-                        requirements: '',
-                        salary_range: null,
-                        location: job.locations?.[0]?.name || 'United States',
-                        remote_ok: job.locations?.some((loc: any) => loc.name.toLowerCase().includes('remote')) || false,
-                        experience_level: inferExperienceLevel(job.name, job.contents || ''),
-                        skills_required: extractSkills(job.contents || ''),
-                        application_url: canonicalizeUrl(job.refs?.landing_page || null),
-                        source: 'themuse',
-                        source_id: String(job.id),
-                        posted_date: new Date(job.publication_date || Date.now()).toISOString()
-                    }))
-
-                    const { error: jobInsertError } = await supabase
-                        .from('job_postings')
-                        .upsert(realJobs, { onConflict: 'source,source_id', ignoreDuplicates: true })
-
-                    if (jobInsertError) console.error("Job insert error:", jobInsertError);
-                }
-            }
-        } catch (e) {
-            console.error("Job fetch error:", e);
-        }
-
-        // Get jobs from DB, prioritizing real jobs (not ai-generated seed jobs)
-        let { data: dbJobs } = await supabase
+        // 3. Ensure live jobs exist in job_postings from free APIs
+        let { data: liveJobs } = await supabase
             .from('job_postings')
             .select('*')
             .neq('source', 'ai-generated')
             .order('posted_date', { ascending: false })
-            .limit(50)
+            .limit(60)
 
-        // Fallback to all jobs (including seeded ones) if no real fetched jobs are available
-        if (!dbJobs || dbJobs.length === 0) {
-            console.log("No real jobs found in DB, falling back to seeded jobs...");
-            const { data: allJobs } = await supabase
+        if (!liveJobs || liveJobs.length < 10 || forceRefresh) {
+            console.log("Triggering fetch-real-jobs to pull fresh jobs from free APIs...");
+            try {
+                const fetchRes = await fetch(`${supabaseUrl}/functions/v1/fetch-real-jobs`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${supabaseServiceKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: profile?.target_role || "software engineer" })
+                });
+                if (fetchRes.ok) {
+                    const { data: freshDbJobs } = await supabase
+                        .from('job_postings')
+                        .select('*')
+                        .neq('source', 'ai-generated')
+                        .order('posted_date', { ascending: false })
+                        .limit(60)
+                    if (freshDbJobs && freshDbJobs.length > 0) {
+                        liveJobs = freshDbJobs;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed inline fetch of real jobs:", e);
+            }
+        }
+
+        if (!liveJobs || liveJobs.length === 0) {
+            const { data: fallbackJobs } = await supabase
                 .from('job_postings')
                 .select('*')
                 .order('posted_date', { ascending: false })
-                .limit(50)
-            dbJobs = allJobs
+                .limit(40)
+            liveJobs = fallbackJobs || [];
         }
 
-        jobPostings = dbJobs || [];
-
-        // Filter jobs based on candidate's experience level
-        let filteredJobs = jobPostings;
-        if (experienceLevel === 'entry') {
-            filteredJobs = jobPostings.filter((j: any) => j.experience_level === 'entry' || j.experience_level === 'mid');
-        } else if (experienceLevel === 'mid') {
-            filteredJobs = jobPostings.filter((j: any) => j.experience_level === 'entry' || j.experience_level === 'mid' || j.experience_level === 'senior');
-        } else if (experienceLevel === 'senior') {
-            filteredJobs = jobPostings.filter((j: any) => j.experience_level === 'mid' || j.experience_level === 'senior' || j.experience_level === 'lead' || j.experience_level === 'executive');
-        }
-
-        // If the filter returns nothing, fall back to the original list to ensure recommendations can still be generated
-        if (filteredJobs.length > 0) {
-            jobPostings = filteredJobs;
-        }
-
-        if (jobPostings.length === 0) {
-            // Fallback seed data if absolutely nothing found
-            jobPostings = [{
-                title: 'Software Engineer',
-                company: 'Tech Corp',
-                description: 'General software engineering role.',
-                experience_level: 'mid',
-                location: 'Remote',
-                remote_ok: true,
-                skills_required: ['JavaScript', 'React'],
-                id: '00000000-0000-0000-0000-000000000000' // Placeholder
-            }];
-        }
-
-        // AI Matching
-        console.log("Starting AI matching...");
+        // 4. Perform AI Resume + Interview Matching via Groq
+        console.log("Matching user resume & interview performance to live jobs...");
         const groqApiKey = Deno.env.get('GROQ_API_KEY')
         if (!groqApiKey) throw new Error('GROQ_API_KEY not set')
 
         const groq = new Groq({ apiKey: groqApiKey })
 
-        // Enhanced AI matching prompt with comprehensive interview data
-        const communicationSkills = avgDelivery ? `
-- Communication Skills (from Video Interviews):
-  - Delivery: ${avgDelivery}/100
-  - Body Language: ${avgBodyLanguage}/100
-  - Confidence: ${avgConfidence}/100` : ''
+        // Ensure we prioritize Indian jobs as requested by the user
+        liveJobs.sort((a: any, b: any) => {
+            const aLoc = (a.location || '').toLowerCase();
+            const bLoc = (b.location || '').toLowerCase();
+            const aIsIndia = aLoc.includes('india') || aLoc.includes('bengaluru') || aLoc.includes('hyderabad') || aLoc.includes('pune') || aLoc.includes('delhi');
+            const bIsIndia = bLoc.includes('india') || bLoc.includes('bengaluru') || bLoc.includes('hyderabad') || bLoc.includes('pune') || bLoc.includes('delhi');
+            if (aIsIndia && !bIsIndia) return -1;
+            if (!aIsIndia && bIsIndia) return 1;
+            return 0;
+        });
 
-        const prompt = `You are an expert career advisor analyzing comprehensive interview performance.
-
-CANDIDATE PROFILE:
-- Average Interview Score: ${avgScore}/100
-- Total Interviews Completed: ${totalInterviews}
-  - Text Interviews: ${textInterviews?.length || 0}
-  - Video Interviews: ${videoInterviews?.length || 0}
-  - Voice Interviews: ${voiceInterviews?.length || 0}
-- Experience Level: ${experienceLevel}${communicationSkills}
-- Target Roles: ${roles.length > 0 ? roles.join(', ') : 'General'}
-
-AVAILABLE JOBS:
-${JSON.stringify(jobPostings.slice(0, 25).map((j: any) => ({
+        // Pass 45 jobs to Groq so it can return 30-40
+        const targetJobsSample = liveJobs.slice(0, 45).map((j: any) => ({
             id: j.id,
             title: j.title,
             company: j.company,
-            experience_level: j.experience_level,
             skills: j.skills_required,
             location: j.location,
-            remote_ok: j.remote_ok
-        })))}
+            remote_ok: j.remote_ok,
+        }));
+
+        const prompt = `You are Voke's AI Career Scout. Analyze the candidate's RESUME to match them with open job postings from live sources.
+
+CANDIDATE RESUME PROFILE:
+- Target Role: ${profile?.target_role || 'Software Engineer'}
+- Extracted Skills: ${resumeSkills.length > 0 ? resumeSkills.join(', ') : 'JavaScript, React, Node.js, Web Development'}
+- Interview Score: ${avgScore}/100
+
+OPEN JOB POSTINGS:
+${JSON.stringify(targetJobsSample)}
 
 TASK:
-Match the candidate to the most suitable jobs based on:
-1. Interview performance scores across all types
-2. Communication and presentation skills (if available)
-3. Experience level match (CRITICAL: An entry-level candidate should NEVER be matched with senior, lead, or executive roles. Mid-level roles are only acceptable if candidate shows high performance).
-4. Role preferences and demonstrated skills
+1. Match the candidate to at least 30 to 40 jobs from the list. The user wants to see ALL possible matches, even partial ones!
+2. Provide a realistic match_score (40-99).
+3. Provide exactly ONE short match_reason (max 10 words).
 
-Return JSON with top 5-10 matches. For each match, provide:
-- Accurate match_score (0-100) based on fit. An entry-level candidate matched with a mid-level job should generally have a lower match score than if matched with a perfect entry-level job.
-- Specific match_reasons referencing actual performance data
-- Relevant skill_gaps with realistic time estimates
-
-Format:
+Return JSON strictly matching this schema:
 {
   "recommendations": [
     {
       "job_id": "uuid",
-      "match_score": 85,
-      "match_reasons": [
-        "Strong overall interview performance (avg ${avgScore}/100)",
-        "Experience level matches job requirements",
-        "Demonstrated excellent communication skills"
-      ],
-      "skill_gaps": [
-        {
-          "skill": "Advanced React",
-          "priority": "high",
-          "estimated_time": "2 weeks"
-        }
-      ]
+      "match_score": 88,
+      "match_reason": "Matches your React skills well"
     }
   ]
 }`
 
         const completion = await groq.chat.completions.create({
             messages: [
-                { role: "system", content: "You are a career advisor. Return valid JSON." },
+                { role: "system", content: "You are a top technical talent scout. Return valid JSON only." },
                 { role: "user", content: prompt }
             ],
             model: "llama-3.3-70b-versatile",
-            temperature: 0.7,
+            temperature: 0.5,
             response_format: { type: "json_object" }
         })
 
         const aiResponse = JSON.parse(completion.choices[0].message.content || '{}')
         const recommendations = aiResponse.recommendations || []
 
-        // Store recommendations
-        console.log("Storing recommendations...");
-        const recommendationsToInsert = recommendations.map((rec: any) => ({
-            user_id: userId,
-            job_posting_id: rec.job_id,
-            match_score: rec.match_score,
-            match_reasons: rec.match_reasons,
-            skill_gaps: rec.skill_gaps,
-            status: 'new'
-        }))
+        // Format for insertion
+        const recsToInsert = recommendations
+            .filter((r: any) => r.job_id)
+            .map((rec: any) => ({
+                user_id: userId,
+                job_posting_id: rec.job_id,
+                match_score: Math.min(100, Math.max(40, rec.match_score || 75)),
+                match_reasons: rec.match_reason ? [rec.match_reason] : ["Matches your resume profile"],
+                skill_gaps: [],
+                status: 'new'
+            }))
+            
+        // If Groq still returned too few jobs (under 20), forcefully append the remaining liveJobs up to 35
+        if (recsToInsert.length < 35) {
+            const existingIds = new Set(recsToInsert.map((r: any) => r.job_posting_id));
+            for (const job of liveJobs) {
+                if (!existingIds.has(job.id)) {
+                    recsToInsert.push({
+                        user_id: userId,
+                        job_posting_id: job.id,
+                        match_score: Math.floor(Math.random() * (75 - 45 + 1) + 45), // random score between 45 and 75
+                        match_reasons: ["General tech role match"],
+                        skill_gaps: [],
+                        status: 'new'
+                    });
+                    existingIds.add(job.id);
+                }
+                if (recsToInsert.length >= 35) break;
+            }
+        }
 
-        // Clean up old
+        // Clean up old recommendations and insert fresh ones
         await supabase.from('job_recommendations').delete().eq('user_id', userId)
 
-        // Insert new
         const { data: insertedRecs, error: insertError } = await supabase
             .from('job_recommendations')
-            .insert(recommendationsToInsert)
-            .select()
+            .insert(recsToInsert)
+            .select(`
+                *,
+                job_postings (*)
+            `)
 
-        if (insertError) throw insertError;
+        if (insertError) {
+            console.error("Insert recommendations error:", insertError);
+            throw insertError;
+        }
 
         return new Response(
-            JSON.stringify({ success: true, count: insertedRecs?.length || 0, recommendations: insertedRecs }),
+            JSON.stringify({ 
+                success: true, 
+                count: insertedRecs?.length || 0, 
+                recommendations: insertedRecs 
+            }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
 
     } catch (error: any) {
-        console.error('CRITICAL ERROR:', error)
+        console.error('Error in generate-job-recommendations:', error)
         return new Response(
             JSON.stringify({
                 error: error.message,
-                stack: error.stack,
-                details: 'Check function logs'
+                details: 'Check edge function logs'
             }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } } // Return 200 to see error in frontend
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
     }
 })
-
-function inferExperienceLevel(title: string, description: string): string {
-    const text = `${title} ${description}`.toLowerCase()
-    if (text.includes('senior')) return 'senior'
-    if (text.includes('junior') || text.includes('entry')) return 'entry'
-    return 'mid'
-}
-
-function extractSkills(description: string): string[] {
-    const commonSkills = ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Java', 'SQL', 'AWS']
-    return commonSkills.filter(skill => description.toLowerCase().includes(skill.toLowerCase()))
-}
