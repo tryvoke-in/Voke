@@ -2,8 +2,6 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { LiveStatus, MessageLog } from '../types/voice';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-
 const SYSTEM_INSTRUCTION = `YOU ARE:
 A real-time voice-based conversational assistant designed to conduct a professional yet friendly interview.
 
@@ -601,7 +599,9 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
                 // Cleanup VAD
                 cancelAnimationFrame(silenceTimer);
-                audioContext.close();
+                if (audioContext && audioContext.state !== 'closed') {
+                    audioContext.close().catch(e => console.warn('AudioContext close error:', e));
+                }
                 stream.getTracks().forEach(track => track.stop());
 
                 // Calculate total size

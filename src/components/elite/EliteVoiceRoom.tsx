@@ -5,7 +5,7 @@ import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { LiveStatus } from '@/types/voice';
 import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
-import { updateRoundResult } from '@/utils/eliteInterviewStorage';
+import { updateRoundResultAsync, saveSelectedGithubRepo } from '@/utils/eliteInterviewStorage';
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff, CheckCircle2, XCircle,
   Sparkles, HelpCircle, ShieldCheck, ChevronRight, User, Award, Clock,
@@ -25,6 +25,7 @@ interface EliteVoiceRoomProps {
   candidateProfileContext?: string;
   githubRepos?: { name: string; description: string; language?: string; summary?: string }[];
   isLoadingRepos?: boolean;
+  userId: string;
   onCompleteRound: (verdict: 'PASSED' | 'FAILED') => void;
   onExit: () => void;
 }
@@ -37,6 +38,7 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
   candidateProfileContext,
   githubRepos,
   isLoadingRepos = false,
+  userId,
   onCompleteRound,
   onExit
 }) => {
@@ -108,17 +110,8 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
   }, [availableRepoOptions]);
 
   const toggleRepoSelection = (repoName: string) => {
-    if (selectedRepos.includes(repoName)) {
-      if (selectedRepos.length > 1) {
-        setSelectedRepos(selectedRepos.filter(r => r !== repoName));
-        toast.success(`Removed ${repoName} from session target repos.`);
-      } else {
-        toast.info("At least one repository must remain selected!");
-      }
-    } else {
-      setSelectedRepos([...selectedRepos, repoName]);
-      toast.success(`Added ${repoName} to session target repos!`);
-    }
+    setSelectedRepos([repoName]);
+    toast.success(`Selected ${repoName} for the interview.`);
   };
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -218,7 +211,31 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
   // Pre-interview repository setup modal state
   const [isPreInterviewSetupOpen, setIsPreInterviewSetupOpen] = useState(true);
 
-  const handleConfirmSetupAndStart = () => {
+  const handleConfirmSetupAndStart = async () => {
+    if (selectedRepos.length === 0) {
+      toast.error('Please select a project to proceed.');
+      return;
+    }
+    
+    // Save selected project to DB
+    const selectedProject = selectedRepos[0];
+    try {
+        // userId is not directly available, wait, we can get it from supabase session
+        const sessionRes = await supabase.auth.getSession();
+        const userId = sessionRes.data.session?.user.id;
+        if (userId) {
+          await saveSelectedGithubRepo(
+              userId, 
+              interviewType.id, 
+              company.id, 
+              role.id, 
+              selectedProject
+          );
+        }
+    } catch (e) {
+        console.error('Failed to save project:', e);
+    }
+
     setIsPreInterviewSetupOpen(false);
     startCamera();
     initiateSession();
@@ -747,17 +764,22 @@ ${isRound1 ? round1CategoryFlow : ''}
     }
 
     // Save progress with real AI-driven verdict, feedback, and sessionId
-    updateRoundResult(
-      interviewType.id,
-      company.id,
-      role.id,
-      round.roundNumber,
-      evaluation.finalVerdict,
-      evaluation.reason,
-      evaluation.finalScore,
-      evaluation.details,
-      newSessionId || undefined
-    );
+    try {
+      await updateRoundResultAsync(
+        userId,
+        interviewType.id,
+        company.id,
+        role.id,
+        round.roundNumber,
+        evaluation.finalVerdict,
+        evaluation.reason,
+        evaluation.finalScore,
+        evaluation.details,
+        newSessionId || undefined
+      );
+    } catch (err) {
+      console.error("Failed to update round result async:", err);
+    }
 
     // Complete round & navigate directly to results report page (or return to rounds hub if no DB session)
     if (newSessionId) {
@@ -824,24 +846,12 @@ ${isRound1 ? round1CategoryFlow : ''}
 
             {/* Search Bar & Action Bar */}
             <div className="space-y-3 flex-1 flex flex-col min-h-0">
-              <div className="flex items-center justify-between text-xs font-medium text-zinc-400 px-1">
-                <span className="flex items-center gap-1.5 text-zinc-200 font-bold">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold text-white flex items-center gap-2">
                   <FolderCode className="w-4 h-4 text-violet-400" />
                   Your Repositories ({availableRepoOptions.length} Available)
                 </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (selectedRepos.length === availableRepoOptions.length) {
-                      setSelectedRepos([availableRepoOptions[0]]);
-                    } else {
-                      setSelectedRepos([...availableRepoOptions]);
-                    }
-                  }}
-                  className="text-violet-400 hover:text-violet-300 font-bold transition-colors cursor-pointer text-xs"
-                >
-                  {selectedRepos.length === availableRepoOptions.length ? "Deselect All" : "Select All Repos"}
-                </button>
+                <span className="text-violet-400 text-xs font-semibold">Select 1 Project</span>
               </div>
 
               {/* Search Filter Bar */}
@@ -958,7 +968,7 @@ ${isRound1 ? round1CategoryFlow : ''}
                 onClick={handleConfirmSetupAndStart}
                 className="w-full h-12 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-violet-600/20 transition-all cursor-pointer flex items-center justify-center"
               >
-                Start Interview Session ({selectedRepos.length} Repos Selected)
+                Start Interview Session (Project Selected)
               </Button>
             </div>
           </div>

@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 export type RoundStatus = 'locked' | 'unlocked' | 'passed' | 'failed';
 
 export interface RoundFeedbackDetails {
@@ -61,37 +63,133 @@ export const getSelectedCompany = (): string | null => {
   return localStorage.getItem(SELECTED_COMPANY_KEY);
 };
 
-export const getProgressKey = (typeId: string, companyId: string, roleId: string) => {
-  return `${STORAGE_KEY_PREFIX}${typeId}_${companyId}_${roleId}`;
-};
+// --- DATABASE PERSISTENCE METHODS ---
 
-export const getCompanyRoleProgress = (typeId: string, companyId: string, roleId: string): CompanyRoleProgress | null => {
+export const fetchCompanyRoleProgress = async (
+  userId: string,
+  typeId: string,
+  companyId: string,
+  roleId: string
+): Promise<CompanyRoleProgress | null> => {
   try {
-    const raw = localStorage.getItem(getProgressKey(typeId, companyId, roleId));
-    if (!raw) return null;
-    return JSON.parse(raw);
+    const { data, error } = await supabase
+      .from('elite_prep_progress')
+      .select('progress_data')
+      .eq('user_id', userId)
+      .eq('type_id', typeId)
+      .eq('company_id', companyId)
+      .eq('role_id', roleId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[eliteInterviewStorage] Error fetching progress:", error);
+      return null;
+    }
+
+    if (data && data.progress_data) {
+      return data.progress_data as unknown as CompanyRoleProgress;
+    }
+    return null;
   } catch (e) {
-    console.error("Failed to load elite progress:", e);
+    console.error("[eliteInterviewStorage] DB fetch exception:", e);
     return null;
   }
 };
 
-export const saveCompanyRoleProgress = (progress: CompanyRoleProgress) => {
+export const upsertCompanyRoleProgress = async (
+  userId: string,
+  progress: CompanyRoleProgress
+): Promise<void> => {
   try {
-    localStorage.setItem(getProgressKey(progress.typeId, progress.companyId, progress.roleId), JSON.stringify(progress));
+    const { error } = await supabase
+      .from('elite_prep_progress')
+      .upsert(
+        {
+          user_id: userId,
+          type_id: progress.typeId,
+          company_id: progress.companyId,
+          role_id: progress.roleId,
+          progress_data: progress as any
+        },
+        { onConflict: 'user_id, type_id, company_id, role_id' }
+      );
+
+    if (error) {
+      console.error("[eliteInterviewStorage] Error upserting progress:", error);
+    }
   } catch (e) {
-    console.error("Failed to save elite progress:", e);
+    console.error("[eliteInterviewStorage] DB upsert exception:", e);
   }
 };
 
-export const initializeCompanyRoleProgress = (
+export const fetchSelectedGithubRepo = async (
+  userId: string,
+  typeId: string,
+  companyId: string,
+  roleId: string
+): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('elite_prep_progress')
+      .select('selected_github_repo')
+      .eq('user_id', userId)
+      .eq('type_id', typeId)
+      .eq('company_id', companyId)
+      .eq('role_id', roleId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[eliteInterviewStorage] Error fetching github repo:", error);
+      return null;
+    }
+
+    return data?.selected_github_repo || null;
+  } catch (e) {
+    console.error("[eliteInterviewStorage] DB fetch repo exception:", e);
+    return null;
+  }
+};
+
+export const saveSelectedGithubRepo = async (
+  userId: string,
+  typeId: string,
+  companyId: string,
+  roleId: string,
+  repoName: string
+): Promise<void> => {
+  try {
+    const { data, error } = await supabase
+      .from('elite_prep_progress')
+      .update({ selected_github_repo: repoName })
+      .eq('user_id', userId)
+      .eq('type_id', typeId)
+      .eq('company_id', companyId)
+      .eq('role_id', roleId)
+      .select();
+
+    if (error) {
+      console.error("[eliteInterviewStorage] Error updating github repo:", error);
+    } else if (!data || data.length === 0) {
+      console.error("[eliteInterviewStorage] No rows matched for update!", { userId, typeId, companyId, roleId });
+    }
+  } catch (e) {
+    console.error("[eliteInterviewStorage] DB update repo exception:", e);
+  }
+};
+
+export const initializeCompanyRoleProgressAsync = async (
+  userId: string,
   typeId: string,
   companyId: string,
   roleId: string,
   defaultRounds: { roundId: string; roundNumber: number; title: string }[]
-): CompanyRoleProgress => {
-  const existing = getCompanyRoleProgress(typeId, companyId, roleId);
-  if (existing) return existing;
+): Promise<CompanyRoleProgress> => {
+  const existing = await fetchCompanyRoleProgress(userId, typeId, companyId, roleId);
+  if (existing) {
+    // Ensure all rounds from default exist in DB, if definition changed (like title/number of rounds)
+    // For simplicity, we just return the existing for now.
+    return existing;
+  }
 
   const rounds: RoundProgress[] = defaultRounds.map((r, index) => ({
     roundId: r.roundId,
@@ -110,11 +208,12 @@ export const initializeCompanyRoleProgress = (
     lastUpdated: new Date().toISOString()
   };
 
-  saveCompanyRoleProgress(initial);
+  await upsertCompanyRoleProgress(userId, initial);
   return initial;
 };
 
-export const updateRoundResult = (
+export const updateRoundResultAsync = async (
+  userId: string,
   typeId: string,
   companyId: string,
   roleId: string,
@@ -124,9 +223,9 @@ export const updateRoundResult = (
   score?: number,
   feedbackDetails?: RoundFeedbackDetails,
   sessionId?: string
-): CompanyRoleProgress => {
-  const currentProgress = getCompanyRoleProgress(typeId, companyId, roleId);
-  if (!currentProgress) throw new Error("No progress record found");
+): Promise<CompanyRoleProgress> => {
+  const currentProgress = await fetchCompanyRoleProgress(userId, typeId, companyId, roleId);
+  if (!currentProgress) throw new Error("No progress record found in DB");
 
   const updatedRounds = currentProgress.rounds.map(round => {
     if (round.roundNumber === roundNumber) {
@@ -160,6 +259,13 @@ export const updateRoundResult = (
     lastUpdated: new Date().toISOString()
   };
 
-  saveCompanyRoleProgress(newProgress);
+  await upsertCompanyRoleProgress(userId, newProgress);
   return newProgress;
 };
+
+// Keep deprecated local storage methods around temporarily to prevent import breaks,
+// but they shouldn't be used if we are doing DB persistence.
+export const getCompanyRoleProgress = (t: string, c: string, r: string): any => null;
+export const saveCompanyRoleProgress = (p: any): void => {};
+export const initializeCompanyRoleProgress = (t: string, c: string, r: string, d: any): any => null;
+export const updateRoundResult = (t: string, c: string, r: string, n: number, v: any, ...args: any): any => null;

@@ -148,8 +148,9 @@ export const EliteRoundsHub: React.FC<EliteRoundsHubProps> = ({
 
             const isPassed = roundProgress.status === 'passed';
             const isFailed = roundProgress.status === 'failed';
-            const isUnlocked = roundProgress.status === 'unlocked';
-            const isLocked = roundProgress.status === 'locked';
+            // TEMPORARY TESTING UNLOCK: Unlocking Round 2 directly
+            const isUnlocked = roundProgress.status === 'unlocked' || roundDef.roundNumber === 2;
+            const isLocked = roundProgress.status === 'locked' && roundDef.roundNumber !== 2;
 
             return (
               <motion.div

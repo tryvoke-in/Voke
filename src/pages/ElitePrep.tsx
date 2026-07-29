@@ -8,14 +8,15 @@ import {
   saveSelectedType, getSelectedType,
   saveSelectedRole, getSelectedRole,
   saveSelectedCompany, getSelectedCompany,
-  initializeCompanyRoleProgress, getCompanyRoleProgress, CompanyRoleProgress
+  initializeCompanyRoleProgressAsync, getCompanyRoleProgress, CompanyRoleProgress
 } from '@/utils/eliteInterviewStorage';
 import { EliteNotebookLMMindMap } from '@/components/elite/EliteNotebookLMMindMap';
 import { EliteVoiceRoom } from '@/components/elite/EliteVoiceRoom';
 import { EliteProjectDeepDive } from '@/components/elite/EliteProjectDeepDive';
 import { useInterviewCredits } from '@/hooks/useInterviewCredits';
 import { loadUserProfileContext, ProfileContext } from '@/utils/profileContext';
-import { Crown, AlertTriangle, Sparkles, Wrench } from 'lucide-react';
+import { Crown, AlertTriangle, Sparkles, Wrench, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 type ViewMode = 'notebook_mindmap' | 'in_interview';
 
@@ -46,9 +47,14 @@ const ElitePrep: React.FC = () => {
   const [profileContext, setProfileContext] = useState<ProfileContext | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
+  const [userId, setUserId] = useState<string | null>(null);
+
   useEffect(() => {
-    const initProfile = async () => {
+    const initProfileAndUser = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) setUserId(user.id);
+
         const ctx = await loadUserProfileContext();
         setProfileContext(ctx);
       } catch (err) {
@@ -57,13 +63,14 @@ const ElitePrep: React.FC = () => {
         setLoadingProfile(false);
       }
     };
-    initProfile();
+    initProfileAndUser();
   }, []);
 
-  const setupRoundsHub = (typeItem: InterviewTypeItem, company: CompanyItem, role: RoleItem) => {
+  const setupRoundsHub = async (typeItem: InterviewTypeItem, company: CompanyItem, role: RoleItem) => {
+    if (!userId) return;
     const generatedRounds = getInterviewRounds(typeItem.id, company.id, role.id);
     setRounds(generatedRounds);
-    const prog = initializeCompanyRoleProgress(typeItem.id, company.id, role.id, generatedRounds);
+    const prog = await initializeCompanyRoleProgressAsync(userId, typeItem.id, company.id, role.id, generatedRounds);
     setProgress(prog);
   };
 
@@ -126,8 +133,7 @@ const ElitePrep: React.FC = () => {
 
   const handleStartRound = async (round: InterviewRoundDef) => {
     if (selectedType && selectedCompany && selectedRole) {
-      const currentProg = getCompanyRoleProgress(selectedType.id, selectedCompany.id, selectedRole.id);
-      const targetRoundState = currentProg?.rounds.find(r => r.roundNumber === round.roundNumber);
+      const targetRoundState = progress?.rounds.find(r => r.roundNumber === round.roundNumber);
       if (round.roundNumber > 1 && targetRoundState?.status === 'locked') {
         toast.error(`🔒 Round ${round.roundNumber} is locked! You must pass Round ${round.roundNumber - 1} first.`);
         return;
@@ -137,14 +143,16 @@ const ElitePrep: React.FC = () => {
     if (credits > 0 || isPremium) {
       await consumeCredit();
     }
-    setActiveRound(round);
-    await consumeCredit();
     setViewMode('in_interview');
   };
 
-  const handleCompleteRound = (verdict: 'PASSED' | 'FAILED') => {
-    if (selectedType && selectedCompany && selectedRole) {
-      const updatedProg = getCompanyRoleProgress(selectedType.id, selectedCompany.id, selectedRole.id);
+  const handleCompleteRound = async (verdict: 'PASSED' | 'FAILED') => {
+    if (selectedType && selectedCompany && selectedRole && userId) {
+      // The updateRoundResultAsync should have been called by the interview component.
+      // We just need to refresh local state.
+      const updatedProg = await initializeCompanyRoleProgressAsync(
+        userId, selectedType.id, selectedCompany.id, selectedRole.id, rounds
+      );
       if (updatedProg) setProgress(updatedProg);
     }
     setViewMode('notebook_mindmap');
@@ -219,7 +227,7 @@ const ElitePrep: React.FC = () => {
           />
         )}
 
-        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 1 && (
+        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 1 && userId && (
           <EliteVoiceRoom
             interviewType={selectedType}
             company={selectedCompany}
@@ -228,12 +236,13 @@ const ElitePrep: React.FC = () => {
             candidateProfileContext={profileContext?.context}
             githubRepos={profileContext?.githubRepos}
             isLoadingRepos={loadingProfile}
+            userId={userId}
             onCompleteRound={handleCompleteRound}
             onExit={() => setViewMode('notebook_mindmap')}
           />
         )}
 
-        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 2 && (
+        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 2 && userId && (
           <EliteProjectDeepDive
             interviewType={selectedType}
             company={selectedCompany}
@@ -242,6 +251,7 @@ const ElitePrep: React.FC = () => {
             candidateProfileContext={profileContext?.context}
             githubRepos={profileContext?.githubRepos}
             isLoadingRepos={loadingProfile}
+            userId={userId}
             onCompleteRound={handleCompleteRound}
             onExit={() => setViewMode('notebook_mindmap')}
           />

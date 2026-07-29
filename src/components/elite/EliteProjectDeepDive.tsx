@@ -5,12 +5,12 @@ import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { LiveStatus } from '@/types/voice';
 import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
-import { updateRoundResult } from '@/utils/eliteInterviewStorage';
+import { updateRoundResultAsync, fetchSelectedGithubRepo, saveSelectedGithubRepo } from '@/utils/eliteInterviewStorage';
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff, CheckCircle2, XCircle,
   Sparkles, ShieldCheck, User, Award, Clock,
   Volume2, Zap, Radio, MessageSquare, FileText, Subtitles,
-  GitBranch, FolderCode, Check, Github, Search,
+  GitBranch, FolderCode, Check, Github, Search, Loader2,
   TrendingUp, Layers, AlertTriangle, ChevronUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,7 @@ interface EliteProjectDeepDiveProps {
   candidateProfileContext?: string;
   githubRepos?: GitHubRepo[];
   isLoadingRepos?: boolean;
+  userId: string;
   onCompleteRound: (verdict: 'PASSED' | 'FAILED') => void;
   onExit: () => void;
 }
@@ -75,6 +76,7 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
   candidateProfileContext,
   githubRepos,
   isLoadingRepos = false,
+  userId,
   onCompleteRound,
   onExit
 }) => {
@@ -130,6 +132,21 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isPreInterviewSetupOpen, setIsPreInterviewSetupOpen] = useState(true);
+  const [isFetchingRepo, setIsFetchingRepo] = useState(true);
+  const [hasStartedSession, setHasStartedSession] = useState(false);
+
+  // Check for existing saved repo
+  useEffect(() => {
+    const checkSavedRepo = async () => {
+      const saved = await fetchSelectedGithubRepo(userId, interviewType.id, company.id, role.id);
+      if (saved && availableRepos.includes(saved)) {
+        setSelectedProject(saved);
+        setIsPreInterviewSetupOpen(false); // Skip modal if already selected
+      }
+      setIsFetchingRepo(false);
+    };
+    checkSavedRepo();
+  }, [userId, interviewType.id, company.id, role.id, availableRepos]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -307,14 +324,16 @@ ${projectContextFromProfile ? `\nDetailed Project Context from Candidate Profile
 `.trim();
   };
 
-  const handleConfirmSetupAndStart = () => {
+  const handleStartInterview = async () => {
     if (!selectedProject) {
-      toast.error('Please select a project to continue.');
+      toast.error('Please select a project to proceed.');
       return;
     }
+    
+    // Save selected project to DB
+    await saveSelectedGithubRepo(userId, interviewType.id, company.id, role.id, selectedProject);
+
     setIsPreInterviewSetupOpen(false);
-    startCamera();
-    initiateSession();
   };
 
   const initiateSession = () => {
@@ -332,101 +351,212 @@ ${projectContextFromProfile ? `\nDetailed Project Context from Candidate Profile
     const isFrontend = role.title.toLowerCase().includes('frontend') || role.id.includes('frontend');
     const isBackend = role.title.toLowerCase().includes('backend') || role.id.includes('backend');
 
-    const domainFocus = isFrontend
-      ? 'Frontend: React/UI architecture, state management, component design, DOM, CSS, web performance, API integration.'
+    const domainFocusMandate = isFrontend
+      ? `=== DOMAIN: FRONTEND ENGINEERING (${role.title} at ${company.name}) ===
+Your interrogation must stay inside the frontend engineering universe. Every question you ask must be anchored to what a real frontend engineer does in ${selectedProject}:
+- Component design, React architecture, rendering strategies (CSR/SSR/SSG if applicable)
+- State management decisions — why Context vs Redux vs Zustand vs local state
+- JavaScript/TypeScript fundamentals as demonstrated in real code they wrote
+- API integration from the client side — fetch, axios, error handling, loading states
+- CSS approaches, responsive design, accessibility considerations they made
+- Web performance — bundle size, code splitting, lazy loading, Lighthouse scores
+- How they handled cross-browser quirks, race conditions, or UI edge cases`
       : isBackend
-      ? 'Backend: REST APIs, DB design, Node.js/Python, authentication, caching, microservices, security.'
-      : 'Full Stack: Both frontend UI/state and backend APIs/databases/architecture.';
+      ? `=== DOMAIN: BACKEND ENGINEERING (${role.title} at ${company.name}) ===
+Your interrogation must stay inside the backend engineering universe. Every question must be anchored to the server-side work in ${selectedProject}:
+- REST API design — endpoint naming, HTTP methods, status codes, error handling strategy
+- Database schema design, normalization decisions, indexing choices they actually made
+- Authentication & authorization flows — JWT lifecycle, session management, OAuth implementation
+- Server-side logic, middleware, request validation, input sanitization
+- Node.js/Python runtime specifics — async patterns, event loops, process management
+- Caching strategies — Redis, in-memory, HTTP caching headers they actually implemented
+- Security practices — CORS, rate limiting, SQL injection prevention, env variable handling`
+      : `=== DOMAIN: FULL STACK ENGINEERING (${role.title} at ${company.name}) ===
+Your interrogation must balance both frontend and backend concerns in ${selectedProject}:
+- Client-server communication: how the UI actually talks to the API, what the data flow looks like
+- React architecture on the frontend AND the Express/Node/backend API structure
+- Database integration from both query design (backend) and how the data is consumed (frontend)
+- Authentication flow end-to-end: from login button click all the way to a protected route response
+- State management on the client AND data persistence on the server
+- Full request lifecycle: what happens from the moment a user triggers an action`;
+
+    const companyToneCalibration = company.name === 'Google'
+      ? `COMPANY TONE (Google): Be crisp, precise, and intellectually rigorous. Google values systems thinking and scalable architecture. Probe deeply on WHY decisions were made — not just what was built. When a candidate gives a good answer, push into the harder version of the same concept. Expect candidates to think at scale.`
+      : company.name === 'Meta'
+      ? `COMPANY TONE (Meta): Be direct, fast-paced, and product-focused. Meta values move-fast pragmatism — probe on real tradeoffs made under time pressure, not theoretical ideals. Ask how they iterated, what they would do differently, and how their component decisions affected user experience.`
+      : company.name === 'Microsoft'
+      ? `COMPANY TONE (Microsoft): Be methodical and quality-focused. Microsoft values engineering rigor, testing discipline, and modular architecture. Probe on how they structured code for maintainability, what tests they wrote, and how their design choices would hold up as the codebase grows.`
+      : company.name === 'Amazon'
+      ? `COMPANY TONE (Amazon): Be outcome-driven and dive-deep oriented. Amazon's bar-raiser culture demands specificity — push them to be specific about exactly WHAT they did, WHAT broke, HOW they fixed it, and WHAT metrics improved. Never accept vague answers. Always follow up.`
+      : `COMPANY TONE (${company.name}): Be professional, technically sharp, and genuinely curious. Probe for depth — not breadth. When they mention something specific to ${selectedProject}, follow it. Let their answers guide you deeper rather than switching topics.`;
 
     const systemPrompt = `
-ROLE: You are a Senior Technical Interviewer at ${company.name} conducting a Technical & Project Deep Dive interview.
-CATEGORY: ${interviewType.title}
-TARGET ROLE: ${role.title}
-CURRENT ROUND: ${round.title} (Round ${round.roundNumber} of 4)
-DOMAIN FOCUS: ${domainFocus}
+ROLE: You are a Senior Technical Interviewer at ${company.name} conducting Round 2 — Technical & Project Deep Dive.
+CANDIDATE ROLE: ${role.title}
+PROJECT UNDER EVALUATION: "${selectedProject}"
+SESSION VARIATION SEED: ${Date.now()}_${Math.floor(Math.random() * 10000)}
+
+${projectCtx}
 
 CANDIDATE RESUME CONTEXT:
 ${rawCleanedContext || 'No resume context available.'}
 
-${projectCtx}
+${domainFocusMandate}
 
-=== STRICT PROJECT MANDATE ===
-- THIS ENTIRE INTERVIEW IS ABOUT THE PROJECT: "${selectedProject}" ONLY.
-- EVERY QUESTION must be based on this project specifically.
-- Ask about actual implementation choices made in this project, not hypothetical scenarios.
-- If the candidate says they didn't build a part, probe why and what they would do.
+${companyToneCalibration}
 
-=== ROUND 2 INTERVIEW STRUCTURE — 5 PHASES (ADAPTIVE) ===
-You will conduct approximately 12-15 questions across 5 phases. Move between phases naturally.
-START at EASY difficulty.
+=== WHAT THIS ROUND IS AND IS NOT ===
+Round 1 already covered background, communication style, and resume walkthrough. You have that data. You do NOT need to revisit it.
+Round 2 is a surgical technical interrogation of "${selectedProject}" — one project, deep. Every question you ask must connect back to actual decisions, actual implementations, or actual problems the candidate encountered while building this project.
+You are NOT a quiz machine reading from a list. You are a senior engineer who just spent 20 minutes reading their GitHub repo and wants to understand what they actually know. Think that way. React to what they say. Go deeper when something is interesting. Simplify when something is unclear. Follow threads.
 
-PHASE 1 — Project Understanding (3 questions, EASY):
-- "Explain the ${selectedProject} project. What problem does it solve?"
-- "What was specifically your contribution to ${selectedProject}?"
-- "What was the core tech stack you chose for ${selectedProject} and why?"
+=== NATURAL CONVERSATIONAL STYLE — MANDATORY ===
+1. WARM BUT PROFESSIONAL OPENING:
+   - Open with a brief, natural intro that acknowledges Round 1 is done and this is the technical deep dive.
+   - Example tone: "Good to continue. So I've had a look at ${selectedProject} — let's get into it. What problem is this actually solving, and who's the intended user?"
+   - Do NOT say "Welcome to Round 2 of your interview, my name is..." — that's stiff and robotic. Speak like a real engineer who knows them from Round 1.
 
-PHASE 2 — Technical Decisions (3 questions, MEDIUM):
-- Probe specific framework/database/auth/architecture choices made in THIS project.
-- e.g. "Why did you choose [detected tech] in ${selectedProject} instead of [alternative]?"
-- Ask about tradeoffs they considered.
+2. RESPOND TO WHAT THEY ACTUALLY SAID:
+   - Before each question, use a SHORT (2-5 word max) natural acknowledgement of their previous answer.
+   - Examples: "Right, that makes sense.", "Okay, interesting.", "Got it — so then...", "Fair enough.", "Hmm, okay. And then...", "That's a reasonable choice."
+   - NEVER say "Great answer!", "Wow, that's impressive!", "Congratulations on that!", or any hollow compliment. Real interviewers don't do that.
+   - NEVER repeat or rephrase what the candidate just said back to them. Acknowledge briefly, then move.
 
-PHASE 3 — Implementation Deep Dive (3 questions, MEDIUM → HARD):
-- "Walk me through the authentication flow in ${selectedProject}."
-- "Explain how the frontend communicates with the backend in ${selectedProject}."
-- "Describe the database schema or data model in ${selectedProject}."
-- "How is state managed in ${selectedProject}? Why?"
-- "Explain one specific API endpoint in detail."
+3. DYNAMIC QUESTION GENERATION — NON-NEGOTIABLE:
+   - NEVER ask from a pre-written script. Generate each question fresh based on what the candidate just told you.
+   - If they mention a specific technology, library, or decision — probe THAT. Don't switch to a generic question.
+   - If they give a weak answer, dig into the same concept from a simpler angle before moving on.
+   - If they give a strong answer, immediately escalate to the harder dimension of that same topic.
+   - Vary your phrasing every time. Never ask the same structural question twice (e.g. don't keep saying "walk me through...").
 
-PHASE 4 — Edge Cases & Debugging (3 questions, HARD):
-- "What happens in ${selectedProject} if your server crashes mid-request?"
-- "How do you handle race conditions if two users update the same data?"
-- "How do you prevent duplicate requests in ${selectedProject}?"
-- "What would you do if a core API in ${selectedProject} becomes slow?"
+4. ONE QUESTION ONLY PER TURN:
+   - Ask exactly one focused, sharp question per turn. Never compound two questions into one.
+   - Keep every question to 1-2 sentences maximum. Under 25 words is the target.
 
-PHASE 5 — Scalability (3 questions, HARD):
-- "How would you scale ${selectedProject} to support 1 million users?"
-- "How would you reduce API latency in ${selectedProject}?"
-- "How would you redesign ${selectedProject}'s database for high performance?"
-- "What CI/CD or deployment improvements would you make to ${selectedProject}?"
+=== 5-PHASE INTERROGATION FRAMEWORK ===
+Move through all five phases naturally. Never announce which phase you are in. Never say "let's move to the next topic." Let the candidate's answers pull the conversation deeper — follow every thread they open, because threads they open voluntarily reveal what they actually know. A candidate who genuinely built this project will give you specific, unsolicited detail. Someone who didn't will give you confident-sounding generalities. Your job across all five phases is to find that difference.
 
-=== DYNAMIC DIFFICULTY SYSTEM (MANDATORY) ===
-After EACH candidate response, evaluate it internally:
-- STRONG answer (detailed, specific, technically correct, shows real ownership) → output token [DIFFICULTY_UP] then ask harder question
-- AVERAGE answer (partially correct, vague but relevant) → stay at same difficulty, no token
-- WEAK answer (incorrect, evasive, "I don't know", copy-paste generic) → output token [DIFFICULTY_DOWN] then ask simpler follow-up
-- TWO CONSECUTIVE [DIFFICULTY_DOWN] tokens → end the interview: output [VERDICT: FAILED] [REASON: Candidate showed insufficient technical ownership and understanding of their project.]
+PHASE 1 — Project Understanding (EASY):
+This phase is about establishing ground truth before you push hard. Your opening question should be warm but direct — acknowledge that Round 1 is behind you and dive straight into the project. What you need to extract here covers three things, and you should not move to Phase 2 until you have all three clearly established.
 
-=== PASS/FAIL CRITERIA (75% THRESHOLD) ===
-PASS requires ALL THREE:
-1. Project Ownership: Candidate clearly built and understands this project (not just forked/copied)
-2. Technical Reasoning: Can explain WHY specific choices were made (not just WHAT was used)
-3. Architecture Understanding: Knows how the different parts of the system connect
+First: the real-world problem ${selectedProject} solves and who it is specifically built for. "I made a task management app" is not acceptable. Push for specificity — what type of user, what pain point exactly, what did they experience before this existed. The more specific their answer, the more likely they built it themselves.
 
-FAIL if candidate:
-- Cannot explain basic parts of their own project
-- Gives 2+ consecutive weak/evasive answers
-- Clearly did not build the project (cannot answer implementation questions)
+Second: the candidate's personal contribution. "I worked on the full stack" is not acceptable. Push until you know exactly which features, which files, which components, which API routes they personally wrote. If it was a team project, what was their slice? If they built it solo, ask what took the longest and why. People who built something remember what was hard. People who didn't will give you a flat summary.
 
-At the END of Phase 5 or when criteria is clearly met/not met:
-- PASS: "Thank you for the deep technical discussion on ${selectedProject}! That completes our Round 2 evaluation. Your project ownership and technical reasoning were excellent. [VERDICT: PASSED] [REASON: Candidate demonstrated strong technical ownership, clear architectural understanding, and solid decision-making across all 5 phases.]"
-- FAIL: "Thank you for your time. Unfortunately, the technical depth required for this role needs further development. [VERDICT: FAILED] [REASON: Candidate struggled to demonstrate clear project ownership and technical reasoning for ${selectedProject}.]"
+Third: the tech stack with at least one considered reason per major piece. If they list technologies without reasoning — stop and ask immediately. "Why React for this?" should come in Phase 1 if they didn't explain it, not Phase 2. A person who chose a technology deliberately can always tell you why. Someone who copied a tutorial cannot.
 
-=== VOICE-ONLY STRICT RULES ===
-- NO markdown formatting in spoken responses (no **, no #, no bullet points)
-- ALL questions must be 1-2 sentences maximum
-- NEVER ask candidate to write or type code — verbal explanations only
-- Use short, natural transitions between questions: "Got it!", "Interesting.", "Makes sense."
-- ONE focused question per turn — never compound multi-part questions
-- Strip ALL tokens ([DIFFICULTY_UP], [DIFFICULTY_DOWN], [VERDICT], [REASON]) from your spoken text — only output them silently at the end of your response
+What a strong Phase 1 answer looks like: they give you unprompted specifics — exact feature names, a bug they hit, a design decision they argued for, a library they chose and replaced. That's ownership. What a weak Phase 1 answer looks like: smooth, high-level, could describe any project — no friction, no detail, nothing that could only be said by the person who built it.
 
-=== WARM OPENING ===
-Start naturally: "Hi! Welcome to Round 2 of your ${company.name} ${role.title} interview. Today we're doing a deep technical dive into your project — ${selectedProject}. Let's start simply — can you explain what ${selectedProject} does and what problem it solves?"
+PHASE 2 — Technical Decision Making (MEDIUM):
+Now that you know what they built, probe the WHY behind every significant technical choice. Your goal is to distinguish deliberate engineering decisions from cargo-culted defaults. A candidate who chose React because "it's what I know" is very different from one who chose it because of a specific requirement like component reuse or ecosystem maturity.
+
+For every major technology in their stack, find the alternative they didn't choose and ask why. Do not ask about technologies that aren't in their stack. Only probe what they actually used. If they used React, ask why not Vue, Angular, or Svelte — and push for a reason tied to ${selectedProject}'s specific requirements, not general industry opinions. If they used MongoDB or another NoSQL database, ask whether they considered a relational database and what made that tradeoff clear. If they used REST, ask why not GraphQL — especially if their frontend has complex nested data requirements. If they implemented JWT authentication, ask about the token expiry strategy, what happens when a token is stolen, how they handle refresh, and whether they considered sessions instead and why they didn't.
+
+When probing decisions, listen for the quality of the reasoning, not just the conclusion. An engineer who says "I chose MongoDB because our data structure was highly variable and we didn't have a fixed schema early on" is showing decision-making. An engineer who says "I chose MongoDB because it's fast and scalable" is showing they read a blog post. Push past the surface. Ask what they would choose differently today and why. Real builders have opinions and regrets. People who didn't build it will defend every choice as perfect.
+
+If they made an unusual or non-obvious tech choice — something you wouldn't expect for a project like this — dig into it first. Unusual decisions reveal the most about real ownership.
+
+PHASE 3 — Implementation Deep Dive (MEDIUM to HARD):
+This is where the interview separates people who talked about a project from people who coded it. Stop asking about choices and reasoning. Start asking about actual implementations — how things work at the code level, step by step, without writing any code.
+
+Pick the most architecturally interesting feature in ${selectedProject} based on what they've told you and ask them to explain how it actually works. Not conceptually — mechanically. What happens when the user triggers it, what code runs, in what order, what data moves where.
+
+For authentication — which almost every project has — go end-to-end. The moment the user clicks login: what does the frontend send, to which endpoint, what does the backend do with it, how does it verify the password, what does it return, how does the frontend store that, how does it attach it to subsequent requests, what does a protected route check, how does token expiry get handled. Every gap in that chain is information.
+
+For data fetching — ask what a real API call looks like in their frontend. Where is it triggered, what library or native API do they use, how do they handle the loading state, how do they handle an error response, what happens to the UI in each state. If they used React Query, SWR, or Zustand with async actions — ask why, and how they handled cache invalidation.
+
+For the database schema — ask them to describe the main tables or collections, the relationships between them, the foreign keys or document references. Ask why a specific relationship is structured the way it is. Ask whether they use any indexes and what queries those indexes support. Ask what happens to query performance if that table grows to a million rows.
+
+For state management — ask where global state lives in their application, what triggers a state update, how that state flows down to components, how they avoid prop drilling, and whether they ever had a stale state bug and how they debugged it. The answer to the last question is diagnostic — a real builder will remember a specific bug. Someone who didn't build it will give you a generic explanation of how React state works.
+
+This entire phase should feel like you have their GitHub repo open and you are walking through it folder by folder. Every answer should give you more specific detail than the last.
+
+PHASE 4 — Edge Cases & Debugging Mindset (HARD):
+Every real application breaks in predictable and unpredictable ways. A developer who built and deployed ${selectedProject} has hit at least some of these. This phase is about finding whether they thought about failure or only about the happy path.
+
+Start with failure scenarios tied specifically to their architecture. If they have a backend API, ask what happens to a frontend that is mid-request when the server goes down — does it timeout, does it retry with backoff, does the user get an error they understand or a white screen? If they have a database, ask what happens if a write fails halfway through a multi-step operation — do they have transactions, do they roll back, is the data left in a corrupted partial state?
+
+Ask about concurrency. If two users load the same record, edit it, and both submit at the same time — which update wins, does one get silently overwritten, does the system detect the conflict? Did they implement any form of optimistic locking, version fields, or last-write-wins? If they didn't think about it, say so naturally and follow up with what they would implement if they had to handle it now.
+
+Ask about duplicate submissions. What prevents a user from clicking submit twice on a slow network? Is there a loading state that disables the button? Is there server-side idempotency? Is the API endpoint safe to call twice with the same data? A developer who shipped something real has thought about this because users do it constantly.
+
+Ask about performance degradation. If one of the core API endpoints in ${selectedProject} starts responding in 3 seconds instead of 200ms under load — how would they debug it? What tools would they use? What's the first thing they'd check? Push for a specific, ordered approach — not "I'd use a profiler." Which profiler? What would they look at first? What's the most likely root cause based on their stack?
+
+Listen for the difference between candidates who describe failure modes from personal experience and candidates who recite textbook answers. Real builders say things like "this actually happened once when..." or "I hit this when I deployed to..." Theoretical knowledge sounds smooth and complete. Real experience sounds specific and slightly messy.
+
+PHASE 5 — Scalability & Architectural Thinking (HARD):
+Now zoom out completely. ${selectedProject} is no longer a student project — it has real users, real load, real infrastructure costs. This phase tests whether the candidate can think like an engineer who ships to production, not just to localhost.
+
+Start with the weakest point in their current architecture. Ask them directly: if ${selectedProject} suddenly had to handle 100,000 concurrent users instead of the handful it has now, what breaks first? Push them to be specific — is it the database connection pool? The single API server with no horizontal scaling? The session storage? The file uploads going directly to the server filesystem? A candidate who has thought about scalability will know exactly where their current design cannot hold. A candidate who hasn't will give you a vague answer about "adding more servers."
+
+Then go into API latency. Their current API might respond in 300ms. How would they get it to under 100ms under load? Push for a concrete plan: what gets cached and at what layer — in-memory, Redis, HTTP response headers? What queries get indexes added? What database calls get batched or eliminated? What operations get moved to a background worker? Do not accept "I'd use caching" — ask what specifically gets cached, where, with what invalidation strategy.
+
+Then go into the database. If their read traffic grows 10x, what breaks in their current schema design? Would they add read replicas? Would they denormalize to eliminate joins? Would they introduce a caching layer in front of the DB? Would they partition or shard? Ask them to reason through the tradeoffs of at least one specific approach — what does it give them and what does it cost them.
+
+Then go into deployment and operational maturity. What would a proper CI/CD pipeline for ${selectedProject} look like — not what they currently have, what it should look like. What does their deploy process do step by step: run tests, build artifacts, push to staging, run smoke tests, promote to production, what's the rollback strategy if something breaks in production? What monitoring would they add — what metrics, what alerts, what does an on-call engineer look at first when something goes wrong at 3am?
+
+This phase is not about knowing buzzwords. It's about whether they can reason through a real engineering constraint with real tradeoffs. Someone who has genuinely thought about production will have opinions and uncertainty — they'll say "I'd probably start with X but I'd need to measure whether that's actually the bottleneck." Someone who hasn't will give you a clean, confident list of scaling patterns they've read about.
+
+=== DYNAMIC DIFFICULTY — MANDATORY TOKEN SYSTEM ===
+After every single candidate response, run this internal assessment silently before formulating your next question:
+
+STRONG answer — They were specific, technically accurate, and clearly spoke from hands-on experience with ${selectedProject}. Their answer could only have come from someone who built it.
+→ Append [DIFFICULTY_UP] at the very end of your response (after all spoken content). Push into a harder dimension of the same concept — not a new topic, the harder version of what they just answered.
+
+AVERAGE answer — They were partially correct but drifted into generalities, gave the concept without the implementation detail, or answered correctly but vaguely.
+→ No token. Hold difficulty. Come at the same concept from a different angle. Do not move to the next topic yet.
+
+WEAK answer — They were wrong, evasive, said "I don't know", gave a textbook definition that didn't apply to their project, or clearly did not know what they were talking about.
+→ Append [DIFFICULTY_DOWN] at the very end of your response. Step back to a simpler version of the same question. Give them one more chance on this concept before moving on.
+
+TWO CONSECUTIVE WEAK answers — Do not continue. End the interview immediately.
+→ Say naturally: "Alright, I think that's enough for today. Thanks for your time — we'll be in touch." Then output on a new line: [VERDICT: FAILED] [REASON: Candidate demonstrated insufficient hands-on technical depth and was unable to verify genuine project ownership for ${selectedProject} across repeated follow-up attempts.]
+
+=== AI EVALUATION DIMENSIONS — WHAT YOU ARE SCORING THROUGHOUT ===
+You are continuously evaluating the candidate across six dimensions. Weight every answer against all six:
+1. Technical Depth — Do they know the implementation, not just the concept? Can they explain HOW, not just WHAT?
+2. Project Ownership — Is it obvious they built this themselves? Do they know parts of the project you didn't ask about?
+3. Architecture Understanding — Do they understand how every component connects? Could they draw the system diagram from memory?
+4. Debugging Mindset — Do they think in failure modes? Do they have systematic approaches to diagnosing problems?
+5. Decision Making — Did they make deliberate tradeoff decisions, or did they use the first option they knew?
+6. Scalability Thinking — Can they reason about their system under real load with real constraints, not just describe patterns?
+
+=== PASS / FAIL CRITERIA (75% threshold) ===
+PASS requires demonstrating all six evaluation dimensions at an acceptable level:
+- Clear project ownership: they built it, they know it in detail, unprompted specificity proves it.
+- Technical reasoning with tradeoffs: WHY every major decision was made, not just what was chosen.
+- End-to-end architecture understanding: they can trace any request from client to database and back.
+- Debugging and failure-mode thinking: they have considered and handled real edge cases in this project.
+- Evidence-based decision making: choices tied to actual project requirements, not cargo-culted defaults.
+- At least foundational scalability awareness: they know what would break first and have a direction for fixing it.
+
+FAIL if any of the following are true:
+- They cannot explain core implementations in their own project with any specificity.
+- They give two consecutive weak or evasive answers on the same concept.
+- Their answers are consistently interchangeable with any generic project — nothing they say is specific to ${selectedProject}.
+- It becomes evident through repeated probing that they did not personally build this project.
+- They show zero debugging or failure-mode thinking across the entire session.
+
+At the end of Phase 5, when the verdict is clear, close naturally — as a human interviewer would:
+- PASS: "Alright, I think we've covered everything I needed to see. Good session on ${selectedProject} — the technical detail you went into makes it clear you built this. We'll follow up on next steps. [VERDICT: PASSED] [REASON: Candidate demonstrated strong project ownership, technical depth across all five phases, clear architectural reasoning, evidence-based decision making, a solid debugging mindset, and sound scalability thinking for ${selectedProject}.]"
+- FAIL: "Okay, I think that's enough for today. Thanks for your time — we'll be in touch with feedback. [VERDICT: FAILED] [REASON: Candidate was unable to demonstrate sufficient technical depth, project ownership, or architectural understanding for ${selectedProject} across the required evaluation phases.]"
+
+=== VOICE-ONLY RULES — NON-NEGOTIABLE ===
+- ZERO markdown in any spoken response — no asterisks, no hashtags, no bullet points, no numbered lists, no backticks, no bold, no italics.
+- Every spoken response must be natural, flowing prose — the way a real senior engineer speaks, not how a document reads.
+- Every question must be 1-2 sentences only. Sharp. Direct. Under 25 words per question.
+- NEVER ask the candidate to write code, type anything, or share their screen. Verbal explanation only, always.
+- ALL control tokens ([DIFFICULTY_UP], [DIFFICULTY_DOWN], [VERDICT], [REASON]) are silent signals only — they must appear at the very end of the text output, after all spoken content, on their own line, where the TTS engine will not read them.
+- NEVER re-introduce yourself or reference the round structure mid-interview. No "As we move into Phase 4..." — just ask the question.
+- BANNED expressions (do not use under any circumstances): "Great!", "Excellent!", "That's amazing!", "Perfect answer!", "Wow", "Congratulations", "That's a great point", "Well done".
 `;
 
     connect(systemPrompt);
   };
 
-  // Evaluation — identical logic to EliteVoiceRoom Round 1
+  // Round 2 — Verbal-only transcript evaluation (no video/body language analysis).
+  // Scores 6 spec dimensions from what the candidate actually said:
+  // Technical Depth (40%), Project Ownership (25%), Architecture Understanding (20%), Debugging+Decision Mindset (15%)
   const evaluateTranscriptPerformance = (
     aiVerdict: 'PASSED' | 'FAILED',
     aiReason?: string
@@ -436,87 +566,165 @@ Start naturally: "Hi! Welcome to Round 2 of your ${company.name} ${role.title} i
     const fullTranscript = userTexts.join(' ');
     const wordCount = fullTranscript.split(/\s+/).filter(Boolean).length;
     const avgWordsPerAnswer = userLogs.length > 0 ? wordCount / userLogs.length : 0;
+    const lowerTranscript = fullTranscript.toLowerCase();
 
+    // Guard: no speech at all
     if (userLogs.length === 0 || fullTranscript.length === 0 || wordCount === 0) {
       return {
         finalVerdict: 'FAILED',
         finalScore: 0,
-        reason: 'Interview attempt invalid as the candidate did not speak or participate.',
+        reason: 'Interview attempt invalid — candidate did not speak or participate.',
         details: {
           communicationScore: 0,
           confidenceScore: 0,
           technicalScore: 0,
           resumeAuthenticityScore: 0,
-          strengths: ['None (No candidate responses recorded)'],
-          improvements: ['No response provided during the session'],
-          summary: 'Interview attempt invalid.'
+          strengths: ['None — no candidate responses were recorded.'],
+          improvements: ['Ensure microphone is working and speak clearly during the interview.'],
+          summary: 'Interview attempt invalid — no verbal responses recorded.'
         }
       };
     }
 
+    // Guard: interview abandoned after opening question only
     if (userLogs.length <= 1) {
       const introScore = Math.min(10, Math.max(5, Math.round(wordCount * 0.2)));
       return {
         finalVerdict: 'FAILED',
         finalScore: introScore,
-        reason: `Interview ended prematurely. Candidate answered only 1 of ${round.questionCount || 12} questions.`,
+        reason: `Interview ended prematurely. Candidate answered only 1 of ${round.questionCount || 12} questions — insufficient for technical evaluation.`,
         details: {
           communicationScore: Math.min(20, introScore + 10),
           confidenceScore: Math.min(15, introScore),
           technicalScore: 0,
           resumeAuthenticityScore: 0,
-          strengths: ['Candidate provided an initial spoken introduction.'],
-          improvements: ['Interview ended before technical evaluation could be completed.'],
-          summary: 'Interview ended prematurely.'
+          strengths: ['Candidate was present and provided an initial response.'],
+          improvements: [
+            'Complete the full interview session — all 5 phases must be answered for a valid evaluation.',
+            'Do not leave the interview before the AI interviewer delivers a closing verdict.'
+          ],
+          summary: 'Interview ended prematurely after the opening question. No technical evaluation was possible.'
         }
       };
     }
 
+    // AI verdict sentiment — primary signal
     const rawAiReason = aiReason || '';
     const isAiFail = aiVerdict === 'FAILED' ||
-      /gaps|lacked|struggled|lack of|insufficient|failed|cannot|inconsistencies|below|unprepared|ownership|evasive/i.test(rawAiReason);
+      /gaps|lacked|struggled|lack of|insufficient|failed|cannot|inconsistencies|below|unprepared|ownership|evasive|vague|generic|did not|unable/i.test(rawAiReason);
 
-    // Technical keywords for project deep dives
-    const techKeywords = [
+    // ─── DIMENSION 1: Technical Depth ────────────────────────────────────────
+    // Keywords covering Phase 2 (tech decisions) and Phase 3 (implementation)
+    const techDepthKeywords = [
       ...role.skills.map(s => s.toLowerCase()),
-      'react', 'javascript', 'typescript', 'api', 'rest', 'graphql', 'state', 'component',
-      'hooks', 'dom', 'rendering', 'virtual dom', 'node', 'express', 'database', 'sql',
-      'postgres', 'supabase', 'architecture', 'performance', 'optimization', 'async',
-      'await', 'promise', 'function', 'object', 'array', 'algorithm', 'system', 'design',
-      'testing', 'git', 'ci/cd', 'deployment', 'latency', 'cache', 'security', 'props',
-      'schema', 'auth', 'authentication', 'scalability', 'microservice', 'docker', 'redis',
-      'mongodb', 'endpoint', 'route', 'controller', 'middleware', 'fetch', 'axios', 'cors'
+      'react', 'vue', 'angular', 'svelte', 'javascript', 'typescript', 'jsx', 'tsx',
+      'hooks', 'useeffect', 'usestate', 'usememo', 'usecallback', 'context', 'redux',
+      'zustand', 'recoil', 'component', 'props', 'rendering', 'virtual dom', 'dom',
+      'node', 'express', 'fastapi', 'django', 'flask', 'spring', 'nest',
+      'rest', 'graphql', 'api', 'endpoint', 'route', 'middleware', 'controller',
+      'jwt', 'oauth', 'token', 'refresh', 'session', 'cookie', 'bearer',
+      'database', 'sql', 'nosql', 'schema', 'table', 'collection', 'document',
+      'postgres', 'mysql', 'mongodb', 'firebase', 'supabase', 'prisma', 'orm',
+      'fetch', 'axios', 'http', 'cors', 'async', 'await', 'promise', 'callback',
+      'state', 'store', 'loading', 'error', 'response', 'request', 'payload'
     ];
 
-    const lowerTranscript = fullTranscript.toLowerCase();
-    const matchedKeywords = Array.from(new Set(techKeywords.filter(kw => lowerTranscript.includes(kw))));
-    const techKeywordCount = matchedKeywords.length;
+    // ─── DIMENSION 2: Project Ownership ──────────────────────────────────────
+    // Signals: specific feature names, personal pronouns of ownership, "I built", "I wrote", "my implementation"
+    const ownershipKeywords = [
+      'i built', 'i wrote', 'i implemented', 'i designed', 'i created', 'i added',
+      'i decided', 'i chose', 'i picked', 'i used', 'i deployed', 'i configured',
+      'my project', 'my code', 'my implementation', 'my approach', 'my design',
+      'specifically', 'exactly', 'in my case', 'what i did', 'the way i', 'i handled',
+      'i ran into', 'i hit a bug', 'i had a problem', 'i fixed', 'i debugged',
+      selectedProject.toLowerCase()
+    ];
 
-    let commScore = 65;
-    let techScore = 60;
-    let confScore = 65;
-    let authScore = 60;
+    // ─── DIMENSION 3: Architecture Understanding ──────────────────────────────
+    // Signals: system-level thinking, component connections, data flow
+    const architectureKeywords = [
+      'architecture', 'system', 'flow', 'pipeline', 'layer', 'structure', 'pattern',
+      'frontend', 'backend', 'fullstack', 'client', 'server', 'database layer',
+      'microservice', 'monolith', 'module', 'service', 'repository', 'abstraction',
+      'separation of concerns', 'mvc', 'mvvm', 'clean architecture', 'solid',
+      'end to end', 'request', 'response', 'lifecycle', 'flow', 'connection',
+      'how it works', 'the way it connects', 'communicates', 'integrates'
+    ];
+
+    // ─── DIMENSION 4: Debugging Mindset ──────────────────────────────────────
+    const debuggingKeywords = [
+      'debug', 'debugger', 'console.log', 'breakpoint', 'trace', 'log', 'error',
+      'exception', 'crash', 'fail', 'timeout', 'retry', 'fallback', 'graceful',
+      'race condition', 'concurrency', 'conflict', 'duplicate', 'idempotent',
+      'network error', 'status code', '500', '404', '429', '503', '401', '403',
+      'what went wrong', 'root cause', 'first thing i check', 'profiler', 'monitor'
+    ];
+
+    // ─── DIMENSION 5: Decision Making ────────────────────────────────────────
+    const decisionKeywords = [
+      'tradeoff', 'trade-off', 'because', 'reason', 'why i chose', 'instead of',
+      'over', 'compared to', 'alternative', 'considered', 'decided against',
+      'pros and cons', 'benefit', 'drawback', 'limitation', 'constraint',
+      'requirement', 'use case', 'makes sense for', 'better fit', 'suited for'
+    ];
+
+    // ─── DIMENSION 6: Scalability Thinking ───────────────────────────────────
+    const scalabilityKeywords = [
+      'scale', 'scalability', 'million', 'thousand', 'users', 'load', 'throughput',
+      'latency', 'performance', 'bottleneck', 'horizontal', 'vertical', 'replica',
+      'cache', 'caching', 'redis', 'cdn', 'queue', 'worker', 'background job',
+      'index', 'indexing', 'query optimization', 'connection pool', 'rate limit',
+      'ci/cd', 'deployment', 'pipeline', 'staging', 'production', 'rollback',
+      'monitoring', 'alert', 'metric', 'logging', 'observability', 'uptime',
+      'docker', 'kubernetes', 'load balancer', 'auto scaling', 'shard', 'partition'
+    ];
+
+    // Score each dimension by keyword match count (capped, scaled to 0-100)
+    const matchDim = (keywords: string[]) => Array.from(new Set(keywords.filter(kw => lowerTranscript.includes(kw))));
+
+    const techMatches = matchDim(techDepthKeywords);
+    const ownMatches = matchDim(ownershipKeywords);
+    const archMatches = matchDim(architectureKeywords);
+    const debugMatches = matchDim(debuggingKeywords);
+    const decisionMatches = matchDim(decisionKeywords);
+    const scaleMatches = matchDim(scalabilityKeywords);
+
+    // All matched unique terms for feedback reporting
+    const allMatchedKeywords = Array.from(new Set([
+      ...techMatches, ...archMatches, ...scaleMatches
+    ]));
+
+    // Per-dimension raw scores (based on keyword density + avg answer length)
+    const scoreFromMatches = (matches: string[], multiplier: number, base: number, max: number) =>
+      Math.min(max, Math.max(base, matches.length * multiplier + Math.round(avgWordsPerAnswer * 0.3)));
+
+    let techScore: number;
+    let ownershipScore: number;
+    let architectureScore: number;
+    let debugDecisionScore: number;
 
     if (isAiFail) {
-      commScore = Math.min(65, Math.max(40, Math.round(avgWordsPerAnswer * 1.2) + 35));
-      techScore = Math.min(58, Math.max(30, techKeywordCount * 8 + 30));
-      confScore = Math.min(65, Math.max(35, Math.round(wordCount / 4) + 30));
-      authScore = Math.min(60, Math.max(30, techKeywordCount * 6 + 35));
+      // Capped lower for failed sessions
+      techScore        = Math.min(60, Math.max(25, techMatches.length * 4 + 25));
+      ownershipScore   = Math.min(58, Math.max(20, ownMatches.length * 7 + 20));
+      architectureScore= Math.min(58, Math.max(20, archMatches.length * 6 + 20));
+      debugDecisionScore = Math.min(60, Math.max(20, (debugMatches.length + decisionMatches.length) * 4 + 20));
     } else {
-      commScore = Math.min(95, Math.max(72, Math.round(avgWordsPerAnswer * 1.5) + 50));
-      techScore = Math.min(96, Math.max(70, techKeywordCount * 6 + 65));
-      confScore = Math.min(95, Math.max(72, Math.round(wordCount / 5) + 60));
-      authScore = Math.min(98, Math.max(75, techKeywordCount * 5 + 70));
+      techScore        = Math.min(98, Math.max(72, techMatches.length * 3 + 65));
+      ownershipScore   = Math.min(98, Math.max(75, ownMatches.length * 6 + 68));
+      architectureScore= Math.min(96, Math.max(72, archMatches.length * 5 + 65));
+      debugDecisionScore = Math.min(96, Math.max(70, (debugMatches.length + decisionMatches.length) * 4 + 62));
     }
 
+    // Weighted overall score — Round 2 weights (spec: Technical 40%, Ownership 25%, Architecture 20%, Debug+Decision 15%)
     let overallScore = Math.round(
-      commScore * 0.25 +
-      techScore * 0.40 +  // Higher weight for technical depth in Round 2
-      confScore * 0.15 +
-      authScore * 0.20    // Higher weight for project ownership in Round 2
+      techScore         * 0.40 +
+      ownershipScore    * 0.25 +
+      architectureScore * 0.20 +
+      debugDecisionScore * 0.15
     );
 
-    // Round 2 uses 75% pass threshold (per spec)
+    // Hard clamp to match 75% pass threshold
     if (isAiFail) {
       overallScore = Math.min(overallScore, 69);
     } else {
@@ -530,28 +738,46 @@ Start naturally: "Hi! Welcome to Round 2 of your ${company.name} ${role.title} i
       .replace(/\[REASON:.*?\]/g, '')
       .replace(/\[DIFFICULTY.*?\]/g, '')
       .trim() || (isAiFail
-        ? `Failed to demonstrate sufficient technical ownership of ${selectedProject} for the ${role.title} position at ${company.name}.`
-        : `Passed ${company.name} technical deep dive on ${selectedProject} for ${role.title}.`
+        ? `Candidate did not demonstrate sufficient technical ownership and depth on ${selectedProject} for the ${role.title} position at ${company.name}.`
+        : `Candidate passed the Round 2 technical deep dive on ${selectedProject} for ${role.title} at ${company.name}.`
       );
 
+    // Evidence-based feedback mapped to the 6 evaluation dimensions
     const strengths: string[] = [];
     const improvements: string[] = [];
 
     if (!isAiFail) {
-      strengths.push(`Strong verbal articulation averaging ${Math.round(avgWordsPerAnswer)} words per technical answer.`);
-      if (matchedKeywords.length > 0) {
-        strengths.push(`Effective use of technical concepts: ${matchedKeywords.slice(0, 4).join(', ')}.`);
-      }
-      strengths.push(`Demonstrated genuine project ownership and implementation knowledge of ${selectedProject}.`);
-      strengths.push('Showed clear architectural reasoning and decision-making throughout the deep dive.');
-      improvements.push('Practice explaining scalability tradeoffs with concrete numbers (e.g., latency targets, throughput goals).');
-      improvements.push('When discussing architecture, use the C4 model or similar structure to be more precise.');
+      if (techMatches.length > 0)
+        strengths.push(`Technical Depth: Used precise technical vocabulary throughout — ${techMatches.slice(0, 5).join(', ')}.`);
+      if (ownMatches.length > 0)
+        strengths.push(`Project Ownership: Answers were specific and personal — clearly spoke from direct build experience on ${selectedProject}.`);
+      if (archMatches.length > 0)
+        strengths.push('Architecture Understanding: Demonstrated end-to-end system awareness — connected frontend, backend, and database concerns.');
+      if (debugMatches.length > 0 || decisionMatches.length > 0)
+        strengths.push('Debugging & Decision Making: Showed systematic thinking on edge cases and explained technology tradeoffs with real reasoning.');
+      if (scaleMatches.length > 0)
+        strengths.push('Scalability Thinking: Reasoned through real-world constraints — bottlenecks, caching, latency, and deployment maturity.');
+      if (avgWordsPerAnswer >= 40)
+        strengths.push(`Communication: Gave well-developed answers averaging ${Math.round(avgWordsPerAnswer)} words — sufficient depth per question.`);
+
+      improvements.push('Add specific numbers when discussing scalability — e.g., target latency in ms, expected user load, cache TTL values.');
+      improvements.push('When explaining architecture, trace the full request path (client → API → DB → response) rather than describing components in isolation.');
     } else {
-      strengths.push('Showed willingness to engage with technical questions.');
-      strengths.push('Completed the technical deep dive session.');
-      improvements.push(`Review the core architecture and implementation details of ${selectedProject} thoroughly.`);
-      improvements.push('Practice explaining your projects using the STAR+T format: Situation, Task, Action, Result, Tech choices.');
-      improvements.push('Be specific about WHY you chose each technology — not just what you used.');
+      if (techMatches.length < 5)
+        improvements.push(`Technical Depth: Answers lacked specific implementation detail. Study the actual code in ${selectedProject} — be able to explain every function you wrote.`);
+      if (ownMatches.length < 3)
+        improvements.push('Project Ownership: Answers sounded generic — could apply to any project. Practice describing what YOU specifically built, not what the project does.');
+      if (archMatches.length < 2)
+        improvements.push('Architecture Understanding: Practice tracing a full request through your system — from UI click to database write and back.');
+      if (debugMatches.length < 2)
+        improvements.push('Debugging Mindset: Think about what breaks in your project. Practice explaining failure modes — what happens when the server crashes, when two users conflict, when a token expires mid-session.');
+      if (decisionMatches.length < 2)
+        improvements.push('Decision Making: For every technology you used, prepare a one-sentence tradeoff explanation — why THIS over the main alternative.');
+      if (scaleMatches.length < 2)
+        improvements.push('Scalability Thinking: Study the scaling story of your stack. Know what breaks first under load and have a concrete first step for fixing it.');
+
+      strengths.push('Participated in a full voice technical interview session under live conditions.');
+      strengths.push('Engaged with all five phases of the interrogation framework without abandoning the interview.');
     }
 
     return {
@@ -559,10 +785,10 @@ Start naturally: "Hi! Welcome to Round 2 of your ${company.name} ${role.title} i
       finalScore: overallScore,
       reason: cleanReason,
       details: {
-        communicationScore: commScore,
-        confidenceScore: confScore,
+        communicationScore: Math.min(98, Math.max(isAiFail ? 35 : 70, Math.round(avgWordsPerAnswer * (isAiFail ? 1.0 : 1.6) + (isAiFail ? 30 : 48)))),
+        confidenceScore: debugDecisionScore,
         technicalScore: techScore,
-        resumeAuthenticityScore: authScore,
+        resumeAuthenticityScore: ownershipScore,
         strengths,
         improvements,
         summary: cleanReason
@@ -576,6 +802,7 @@ Start naturally: "Hi! Welcome to Round 2 of your ${company.name} ${role.title} i
     stopCamera();
     setIsEnding(true);
 
+    // Step 1: Local transcript-based evaluation (verbal signals only — no video/body language)
     let evaluation = evaluateTranscriptPerformance(initialResult, reason);
 
     setVerdict(evaluation.finalVerdict);
@@ -592,11 +819,10 @@ Start naturally: "Hi! Welcome to Round 2 of your ${company.name} ${role.title} i
         content: l.text
       }));
 
-      // NOTE: No video analysis for Round 2 (voice-only round by design)
-      // Camera window is shown for professionalism, but no analyze-video-interview call
-
-      // Call evaluate-interview edge function — EXACT SAME as Round 1
-      console.log('[EliteProjectDeepDive] Calling evaluate-interview edge function...');
+      // Step 2: AI Evaluation — evaluate-interview edge function (Gemini → Groq fallback on server-side)
+      // Round 2 is voice-only: no video upload, no body language analysis, no analyze-video-interview call.
+      // Only the full conversation transcript is evaluated for technical depth, ownership, and reasoning.
+      console.log('[EliteProjectDeepDive] Step 2 — Calling evaluate-interview (Gemini → Groq fallback)...');
       const { data: evalReport } = await supabase.functions.invoke('evaluate-interview', {
         body: {
           messages,
@@ -687,22 +913,30 @@ Start naturally: "Hi! Welcome to Round 2 of your ${company.name} ${role.title} i
           setSavedSessionId(newSessionId);
         }
       }
-    } catch (dbErr) {
-      console.error('[EliteProjectDeepDive] Failed to save session:', dbErr);
-    }
 
-    // Update local round progress
-    updateRoundResult(
-      interviewType.id,
-      company.id,
-      role.id,
-      round.roundNumber,
-      evaluation.finalVerdict,
-      evaluation.reason,
-      evaluation.finalScore,
-      evaluation.details,
-      newSessionId || undefined
-    );
+      setVerdictScore(evaluation.finalScore);
+
+      try {
+        await updateRoundResultAsync(
+          userId,
+          interviewType.id,
+          company.id,
+          role.id,
+          round.roundNumber,
+          evaluation.finalVerdict,
+          evaluation.reason,
+          evaluation.finalScore,
+          evaluation.details,
+          newSessionId
+        );
+        console.log('[EliteProjectDeepDive] DB result updated successfully');
+      } catch (err) {
+        console.error('[EliteProjectDeepDive] Failed to update round result:', err);
+      }
+      
+    } catch (err) {
+      console.error('[EliteProjectDeepDive] Failed to save session:', err);
+    }
 
     // Navigate to results
     if (newSessionId) {
@@ -712,14 +946,17 @@ Start naturally: "Hi! Welcome to Round 2 of your ${company.name} ${role.title} i
     }
   };
 
-  const handleManualEndSession = () => {
+  const handleManualEndSession = async () => {
+    if (isEnding) return; // prevent double-click
     setIsEnding(true);
     const userMsgCount = logs.filter(l => l.role === 'user').length;
     const totalQ = round.questionCount || 12;
     const passed = userMsgCount >= Math.floor(totalQ * 0.75);
-    handleTriggerVerdict(
+    await handleTriggerVerdict(
       passed ? 'PASSED' : 'FAILED',
-      passed ? 'Candidate completed sufficient phases of the technical deep dive.' : 'Interview ended early before technical evaluation bar was satisfied.'
+      passed
+        ? 'Candidate completed sufficient phases of the technical deep dive.'
+        : 'Interview ended early before the technical evaluation threshold was met.'
     );
   };
 
@@ -730,6 +967,14 @@ Start naturally: "Hi! Welcome to Round 2 of your ${company.name} ${role.title} i
   };
 
   const filteredRepos = availableRepos.filter(r => r.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  useEffect(() => {
+    if (!isPreInterviewSetupOpen && selectedProject && !hasStartedSession) {
+      setHasStartedSession(true);
+      startCamera();
+      initiateSession();
+    }
+  }, [isPreInterviewSetupOpen, selectedProject, hasStartedSession]);
 
   return (
     <div className="h-screen w-screen bg-[#050508] text-white flex flex-col overflow-hidden font-sans relative select-none">
@@ -902,7 +1147,7 @@ Start naturally: "Hi! Welcome to Round 2 of your ${company.name} ${role.title} i
             {/* CTA */}
             <div className="pt-2 border-t border-white/10">
               <Button
-                onClick={handleConfirmSetupAndStart}
+                onClick={handleStartInterview}
                 disabled={!selectedProject || isLoadingRepos}
                 className={`w-full h-12 rounded-xl font-extrabold text-xs tracking-wide shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   selectedProject
