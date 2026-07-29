@@ -410,7 +410,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-black text-white overflow-hidden">
+    <div className="min-h-screen w-full flex bg-black text-white overflow-y-auto">
       {/* Left Side - Feature Showcase */}
       <div className="hidden lg:flex w-1/2 relative items-center justify-center p-12 overflow-hidden">
         {/* Background Effects */}
@@ -448,7 +448,7 @@ const Auth = () => {
       </div>
 
       {/* Right Side - Auth Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative bg-black/95">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 relative bg-black/95 min-h-screen overflow-y-auto">
         <div className="absolute top-6 right-6 flex items-center gap-4">
           <Button
             variant="ghost"

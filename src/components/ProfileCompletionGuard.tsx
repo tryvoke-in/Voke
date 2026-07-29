@@ -7,10 +7,10 @@ export const ProfileCompletionGuard = ({ children }: { children: React.ReactNode
     const location = useLocation();
     const isSSR = typeof window === "undefined";
     const isPublicPage = [
-        "/", "/pricing", "/companies", "/dsa-sheet", "/question-practice",
+        "/", "/auth", "/pricing", "/companies", "/dsa-sheet", "/question-practice",
         "/daily-challenge", "/elite-prep", "/community", "/leaderboard",
-        "/help", "/privacy", "/waitlist"
-    ].includes(location.pathname) || location.pathname.startsWith("/companies/");
+        "/help", "/privacy", "/about", "/terms", "/contact", "/waitlist"
+    ].includes(location.pathname) || location.pathname.startsWith("/companies/") || location.pathname.startsWith("/blog");
 
     const [loading, setLoading] = useState(!isSSR && !isPublicPage);
 
