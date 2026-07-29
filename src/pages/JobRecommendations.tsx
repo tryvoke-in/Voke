@@ -242,6 +242,10 @@ export default function JobRecommendations() {
         body: { userId: targetUid, forceRefresh: true },
       });
       if (error) throw error;
+      if (data?.crashError) {
+        console.error("EDGE FUNCTION CRASH DETAILS:", data.crashError, data.details);
+        throw new Error("Backend crashed: " + data.crashError);
+      }
 
       toast({ title: "Scouting Complete!", description: `Found ${data?.count || 0} live role matches.` });
       
