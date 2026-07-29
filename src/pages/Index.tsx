@@ -198,6 +198,7 @@ const Index = () => {
 
             {/* Mobile Menu Toggle */}
             <button 
+              aria-label="Toggle Navigation Menu"
               className="md:hidden text-white p-2"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
@@ -246,7 +247,8 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Hero Section with Overlapping 3D Floating Cards Stack & Live Dialog Simulator */}
+      <main id="main-content">
+        {/* Hero Section with Overlapping 3D Floating Cards Stack & Live Dialog Simulator */}
       <section className="relative pt-36 pb-24 md:pt-48 md:pb-36 overflow-hidden">
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="grid lg:grid-cols-12 gap-16 items-center">
@@ -1115,11 +1117,13 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer (Voke Logo added, generic sparkles icon removed) */}
-      <footer className="bg-black border-t border-white/10 pt-20 pb-10 relative z-10">
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 pt-16 pb-12 bg-black/60 relative z-10">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-4 gap-12 mb-16">
-            <div className="col-span-1 md:col-span-2 space-y-6">
+            <div className="md:col-span-2 space-y-6">
               <div className="flex items-center gap-2">
                 <img 
                   src="/images/voke_logo.png" 
@@ -1140,17 +1144,19 @@ const Index = () => {
             <div>
               <h4 className="font-bold text-white mb-6 text-sm">Product</h4>
               <ul className="space-y-4 text-gray-400 text-sm">
-                <li><a href="#features" className="hover:text-violet-400 transition-colors">Features</a></li>
-                <li><a href="#pricing" className="hover:text-violet-400 transition-colors">Pricing</a></li>
-                <li><a href="#how-it-works" className="hover:text-violet-400 transition-colors">How it Works</a></li>
+                <li><a href="/#features" className="hover:text-violet-400 transition-colors">Features</a></li>
+                <li><a href="/pricing" className="hover:text-violet-400 transition-colors">Pricing</a></li>
+                <li><a href="/companies" className="hover:text-violet-400 transition-colors">Companies</a></li>
+                <li><a href="/dsa-sheet" className="hover:text-violet-400 transition-colors">DSA Sheet</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-bold text-white mb-6 text-sm">Support</h4>
               <ul className="space-y-4 text-gray-400 text-sm">
-                <li><a href="mailto:support@voke.ai" className="hover:text-violet-400 transition-colors">Contact Support</a></li>
-                <li><a href="mailto:teamtryvoke@gmail.com" className="hover:text-violet-400 transition-colors">Enterprise Sales</a></li>
+                <li><a href="/help" className="hover:text-violet-400 transition-colors">Help Center</a></li>
+                <li><a href="/contact" className="hover:text-violet-400 transition-colors">Contact Support</a></li>
+                <li><a href="/about" className="hover:text-violet-400 transition-colors">About Voke</a></li>
               </ul>
             </div>
           </div>
@@ -1160,8 +1166,8 @@ const Index = () => {
               © {new Date().getFullYear()} Voke AI. All rights reserved.
             </p>
             <div className="flex items-center gap-6 text-xs">
-              <a href="#" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="text-gray-500 hover:text-white transition-colors">Terms of Service</a>
+              <a href="/privacy" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</a>
+              <a href="/terms" className="text-gray-500 hover:text-white transition-colors">Terms of Service</a>
             </div>
           </div>
         </div>

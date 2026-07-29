@@ -1,0 +1,34 @@
+# Voke – AI Powered Technical & Behavioral Interview Practice Platform
+
+> Voke (https://www.tryvoke.in) is an AI-powered interview preparation platform designed specifically for B.Tech CSE students, software engineering candidates, and tech professionals preparing for campus placements, internships, and MAANG/tier-1 technical interviews.
+
+## Core Capabilities & Practice Modules
+
+- **AI Voice & Video Mock Interviews** (`/voice-assistant`): Conduct live, 1-on-1 technical and behavioral mock sessions with AI interviewers. Evaluates technical correctness, communication clarity, problem-solving structure, and confidence in real time.
+- **Resume & Project-Based Question Generation** (`/resume-builder`): Extract projects, tech stack, and GitHub repository details to generate custom interview questions tailored specifically to your resume profile.
+- **Curated DSA Sheet** (`/dsa-sheet`): Handpicked Data Structures and Algorithms curriculum covering Arrays, Trees, Graphs, Dynamic Programming, and System Design with instant AI solution evaluation.
+- **Company-Specific Interview Kits** (`/companies`): Curated real interview question sets and difficulty breakdowns for Google, Meta, Amazon, Microsoft, Apple, Uber, Netflix, and top tech companies.
+- **Technical Question Bank** (`/question-practice`): Thousands of categorized coding, system design, and behavioral questions with instant AI hints and detailed solutions.
+- **Daily Coding Challenge** (`/daily-challenge`): Daily interview question of the day with streak tracking and global leaderboard rewards.
+- **Peer Interview Rooms** (`/peer-interviews`): Practice mock interviews live with peer candidates and exchange structured feedback.
+
+## Key Public Resources
+
+- **Home**: https://www.tryvoke.in/
+- **Pricing**: https://www.tryvoke.in/pricing
+- **Company Interview Kits**: https://www.tryvoke.in/companies
+- **DSA Sheet**: https://www.tryvoke.in/dsa-sheet
+- **Question Practice Bank**: https://www.tryvoke.in/question-practice
+- **Daily Challenge**: https://www.tryvoke.in/daily-challenge
+- **Elite Prep Program**: https://www.tryvoke.in/elite-prep
+- **Community Hub**: https://www.tryvoke.in/community
+- **Leaderboard**: https://www.tryvoke.in/leaderboard
+- **Help Center & FAQs**: https://www.tryvoke.in/help
+- **About Voke & Founders**: https://www.tryvoke.in/about
+- **Engineering Blog**: https://www.tryvoke.in/blog
+
+## Technical Stack & Architecture
+
+- **Frontend**: React 18, TypeScript, Tailwind CSS, Vite, Framer Motion
+- **AI Infrastructure**: Google Gemini 2.5/3.6, WebRTC, Speech-to-Text & Text-to-Speech API
+- **Backend & Auth**: Supabase, PostgreSQL, AES-256 encrypted storage

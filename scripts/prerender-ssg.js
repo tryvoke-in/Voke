@@ -531,9 +531,10 @@ Disallow: /admin
 Disallow: /api/
 
 # -------------------------------------------------------------------
-# 4. XML Sitemap Index Location
+# 4. XML Sitemap Index Location & LLM Discoverability
 # -------------------------------------------------------------------
-Sitemap: ${SITE_URL}/sitemap.xml`;
+Sitemap: ${SITE_URL}/sitemap.xml
+# LLM Context: ${SITE_URL}/llms.txt`;
 }
 
 function injectHeadAndBody(templateHtml, page, renderedReactHtml) {

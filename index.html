@@ -13,6 +13,10 @@
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#09090b" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <!-- Primary SEO -->
     <title>Voke – AI Powered Interview Practice for Tech Students & Engineers</title>
@@ -20,6 +24,9 @@
     <meta name="author" content="Voke" />
     <meta name="robots" content="index, follow" />
     <meta name="keywords" content="Voke, AI interview practice, technical interview, behavioral interview, resume analysis" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://www.tryvoke.in/" />
@@ -41,6 +48,9 @@
     <meta property="og:url" content="https://www.tryvoke.in/" />
     <meta property="og:site_name" content="Voke" />
     <meta property="og:image" content="https://www.tryvoke.in/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:alt" content="Voke – AI Interview Practice" />
     <meta property="og:locale" content="en_IN" />
 
@@ -50,6 +60,7 @@
     <meta name="twitter:description" content="Practice interviews with AI-powered feedback and personalized learning paths for tech careers." />
     <meta name="twitter:image" content="https://www.tryvoke.in/og-image.png" />
     <meta name="twitter:site" content="@tryvoke" />
+    <meta name="twitter:creator" content="@tryvoke" />
 
     <!-- Structured Data (JSON-LD) for Google Rich Results -->
     <script id="voke-json-ld" type="application/ld+json">
@@ -90,6 +101,9 @@
   </head>
 
   <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[99999] focus:bg-violet-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-xl focus:outline-none">
+      Skip to main content
+    </a>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

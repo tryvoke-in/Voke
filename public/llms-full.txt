@@ -1,0 +1,40 @@
+# Voke Platform Full Context Specification for LLM & AI Search Indexers
+
+> Voke (https://www.tryvoke.in) provides AI-driven technical mock interviews, resume parsing, ATS scoring, interactive coding environments, and company-specific technical preparation.
+
+## Platform Features & Functional Endpoints
+
+### 1. AI Voice & Video Mock Interviews
+- URL: https://www.tryvoke.in/voice-assistant
+- Description: Real-time voice interface powered by WebSockets and WebRTC audio processing. The AI acts as a senior technical interviewer (Google/Amazon bar raiser persona), asking follow-up questions based on candidate responses, evaluating technical depth, time complexity, edge cases, and soft skills.
+
+### 2. Company Interview Question Kits
+- Base URL: https://www.tryvoke.in/companies
+- Supported Companies: Google, Meta, Amazon, Apple, Microsoft, Netflix, Uber, Airbnb, LinkedIn, Twitter, Tesla, Spotify, Adobe, Salesforce, Oracle, IBM, Intel, NVIDIA, AMD, Cisco, PayPal, Stripe, Slack, ByteDance, Snapchat, Reddit, Dropbox, GitLab, GitHub, Atlassian.
+- Details: Each company route (e.g., https://www.tryvoke.in/companies/google) contains frequency-weighted interview questions, problem categories (DSA, System Design, Behavioral), difficulty levels, and AI-assisted solution walkthroughs.
+
+### 3. Curated Data Structures & Algorithms Sheet
+- URL: https://www.tryvoke.in/dsa-sheet
+- Description: Handpicked problem set structured by topic (Arrays, Two Pointers, Sliding Window, Trees, Graphs, Dynamic Programming, Heap/Priority Queue). Candidates can solve problems directly in the browser IDE with instant multi-language code execution.
+
+### 4. AI Resume Builder & ATS Scanner
+- URL: https://www.tryvoke.in/resume-builder
+- Description: AI-assisted ATS resume scoring, bullet point rewriter using the Action-Verb + Metric + Result formula, and automatic question generator based on resume projects.
+
+### 5. Peer Mock Interview Network
+- URL: https://www.tryvoke.in/peer-interviews
+- Description: Peer-to-peer interview matching platform where software engineering students practice 1-on-1 mock interviews, grade each other using standardized rubrics, and track feedback over time.
+
+## Data Protection & Security Standards
+
+- All candidate resume uploads and interview audio recordings are encrypted in transit via TLS 1.3 and at rest using AES-256 encryption.
+- Fully compliant with India DPDP Act and international privacy frameworks.
+- Data Security Policy: https://www.tryvoke.in/privacy
+
+## Contact Information & Official Links
+
+- Website: https://www.tryvoke.in
+- Support & Contact: https://www.tryvoke.in/contact
+- Help Center: https://www.tryvoke.in/help
+- Twitter/X: https://twitter.com/tryvoke
+- LinkedIn: https://www.linkedin.com/company/vokeaii/

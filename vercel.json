@@ -29,6 +29,24 @@
           "value": "camera=(self), microphone=(self), geolocation=(), payment=(self \"https://checkout.razorpay.com\")"
         }
       ]
+    },
+    {
+      "source": "/(assets|images)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(favicon.png|og-image.png|manifest.json|llms.txt|llms-full.txt)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
     }
   ],
   "redirects": [
