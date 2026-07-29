@@ -52,6 +52,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
   const [allSessions, setAllSessions] = useState<any[]>([]);
+  const [communityPulsePosts, setCommunityPulsePosts] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -232,12 +233,53 @@ const Dashboard = () => {
         .or(`host_user_id.eq.${user.id},guest_user_id.eq.${user.id}`)
         .order("scheduled_at", { ascending: false });
 
+      // 5. Fetch Solved Questions
+      const { data: solvedQuestions } = await supabase
+        .from("solved_questions" as any)
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-      // Combine for "Recent Activity" list (Top 5)
+      // 6. Fetch Community Pulse Posts
+      const { data: postsData } = await supabase
+        .from("posts" as any)
+        .select("id, title, likes_count, comments_count, created_at")
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (postsData && postsData.length > 0) {
+        setCommunityPulsePosts(postsData);
+      }
+
+      // Combine for "Recent Activity" list (Top 5) & ProgressPanel allSessions
       const allActivity = [
         ...(textSessions || []).map(s => ({ ...s, type: 'Text', date: s.created_at, score: s.overall_score })),
         ...(videoSessions || []).map(s => ({ ...s, type: 'Video', date: s.created_at, score: s.overall_score })),
-        ...(peerSessions || []).map(s => ({ ...s, type: 'Peer', date: s.scheduled_at, score: null })) // Peer score separate
+        ...(peerSessions || []).map(s => {
+          const myRating = s.peer_interview_ratings?.find((r: any) => r.rated_user_id === user.id);
+          const ratingScore = myRating ? (myRating.overall_rating ? myRating.overall_rating * 20 : (myRating.overall_score ? myRating.overall_score * 10 : null)) : null;
+          return {
+            ...s,
+            type: 'Peer',
+            date: s.scheduled_at || s.created_at,
+            score: ratingScore,
+            overall_score: ratingScore,
+            confidence_score: myRating?.confidence_rating ? myRating.confidence_rating * 20 : null,
+            delivery_score: myRating?.communication_rating ? myRating.communication_rating * 20 : null,
+            body_language_score: myRating?.presentation_rating ? myRating.presentation_rating * 20 : null
+          };
+        }),
+        ...(solvedQuestions || []).map((sq: any) => ({
+          ...sq,
+          id: sq.id || `sq-${sq.question_id}`,
+          type: 'Coding Practice',
+          date: sq.created_at || sq.solved_at || new Date().toISOString(),
+          score: typeof sq.score === 'number' && sq.score > 0 ? sq.score : 85,
+          overall_score: typeof sq.score === 'number' && sq.score > 0 ? sq.score : 85,
+          confidence_score: 85,
+          delivery_score: 80,
+          total_duration_seconds: 600
+        }))
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       setSessions(allActivity.slice(0, 5));
@@ -880,18 +922,24 @@ const Dashboard = () => {
                   Community Pulse
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { title: "Google L4 Interview Experience", views: "2.4k" },
-                  { title: "System Design: TinyURL", views: "1.8k" },
-                  { title: "Salary Negotiation Tips", views: "3.1k" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between border-b border-border/40 last:border-0 pb-3 last:pb-0">
-                    <p className="text-sm font-medium hover:text-blue-500 cursor-pointer transition-colors">{item.title}</p>
-                    <span className="text-xs text-muted-foreground">{item.views}</span>
+              <CardContent className="space-y-3">
+                {(communityPulsePosts.length > 0 ? communityPulsePosts : [
+                  { id: "", title: "Google L4 Interview Experience", likes_count: 42, views: "2.4k" },
+                  { id: "", title: "System Design: TinyURL", likes_count: 28, views: "1.8k" },
+                  { id: "", title: "Salary Negotiation Tips", likes_count: 56, views: "3.1k" },
+                ]).map((item, i) => (
+                  <div 
+                    key={item.id || i} 
+                    onClick={() => navigate(item.id ? `/community#post-${item.id}` : "/community")}
+                    className="flex items-center justify-between border-b border-border/40 last:border-0 pb-2.5 last:pb-0 hover:bg-muted/30 p-2 rounded-lg transition-colors cursor-pointer group"
+                  >
+                    <p className="text-sm font-medium group-hover:text-blue-500 transition-colors line-clamp-1 flex-1 pr-2">{item.title}</p>
+                    <span className="text-xs text-muted-foreground shrink-0 font-medium">
+                      {item.likes_count !== undefined ? `${item.likes_count} likes` : item.views}
+                    </span>
                   </div>
                 ))}
-                <Button variant="ghost" size="sm" className="w-full text-blue-500" onClick={() => navigate("/community")}>
+                <Button variant="ghost" size="sm" className="w-full text-blue-500 font-semibold hover:bg-blue-500/10 mt-1" onClick={() => navigate("/community")}>
                   Visit Community
                 </Button>
               </CardContent>

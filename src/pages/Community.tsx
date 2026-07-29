@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   MessageSquare, Heart, Share2, TrendingUp, Users,
   MoreHorizontal, Image as ImageIcon, Send, Search, Sparkles, X,
-  Calendar, Award, MessageCircle, Flame
+  Calendar, Award, MessageCircle, Flame, CheckCircle2
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
@@ -17,10 +17,39 @@ import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
+const DEFAULT_TRENDING_TOPICS = [
+  { tag: "SystemDesign", posts: 24 },
+  { tag: "GoogleL4", posts: 19 },
+  { tag: "LeetCodeMedium", posts: 16 },
+  { tag: "BehavioralPrep", posts: 12 },
+  { tag: "ResumeReview", posts: 9 },
+];
+
+const DEFAULT_SUGGESTED_EVENTS = [
+  {
+    title: "Google & Meta Peer Mock Session",
+    description: "Live 1-on-1 coding interview practice with peers & AI real-time evaluation.",
+    type: "Mock Session"
+  },
+  {
+    title: "System Design Masterclass: Scalable Architecture",
+    description: "Interactive session on designing TinyURL, Rate Limiters, and Distributed Cache.",
+    type: "Workshop"
+  },
+  {
+    title: "Resume & ATS Optimization Clinic",
+    description: "Get instant peer feedback on your resume structure for top tech companies.",
+    type: "Peer Review"
+  }
+];
+
 const Community = () => {
   const { toast } = useToast();
   const [view, setView] = useState<'feed' | 'trending' | 'events'>('feed');
-  const [aiInsights, setAiInsights] = useState<{ trending_topics: any[], suggested_events: any[] } | null>(null);
+  const [aiInsights, setAiInsights] = useState<{ trending_topics: any[], suggested_events: any[] }>({
+    trending_topics: DEFAULT_TRENDING_TOPICS,
+    suggested_events: DEFAULT_SUGGESTED_EVENTS,
+  });
   const [user, setUser] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [topContributors, setTopContributors] = useState<any[]>([]);
@@ -33,63 +62,96 @@ const Community = () => {
   const [postComments, setPostComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
-  const [showDevModal, setShowDevModal] = useState(true);
+  const [showDevModal, setShowDevModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     checkAuth();
     fetchPosts();
-    fetchAIInsights();
     fetchTopContributors();
 
-    // Realtime subscription for posts and likes
+    // Listen for auth session changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    // Realtime subscription for posts, likes, and comments
     const channel = supabase
       .channel('public:community')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
         fetchPosts();
         fetchTopContributors();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, () => {
         fetchPosts();
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => {
+        fetchPosts();
+      })
       .subscribe();
 
     return () => {
+      subscription.unsubscribe();
       supabase.removeChannel(channel);
     };
   }, []);
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
   };
 
-  const fetchAIInsights = async () => {
+  const fetchAIInsights = async (postsList: any[]) => {
+    // 1. Dynamically compute trending tags from real community posts
+    const tagCounts: Record<string, number> = {};
+    (postsList || []).forEach((p: any) => {
+      if (Array.isArray(p.tags)) {
+        p.tags.forEach((tag: string) => {
+          const cleanTag = tag.trim().replace(/^#/, '');
+          if (cleanTag) {
+            tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    const computedTopics = Object.entries(tagCounts)
+      .map(([tag, count]) => ({ tag, posts: count }))
+      .sort((a, b) => b.posts - a.posts);
+
+    const mergedTopics = computedTopics.length > 0
+      ? [...computedTopics, ...DEFAULT_TRENDING_TOPICS.filter(dt => !computedTopics.some(ct => ct.tag.toLowerCase() === dt.tag.toLowerCase()))].slice(0, 5)
+      : DEFAULT_TRENDING_TOPICS;
+
+    setAiInsights({
+      trending_topics: mergedTopics,
+      suggested_events: DEFAULT_SUGGESTED_EVENTS
+    });
+
+    // 2. Try fetching from AI Edge function if deployed
     try {
       const { data, error } = await supabase.functions.invoke('analyze-community-trends');
-      if (error) throw error;
-      setAiInsights(data);
+      if (!error && data && data.trending_topics && data.suggested_events) {
+        setAiInsights(data);
+      }
     } catch (error) {
-      console.error('Error fetching AI insights:', error);
+      // Graceful fallback already in state
     }
   };
 
   const fetchTopContributors = async () => {
     try {
-      // Fetch all posts grouped by user, then join with profiles
       const { data: postsData, error: postsError } = await supabase
         .from('posts' as any)
         .select('user_id');
 
       if (postsError) throw postsError;
 
-      // Count posts per user
       const countMap: Record<string, number> = {};
       (postsData || []).forEach((p: any) => {
-        countMap[p.user_id] = (countMap[p.user_id] || 0) + 1;
+        if (p.user_id) countMap[p.user_id] = (countMap[p.user_id] || 0) + 1;
       });
 
-      // Sort by count and take top 5
       const topUserIds = Object.entries(countMap)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5);
@@ -99,20 +161,16 @@ const Community = () => {
         return;
       }
 
-      // Fetch profiles for top users
-      const { data: profiles, error: profilesError } = await supabase
+      const { data: profiles } = await supabase
         .from('profiles' as any)
         .select('id, full_name, avatar_url, target_role')
         .in('id', topUserIds.map(([id]) => id));
 
-      if (profilesError) throw profilesError;
-
-      // Merge counts with profiles and sort
       const contributors = topUserIds.map(([userId, count], index) => {
         const profile = (profiles || []).find((p: any) => p.id === userId);
         return {
           id: userId,
-          name: profile?.full_name || 'Anonymous',
+          name: profile?.full_name || 'Anonymous Engineer',
           avatar_url: profile?.avatar_url || null,
           title: profile?.target_role || 'Community Member',
           postCount: count,
@@ -128,28 +186,55 @@ const Community = () => {
 
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
+      // Robust multi-step fetch to avoid schema join issues
+      const { data: postsData, error: postsError } = await supabase
         .from('posts' as any)
-        .select(`
-          *,
-          profiles:user_id (full_name, avatar_url, job_title),
-          likes (user_id),
-          comments (count)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching posts with relations:', error);
-        const { data: simpleData, error: simpleError } = await supabase
-          .from('posts' as any)
-          .select('*')
-          .order('created_at', { ascending: false });
+      if (postsError) throw postsError;
 
-        if (simpleError) throw simpleError;
-        setPosts(simpleData || []);
-      } else {
-        setPosts(data || []);
+      const rawPosts = postsData || [];
+      if (rawPosts.length === 0) {
+        setPosts([]);
+        fetchAIInsights([]);
+        setLoading(false);
+        return;
       }
+
+      // Collect user IDs for profiles
+      const userIds = Array.from(new Set(rawPosts.map((p: any) => p.user_id).filter(Boolean)));
+      
+      const { data: profilesData } = userIds.length > 0
+        ? await supabase.from('profiles' as any).select('id, full_name, avatar_url, job_title').in('id', userIds)
+        : { data: [] };
+
+      // Fetch all likes
+      const { data: likesData } = await supabase
+        .from('likes' as any)
+        .select('*');
+
+      // Fetch all comments count
+      const { data: commentsData } = await supabase
+        .from('comments' as any)
+        .select('id, post_id');
+
+      const profilesMap = new Map((profilesData || []).map((p: any) => [p.id, p]));
+
+      const formattedPosts = rawPosts.map((p: any) => {
+        const postLikes = (likesData || []).filter((l: any) => l.post_id === p.id);
+        const postCommentsCount = (commentsData || []).filter((c: any) => c.post_id === p.id).length;
+        
+        return {
+          ...p,
+          profiles: profilesMap.get(p.user_id) || { full_name: 'Anonymous Engineer', avatar_url: null, job_title: 'Software Developer' },
+          likes: postLikes,
+          commentsCount: postCommentsCount,
+        };
+      });
+
+      setPosts(formattedPosts);
+      fetchAIInsights(formattedPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
@@ -159,7 +244,14 @@ const Community = () => {
 
   const handlePost = async () => {
     if (!newPost.trim()) return;
-    if (!user) {
+    
+    let currentUser = user;
+    if (!currentUser) {
+      const { data: { session } } = await supabase.auth.getSession();
+      currentUser = session?.user;
+    }
+
+    if (!currentUser) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to post in the community.",
@@ -168,15 +260,14 @@ const Community = () => {
       return;
     }
 
-    // Extract any #hashtags typed in the post body, or default to ["InterviewPrep"]
     const extractedTags = newPost.match(/#[\w]+/g)?.map(tag => tag.substring(1)) || ["InterviewPrep"];
 
     try {
       const { error } = await supabase
         .from('posts' as any)
         .insert({
-          user_id: user.id,
-          content: newPost,
+          user_id: currentUser.id,
+          content: newPost.trim(),
           image_url: imageUrl.trim() || null,
           tags: extractedTags
         });
@@ -190,18 +281,24 @@ const Community = () => {
         description: "Your discussion has been shared with the community.",
       });
       fetchPosts();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating post:', error);
       toast({
         title: "Error",
-        description: "Failed to publish post. Please try again.",
+        description: error.message || "Failed to publish post. Please try again.",
         variant: "destructive",
       });
     }
   };
 
   const handleLike = async (postId: string) => {
-    if (!user) {
+    let currentUser = user;
+    if (!currentUser) {
+      const { data: { session } } = await supabase.auth.getSession();
+      currentUser = session?.user;
+    }
+
+    if (!currentUser) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to like discussions.",
@@ -210,18 +307,37 @@ const Community = () => {
       return;
     }
 
-    const post = posts.find(p => p.id === postId);
-    const isLiked = post?.likes?.some((l: any) => l.user_id === user.id);
+    const targetPost = posts.find(p => p.id === postId);
+    const isLiked = targetPost?.likes?.some((l: any) => l.user_id === currentUser.id);
+
+    // Optimistic UI update
+    setPosts(prevPosts => prevPosts.map(p => {
+      if (p.id === postId) {
+        const newLikes = isLiked
+          ? (p.likes || []).filter((l: any) => l.user_id !== currentUser.id)
+          : [...(p.likes || []), { post_id: postId, user_id: currentUser.id }];
+        return { ...p, likes: newLikes };
+      }
+      return p;
+    }));
 
     try {
       if (isLiked) {
-        await supabase.from('likes' as any).delete().eq('post_id', postId).eq('user_id', user.id);
+        const { error } = await supabase
+          .from('likes' as any)
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', currentUser.id);
+        if (error) throw error;
       } else {
-        await supabase.from('likes' as any).insert({ post_id: postId, user_id: user.id });
+        const { error } = await supabase
+          .from('likes' as any)
+          .insert({ post_id: postId, user_id: currentUser.id });
+        if (error) throw error;
       }
-      fetchPosts();
     } catch (error) {
       console.error('Error toggling like:', error);
+      fetchPosts(); // Revert on failure
     }
   };
 
@@ -235,11 +351,13 @@ const Community = () => {
   };
 
   const handleRegisterEvent = (eventTitle: string) => {
-    setRegisteredEvents(prev => ({ ...prev, [eventTitle]: !prev[eventTitle] }));
-    const isReg = !registeredEvents[eventTitle];
-    toast({
-      title: isReg ? "Registered!" : "Unregistered",
-      description: isReg ? `You are registered for "${eventTitle}".` : `Registration cancelled for "${eventTitle}".`,
+    setRegisteredEvents(prev => {
+      const isReg = !prev[eventTitle];
+      toast({
+        title: isReg ? "Registered!" : "Unregistered",
+        description: isReg ? `You are registered for "${eventTitle}".` : `Registration cancelled for "${eventTitle}".`,
+      });
+      return { ...prev, [eventTitle]: isReg };
     });
   };
 
@@ -253,17 +371,28 @@ const Community = () => {
     setExpandedPost(postId);
     setCommentLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: rawComments, error } = await supabase
         .from('comments' as any)
-        .select(`
-          *,
-          profiles:user_id (full_name, avatar_url)
-        `)
+        .select('*')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setPostComments(data || []);
+
+      const commentUserIds = Array.from(new Set((rawComments || []).map((c: any) => c.user_id).filter(Boolean)));
+      
+      const { data: commentProfiles } = commentUserIds.length > 0
+        ? await supabase.from('profiles' as any).select('id, full_name, avatar_url').in('id', commentUserIds)
+        : { data: [] };
+
+      const profileMap = new Map((commentProfiles || []).map((p: any) => [p.id, p]));
+
+      const commentsWithProfiles = (rawComments || []).map((c: any) => ({
+        ...c,
+        profiles: profileMap.get(c.user_id) || { full_name: 'Software Engineer', avatar_url: null }
+      }));
+
+      setPostComments(commentsWithProfiles);
     } catch (error) {
       console.error('Error fetching comments:', error);
     } finally {
@@ -272,32 +401,52 @@ const Community = () => {
   };
 
   const handleSubmitComment = async (postId: string) => {
-    if (!newComment.trim() || !user) return;
+    if (!newComment.trim()) return;
+
+    let currentUser = user;
+    if (!currentUser) {
+      const { data: { session } } = await supabase.auth.getSession();
+      currentUser = session?.user;
+    }
+
+    if (!currentUser) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to reply.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const commentContent = newComment.trim();
+    setNewComment("");
 
     try {
       const { error } = await supabase
         .from('comments' as any)
         .insert({
           post_id: postId,
-          user_id: user.id,
-          content: newComment
+          user_id: currentUser.id,
+          content: commentContent
         });
 
       if (error) throw error;
 
-      setNewComment("");
-      const { data } = await supabase
-        .from('comments' as any)
-        .select(`
-          *,
-          profiles:user_id (full_name, avatar_url)
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-      setPostComments(data || []);
+      toast({
+        title: "Comment Added!",
+        description: "Your reply has been added to the discussion.",
+      });
+
+      // Reload comments and update posts comment count
+      await handleToggleComments(postId);
       fetchPosts();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding comment:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to post comment. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -315,7 +464,7 @@ const Community = () => {
     <div className="min-h-screen bg-muted/30 flex flex-col text-foreground selection:bg-violet-500/30 pt-16">
       <Navbar />
 
-      {/* Beta Development Modal */}
+      {/* Development Preview Modal (Optional) */}
       <AnimatePresence>
         {showDevModal && (
           <motion.div
@@ -342,10 +491,10 @@ const Community = () => {
                   <Sparkles className="h-7 w-7 text-amber-500 animate-pulse" />
                 </div>
 
-                <h2 className="text-2xl font-bold">Community Beta</h2>
+                <h2 className="text-2xl font-bold">Community Lounge</h2>
 
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  The Voke Community Lounge is currently in live preview. Connect with peers, share mock interview insights, and discover trending tech prep topics.
+                  Connect with peers, share mock interview experiences, discuss interview questions, and participate in community events.
                 </p>
 
                 <div className="pt-2 w-full">
@@ -415,7 +564,7 @@ const Community = () => {
                     {topContributors.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-3">No contributors yet. Be the first to post!</p>
                     ) : (
-                      topContributors.map((member, i) => (
+                      topContributors.map((member) => (
                         <div key={member.id} className="flex items-center gap-3">
                           <Avatar className="h-9 w-9 border border-border/50">
                             <AvatarImage src={member.avatar_url} />
@@ -454,7 +603,7 @@ const Community = () => {
                           </Avatar>
                           <div className="flex-1 space-y-3">
                             <Textarea
-                              placeholder="Share your interview questions, tech insights, or preparation milestones..."
+                              placeholder="Share your interview questions, tech insights, or preparation milestones... (Use #hashtags to create topics)"
                               value={newPost}
                               onChange={(e) => setNewPost(e.target.value)}
                               className="bg-muted/40 border-border/60 min-h-[90px] resize-none focus:border-violet-500/50 focus:ring-violet-500/20 text-sm rounded-xl"
@@ -495,7 +644,7 @@ const Community = () => {
                     <div className="space-y-4">
                       {loading ? (
                         <div className="text-center py-12 bg-card/40 border border-border/50 rounded-2xl">
-                          <div className="inline-block w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
+                          <div className="inline-block w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mb-2" />
                           <p className="text-sm text-muted-foreground">Loading community discussions...</p>
                         </div>
                       ) : filteredPosts.length === 0 ? (
@@ -563,7 +712,7 @@ const Community = () => {
                                   className={`text-xs gap-1.5 ${post.likes?.some((l: any) => l.user_id === user?.id) ? 'text-pink-500 bg-pink-500/10 font-bold' : 'text-muted-foreground hover:text-pink-500 hover:bg-pink-500/10'}`}
                                   onClick={() => handleLike(post.id)}
                                 >
-                                  <Heart className={`h-4 w-4 ${post.likes?.some((l: any) => l.user_id === user?.id) ? 'fill-current' : ''}`} />
+                                  <Heart className={`h-4 w-4 ${post.likes?.some((l: any) => l.user_id === user?.id) ? 'fill-current text-pink-500' : ''}`} />
                                   {post.likes?.length || 0} Likes
                                 </Button>
                                 
@@ -573,7 +722,7 @@ const Community = () => {
                                   className={`text-xs gap-1.5 ${expandedPost === post.id ? 'text-violet-600 dark:text-violet-400 bg-violet-500/10 font-bold' : 'text-muted-foreground hover:text-violet-600 hover:bg-violet-500/10'}`}
                                   onClick={() => handleToggleComments(post.id)}
                                 >
-                                  <MessageSquare className="h-4 w-4" /> {post.comments?.[0]?.count || 0} Comments
+                                  <MessageSquare className="h-4 w-4" /> {post.commentsCount ?? 0} Comments
                                 </Button>
 
                                 <Button
@@ -593,19 +742,19 @@ const Community = () => {
                                     {commentLoading ? (
                                       <div className="text-center text-xs text-muted-foreground py-2">Loading replies...</div>
                                     ) : postComments.length === 0 ? (
-                                      <div className="text-center text-xs text-muted-foreground py-2">No comments yet. Write a response below!</div>
+                                      <div className="text-center text-xs text-muted-foreground py-2">No comments yet. Be the first to write a response!</div>
                                     ) : (
                                       postComments.map((comment) => (
                                         <div key={comment.id} className="flex gap-2.5">
                                           <Avatar className="h-7 w-7 border border-border/50">
                                             <AvatarImage src={comment.profiles?.avatar_url} />
-                                            <AvatarFallback className="bg-primary/20 text-primary text-[10px] font-bold">
+                                            <AvatarFallback className="bg-violet-500/20 text-violet-500 text-[10px] font-bold">
                                               {comment.profiles?.full_name?.[0] || 'U'}
                                             </AvatarFallback>
                                           </Avatar>
                                           <div className="flex-1 bg-card border border-border/50 rounded-xl p-2.5">
                                             <div className="flex justify-between items-start mb-0.5">
-                                              <span className="font-semibold text-xs">{comment.profiles?.full_name || 'Engineer'}</span>
+                                              <span className="font-semibold text-xs text-foreground">{comment.profiles?.full_name || 'Engineer'}</span>
                                               <span className="text-[10px] text-muted-foreground">
                                                 {new Date(comment.created_at).toLocaleDateString()}
                                               </span>
@@ -651,34 +800,34 @@ const Community = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-lg">
                         <TrendingUp className="w-5 h-5 text-emerald-500" />
-                        AI-Analyzed Trending Interview Topics
+                        Trending Interview & Tech Topics
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {!aiInsights ? (
-                        <div className="text-center py-8 text-sm text-muted-foreground">Analyzing community conversations...</div>
-                      ) : (
-                        aiInsights.trending_topics?.map((topic: any, i: number) => (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            className="flex justify-between items-center p-3.5 rounded-xl bg-muted/40 border border-border/50 hover:border-emerald-500/30 transition-all"
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="text-lg font-bold text-muted-foreground/60">#{i + 1}</span>
-                              <div>
-                                <h4 className="font-semibold text-sm text-foreground">#{topic.tag}</h4>
-                                <p className="text-xs text-muted-foreground">{topic.posts} active posts</p>
-                              </div>
+                      {aiInsights.trending_topics.map((topic: any, i: number) => (
+                        <motion.div
+                          key={topic.tag || i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          onClick={() => {
+                            setSearchQuery(topic.tag);
+                            setView('feed');
+                          }}
+                          className="flex justify-between items-center p-3.5 rounded-xl bg-muted/40 border border-border/50 hover:border-emerald-500/40 transition-all cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg font-bold text-muted-foreground/60">#{i + 1}</span>
+                            <div>
+                              <h4 className="font-semibold text-sm text-foreground group-hover:text-emerald-500 transition-colors">#{topic.tag}</h4>
+                              <p className="text-xs text-muted-foreground">{topic.posts} active discussions</p>
                             </div>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-500">
-                              <TrendingUp className="h-4 w-4" />
-                            </Button>
-                          </motion.div>
-                        ))
-                      )}
+                          </div>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-500">
+                            <TrendingUp className="h-4 w-4" />
+                          </Button>
+                        </motion.div>
+                      ))}
                     </CardContent>
                   </Card>
                 )}
@@ -692,33 +841,29 @@ const Community = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-4">
-                      {!aiInsights ? (
-                        <div className="text-center py-8 text-sm text-muted-foreground">Generating event schedule...</div>
-                      ) : (
-                        aiInsights.suggested_events?.map((event: any, i: number) => (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            className="p-5 rounded-2xl bg-muted/30 border border-border/50"
-                          >
-                            <div className="flex justify-between items-start mb-3">
-                              <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">{event.type}</Badge>
-                              <Button
-                                size="sm"
-                                variant={registeredEvents[event.title] ? "default" : "outline"}
-                                className={`text-xs rounded-xl ${registeredEvents[event.title] ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'border-border'}`}
-                                onClick={() => handleRegisterEvent(event.title)}
-                              >
-                                {registeredEvents[event.title] ? "Registered ✓" : "Register Interest"}
-                              </Button>
-                            </div>
-                            <h4 className="text-base font-bold text-foreground mb-1">{event.title}</h4>
-                            <p className="text-xs text-muted-foreground">{event.description}</p>
-                          </motion.div>
-                        ))
-                      )}
+                      {aiInsights.suggested_events.map((event: any, i: number) => (
+                        <motion.div
+                          key={event.title || i}
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="p-5 rounded-2xl bg-muted/30 border border-border/50 hover:border-blue-500/30 transition-all"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">{event.type}</Badge>
+                            <Button
+                              size="sm"
+                              variant={registeredEvents[event.title] ? "default" : "outline"}
+                              className={`text-xs rounded-xl ${registeredEvents[event.title] ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'border-border'}`}
+                              onClick={() => handleRegisterEvent(event.title)}
+                            >
+                              {registeredEvents[event.title] ? "Registered ✓" : "Register Interest"}
+                            </Button>
+                          </div>
+                          <h4 className="text-base font-bold text-foreground mb-1">{event.title}</h4>
+                          <p className="text-xs text-muted-foreground">{event.description}</p>
+                        </motion.div>
+                      ))}
                     </CardContent>
                   </Card>
                 )}
@@ -745,26 +890,22 @@ const Community = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {aiInsights?.trending_topics ? (
-                      aiInsights.trending_topics.slice(0, 5).map((topic: any) => (
-                        <div
-                          key={topic.tag}
-                          className="flex justify-between items-center group cursor-pointer p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
-                          onClick={() => {
-                            setSearchQuery(topic.tag);
-                            setView('feed');
-                          }}
-                        >
-                          <div>
-                            <p className="font-medium text-xs text-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">#{topic.tag}</p>
-                            <p className="text-[10px] text-muted-foreground">{topic.posts} posts</p>
-                          </div>
-                          <TrendingUp className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {aiInsights.trending_topics.slice(0, 5).map((topic: any) => (
+                      <div
+                        key={topic.tag}
+                        className="flex justify-between items-center group cursor-pointer p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
+                        onClick={() => {
+                          setSearchQuery(topic.tag);
+                          setView('feed');
+                        }}
+                      >
+                        <div>
+                          <p className="font-medium text-xs text-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">#{topic.tag}</p>
+                          <p className="text-[10px] text-muted-foreground">{topic.posts} posts</p>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-xs text-muted-foreground">Loading topics...</div>
-                    )}
+                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    ))}
                   </CardContent>
                 </Card>
               </div>
