@@ -342,11 +342,6 @@ const GlobalAIChatbot = () => {
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Hide assistant on Landing Page ("/")
-  if (location.pathname === "/") {
-    return null;
-  }
-
   // Load chat history from localStorage
   useEffect(() => {
     try {
@@ -641,6 +636,11 @@ const GlobalAIChatbot = () => {
     { label: "📄 ATS Resume Scoring", text: "How can I improve my tech resume for ATS?" },
     { label: "🏗️ System Design Checklist", text: "Give me a System Design interview checklist." }
   ];
+
+  // Hide assistant on Landing Page ("/")
+  if (location.pathname === "/") {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
