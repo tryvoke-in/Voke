@@ -1,925 +1,227 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  MessageSquare, Heart, Share2, TrendingUp, Users,
-  MoreHorizontal, Image as ImageIcon, Send, Search, Sparkles, X,
-  Calendar, Award, MessageCircle, Flame, CheckCircle2
-} from "lucide-react";
-import { Navbar } from "@/components/Navbar";
-import { Sidebar } from "@/components/Sidebar";
 import { Footer } from "@/components/Footer";
+import { Navbar } from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Bookmark, Check, Circle, Clock3, Code2, Flame, Heart, Lightbulb,
+  MessageSquare, Network, Plus, Search, Send, Sparkles, Target,
+  Trophy, Users, Video, X
+} from "lucide-react";
 
-const DEFAULT_TRENDING_TOPICS = [
-  { tag: "SystemDesign", posts: 24 },
-  { tag: "GoogleL4", posts: 19 },
-  { tag: "LeetCodeMedium", posts: 16 },
-  { tag: "BehavioralPrep", posts: 12 },
-  { tag: "ResumeReview", posts: 9 },
+type FeedFilter = "for_you" | "interview_experience" | "question" | "win";
+type ComposerMode = "interview_experience" | "question" | "mock_request" | "win";
+
+const SKILLS = [
+  { key: "mock_interview", label: "Mock Interview", Icon: Video, color: "text-violet-400", bg: "bg-violet-500/15" },
+  { key: "dsa", label: "DSA", Icon: Code2, color: "text-emerald-400", bg: "bg-emerald-500/15" },
+  { key: "system_design", label: "System Design", Icon: Network, color: "text-sky-400", bg: "bg-sky-500/15" },
+  { key: "behavioral", label: "Behavioral", Icon: Users, color: "text-amber-400", bg: "bg-amber-500/15" },
 ];
 
-const DEFAULT_SUGGESTED_EVENTS = [
-  {
-    title: "Google & Meta Peer Mock Session",
-    description: "Live 1-on-1 coding interview practice with peers & AI real-time evaluation.",
-    type: "Mock Session"
-  },
-  {
-    title: "System Design Masterclass: Scalable Architecture",
-    description: "Interactive session on designing TinyURL, Rate Limiters, and Distributed Cache.",
-    type: "Workshop"
-  },
-  {
-    title: "Resume & ATS Optimization Clinic",
-    description: "Get instant peer feedback on your resume structure for top tech companies.",
-    type: "Peer Review"
-  }
+const DEFAULT_PLAN = [
+  { task_type: "mock_interview", title: "Complete a mock interview", duration_minutes: 45, sort_order: 1, destination: "/voice-assistant" },
+  { task_type: "dsa", title: "Solve one DSA challenge", duration_minutes: 30, sort_order: 2, destination: "/daily-challenge" },
+  { task_type: "system_design", title: "Review a system design concept", duration_minutes: 30, sort_order: 3, destination: "/learning-paths" },
 ];
+
+const modeCopy: Record<ComposerMode, { label: string; placeholder: string; action: string }> = {
+  interview_experience: { label: "Share an experience", placeholder: "What company, role, rounds, and lessons would help another candidate?", action: "Share experience" },
+  question: { label: "Ask a question", placeholder: "Ask the community for focused feedback on your preparation.", action: "Ask community" },
+  mock_request: { label: "Find a mock partner", placeholder: "Describe the role, level, and format you want to practice.", action: "Find partner" },
+  win: { label: "Share a win", placeholder: "Celebrate a milestone and tell the community what helped you get there.", action: "Share win" },
+};
 
 const Community = () => {
   const { toast } = useToast();
-  const [view, setView] = useState<'feed' | 'trending' | 'events'>('feed');
-  const [aiInsights, setAiInsights] = useState<{ trending_topics: any[], suggested_events: any[] }>({
-    trending_topics: DEFAULT_TRENDING_TOPICS,
-    suggested_events: DEFAULT_SUGGESTED_EVENTS,
-  });
   const [user, setUser] = useState<any>(null);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [topContributors, setTopContributors] = useState<any[]>([]);
-  const [newPost, setNewPost] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [showImageInput, setShowImageInput] = useState(false);
-  const [registeredEvents, setRegisteredEvents] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
-  const [expandedPost, setExpandedPost] = useState<string | null>(null);
-  const [postComments, setPostComments] = useState<any[]>([]);
-  const [newComment, setNewComment] = useState("");
-  const [commentLoading, setCommentLoading] = useState(false);
-  const [showDevModal, setShowDevModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [posts, setPosts] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [plan, setPlan] = useState<any[]>([]);
+  const [filter, setFilter] = useState<FeedFilter>("for_you");
+  const [composerMode, setComposerMode] = useState<ComposerMode>("interview_experience");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [search, setSearch] = useState("");
+  const [creatingRoom, setCreatingRoom] = useState(false);
+  const [roomTitle, setRoomTitle] = useState("");
+  const [roomSkill, setRoomSkill] = useState("mock_interview");
 
   useEffect(() => {
-    checkAuth();
-    fetchPosts();
-    fetchTopContributors();
-
-    // Listen for auth session changes
+    void load();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
+      setUser(session?.user ?? null);
+      void load(session?.user ?? null);
     });
-
-    // Realtime subscription for posts, likes, and comments
-    const channel = supabase
-      .channel('public:community')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
-        fetchPosts();
-        fetchTopContributors();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, () => {
-        fetchPosts();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => {
-        fetchPosts();
-      })
+    const channel = supabase.channel("voke-pulse-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => void load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "community_mock_rooms" }, () => void load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "community_mock_room_members" }, () => void load())
       .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-      supabase.removeChannel(channel);
-    };
+    return () => { subscription.unsubscribe(); supabase.removeChannel(channel); };
   }, []);
 
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setUser(session?.user || null);
+  const load = async (knownUser?: any) => {
+    setLoading(true);
+    const activeUser = knownUser ?? (await supabase.auth.getSession()).data.session?.user ?? null;
+    setUser(activeUser);
+    const [{ data: rawPosts }, { data: rawRooms }, { data: profiles }, { data: myLikes }, { data: saved }, { data: dailyPlan }] = await Promise.all([
+      supabase.from("community_feed" as any).select("*").order("pinned_at", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false }).limit(30),
+      supabase.from("community_mock_room_feed" as any).select("*").order("scheduled_at", { ascending: true }).limit(6),
+      supabase.from("community_profiles" as any).select("id, display_name, avatar_url, target_role"),
+      activeUser ? supabase.from("likes" as any).select("post_id").eq("user_id", activeUser.id) : Promise.resolve({ data: [] }),
+      activeUser ? supabase.from("community_saved_posts" as any).select("post_id").eq("user_id", activeUser.id) : Promise.resolve({ data: [] }),
+      activeUser ? supabase.from("community_daily_plan_items" as any).select("*").eq("user_id", activeUser.id).eq("plan_date", new Date().toISOString().slice(0, 10)).order("sort_order") : Promise.resolve({ data: [] }),
+    ]);
+    const existingPlan = dailyPlan || [];
+    if (activeUser && existingPlan.length === 0) {
+      const { data: seeded } = await supabase.from("community_daily_plan_items" as any).insert(DEFAULT_PLAN.map(item => ({ ...item, user_id: activeUser.id }))).select();
+      setPlan(seeded || []);
+    } else setPlan(existingPlan);
+    const profileMap = new Map((profiles || []).map((profile: any) => [profile.id, profile]));
+    const liked = new Set((myLikes || []).map((row: any) => row.post_id));
+    const savedIds = new Set((saved || []).map((row: any) => row.post_id));
+    setPosts((rawPosts || []).map((post: any) => ({
+      ...post,
+      author: profileMap.get(post.user_id) || { display_name: "Voke Member", target_role: "Community Member" },
+      liked: liked.has(post.id), saved: savedIds.has(post.id), likeCount: post.like_count || 0, commentCount: post.comment_count || 0,
+    })));
+    setRooms(rawRooms || []);
+    setLoading(false);
   };
 
-  const fetchAIInsights = async (postsList: any[]) => {
-    // 1. Dynamically compute trending tags from real community posts
-    const tagCounts: Record<string, number> = {};
-    (postsList || []).forEach((p: any) => {
-      if (Array.isArray(p.tags)) {
-        p.tags.forEach((tag: string) => {
-          const cleanTag = tag.trim().replace(/^#/, '');
-          if (cleanTag) {
-            tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
-          }
-        });
-      }
+  const requireUser = async () => {
+    const activeUser = user ?? (await supabase.auth.getSession()).data.session?.user;
+    if (!activeUser) toast({ title: "Sign in required", description: "Join Voke to participate in Pulse.", variant: "destructive" });
+    return activeUser;
+  };
+
+  const publish = async () => {
+    const activeUser = await requireUser();
+    if (!activeUser || !content.trim()) return;
+    const tags = content.match(/#[\w]+/g)?.map(tag => tag.slice(1)) || [composerMode === "question" ? "InterviewHelp" : "InterviewPrep"];
+    const { error } = await supabase.from("posts" as any).insert({
+      user_id: activeUser.id, title: title.trim() || null, content: content.trim(), tags,
+      post_type: composerMode, metadata: { source: "voke_pulse", composer: composerMode },
     });
-
-    const computedTopics = Object.entries(tagCounts)
-      .map(([tag, count]) => ({ tag, posts: count }))
-      .sort((a, b) => b.posts - a.posts);
-
-    const mergedTopics = computedTopics.length > 0
-      ? [...computedTopics, ...DEFAULT_TRENDING_TOPICS.filter(dt => !computedTopics.some(ct => ct.tag.toLowerCase() === dt.tag.toLowerCase()))].slice(0, 5)
-      : DEFAULT_TRENDING_TOPICS;
-
-    setAiInsights({
-      trending_topics: mergedTopics,
-      suggested_events: DEFAULT_SUGGESTED_EVENTS
-    });
-
-    // 2. Try fetching from AI Edge function if deployed
-    try {
-      const { data, error } = await supabase.functions.invoke('analyze-community-trends');
-      if (!error && data && data.trending_topics && data.suggested_events) {
-        setAiInsights(data);
-      }
-    } catch (error) {
-      // Graceful fallback already in state
-    }
+    if (error) return toast({ title: "Could not publish", description: error.message, variant: "destructive" });
+    setTitle(""); setContent(""); toast({ title: "Shared with your Prep Circle", description: "Your community post is live." }); void load(activeUser);
   };
 
-  const fetchTopContributors = async () => {
-    try {
-      const { data: postsData, error: postsError } = await supabase
-        .from('community_feed' as any)
-        .select('user_id');
-
-      if (postsError) throw postsError;
-
-      const countMap: Record<string, number> = {};
-      (postsData || []).forEach((p: any) => {
-        if (p.user_id) countMap[p.user_id] = (countMap[p.user_id] || 0) + 1;
-      });
-
-      const topUserIds = Object.entries(countMap)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 5);
-
-      if (topUserIds.length === 0) {
-        setTopContributors([]);
-        return;
-      }
-
-      const { data: profiles } = await supabase
-        .from('community_profiles' as any)
-        .select('id, display_name, avatar_url, target_role')
-        .in('id', topUserIds.map(([id]) => id));
-
-      const contributors = topUserIds.map(([userId, count], index) => {
-        const profile = (profiles || []).find((p: any) => p.id === userId);
-        return {
-          id: userId,
-          name: profile?.display_name || 'Voke Member',
-          avatar_url: profile?.avatar_url || null,
-          title: profile?.target_role || 'Community Member',
-          postCount: count,
-          rank: index === 0 ? 'Top 1%' : index === 1 ? 'Top 3%' : index === 2 ? 'Top 5%' : index === 3 ? 'Top 10%' : 'Top 15%',
-        };
-      });
-
-      setTopContributors(contributors);
-    } catch (error) {
-      console.error('Error fetching top contributors:', error);
-    }
+  const toggleLike = async (post: any) => {
+    const activeUser = await requireUser(); if (!activeUser) return;
+    setPosts(current => current.map(item => item.id === post.id ? { ...item, liked: !item.liked, likeCount: item.likeCount + (item.liked ? -1 : 1) } : item));
+    const result = post.liked
+      ? await supabase.from("likes" as any).delete().eq("post_id", post.id).eq("user_id", activeUser.id)
+      : await supabase.from("likes" as any).insert({ post_id: post.id, user_id: activeUser.id });
+    if (result.error) { toast({ title: "Could not update reaction", variant: "destructive" }); void load(activeUser); }
   };
 
-  const fetchPosts = async () => {
-    try {
-      // The feed view provides server-side like/comment counts, so we do not
-      // download every community interaction just to count it in the browser.
-      const { data: postsData, error: postsError } = await supabase
-        .from('community_feed' as any)
-        .select('*')
-        .order('pinned_at', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false });
-
-      if (postsError) throw postsError;
-
-      const rawPosts = postsData || [];
-      if (rawPosts.length === 0) {
-        setPosts([]);
-        fetchAIInsights([]);
-        setLoading(false);
-        return;
-      }
-
-      // Collect user IDs for profiles
-      const userIds = Array.from(new Set(rawPosts.map((p: any) => p.user_id).filter(Boolean)));
-      
-      const { data: profilesData } = userIds.length > 0
-        ? await supabase.from('community_profiles' as any).select('id, display_name, avatar_url, target_role').in('id', userIds)
-        : { data: [] };
-
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data: myLikes } = session?.user && rawPosts.length > 0
-        ? await supabase
-            .from('likes' as any)
-            .select('post_id')
-            .eq('user_id', session.user.id)
-            .in('post_id', rawPosts.map((post: any) => post.id))
-        : { data: [] };
-
-      const profilesMap = new Map((profilesData || []).map((p: any) => [p.id, p]));
-      const likedPostIds = new Set((myLikes || []).map((like: any) => like.post_id));
-
-      const formattedPosts = rawPosts.map((p: any) => {
-        return {
-          ...p,
-          profiles: profilesMap.get(p.user_id) || { display_name: 'Voke Member', avatar_url: null, target_role: 'Community Member' },
-          isLiked: likedPostIds.has(p.id),
-          likeCount: p.like_count || 0,
-          commentsCount: p.comment_count || 0,
-        };
-      });
-
-      setPosts(formattedPosts);
-      fetchAIInsights(formattedPosts);
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-    } finally {
-      setLoading(false);
-    }
+  const toggleSave = async (post: any) => {
+    const activeUser = await requireUser(); if (!activeUser) return;
+    setPosts(current => current.map(item => item.id === post.id ? { ...item, saved: !item.saved } : item));
+    const result = post.saved
+      ? await supabase.from("community_saved_posts" as any).delete().eq("post_id", post.id).eq("user_id", activeUser.id)
+      : await supabase.from("community_saved_posts" as any).insert({ post_id: post.id, user_id: activeUser.id });
+    if (result.error) { toast({ title: "Could not update saves", variant: "destructive" }); void load(activeUser); }
   };
 
-  const handlePost = async () => {
-    if (!newPost.trim()) return;
-    
-    let currentUser = user;
-    if (!currentUser) {
-      const { data: { session } } = await supabase.auth.getSession();
-      currentUser = session?.user;
-    }
-
-    if (!currentUser) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to post in the community.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const extractedTags = newPost.match(/#[\w]+/g)?.map(tag => tag.substring(1)) || ["InterviewPrep"];
-
-    try {
-      const { error } = await supabase
-        .from('posts' as any)
-        .insert({
-          user_id: currentUser.id,
-          content: newPost.trim(),
-          image_url: imageUrl.trim() || null,
-          tags: extractedTags
-        });
-
-      if (error) throw error;
-      setNewPost("");
-      setImageUrl("");
-      setShowImageInput(false);
-      toast({
-        title: "Post Published!",
-        description: "Your discussion has been shared with the community.",
-      });
-      fetchPosts();
-    } catch (error: any) {
-      console.error('Error creating post:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to publish post. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const togglePlanItem = async (item: any) => {
+    const { error } = await supabase.from("community_daily_plan_items" as any).update({ completed: !item.completed }).eq("id", item.id);
+    if (!error) setPlan(current => current.map(entry => entry.id === item.id ? { ...entry, completed: !entry.completed } : entry));
   };
 
-  const handleLike = async (postId: string) => {
-    let currentUser = user;
-    if (!currentUser) {
-      const { data: { session } } = await supabase.auth.getSession();
-      currentUser = session?.user;
-    }
-
-    if (!currentUser) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to like discussions.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const targetPost = posts.find(p => p.id === postId);
-    const isLiked = Boolean(targetPost?.isLiked);
-
-    // Optimistic UI update
-    setPosts(prevPosts => prevPosts.map(p => {
-      if (p.id === postId) {
-        return {
-          ...p,
-          isLiked: !isLiked,
-          likeCount: Math.max(0, (p.likeCount || 0) + (isLiked ? -1 : 1)),
-        };
-      }
-      return p;
-    }));
-
-    try {
-      if (isLiked) {
-        const { error } = await supabase
-          .from('likes' as any)
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', currentUser.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('likes' as any)
-          .insert({ post_id: postId, user_id: currentUser.id });
-        if (error) throw error;
-      }
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      fetchPosts(); // Revert on failure
-    }
+  const createRoom = async () => {
+    const activeUser = await requireUser(); if (!activeUser || !roomTitle.trim()) return;
+    const { error } = await supabase.from("community_mock_rooms" as any).insert({ host_id: activeUser.id, title: roomTitle.trim(), skill: roomSkill, description: "Practice together in Voke Pulse." });
+    if (error) return toast({ title: "Could not create room", description: error.message, variant: "destructive" });
+    setRoomTitle(""); setCreatingRoom(false); toast({ title: "Mock room is open", description: "Other Voke members can join now." }); void load(activeUser);
   };
 
-  const handleShare = (postId: string) => {
-    const shareUrl = `${window.location.origin}/community#post-${postId}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast({
-      title: "Link Copied!",
-      description: "Discussion link copied to clipboard.",
-    });
+  const joinRoom = async (room: any) => {
+    const activeUser = await requireUser(); if (!activeUser) return;
+    const { error } = await supabase.from("community_mock_room_members" as any).insert({ room_id: room.id, user_id: activeUser.id });
+    if (error?.code === "23505") return toast({ title: "You already joined this room" });
+    if (error) return toast({ title: "Could not join room", description: error.message, variant: "destructive" });
+    toast({ title: "You joined the mock room", description: "Open Peer Match when you are ready to practice." }); void load(activeUser);
   };
 
-  const handleRegisterEvent = (eventTitle: string) => {
-    setRegisteredEvents(prev => {
-      const isReg = !prev[eventTitle];
-      toast({
-        title: isReg ? "Registered!" : "Unregistered",
-        description: isReg ? `You are registered for "${eventTitle}".` : `Registration cancelled for "${eventTitle}".`,
-      });
-      return { ...prev, [eventTitle]: isReg };
-    });
-  };
+  const visiblePosts = useMemo(() => posts.filter(post => {
+    const typeMatch = filter === "for_you" || post.post_type === filter;
+    const needle = search.toLowerCase();
+    return typeMatch && (!needle || `${post.title || ""} ${post.content} ${post.author?.display_name || ""} ${(post.tags || []).join(" ")}`.toLowerCase().includes(needle));
+  }), [posts, filter, search]);
+  const complete = plan.filter(item => item.completed).length;
+  const totalMinutes = plan.reduce((sum, item) => sum + item.duration_minutes, 0);
+  const skillProgress = (index: number) => Math.min(88, 36 + complete * 12 + index * 7);
 
-  const handleToggleComments = async (postId: string) => {
-    if (expandedPost === postId) {
-      setExpandedPost(null);
-      setPostComments([]);
-      return;
-    }
+  return <div className="min-h-screen bg-[#080d18] text-slate-100 selection:bg-violet-500/30 pt-16">
+    <Navbar />
+    <main className="mx-auto w-full max-w-[1560px] px-4 py-6 lg:px-8">
+      <div className="grid gap-5 xl:grid-cols-[290px_minmax(0,1fr)_330px]">
+        <aside className="space-y-5">
+          <Card className="border-white/10 bg-[#101827] shadow-xl shadow-black/10"><CardContent className="p-4">
+            <div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">Your Prep Circle</h2><span className="text-xs text-slate-500">Today</span></div>
+            <div className="space-y-3">{SKILLS.map(({ label, Icon, color, bg }, index) => <div key={label} className="flex items-center gap-3 rounded-xl p-2.5 hover:bg-white/[0.03]">
+              <div className={`grid h-10 w-10 place-items-center rounded-xl ${bg}`}><Icon className={`h-5 w-5 ${color}`} /></div>
+              <div className="min-w-0 flex-1"><p className="text-sm font-medium">{label}</p><p className="text-xs text-slate-500">{skillProgress(index)}% building</p></div>
+              <div className="grid h-10 w-10 place-items-center rounded-full border-2 border-slate-700 text-[10px] font-semibold" style={{ borderTopColor: index % 2 ? "#34d399" : "#8b5cf6" }}>{skillProgress(index)}%</div>
+            </div>)}</div>
+          </CardContent></Card>
+          <Card className="border-white/10 bg-[#101827]"><CardContent className="p-5">
+            <div className="flex items-center gap-2"><Flame className="h-5 w-5 text-amber-400"/><h2 className="font-semibold">Momentum</h2></div>
+            <p className="mt-5 text-3xl font-semibold">{complete}<span className="text-slate-500"> / {plan.length || 3}</span></p><p className="text-xs text-slate-500">sessions completed today</p>
+            <div className="mt-5 flex items-center justify-between">{[0,1,2,3,4].map(day => <div key={day} className="text-center"><div className={`mx-auto mb-1.5 grid h-6 w-6 place-items-center rounded-full ${day < complete ? "bg-emerald-500 text-emerald-950" : "border border-slate-600"}`}>{day < complete && <Check className="h-3.5 w-3.5"/>}</div><span className="text-[10px] text-slate-500">{["M","T","W","T","F"][day]}</span></div>)}</div>
+            <Button className="mt-5 w-full border border-violet-500/60 bg-transparent text-violet-300 hover:bg-violet-500/10" onClick={() => setCreatingRoom(true)}><Users className="mr-2 h-4 w-4"/>Find a Peer Match</Button>
+          </CardContent></Card>
+        </aside>
 
-    setExpandedPost(postId);
-    setCommentLoading(true);
-    try {
-      const { data: rawComments, error } = await supabase
-        .from('comments' as any)
-        .select('*')
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
+        <section className="min-w-0 space-y-5">
+          <div className="flex overflow-x-auto rounded-xl border border-white/10 bg-[#101827] p-1.5">{([
+            ["for_you", "For you"], ["interview_experience", "Interview Stories"], ["question", "Ask & Answer"], ["win", "Wins"]
+          ] as [FeedFilter, string][]).map(([key, label]) => <button key={key} onClick={() => setFilter(key)} className={`min-w-[120px] rounded-lg px-4 py-2 text-sm transition ${filter === key ? "bg-violet-600 font-medium text-white shadow-lg shadow-violet-900/40" : "text-slate-400 hover:text-white"}`}>{label}</button>)}</div>
+          <Card className="border-white/10 bg-[#101827]"><CardContent className="p-5">
+            <p className="mb-4 text-sm font-medium text-slate-300">What are you working on?</p>
+            <div className="grid gap-2 sm:grid-cols-3">{(["interview_experience", "question", "mock_request"] as ComposerMode[]).map(mode => <button key={mode} onClick={() => setComposerMode(mode)} className={`rounded-xl border p-3 text-left transition ${composerMode === mode ? "border-violet-500/70 bg-violet-500/10" : "border-white/10 hover:border-white/20 hover:bg-white/[0.03]"}`}>
+              <span className="text-sm font-medium">{modeCopy[mode].label}</span><span className="mt-1 block text-xs text-slate-500">{mode === "interview_experience" ? "Help candidates prepare" : mode === "question" ? "Get useful feedback" : "Practice together"}</span>
+            </button>)}</div>
+            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Add a clear title (optional)" className="mt-4 border-white/10 bg-[#0b1220]" />
+            <Textarea value={content} onChange={e => setContent(e.target.value)} placeholder={modeCopy[composerMode].placeholder} className="mt-2 min-h-[100px] resize-none border-white/10 bg-[#0b1220]" />
+            <div className="mt-3 flex justify-end"><Button onClick={publish} disabled={!content.trim()} className="bg-violet-600 hover:bg-violet-500"><Send className="mr-2 h-4 w-4"/>{modeCopy[composerMode].action}</Button></div>
+          </CardContent></Card>
+          <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"/><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search interview stories, questions and skills" className="border-white/10 bg-[#101827] pl-9"/></div>
+          <div className="space-y-4">{loading ? <PulseLoading/> : visiblePosts.length ? visiblePosts.map((post, index) => <motion.article key={post.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}><PostCard post={post} onLike={() => toggleLike(post)} onSave={() => toggleSave(post)} /></motion.article>) : <EmptyFeed />}</div>
+        </section>
 
-      if (error) throw error;
-
-      const commentUserIds = Array.from(new Set((rawComments || []).map((c: any) => c.user_id).filter(Boolean)));
-      
-      const { data: commentProfiles } = commentUserIds.length > 0
-        ? await supabase.from('community_profiles' as any).select('id, display_name, avatar_url').in('id', commentUserIds)
-        : { data: [] };
-
-      const profileMap = new Map((commentProfiles || []).map((p: any) => [p.id, p]));
-
-      const commentsWithProfiles = (rawComments || []).map((c: any) => ({
-        ...c,
-        profiles: profileMap.get(c.user_id) || { display_name: 'Voke Member', avatar_url: null }
-      }));
-
-      setPostComments(commentsWithProfiles);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-    } finally {
-      setCommentLoading(false);
-    }
-  };
-
-  const handleSubmitComment = async (postId: string) => {
-    if (!newComment.trim()) return;
-
-    let currentUser = user;
-    if (!currentUser) {
-      const { data: { session } } = await supabase.auth.getSession();
-      currentUser = session?.user;
-    }
-
-    if (!currentUser) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to reply.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const commentContent = newComment.trim();
-    setNewComment("");
-
-    try {
-      const { error } = await supabase
-        .from('comments' as any)
-        .insert({
-          post_id: postId,
-          user_id: currentUser.id,
-          content: commentContent
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Comment Added!",
-        description: "Your reply has been added to the discussion.",
-      });
-
-      // Keep the open thread open after a reply, then refresh its contents.
-      setExpandedPost(null);
-      await handleToggleComments(postId);
-      fetchPosts();
-    } catch (error: any) {
-      console.error('Error adding comment:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to post comment. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const filteredPosts = posts.filter(post => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      post.content?.toLowerCase().includes(query) ||
-      post.profiles?.display_name?.toLowerCase().includes(query) ||
-      post.tags?.some((t: string) => t.toLowerCase().includes(query))
-    );
-  });
-
-  return (
-    <div className="min-h-screen bg-muted/30 flex flex-col text-foreground selection:bg-violet-500/30 pt-16">
-      <Navbar />
-
-      {/* Development Preview Modal (Optional) */}
-      <AnimatePresence>
-        {showDevModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card border border-border p-6 rounded-3xl max-w-md w-full shadow-2xl relative overflow-hidden text-card-foreground"
-            >
-              <button
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors"
-                onClick={() => setShowDevModal(false)}
-              >
-                <X className="h-4 w-4" />
-              </button>
-
-              <div className="flex flex-col items-center text-center space-y-4 pt-2">
-                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-                  <Sparkles className="h-7 w-7 text-amber-500 animate-pulse" />
-                </div>
-
-                <h2 className="text-2xl font-bold">Community Lounge</h2>
-
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Connect with peers, share mock interview experiences, discuss interview questions, and participate in community events.
-                </p>
-
-                <div className="pt-2 w-full">
-                  <Button
-                    className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold h-11 rounded-xl shadow-lg shadow-violet-600/20"
-                    onClick={() => setShowDevModal(false)}
-                  >
-                    Enter Community Lounge
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="flex-1 flex w-full min-w-0 relative">
-        <Sidebar />
-
-        <div className="flex-1 flex flex-col min-w-0">
-          <main className="container mx-auto px-4 py-8">
-            
-
-            {/* Layout Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
-              {/* Left Column: Navigation & Leaderboard */}
-              <div className="lg:col-span-3 space-y-6">
-                {/* Navigation Card */}
-                <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm">
-                  <CardContent className="p-3 space-y-1">
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start text-sm font-medium rounded-xl h-11 ${view === 'feed' ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400 font-bold' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-                      onClick={() => setView('feed')}
-                    >
-                      <MessageSquare className="mr-3 h-4 w-4 text-violet-500" />
-                      Community Feed
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start text-sm font-medium rounded-xl h-11 ${view === 'trending' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-                      onClick={() => setView('trending')}
-                    >
-                      <TrendingUp className="mr-3 h-4 w-4 text-emerald-500" />
-                      Trending Topics
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start text-sm font-medium rounded-xl h-11 ${view === 'events' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-                      onClick={() => setView('events')}
-                    >
-                      <Users className="mr-3 h-4 w-4 text-blue-500" />
-                      Live Events & Mocks
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Top Contributors Card */}
-                <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                      <Award className="w-4 h-4 text-amber-500" /> Top Contributors
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {topContributors.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-3">No contributors yet. Be the first to post!</p>
-                    ) : (
-                      topContributors.map((member) => (
-                        <div key={member.id} className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9 border border-border/50">
-                            <AvatarImage src={member.avatar_url} />
-                            <AvatarFallback className="bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-xs font-bold">
-                              {member.name?.[0]?.toUpperCase() || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{member.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{member.title} • {member.postCount} posts</p>
-                          </div>
-                          <Badge variant="outline" className="text-[10px] bg-violet-500/10 text-violet-500 border-violet-500/20">
-                            {member.rank}
-                          </Badge>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Main Content Area */}
-              <div className="lg:col-span-6 space-y-6">
-                
-                {view === 'feed' && (
-                  <>
-                    {/* Create Post Card */}
-                    <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm overflow-hidden">
-                      <CardContent className="p-4 sm:p-5">
-                        <div className="flex gap-4">
-                          <Avatar className="h-10 w-10 border border-border">
-                            <AvatarImage src={user?.user_metadata?.avatar_url} />
-                            <AvatarFallback className="bg-gradient-to-br from-violet-600 to-purple-600 text-white font-bold">
-                              {user?.email?.[0]?.toUpperCase() || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 space-y-3">
-                            <Textarea
-                              placeholder="Share your interview questions, tech insights, or preparation milestones... (Use #hashtags to create topics)"
-                              value={newPost}
-                              onChange={(e) => setNewPost(e.target.value)}
-                              className="bg-muted/40 border-border/60 min-h-[90px] resize-none focus:border-violet-500/50 focus:ring-violet-500/20 text-sm rounded-xl"
-                            />
-                            {showImageInput && (
-                              <Input
-                                placeholder="Paste image URL (optional)..."
-                                value={imageUrl}
-                                onChange={(e) => setImageUrl(e.target.value)}
-                                className="bg-muted/40 border-border/60 h-9 text-xs rounded-xl"
-                              />
-                            )}
-                            <div className="flex justify-between items-center pt-1">
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setShowImageInput(!showImageInput)}
-                                  className={`text-xs gap-1.5 rounded-lg ${showImageInput ? 'text-violet-600 bg-violet-500/10 font-bold' : 'text-muted-foreground hover:text-violet-500 hover:bg-violet-500/10'}`}
-                                >
-                                  <ImageIcon className="h-4 w-4" /> Media
-                                </Button>
-                              </div>
-                              <Button
-                                onClick={handlePost}
-                                disabled={!newPost.trim()}
-                                className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold px-4 h-9 rounded-xl shadow-md shadow-violet-600/20"
-                              >
-                                <Send className="mr-1.5 h-3.5 w-3.5" /> Post Discussion
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Posts Stream */}
-                    <div className="space-y-4">
-                      {loading ? (
-                        <div className="text-center py-12 bg-card/40 border border-border/50 rounded-2xl">
-                          <div className="inline-block w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mb-2" />
-                          <p className="text-sm text-muted-foreground">Loading community discussions...</p>
-                        </div>
-                      ) : filteredPosts.length === 0 ? (
-                        <div className="text-center py-12 bg-card/40 border border-border/50 rounded-2xl">
-                          <MessageCircle className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
-                          <h4 className="font-semibold text-base">No discussions found</h4>
-                          <p className="text-xs text-muted-foreground mt-1">Be the first software engineer to start a conversation!</p>
-                        </div>
-                      ) : (
-                        filteredPosts.map((post) => (
-                          <motion.div
-                            key={post.id}
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden">
-                              <CardHeader className="flex flex-row items-start gap-3 p-4 sm:p-5 pb-2">
-                                <Avatar className="h-10 w-10 border border-border/50">
-                                  <AvatarImage src={post.profiles?.avatar_url} />
-                                  <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-600 text-white font-semibold">
-                                    {post.profiles?.display_name?.[0] || 'U'}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex justify-between items-start">
-                                    <div>
-                                      <h3 className="font-semibold text-foreground text-sm">{post.profiles?.display_name || 'Voke Member'}</h3>
-                                      <p className="text-xs text-muted-foreground mt-0.5">
-                                        {post.profiles?.target_role || 'Community Member'} • {new Date(post.created_at).toLocaleDateString()}
-                                      </p>
-                                    </div>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </CardHeader>
-                              
-                              <CardContent className="p-4 sm:p-5 pt-2 space-y-3">
-                                <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">{post.content}</p>
-                                {post.image_url && (
-                                  <div className="rounded-xl overflow-hidden border border-border">
-                                    <img src={post.image_url} alt="Post media" className="w-full h-auto max-h-80 object-cover" />
-                                  </div>
-                                )}
-                                <div className="flex flex-wrap gap-1.5">
-                                  {post.tags?.map((tag: string) => (
-                                    <Badge
-                                      key={tag}
-                                      variant="secondary"
-                                      className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border-0 text-[11px] cursor-pointer hover:bg-violet-500/20 transition-colors"
-                                      onClick={() => setSearchQuery(tag)}
-                                    >
-                                      #{tag}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </CardContent>
-
-                              <CardFooter className="p-3 sm:px-5 border-t border-border/40 flex justify-between bg-muted/20">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className={`text-xs gap-1.5 ${post.isLiked ? 'text-pink-500 bg-pink-500/10 font-bold' : 'text-muted-foreground hover:text-pink-500 hover:bg-pink-500/10'}`}
-                                  onClick={() => handleLike(post.id)}
-                                >
-                                  <Heart className={`h-4 w-4 ${post.isLiked ? 'fill-current text-pink-500' : ''}`} />
-                                  {post.likeCount || 0} Likes
-                                </Button>
-                                
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className={`text-xs gap-1.5 ${expandedPost === post.id ? 'text-violet-600 dark:text-violet-400 bg-violet-500/10 font-bold' : 'text-muted-foreground hover:text-violet-600 hover:bg-violet-500/10'}`}
-                                  onClick={() => handleToggleComments(post.id)}
-                                >
-                                  <MessageSquare className="h-4 w-4" /> {post.commentsCount ?? 0} Comments
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
-                                  onClick={() => handleShare(post.id)}
-                                >
-                                  <Share2 className="h-4 w-4" /> Share
-                                </Button>
-                              </CardFooter>
-
-                              {/* Comment Thread Section */}
-                              {expandedPost === post.id && (
-                                <div className="border-t border-border/40 bg-muted/30 p-4 space-y-3">
-                                  <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                                    {commentLoading ? (
-                                      <div className="text-center text-xs text-muted-foreground py-2">Loading replies...</div>
-                                    ) : postComments.length === 0 ? (
-                                      <div className="text-center text-xs text-muted-foreground py-2">No comments yet. Be the first to write a response!</div>
-                                    ) : (
-                                      postComments.map((comment) => (
-                                        <div key={comment.id} className="flex gap-2.5">
-                                          <Avatar className="h-7 w-7 border border-border/50">
-                                            <AvatarImage src={comment.profiles?.avatar_url} />
-                                            <AvatarFallback className="bg-violet-500/20 text-violet-500 text-[10px] font-bold">
-                                              {comment.profiles?.display_name?.[0] || 'U'}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <div className="flex-1 bg-card border border-border/50 rounded-xl p-2.5">
-                                            <div className="flex justify-between items-start mb-0.5">
-                                              <span className="font-semibold text-xs text-foreground">{comment.profiles?.display_name || 'Voke Member'}</span>
-                                              <span className="text-[10px] text-muted-foreground">
-                                                {new Date(comment.created_at).toLocaleDateString()}
-                                              </span>
-                                            </div>
-                                            <p className="text-xs text-foreground/90">{comment.content}</p>
-                                          </div>
-                                        </div>
-                                      ))
-                                    )}
-                                  </div>
-
-                                  <div className="flex gap-2 pt-2">
-                                    <Input
-                                      placeholder="Write a comment..."
-                                      value={newComment}
-                                      onChange={(e) => setNewComment(e.target.value)}
-                                      className="bg-card border-border h-9 text-xs focus:border-violet-500/50 rounded-xl"
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleSubmitComment(post.id);
-                                      }}
-                                    />
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleSubmitComment(post.id)}
-                                      disabled={!newComment.trim()}
-                                      className="bg-violet-600 hover:bg-violet-700 text-white h-9 px-3 rounded-xl"
-                                    >
-                                      <Send className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              )}
-                            </Card>
-                          </motion.div>
-                        ))
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {view === 'trending' && (
-                  <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <TrendingUp className="w-5 h-5 text-emerald-500" />
-                        Trending Interview & Tech Topics
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {aiInsights.trending_topics.map((topic: any, i: number) => (
-                        <motion.div
-                          key={topic.tag || i}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          onClick={() => {
-                            setSearchQuery(topic.tag);
-                            setView('feed');
-                          }}
-                          className="flex justify-between items-center p-3.5 rounded-xl bg-muted/40 border border-border/50 hover:border-emerald-500/40 transition-all cursor-pointer group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg font-bold text-muted-foreground/60">#{i + 1}</span>
-                            <div>
-                              <h4 className="font-semibold text-sm text-foreground group-hover:text-emerald-500 transition-colors">#{topic.tag}</h4>
-                              <p className="text-xs text-muted-foreground">{topic.posts} active discussions</p>
-                            </div>
-                          </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-500">
-                            <TrendingUp className="h-4 w-4" />
-                          </Button>
-                        </motion.div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {view === 'events' && (
-                  <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <Users className="w-5 h-5 text-blue-500" />
-                        Community Peer Events & Mock Sessions
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid gap-4">
-                      {aiInsights.suggested_events.map((event: any, i: number) => (
-                        <motion.div
-                          key={event.title || i}
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          className="p-5 rounded-2xl bg-muted/30 border border-border/50 hover:border-blue-500/30 transition-all"
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">{event.type}</Badge>
-                            <Button
-                              size="sm"
-                              variant={registeredEvents[event.title] ? "default" : "outline"}
-                              className={`text-xs rounded-xl ${registeredEvents[event.title] ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'border-border'}`}
-                              onClick={() => handleRegisterEvent(event.title)}
-                            >
-                              {registeredEvents[event.title] ? "Registered ✓" : "Register Interest"}
-                            </Button>
-                          </div>
-                          <h4 className="text-base font-bold text-foreground mb-1">{event.title}</h4>
-                          <p className="text-xs text-muted-foreground">{event.description}</p>
-                        </motion.div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
-
-              </div>
-
-              {/* Right Column: Search & Quick Trends */}
-              <div className="hidden lg:block lg:col-span-3 space-y-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search posts & topics..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 bg-card/60 border-border/60 text-xs rounded-xl focus:bg-card transition-all"
-                  />
-                </div>
-
-                <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                      <TrendingUp className="w-4 h-4 text-emerald-500" />
-                      Trending Topics
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {aiInsights.trending_topics.slice(0, 5).map((topic: any) => (
-                      <div
-                        key={topic.tag}
-                        className="flex justify-between items-center group cursor-pointer p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
-                        onClick={() => {
-                          setSearchQuery(topic.tag);
-                          setView('feed');
-                        }}
-                      >
-                        <div>
-                          <p className="font-medium text-xs text-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">#{topic.tag}</p>
-                          <p className="text-[10px] text-muted-foreground">{topic.posts} posts</p>
-                        </div>
-                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
-
-            </div>
-          </main>
-          
-          <Footer />
-        </div>
+        <aside className="space-y-5">
+          <Card className="border-white/10 bg-[#101827]"><CardContent className="p-5"><div className="flex items-center justify-between"><div><p className="font-semibold">Today’s interview plan</p><p className="mt-1 text-xs text-slate-500">{totalMinutes} minutes planned</p></div><div className="grid h-16 w-16 place-items-center rounded-full border-4 border-amber-400/80 text-lg font-semibold">{plan.length ? Math.round((complete / plan.length) * 100) : 0}%</div></div>
+            <div className="mt-5 space-y-2">{plan.map(item => <button key={item.id} onClick={() => togglePlanItem(item)} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.025] p-3 text-left hover:bg-white/[0.06]"><span className={`grid h-6 w-6 place-items-center rounded-full ${item.completed ? "bg-emerald-500 text-emerald-950" : "border border-slate-600"}`}>{item.completed ? <Check className="h-4 w-4"/> : <Circle className="h-3 w-3"/>}</span><span className="min-w-0 flex-1 text-sm">{item.title}</span><span className="text-xs text-slate-500">{item.duration_minutes}m</span></button>)}</div>
+            <Button className="mt-4 w-full bg-violet-600 hover:bg-violet-500" onClick={() => plan.find(item => !item.completed)?.destination && (window.location.href = plan.find(item => !item.completed).destination)}>Continue plan <span className="ml-2">→</span></Button>
+          </CardContent></Card>
+          <Card className="border-white/10 bg-[#101827]"><CardContent className="p-5"><div className="flex items-center justify-between"><h2 className="font-semibold">Active mock rooms</h2><button className="text-xs text-violet-300" onClick={() => setCreatingRoom(true)}>Create room</button></div><div className="mt-4 space-y-3">{rooms.length ? rooms.map(room => <div key={room.id} className="rounded-xl border border-white/10 bg-white/[0.025] p-3"><div className="flex items-start justify-between gap-2"><div><p className="text-sm font-medium">{room.title}</p><p className="mt-1 text-xs capitalize text-slate-500">{room.skill.replace("_", " ")} · {room.duration_minutes} min</p></div><Button size="sm" className="h-8 bg-violet-600 px-3 text-xs hover:bg-violet-500" disabled={room.member_count >= room.capacity} onClick={() => joinRoom(room)}>{room.member_count >= room.capacity ? "Full" : "Join"}</Button></div><div className="mt-3 flex items-center justify-between"><div className="flex -space-x-1.5"><Avatar className="h-5 w-5 border border-[#101827]"><AvatarFallback className="bg-violet-500 text-[8px]">V</AvatarFallback></Avatar><Avatar className="h-5 w-5 border border-[#101827]"><AvatarFallback className="bg-sky-500 text-[8px]">P</AvatarFallback></Avatar></div><span className="text-[11px] text-slate-500">{room.member_count} / {room.capacity}</span></div></div>) : <p className="py-3 text-sm text-slate-500">No rooms open yet. Start one for your Prep Circle.</p>}</div></CardContent></Card>
+          <Card className="border-white/10 bg-[#101827]"><CardContent className="p-5"><div className="mb-3 flex items-center gap-2"><Sparkles className="h-4 w-4 text-emerald-400"/><h2 className="font-semibold">Trending skills</h2></div><div className="flex flex-wrap gap-2">{["System Design", "Dynamic Programming", "Graphs", "Behavioral", "Low-level Design"].map(skill => <Badge key={skill} className="border-emerald-500/20 bg-emerald-500/10 py-1 text-emerald-300">↗ {skill}</Badge>)}</div></CardContent></Card>
+        </aside>
       </div>
-    </div>
-  );
+    </main>
+    {creatingRoom && <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4"><Card className="w-full max-w-md border-white/10 bg-[#101827]"><CardContent className="p-6"><div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold">Open a mock room</h2><p className="text-sm text-slate-500">Invite your Prep Circle to practice now.</p></div><Button size="icon" variant="ghost" onClick={() => setCreatingRoom(false)}><X className="h-4 w-4"/></Button></div><Input value={roomTitle} onChange={e => setRoomTitle(e.target.value)} placeholder="e.g. SDE 1 behavioral mock" className="mt-5 border-white/10 bg-[#0b1220]"/><div className="mt-3 grid grid-cols-2 gap-2">{SKILLS.map(skill => <Button key={skill.key} variant="outline" onClick={() => setRoomSkill(skill.key)} className={`${roomSkill === skill.key ? "border-violet-500 bg-violet-500/10 text-violet-200" : "border-white/10"}`}>{skill.label}</Button>)}</div><Button onClick={createRoom} disabled={!roomTitle.trim()} className="mt-5 w-full bg-violet-600 hover:bg-violet-500"><Plus className="mr-2 h-4 w-4"/>Open room</Button></CardContent></Card></div>}
+    <Footer />
+  </div>;
 };
+
+function PostCard({ post, onLike, onSave }: { post: any; onLike: () => void; onSave: () => void }) {
+  const typeLabel = post.post_type === "interview_experience" ? "Interview experience" : post.post_type === "mock_request" ? "Mock partner request" : post.post_type === "question" ? "Question" : post.post_type === "win" ? "Win" : "Discussion";
+  return <Card className="overflow-hidden border-white/10 bg-[#101827] shadow-xl shadow-black/5"><CardContent className="p-5"><div className="flex gap-3"><Avatar className="h-10 w-10"><AvatarImage src={post.author?.avatar_url}/><AvatarFallback className="bg-violet-600 font-semibold">{post.author?.display_name?.[0] || "V"}</AvatarFallback></Avatar><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold">{post.author?.display_name || "Voke Member"}</p><p className="text-xs text-slate-500">{post.author?.target_role || "Community Member"} · {new Date(post.created_at).toLocaleDateString()}</p></div><Badge className="border-violet-500/20 bg-violet-500/10 text-violet-300">{typeLabel}</Badge></div></div></div>{post.title && <h2 className="mt-5 text-lg font-semibold tracking-tight">{post.title}</h2>}<p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300">{post.content}</p>{post.tags?.length ? <div className="mt-4 flex flex-wrap gap-2">{post.tags.map((tag: string) => <Badge key={tag} className="border-sky-500/15 bg-sky-500/10 text-sky-300">#{tag}</Badge>)}</div> : null}<div className="mt-5 flex border-t border-white/10 pt-3"><Button variant="ghost" size="sm" onClick={onLike} className={post.liked ? "text-pink-400" : "text-slate-400"}><Heart className={`mr-1.5 h-4 w-4 ${post.liked ? "fill-current" : ""}`}/>{post.likeCount} Helpful</Button><Button variant="ghost" size="sm" className="ml-2 text-slate-400"><MessageSquare className="mr-1.5 h-4 w-4"/>{post.commentCount} Comments</Button><Button variant="ghost" size="sm" onClick={onSave} className={`ml-auto ${post.saved ? "text-violet-300" : "text-slate-400"}`}><Bookmark className={`mr-1.5 h-4 w-4 ${post.saved ? "fill-current" : ""}`}/>{post.saved ? "Saved" : "Save"}</Button></div></CardContent></Card>;
+}
+
+function PulseLoading() { return <div className="grid place-items-center rounded-2xl border border-white/10 bg-[#101827] py-16 text-sm text-slate-500"><Sparkles className="mb-3 h-6 w-6 animate-pulse text-violet-400"/>Loading your Prep Circle…</div>; }
+function EmptyFeed() { return <div className="rounded-2xl border border-dashed border-white/15 bg-[#101827] py-14 text-center"><Lightbulb className="mx-auto h-8 w-8 text-amber-300"/><h2 className="mt-3 font-semibold">Start a useful conversation</h2><p className="mt-1 text-sm text-slate-500">Share an interview insight, ask a focused question, or find a mock partner.</p></div>; }
 
 export default Community;
