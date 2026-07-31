@@ -230,18 +230,23 @@ Return JSON strictly matching this schema:
   ]
 }`
 
-        const completion = await groq.chat.completions.create({
-            messages: [
-                { role: "system", content: "You are a top technical talent scout. Return valid JSON only." },
-                { role: "user", content: prompt }
-            ],
-            model: "llama-3.3-70b-versatile",
-            temperature: 0.5,
-            response_format: { type: "json_object" }
-        })
+        let recommendations: any[] = [];
+        try {
+            const completion = await groq.chat.completions.create({
+                messages: [
+                    { role: "system", content: "You are a top technical talent scout. Return valid JSON only." },
+                    { role: "user", content: prompt }
+                ],
+                model: "llama-3.3-70b-versatile",
+                temperature: 0.5,
+                response_format: { type: "json_object" }
+            })
 
-        const aiResponse = JSON.parse(completion.choices[0].message.content || '{}')
-        const recommendations = aiResponse.recommendations || []
+            const aiResponse = JSON.parse(completion.choices[0].message.content || '{}')
+            recommendations = aiResponse.recommendations || []
+        } catch (groqError: any) {
+            console.warn("Groq API failed (likely rate limit), falling back to baseline recommendations:", groqError.message);
+        }
 
         // Format for insertion
         const recsToInsert = recommendations
