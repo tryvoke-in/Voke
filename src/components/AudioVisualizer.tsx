@@ -31,7 +31,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ isUserSpeaking
             return rect;
         };
 
-        let rect = updateCanvasSize();
+        const rect = updateCanvasSize();
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
         const baseRadius = Math.min(rect.width, rect.height) * 0.32;
