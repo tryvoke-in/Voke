@@ -142,7 +142,7 @@ const Community = () => {
   const fetchTopContributors = async () => {
     try {
       const { data: postsData, error: postsError } = await supabase
-        .from('posts' as any)
+        .from('community_feed' as any)
         .select('user_id');
 
       if (postsError) throw postsError;
@@ -162,15 +162,15 @@ const Community = () => {
       }
 
       const { data: profiles } = await supabase
-        .from('profiles' as any)
-        .select('id, full_name, avatar_url, target_role')
+        .from('community_profiles' as any)
+        .select('id, display_name, avatar_url, target_role')
         .in('id', topUserIds.map(([id]) => id));
 
       const contributors = topUserIds.map(([userId, count], index) => {
         const profile = (profiles || []).find((p: any) => p.id === userId);
         return {
           id: userId,
-          name: profile?.full_name || 'Anonymous Engineer',
+          name: profile?.display_name || 'Voke Member',
           avatar_url: profile?.avatar_url || null,
           title: profile?.target_role || 'Community Member',
           postCount: count,
@@ -186,10 +186,12 @@ const Community = () => {
 
   const fetchPosts = async () => {
     try {
-      // Robust multi-step fetch to avoid schema join issues
+      // The feed view provides server-side like/comment counts, so we do not
+      // download every community interaction just to count it in the browser.
       const { data: postsData, error: postsError } = await supabase
-        .from('posts' as any)
+        .from('community_feed' as any)
         .select('*')
+        .order('pinned_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       if (postsError) throw postsError;
@@ -206,30 +208,28 @@ const Community = () => {
       const userIds = Array.from(new Set(rawPosts.map((p: any) => p.user_id).filter(Boolean)));
       
       const { data: profilesData } = userIds.length > 0
-        ? await supabase.from('profiles' as any).select('id, full_name, avatar_url, job_title').in('id', userIds)
+        ? await supabase.from('community_profiles' as any).select('id, display_name, avatar_url, target_role').in('id', userIds)
         : { data: [] };
 
-      // Fetch all likes
-      const { data: likesData } = await supabase
-        .from('likes' as any)
-        .select('*');
-
-      // Fetch all comments count
-      const { data: commentsData } = await supabase
-        .from('comments' as any)
-        .select('id, post_id');
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data: myLikes } = session?.user && rawPosts.length > 0
+        ? await supabase
+            .from('likes' as any)
+            .select('post_id')
+            .eq('user_id', session.user.id)
+            .in('post_id', rawPosts.map((post: any) => post.id))
+        : { data: [] };
 
       const profilesMap = new Map((profilesData || []).map((p: any) => [p.id, p]));
+      const likedPostIds = new Set((myLikes || []).map((like: any) => like.post_id));
 
       const formattedPosts = rawPosts.map((p: any) => {
-        const postLikes = (likesData || []).filter((l: any) => l.post_id === p.id);
-        const postCommentsCount = (commentsData || []).filter((c: any) => c.post_id === p.id).length;
-        
         return {
           ...p,
-          profiles: profilesMap.get(p.user_id) || { full_name: 'Anonymous Engineer', avatar_url: null, job_title: 'Software Developer' },
-          likes: postLikes,
-          commentsCount: postCommentsCount,
+          profiles: profilesMap.get(p.user_id) || { display_name: 'Voke Member', avatar_url: null, target_role: 'Community Member' },
+          isLiked: likedPostIds.has(p.id),
+          likeCount: p.like_count || 0,
+          commentsCount: p.comment_count || 0,
         };
       });
 
@@ -308,15 +308,16 @@ const Community = () => {
     }
 
     const targetPost = posts.find(p => p.id === postId);
-    const isLiked = targetPost?.likes?.some((l: any) => l.user_id === currentUser.id);
+    const isLiked = Boolean(targetPost?.isLiked);
 
     // Optimistic UI update
     setPosts(prevPosts => prevPosts.map(p => {
       if (p.id === postId) {
-        const newLikes = isLiked
-          ? (p.likes || []).filter((l: any) => l.user_id !== currentUser.id)
-          : [...(p.likes || []), { post_id: postId, user_id: currentUser.id }];
-        return { ...p, likes: newLikes };
+        return {
+          ...p,
+          isLiked: !isLiked,
+          likeCount: Math.max(0, (p.likeCount || 0) + (isLiked ? -1 : 1)),
+        };
       }
       return p;
     }));
@@ -382,14 +383,14 @@ const Community = () => {
       const commentUserIds = Array.from(new Set((rawComments || []).map((c: any) => c.user_id).filter(Boolean)));
       
       const { data: commentProfiles } = commentUserIds.length > 0
-        ? await supabase.from('profiles' as any).select('id, full_name, avatar_url').in('id', commentUserIds)
+        ? await supabase.from('community_profiles' as any).select('id, display_name, avatar_url').in('id', commentUserIds)
         : { data: [] };
 
       const profileMap = new Map((commentProfiles || []).map((p: any) => [p.id, p]));
 
       const commentsWithProfiles = (rawComments || []).map((c: any) => ({
         ...c,
-        profiles: profileMap.get(c.user_id) || { full_name: 'Software Engineer', avatar_url: null }
+        profiles: profileMap.get(c.user_id) || { display_name: 'Voke Member', avatar_url: null }
       }));
 
       setPostComments(commentsWithProfiles);
@@ -437,7 +438,8 @@ const Community = () => {
         description: "Your reply has been added to the discussion.",
       });
 
-      // Reload comments and update posts comment count
+      // Keep the open thread open after a reply, then refresh its contents.
+      setExpandedPost(null);
       await handleToggleComments(postId);
       fetchPosts();
     } catch (error: any) {
@@ -455,7 +457,7 @@ const Community = () => {
     const query = searchQuery.toLowerCase();
     return (
       post.content?.toLowerCase().includes(query) ||
-      post.profiles?.full_name?.toLowerCase().includes(query) ||
+      post.profiles?.display_name?.toLowerCase().includes(query) ||
       post.tags?.some((t: string) => t.toLowerCase().includes(query))
     );
   });
@@ -666,15 +668,15 @@ const Community = () => {
                                 <Avatar className="h-10 w-10 border border-border/50">
                                   <AvatarImage src={post.profiles?.avatar_url} />
                                   <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-600 text-white font-semibold">
-                                    {post.profiles?.full_name?.[0] || 'U'}
+                                    {post.profiles?.display_name?.[0] || 'U'}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex justify-between items-start">
                                     <div>
-                                      <h3 className="font-semibold text-foreground text-sm">{post.profiles?.full_name || 'Anonymous Engineer'}</h3>
+                                      <h3 className="font-semibold text-foreground text-sm">{post.profiles?.display_name || 'Voke Member'}</h3>
                                       <p className="text-xs text-muted-foreground mt-0.5">
-                                        {post.profiles?.job_title || 'Software Developer'} • {new Date(post.created_at).toLocaleDateString()}
+                                        {post.profiles?.target_role || 'Community Member'} • {new Date(post.created_at).toLocaleDateString()}
                                       </p>
                                     </div>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
@@ -709,11 +711,11 @@ const Community = () => {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className={`text-xs gap-1.5 ${post.likes?.some((l: any) => l.user_id === user?.id) ? 'text-pink-500 bg-pink-500/10 font-bold' : 'text-muted-foreground hover:text-pink-500 hover:bg-pink-500/10'}`}
+                                  className={`text-xs gap-1.5 ${post.isLiked ? 'text-pink-500 bg-pink-500/10 font-bold' : 'text-muted-foreground hover:text-pink-500 hover:bg-pink-500/10'}`}
                                   onClick={() => handleLike(post.id)}
                                 >
-                                  <Heart className={`h-4 w-4 ${post.likes?.some((l: any) => l.user_id === user?.id) ? 'fill-current text-pink-500' : ''}`} />
-                                  {post.likes?.length || 0} Likes
+                                  <Heart className={`h-4 w-4 ${post.isLiked ? 'fill-current text-pink-500' : ''}`} />
+                                  {post.likeCount || 0} Likes
                                 </Button>
                                 
                                 <Button
@@ -749,12 +751,12 @@ const Community = () => {
                                           <Avatar className="h-7 w-7 border border-border/50">
                                             <AvatarImage src={comment.profiles?.avatar_url} />
                                             <AvatarFallback className="bg-violet-500/20 text-violet-500 text-[10px] font-bold">
-                                              {comment.profiles?.full_name?.[0] || 'U'}
+                                              {comment.profiles?.display_name?.[0] || 'U'}
                                             </AvatarFallback>
                                           </Avatar>
                                           <div className="flex-1 bg-card border border-border/50 rounded-xl p-2.5">
                                             <div className="flex justify-between items-start mb-0.5">
-                                              <span className="font-semibold text-xs text-foreground">{comment.profiles?.full_name || 'Engineer'}</span>
+                                              <span className="font-semibold text-xs text-foreground">{comment.profiles?.display_name || 'Voke Member'}</span>
                                               <span className="text-[10px] text-muted-foreground">
                                                 {new Date(comment.created_at).toLocaleDateString()}
                                               </span>
