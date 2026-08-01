@@ -119,7 +119,7 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
                 const username = targetGithubUsername || 'user';
                 console.log('[ProfileContext] Fetching GitHub repos (Personal & Org)...');
 
-                let allRawRepos: any[] = [];
+                const allRawRepos: any[] = [];
                 const reqHeaders: Record<string, string> = {
                     'Accept': 'application/vnd.github.v3+json'
                 };
@@ -145,7 +145,7 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
 
                 // 2. Personal public repos endpoint
                 if (allRawRepos.length === 0 && targetGithubUsername) {
-                    let reposResponse = await fetch(
+                    const reposResponse = await fetch(
                         `https://api.github.com/users/${username}/repos?sort=updated&per_page=100`,
                         { headers: reqHeaders }
                     );

@@ -161,7 +161,7 @@ export async function executePistonCode(
       try {
         const errorData = await response.json();
         errMsg = errorData.error || errorData.message || errMsg;
-      } catch (e) {}
+      } catch (e) {/* empty */}
       throw new Error(errMsg);
     }
 

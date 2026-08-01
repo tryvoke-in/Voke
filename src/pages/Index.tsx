@@ -273,7 +273,7 @@ const Index = () => {
               >
                 Master the Interview.<br />
                 <span className="bg-gradient-to-r from-white via-violet-300 to-fuchsia-400 bg-clip-text text-transparent">
-                  Secure the Offeree.
+                  Secure the Offer.
                 </span>
               </motion.h1>
 

@@ -31,7 +31,7 @@ const calculateStreak = (dates: string[]) => {
   }
 
   let streak = 0;
-  let currentCheck = uniqueDates.includes(today) ? new Date(today) : new Date(yesterday);
+  const currentCheck = uniqueDates.includes(today) ? new Date(today) : new Date(yesterday);
 
   for (const dateStr of uniqueDates) {
     const date = new Date(dateStr);

@@ -85,7 +85,7 @@ async function seed() {
         if (!entry.isDirectory()) continue;
 
         // Map filename to period
-        const period = file.replace('.csv', '').replace(/^\d+\.\s*/, '').trim();
+        let period = file.replace('.csv', '').replace(/^\d+\.\s*/, '').trim();
         // e.g. "1. Thirty Days.csv" -> "Thirty Days"
 
         const content = await fs.readFile(path.join(companyDir, file), 'utf-8');

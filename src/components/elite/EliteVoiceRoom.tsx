@@ -10,7 +10,7 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, CheckCircle2, XCircle,
   Sparkles, HelpCircle, ShieldCheck, ChevronRight, User, Award, Clock,
   Volume2, Maximize2, Zap, Radio, MessageSquare, FileText, Subtitles,
-  GitBranch, FolderCode, Check, Github
+  GitBranch, FolderCode, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
