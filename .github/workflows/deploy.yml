@@ -16,11 +16,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Install Vercel CLI on the GitHub Action runner
+      # Step 2: Setup Node.js with built-in npm cache
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # Step 3: Install Vercel CLI on the GitHub Action runner
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      # Step 3: Fetch project setting parameters from Vercel
+      # Step 4: Fetch project setting parameters from Vercel
       - name: Pull Vercel Environment Information
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
@@ -32,7 +39,7 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      # Step 4: Build project output artifacts locally on GitHub runner
+      # Step 5: Build project output artifacts locally on GitHub runner
       - name: Build Project Artifacts
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
@@ -44,7 +51,7 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      # Step 5: Upload prebuilt output to your Vercel personal account
+      # Step 6: Upload prebuilt output to your Vercel personal account
       - name: Deploy Project Artifacts to Vercel
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
@@ -55,4 +62,3 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
