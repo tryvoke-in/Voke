@@ -4,7 +4,7 @@ import {
   INTERVIEW_TYPES, ELITE_ROLES, TOP_COMPANIES,
   InterviewTypeItem, RoleItem, CompanyItem, InterviewRoundDef, getInterviewRounds
 } from '@/data/eliteInterviewData';
-import { CompanyRoleProgress } from '@/utils/eliteInterviewStorage';
+import { CompanyRoleProgress, computeFinalRecommendation } from '@/utils/eliteInterviewStorage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -466,6 +466,54 @@ export const EliteNotebookLMMindMap: React.FC<EliteNotebookLMMindMapProps> = ({
                       </div>
                     );
                   })}
+
+                  {/* FINAL RECOMMENDATION SUMMARY CARD (Unfolds when rounds are attempted or completed) */}
+                  {progress && progress.rounds.some(r => r.status === 'passed' || r.status === 'failed') && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 rounded-3xl border border-amber-500/40 bg-gradient-to-br from-amber-950/30 via-slate-900/90 to-slate-950 backdrop-blur-2xl shadow-2xl space-y-3 mt-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Award className="w-4 h-4 text-amber-400" />
+                          <span className="text-xs font-black text-white">Final Recommendation</span>
+                        </div>
+                        <Badge className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-black uppercase">
+                          Weighted Engine
+                        </Badge>
+                      </div>
+
+                      {/* Score Summary & Decision */}
+                      {(() => {
+                        const rec = computeFinalRecommendation(progress);
+                        return (
+                          <div className="space-y-2.5">
+                            <div className="flex items-center justify-between bg-black/40 p-2.5 rounded-2xl border border-white/5">
+                              <div>
+                                <div className="text-[9px] text-slate-400 uppercase font-bold">Overall Score</div>
+                                <div className="text-lg font-black text-amber-300">{rec.overallScore}%</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-[9px] text-slate-400 uppercase font-bold">Hiring Verdict</div>
+                                <div className={`text-xs font-black px-2 py-0.5 rounded-lg border ${rec.decisionBadgeColor}`}>
+                                  {rec.decision}
+                                </div>
+                              </div>
+                            </div>
+
+                            <p className="text-[10px] text-slate-300 leading-relaxed italic">
+                              "{rec.decisionDescription}"
+                            </p>
+
+                            <div className="text-[9px] text-slate-400 font-mono flex justify-between border-t border-white/5 pt-2">
+                              <span>Weights: R1 20% • R2 35% • R3 35% • R4 10%</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </motion.div>
+                  )}
                 </motion.div>
               </>
             )}

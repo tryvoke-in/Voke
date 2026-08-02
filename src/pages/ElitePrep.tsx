@@ -13,6 +13,7 @@ import {
 import { EliteNotebookLMMindMap } from '@/components/elite/EliteNotebookLMMindMap';
 import { EliteVoiceRoom } from '@/components/elite/EliteVoiceRoom';
 import { EliteProjectDeepDive } from '@/components/elite/EliteProjectDeepDive';
+import { EliteCodingAssessment } from '@/components/elite/EliteCodingAssessment';
 import { useInterviewCredits } from '@/hooks/useInterviewCredits';
 import { loadUserProfileContext, ProfileContext } from '@/utils/profileContext';
 import { Crown, AlertTriangle, Sparkles, Wrench, Loader2 } from 'lucide-react';
@@ -251,6 +252,19 @@ const ElitePrep: React.FC = () => {
             candidateProfileContext={profileContext?.context}
             githubRepos={profileContext?.githubRepos}
             isLoadingRepos={loadingProfile}
+            userId={userId}
+            onCompleteRound={handleCompleteRound}
+            onExit={() => setViewMode('notebook_mindmap')}
+          />
+        )}
+
+        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 3 && userId && (
+          <EliteCodingAssessment
+            interviewType={selectedType}
+            company={selectedCompany}
+            role={selectedRole}
+            round={activeRound}
+            candidateProfileContext={profileContext?.context}
             userId={userId}
             onCompleteRound={handleCompleteRound}
             onExit={() => setViewMode('notebook_mindmap')}

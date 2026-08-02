@@ -263,8 +263,151 @@ export const updateRoundResultAsync = async (
   return newProgress;
 };
 
-// Keep deprecated local storage methods around temporarily to prevent import breaks,
-// but they shouldn't be used if we are doing DB persistence.
+// --- FINAL RECOMMENDATION ENGINE ---
+
+export type FinalHiringDecision = 'Strong Hire' | 'Hire' | 'Hold / Review' | 'Reject';
+
+export interface FinalRecommendation {
+  overallScore: number;
+  decision: FinalHiringDecision;
+  decisionBadgeColor: string;
+  decisionDescription: string;
+  isHardRejected: boolean;
+  hardRejectionReason?: string;
+  weightedBreakdown: {
+    roundNumber: number;
+    title: string;
+    weightPercent: number;
+    rawScore: number;
+    weightedContribution: number;
+    status: RoundStatus;
+  }[];
+  strengths: string[];
+  improvements: string[];
+  recommendedResources: {
+    title: string;
+    category: string;
+    url?: string;
+    description: string;
+  }[];
+}
+
+export const ROUND_WEIGHTS: Record<number, number> = {
+  1: 0.20, // Resume & Intro: 20%
+  2: 0.35, // Project Discussion: 35%
+  3: 0.35, // Coding Assessment: 35%
+  4: 0.10  // HR & Behavioral: 10%
+};
+
+export const computeFinalRecommendation = (
+  progress: CompanyRoleProgress,
+  hardRejectionFlag?: { triggered: boolean; reason: string }
+): FinalRecommendation => {
+  let totalWeightedScore = 0;
+  let totalCalculatedWeight = 0;
+  const allStrengths: string[] = [];
+  const allImprovements: string[] = [];
+
+  const breakdown = progress.rounds.map(r => {
+    const weight = ROUND_WEIGHTS[r.roundNumber] || 0.25;
+    const rawScore = r.score ?? (r.status === 'passed' ? 85 : 0);
+    const weightedContribution = Math.round(rawScore * weight);
+
+    if (r.status === 'passed' || r.status === 'failed') {
+      totalWeightedScore += weightedContribution;
+      totalCalculatedWeight += weight;
+    }
+
+    if (r.feedbackDetails?.strengths) {
+      allStrengths.push(...r.feedbackDetails.strengths);
+    }
+    if (r.feedbackDetails?.improvements) {
+      allImprovements.push(...r.feedbackDetails.improvements);
+    }
+
+    return {
+      roundNumber: r.roundNumber,
+      title: r.title,
+      weightPercent: Math.round(weight * 100),
+      rawScore,
+      weightedContribution,
+      status: r.status
+    };
+  });
+
+  const normalizedOverallScore = totalCalculatedWeight > 0
+    ? Math.round((totalWeightedScore / totalCalculatedWeight))
+    : 0;
+
+  // Evaluate Decision Bands
+  let decision: FinalHiringDecision = 'Reject';
+  let decisionBadgeColor = 'bg-rose-500/10 border-rose-500/30 text-rose-400';
+  let decisionDescription = 'Performance below hiring threshold. Needs further technical and problem-solving preparation.';
+
+  if (normalizedOverallScore >= 85) {
+    decision = 'Strong Hire';
+    decisionBadgeColor = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
+    decisionDescription = 'Outstanding technical aptitude, problem solving, system intuition, and communication.';
+  } else if (normalizedOverallScore >= 75) {
+    decision = 'Hire';
+    decisionBadgeColor = 'bg-blue-500/10 border-blue-500/30 text-blue-400';
+    decisionDescription = 'Solid technical capability meeting company benchmarks. Recommended for internship placement.';
+  } else if (normalizedOverallScore >= 65) {
+    decision = 'Hold / Review';
+    decisionBadgeColor = 'bg-amber-500/10 border-amber-500/30 text-amber-400';
+    decisionDescription = 'Borderline performance with strong potential. Committee review or follow-up challenge recommended.';
+  } else {
+    decision = 'Reject';
+    decisionBadgeColor = 'bg-rose-500/10 border-rose-500/30 text-rose-400';
+    decisionDescription = 'Did not meet the core engineering and problem-solving benchmarks for this role.';
+  }
+
+  // Check Hard Rejection Rules
+  let isHardRejected = false;
+  let hardRejectionReason: string | undefined;
+
+  if (hardRejectionFlag?.triggered) {
+    isHardRejected = true;
+    hardRejectionReason = hardRejectionFlag.reason;
+    decision = 'Reject';
+    decisionBadgeColor = 'bg-rose-500/10 border-rose-500/30 text-rose-400';
+    decisionDescription = `Hard Rejection Triggered: ${hardRejectionFlag.reason}`;
+  }
+
+  // Role-specific recommended resources
+  const recommendedResources = [
+    {
+      title: 'NeetCode 150 & Two-Pointers Patterns',
+      category: 'Data Structures & Algorithms',
+      description: 'Master core patterns in sliding window, two pointers, and hash maps.'
+    },
+    {
+      title: 'System Design Interview – Alex Xu',
+      category: 'System Architecture',
+      description: 'Fundamental architectures for rate limiters, caching, and state flow.'
+    },
+    {
+      title: 'Clean Code & JavaScript/TypeScript Deep Dive',
+      category: 'Code Quality',
+      description: 'Idiomatic patterns, error handling, and modular component architecture.'
+    }
+  ];
+
+  return {
+    overallScore: normalizedOverallScore,
+    decision,
+    decisionBadgeColor,
+    decisionDescription,
+    isHardRejected,
+    hardRejectionReason,
+    weightedBreakdown: breakdown,
+    strengths: Array.from(new Set(allStrengths)).slice(0, 5),
+    improvements: Array.from(new Set(allImprovements)).slice(0, 5),
+    recommendedResources
+  };
+};
+
+// Deprecated fallback methods for backwards compatibility
 export const getCompanyRoleProgress = (t: string, c: string, r: string): any => null;
 export const saveCompanyRoleProgress = (p: any): void => {};
 export const initializeCompanyRoleProgress = (t: string, c: string, r: string, d: any): any => null;

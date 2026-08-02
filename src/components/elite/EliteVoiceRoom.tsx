@@ -5,7 +5,7 @@ import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { LiveStatus } from '@/types/voice';
 import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
-import { updateRoundResultAsync, saveSelectedGithubRepo } from '@/utils/eliteInterviewStorage';
+import { updateRoundResultAsync, saveSelectedGithubRepo, fetchSelectedGithubRepo } from '@/utils/eliteInterviewStorage';
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff, CheckCircle2, XCircle,
   Sparkles, HelpCircle, ShieldCheck, ChevronRight, User, Award, Clock,
@@ -103,15 +103,32 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Initialize selection: Fetch saved repo or select exactly 1 repo by default (compulsory min 1)
   useEffect(() => {
-    if (availableRepoOptions.length > 0 && selectedRepos.length === 0) {
-      setSelectedRepos(availableRepoOptions);
-    }
-  }, [availableRepoOptions]);
+    const loadRepoPreference = async () => {
+      if (userId && interviewType?.id && company?.id && role?.id) {
+        const saved = await fetchSelectedGithubRepo(userId, interviewType.id, company.id, role.id);
+        if (saved && availableRepoOptions.includes(saved)) {
+          setSelectedRepos([saved]);
+          return;
+        }
+      }
+      // If no saved repo or not found, automatically select ONLY the first available repo (never all)
+      if (availableRepoOptions.length > 0) {
+        setSelectedRepos(prev => (prev.length > 0 && availableRepoOptions.includes(prev[0])) ? prev : [availableRepoOptions[0]]);
+      }
+    };
+    loadRepoPreference();
+  }, [userId, interviewType?.id, company?.id, role?.id, availableRepoOptions]);
 
   const toggleRepoSelection = (repoName: string) => {
+    // Exactly 1 project is selected; minimum 1 is compulsory at all times
+    if (selectedRepos.length === 1 && selectedRepos[0] === repoName) {
+      toast.info(`"${repoName}" is currently selected as your target project.`);
+      return;
+    }
     setSelectedRepos([repoName]);
-    toast.success(`Selected ${repoName} for the interview.`);
+    toast.success(`Selected "${repoName}" for the interview.`);
   };
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -212,28 +229,30 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
   const [isPreInterviewSetupOpen, setIsPreInterviewSetupOpen] = useState(true);
 
   const handleConfirmSetupAndStart = async () => {
-    if (selectedRepos.length === 0) {
-      toast.error('Please select a project to proceed.');
+    const targetProject = selectedRepos[0] || (availableRepoOptions.length > 0 ? availableRepoOptions[0] : '');
+    if (!targetProject) {
+      toast.error('Please connect your GitHub account or add projects to your profile to proceed.');
       return;
     }
     
+    if (selectedRepos.length === 0 || selectedRepos[0] !== targetProject) {
+      setSelectedRepos([targetProject]);
+    }
+    
     // Save selected project to DB
-    const selectedProject = selectedRepos[0];
     try {
-        // userId is not directly available, wait, we can get it from supabase session
-        const sessionRes = await supabase.auth.getSession();
-        const userId = sessionRes.data.session?.user.id;
-        if (userId) {
-          await saveSelectedGithubRepo(
-              userId, 
-              interviewType.id, 
-              company.id, 
-              role.id, 
-              selectedProject
-          );
-        }
+      const activeUserId = userId || (await supabase.auth.getSession()).data.session?.user.id;
+      if (activeUserId) {
+        await saveSelectedGithubRepo(
+          activeUserId, 
+          interviewType.id, 
+          company.id, 
+          role.id, 
+          targetProject
+        );
+      }
     } catch (e) {
-        console.error('Failed to save project:', e);
+      console.error('Failed to save project:', e);
     }
 
     setIsPreInterviewSetupOpen(false);
@@ -846,12 +865,14 @@ ${isRound1 ? round1CategoryFlow : ''}
 
             {/* Search Bar & Action Bar */}
             <div className="space-y-3 flex-1 flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-white flex items-center gap-2">
                   <FolderCode className="w-4 h-4 text-violet-400" />
                   Your Repositories ({availableRepoOptions.length} Available)
                 </span>
-                <span className="text-violet-400 text-xs font-semibold">Select 1 Project</span>
+                <Badge className="bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold">
+                  {selectedRepos.length === 1 ? `Target: ${selectedRepos[0]}` : '1 Project Selected'}
+                </Badge>
               </div>
 
               {/* Search Filter Bar */}
@@ -923,23 +944,23 @@ ${isRound1 ? round1CategoryFlow : ''}
                         <div
                           key={repo}
                           onClick={() => toggleRepoSelection(repo)}
-                          className={`group p-3.5 rounded-xl border cursor-pointer transition-all duration-150 flex flex-col justify-between relative ${
+                          className={`group p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col justify-between relative ${
                             isSelected
-                              ? 'bg-[#141628] border-violet-500/50 shadow-md shadow-violet-500/5'
-                              : 'bg-[#0d0e17]/80 border-white/5 hover:border-white/15 hover:bg-[#121422]/60 opacity-70 hover:opacity-100'
+                              ? 'bg-[#141628] border-violet-500/80 ring-2 ring-violet-500/30 shadow-lg shadow-violet-500/10'
+                              : 'bg-[#0d0e17]/80 border-white/5 hover:border-white/20 hover:bg-[#121422]/60 opacity-60 hover:opacity-100'
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2 mb-2.5">
-                            <div className="flex items-center gap-2.5">
-                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all shrink-0 ${
                                 isSelected 
-                                  ? 'bg-emerald-500 text-zinc-950 shadow-sm shadow-emerald-500/20 font-extrabold' 
+                                  ? 'bg-violet-500 text-white shadow-sm shadow-violet-500/30 font-extrabold' 
                                   : 'bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
                               }`}>
-                                {isSelected ? <Check className="w-3.5 h-3.5 text-zinc-950 stroke-[3]" /> : <GitBranch className="w-3.5 h-3.5 text-zinc-500" />}
+                                {isSelected ? <Check className="w-3.5 h-3.5 text-white stroke-[3]" /> : <GitBranch className="w-3.5 h-3.5 text-zinc-500" />}
                               </div>
-                              <div>
-                                <h4 className="text-xs font-bold text-white tracking-tight group-hover:text-emerald-300 transition-colors">
+                              <div className="min-w-0 flex-1">
+                                <h4 className={`text-xs font-bold tracking-tight truncate ${isSelected ? 'text-violet-200' : 'text-white group-hover:text-violet-300'}`}>
                                   {repo}
                                 </h4>
                                 <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-white/5 inline-block mt-0.5">
@@ -951,8 +972,8 @@ ${isRound1 ? round1CategoryFlow : ''}
 
                           <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[10px]">
                             <span className="text-zinc-500 font-medium">Interview Target</span>
-                            <span className={`font-bold ${isSelected ? 'text-emerald-400' : 'text-zinc-600'}`}>
-                              {isSelected ? '✓ Active Target' : 'Tap to Include'}
+                            <span className={`font-bold ${isSelected ? 'text-violet-400' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
+                              {isSelected ? '✓ Selected Target' : 'Click to Select'}
                             </span>
                           </div>
                         </div>
@@ -966,9 +987,10 @@ ${isRound1 ? round1CategoryFlow : ''}
             <div className="pt-2 border-t border-white/10">
               <Button
                 onClick={handleConfirmSetupAndStart}
-                className="w-full h-12 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-violet-600/20 transition-all cursor-pointer flex items-center justify-center"
+                className="w-full h-12 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-violet-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                Start Interview Session (Project Selected)
+                <Zap className="w-4 h-4 text-amber-400" />
+                Start Interview Session with "{selectedRepos[0] || 'Selected Project'}"
               </Button>
             </div>
           </div>

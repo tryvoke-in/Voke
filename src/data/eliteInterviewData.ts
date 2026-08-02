@@ -226,12 +226,18 @@ export const getInterviewRounds = (typeId: string, companyId: string, roleId: st
     {
       roundId: `${typeId}_${companyId}_${roleId}_r3`,
       roundNumber: 3,
-      title: 'Round 3: System Concepts & Domain Mastery',
-      subtitle: '8-9 Questions • Architecture & Web Fundamentals',
-      questionCount: 9,
-      durationMins: 20,
-      focusAreas: ['Web Performance', 'API Design & Integration', 'State & Data Flow', 'Debugging Scenarios'],
-      description: `Domain-specific round tailored to ${company.name}'s technical standards for ${role.title}. Tests system awareness, API understanding, and component lifecycle across 8-9 questions.`
+      title: 'Round 3 — Coding Assessment',
+      subtitle: '30–45 Mins • Live Coding, Debugging & Practical System Design',
+      questionCount: 5,
+      durationMins: 35,
+      focusAreas: [
+        'Section A: Problem Solving & DSA',
+        'Section B: Bug Identification & Code Fixing',
+        'Section C: Complexity & Practical System Design',
+        'Code Quality & Execution Correctness',
+        'Real-time Technical Communication'
+      ],
+      description: `Comprehensive coding evaluation at ${company.name} for ${role.title}. Evaluate problem-solving across Arrays/Strings/HashMaps/Two-Pointers, live debugging of buggy snippets, and practical system design questions. Monaco editor with test execution & voice AI interrogation. Pass threshold: 75%.`
     },
     {
       roundId: `${typeId}_${companyId}_${roleId}_r4`,

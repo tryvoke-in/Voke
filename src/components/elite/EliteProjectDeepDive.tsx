@@ -135,18 +135,26 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
   const [isFetchingRepo, setIsFetchingRepo] = useState(true);
   const [hasStartedSession, setHasStartedSession] = useState(false);
 
-  // Check for existing saved repo
+  // Check for existing saved repo or select first repo by default
   useEffect(() => {
     const checkSavedRepo = async () => {
       const saved = await fetchSelectedGithubRepo(userId, interviewType.id, company.id, role.id);
       if (saved && availableRepos.includes(saved)) {
         setSelectedProject(saved);
         setIsPreInterviewSetupOpen(false); // Skip modal if already selected
+      } else if (availableRepos.length > 0) {
+        setSelectedProject(availableRepos[0]); // Always default to 1st repo (compulsory min 1)
       }
       setIsFetchingRepo(false);
     };
     checkSavedRepo();
   }, [userId, interviewType.id, company.id, role.id, availableRepos]);
+
+  useEffect(() => {
+    if (availableRepos.length > 0 && !selectedProject) {
+      setSelectedProject(availableRepos[0]);
+    }
+  }, [availableRepos, selectedProject]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
