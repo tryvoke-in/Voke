@@ -319,7 +319,7 @@ const DSASheet = () => {
                                                                 : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-lg shadow-indigo-500/20"
                                                         )}
                                                         onClick={() => navigate(
-                                                            `/playground?title=${encodeURIComponent(question.title)}&difficulty=${question.difficulty}&questionId=${question.id}&from=dsa-sheet`
+                                                            `/playground?title=${encodeURIComponent(question.title)}&difficulty=${question.difficulty}&questionId=${question.id}&mode=problem`
                                                         )}
                                                     >
                                                         {isSolved ? (

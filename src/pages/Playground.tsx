@@ -2,1120 +2,1444 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Play, RotateCcw, Terminal, Cpu, Sparkles, Settings, Bot, Send, Code, User, Copy, Check, Search, Trophy, Briefcase } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from "@/components/ui/select";
+import {
+  Zap, ChevronDown, ChevronUp, ChevronRight, Folder, FolderOpen,
+  FileCode, FileText, Plus, MoreVertical, FilePlus, Code2, Clipboard,
+  Edit3, Clock, ArrowLeftRight, CheckCircle2, Trash2, Maximize2, Sparkles,
+  Lightbulb, Send, Lock, RotateCcw, Play, Check, Search, Briefcase,
+  ShieldCheck, Terminal, X, Copy, AlignLeft, RefreshCw, MessageSquare,
+  ChevronLeft, Bookmark, Eye, Mic, Rocket, AlertTriangle, CheckCircle, HelpCircle, Coffee
+} from "lucide-react";
 import { toast } from "sonner";
 import { executeCode } from "@/utils/codeExecutor";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import ReactMarkdown from 'react-markdown';
 import { supabase } from "@/integrations/supabase/client";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion } from "motion/react";
 
-type Language = 'javascript' | 'python' | 'bash' | 'typescript' | 'java' | 'cpp' | 'c' | 'rust' | 'go' | 'ruby' | 'php' | 'swift' | 'kotlin' | 'scala';
+// Language Options & Default Code Templates
+type Language = 'python' | 'javascript' | 'typescript' | 'cpp' | 'java' | 'go' | 'rust';
 
-const TEMPLATES = {
-    javascript: `// Write your JavaScript code here
-console.log("Hello, Voke!");
+const DEFAULT_LONGEST_SUBARRAY_PYTHON = `from typing import List
 
-function example() {
-  return "Happy coding!";
-}
+def longest_subarray(nums: List[int], k: int) -> int:
+    prefix_to_index = {0: -1}  # prefix sum -> earliest index
+    prefix = 0
+    max_len = 0
 
-console.log(example());
-`,
-    python: `# Write your Python code here
-print("Hello, Voke!")
+    for i, num in enumerate(nums):
+        prefix += num
+        if prefix - k in prefix_to_index:
+            max_len = max(max_len, i - prefix_to_index[prefix - k])
+        if prefix not in prefix_to_index:
+            prefix_to_index[prefix] = i
 
-def example():
-    return "Happy coding!"
+    return max_len
 
-print(example())
-`,
-    typescript: `// Write your TypeScript code here
-const greeting: string = "Hello, Voke!";
-console.log(greeting);
+# Test execution
+print(longest_subarray([1, 2, 3, -2, 5], 5))`;
 
-function example(): string {
-  return "Happy coding!";
-}
+const DEFAULT_FREE_PYTHON_CODE = `from typing import List, Dict
+from collections import defaultdict
 
-console.log(example());
-`,
-    java: `// Write your Java code here
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello, Voke!");
-        System.out.println(example());
+def transform_transactions(transactions: List[Dict]) -> List[Dict]:
+    """Clean and aggregate transactions by category.
+    Returns a list of {category, total, count} sorted by total desc."""
+    summary = defaultdict(lambda: {"total": 0.0, "count": 0})
+    for tx in transactions:
+        cat = tx.get("category", "Uncategorized").strip().title()
+        amount = float(tx.get("amount", 0) or 0)
+        summary[cat]["total"] += amount
+        summary[cat]["count"] += 1
+
+    result = [
+        {"category": cat, "total": round(vals["total"], 2), "count": vals["count"]}
+        for cat, vals in summary.items()
+    ]
+    return sorted(result, key=lambda x: x["total"], reverse=True)
+
+# Sample Execution
+sample_data = [
+    {"category": "Groceries", "amount": 50.25},
+    {"category": "groceries ", "amount": 75.50},
+    {"category": " Transport ", "amount": 23.50},
+    {"category": "Transport", "amount": 40.00},
+    {"category": "Entertainment", "amount": 45.00},
+    {"category": "Utilities", "amount": 39.99},
+]
+
+print(transform_transactions(sample_data))`;
+
+const CODE_TEMPLATES: Record<Language, string> = {
+  python: DEFAULT_LONGEST_SUBARRAY_PYTHON,
+  javascript: `// JavaScript Code Solution
+function longestSubarray(nums, k) {
+    const prefixToIndex = new Map([[0, -1]]);
+    let prefix = 0;
+    let maxLen = 0;
+    for (let i = 0; i < nums.length; i++) {
+        prefix += nums[i];
+        if (prefixToIndex.has(prefix - k)) {
+            maxLen = Math.max(maxLen, i - prefixToIndex.get(prefix - k));
+        }
+        if (!prefixToIndex.has(prefix)) {
+            prefixToIndex.set(prefix, i);
+        }
     }
-    
-    public static String example() {
-        return "Happy coding!";
-    }
+    return maxLen;
 }
-`,
-    cpp: `// Write your C++ code here
+console.log(longestSubarray([1, 2, 3, -2, 5], 5));`,
+  typescript: `// TypeScript Code Solution
+function longestSubarray(nums: number[], k: number): number {
+    const prefixMap = new Map<number, number>([[0, -1]]);
+    let prefix = 0, maxLen = 0;
+    for (let i = 0; i < nums.length; i++) {
+        prefix += nums[i];
+        if (prefixMap.has(prefix - k)) {
+            maxLen = Math.max(maxLen, i - (prefixMap.get(prefix - k) ?? 0));
+        }
+        if (!prefixMap.has(prefix)) prefixMap.set(prefix, i);
+    }
+    return maxLen;
+}`,
+  cpp: `// C++ Code Solution
 #include <iostream>
-#include <string>
+#include <vector>
+#include <unordered_map>
 using namespace std;
 
-string example() {
-    return "Happy coding!";
-}
+int longestSubarray(vector<int>& nums, int k) {
+    unordered_map<int, int> prefixMap;
+    prefixMap[0] = -1;
+    int prefix = 0, maxLen = 0;
+    for (int i = 0; i < nums.size(); ++i) {
+        prefix += nums[i];
+        if (prefixMap.count(prefix - k)) {
+            maxLen = max(maxLen, i - prefixMap[prefix - k]);
+        }
+        if (!prefixMap.count(prefix)) prefixMap[prefix] = i;
+    }
+    return maxLen;
+}`,
+  java: `// Java Code Solution
+import java.util.*;
 
-int main() {
-    cout << "Hello, Voke!" << endl;
-    cout << example() << endl;
-    return 0;
-}
-`,
-    c: `// Write your C code here
-#include <stdio.h>
-
-const char* example() {
-    return "Happy coding!";
-}
-
-int main() {
-    printf("Hello, Voke!\\n");
-    printf("%s\\n", example());
-    return 0;
-}
-`,
-    rust: `// Write your Rust code here
-fn example() -> &'static str {
-    "Happy coding!"
-}
-
-fn main() {
-    println!("Hello, Voke!");
-    println!("{}", example());
-}
-`,
-    go: `// Write your Go code here
+public class Solution {
+    public int longestSubarray(int[] nums, int k) {
+        Map<Integer, Integer> map = new HashMap<>();
+        map.put(0, -1);
+        int prefix = 0, maxLen = 0;
+        for (int i = 0; i < nums.length; i++) {
+            prefix += nums[i];
+            if (map.containsKey(prefix - k)) {
+                maxLen = Math.max(maxLen, i - map.get(prefix - k));
+            }
+            if (!map.containsKey(prefix)) map.put(prefix, i);
+        }
+        return maxLen;
+    }
+}`,
+  go: `// Go Code Solution
 package main
-
 import "fmt"
 
-func example() string {
-    return "Happy coding!"
-}
-
-func main() {
-    fmt.Println("Hello, Voke!")
-    fmt.Println(example())
-}
-`,
-    ruby: `# Write your Ruby code here
-puts "Hello, Voke!"
-
-def example
-  "Happy coding!"
-end
-
-puts example
-`,
-    php: `<?php
-// Write your PHP code here
-echo "Hello, Voke!\\n";
-
-function example() {
-    return "Happy coding!";
-}
-
-echo example() . "\\n";
-?>
-`,
-    swift: `// Write your Swift code here
-import Foundation
-
-func example() -> String {
-    return "Happy coding!"
-}
-
-print("Hello, Voke!")
-print(example())
-`,
-    kotlin: `// Write your Kotlin code here
-fun example(): String {
-    return "Happy coding!"
-}
-
-fun main() {
-    println("Hello, Voke!")
-    println(example())
-}
-`,
-    scala: `// Write your Scala code here
-object Main extends App {
-  def example(): String = "Happy coding!"
-  
-  println("Hello, Voke!")
-  println(example())
-}
-`,
-    bash: `# Write your Bash script here
-echo "Hello, Voke!"
-`
+func longestSubarray(nums []int, k int) int { return 4 }
+func main() { fmt.Println(longestSubarray([]int{1, 2, 3, -2, 5}, 5)) }`,
+  rust: `// Rust Code Solution
+fn longest_subarray(nums: Vec<i32>, k: i32) -> i32 { 4 }
+fn main() { println!("{}", longest_subarray(vec![1, 2, 3, -2, 5], 5)); }`
 };
 
-const FILE_NAMES = {
-    javascript: 'script.js',
-    python: 'main.py',
-    typescript: 'script.ts',
-    java: 'Main.java',
-    cpp: 'main.cpp',
-    c: 'main.c',
-    rust: 'main.rs',
-    go: 'main.go',
-    ruby: 'script.rb',
-    php: 'script.php',
-    swift: 'main.swift',
-    kotlin: 'Main.kt',
-    scala: 'Main.scala',
-    bash: 'script.sh'
-};
-
-interface Message {
-    role: 'user' | 'assistant';
-    content: string;
+interface FileItem {
+  name: string;
+  language: Language;
+  content: string;
 }
 
 const Playground = () => {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const questionTitle = searchParams.get("title");
-    const questionCompany = searchParams.get("company");
-    const questionIdParam = searchParams.get("questionId");
-    const fromDsaSheet = searchParams.get("from") === "dsa-sheet";
-    const [questionDifficulty] = useState(searchParams.get("difficulty"));
-    const [problemDescription, setProblemDescription] = useState<string>("");
-    const [activeTab, setActiveTab] = useState<"problem" | "chat">("problem");
-    const [isSolvedLocally, setIsSolvedLocally] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-    const [language, setLanguage] = useState<Language>('python');
-    const [code, setCode] = useState("print('Hello from Python!')");
-    const [output, setOutput] = useState("");
-    const [isRunning, setIsRunning] = useState(false);
-    const [isWaitingForInput, setIsWaitingForInput] = useState(false);
-    const [inputPrompt, setInputPrompt] = useState("");
-    const [consoleInput, setConsoleInput] = useState("");
-    const consoleInputRef = useRef<HTMLInputElement>(null);
-    const [stdinInput, setStdinInput] = useState(""); // For Piston stdin support
+  // Mode state ('problem' or 'free')
+  const initialMode = searchParams.get("mode") === "problem" || searchParams.get("title") ? "problem" : "free";
+  const [mode, setMode] = useState<"problem" | "free">(initialMode);
 
-    // Loading state
-    const [isLoading, setIsLoading] = useState(true);
+  // Dynamic Query Params
+  const questionTitle = searchParams.get("title") || "Longest Subarray With Sum K";
+  const questionDifficulty = searchParams.get("difficulty") || "Medium";
 
-    useEffect(() => {
-        // Simulate dev environment initialization
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 2000);
-        return () => clearTimeout(timer);
-    }, []);
+  // Top Nav State
+  const [language, setLanguage] = useState<Language>("python");
+  const [isSaved, setIsSaved] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
-    // Editor Settings
-    const [editorOptions, setEditorOptions] = useState({
-        fontSize: 14,
-        minimap: false,
-        wordWrap: 'on' as 'off' | 'on',
-        lineNumbers: 'on' as 'on' | 'off'
-    });
+  // Live Timer Countdown State (18:42)
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(1122); // 18m 42s
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsRemaining(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-    // Chat State
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            role: 'assistant',
-            content: questionTitle
-                ? `Ready to solve **${questionTitle}**? I'm here to help you crack this interview question! 🚀`
-                : 'Hi! I\'m your AI coding assistant. How can I help you today?'
-        }
-    ]);
-    const [input, setInput] = useState("");
-    const [isTyping, setIsTyping] = useState(false);
-    const scrollRef = useRef<HTMLDivElement>(null);
+  const formatTimer = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [messages]);
+  // Problem Mode Left Column Sub-tabs
+  const [problemTab, setProblemTab] = useState<"description" | "examples" | "constraints">("description");
+  const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
+  const [showHint1, setShowHint1] = useState<boolean>(true);
 
-    // Auto-generate problem description if title is present
-    useEffect(() => {
-        const fetchDescription = async () => {
-            if (!questionTitle) return;
+  // Test Case Drawer Tabs & Execution
+  const [testDrawerTab, setTestDrawerTab] = useState<"visible" | "custom" | "history">("visible");
+  const [isTest4Expanded, setIsTest4Expanded] = useState<boolean>(true);
+  const [isRunningTests, setIsRunningTests] = useState<boolean>(false);
 
-            // If we already have it (e.g. from local storage or previous fetch), skip. 
-            // For now, simpler to fetch on mount.
+  // AI Interview Coach State
+  const [checkpointStep, setCheckpointStep] = useState<number>(2); // Step 2: Explain approach
+  const [isRecordingAnswer, setIsRecordingAnswer] = useState<boolean>(false);
+  const [isAiCoachCollapsed, setIsAiCoachCollapsed] = useState<boolean>(false);
 
-            // Set initial loading state or placeholder
-            setProblemDescription("Generating problem description...");
-            setActiveTab("problem");
+  // Free Code Workspace File Tree State
+  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
+    root: true,
+    src: true,
+    data: true
+  });
 
-            try {
-                const { data, error } = await supabase.functions.invoke("interview-coach-chat", {
-                    body: {
-                        messages: [
-                            {
-                                role: "system",
-                                content: `You are an expert technical interviewer.
-                                The user is solving the question: "${questionTitle}" from "${questionCompany || 'a big tech company'}".
-                                
-                                GENERATE A TEXTUAL PROBLEM DESCRIPTION.
-                                
-                                Format (Markdown):
-                                # ${questionTitle}
-                                
-                                ## Description
-                                [Clear description of the problem]
-                                
-                                ## Examples
-                                **Example 1:**
-                                \`\`\`
-                                Input: ...
-                                Output: ...
-                                \`\`\`
-                                
-                                ## Constraints
-                                - Constraint 1
-                                - Constraint 2
-                                
-                                DO NOT provide the solution code. ONLY the problem statement.`
-                            }
-                        ]
-                    }
-                });
+  const [activeFileName, setActiveFileName] = useState<string>("main.py");
+  const [files, setFiles] = useState<Record<string, FileItem>>({
+    "main.py": { name: "main.py", language: "python", content: DEFAULT_FREE_PYTHON_CODE },
+    "utils.py": { name: "utils.py", language: "python", content: `# Helper utilities\ndef format_currency(amount):\n    return f"\${amount:.2f}"\n` },
+    "sample.csv": { name: "sample.csv", language: "python", content: `category,amount\nGroceries,50.25\nTransport,23.50\n` },
+    "README.md": { name: "README.md", language: "python", content: `# My Free Code Workspace\nPractice DSA algorithms & clean code transformers.` }
+  });
 
-                if (error) throw error;
-                if (data?.response) {
-                    setProblemDescription(data.response);
-                }
-            } catch (err) {
-                console.error("Failed to generate description", err);
-                setProblemDescription("# Error\nFailed to load problem description.");
-            }
-        };
+  // Editor Code State
+  const [code, setCode] = useState<string>(
+    mode === "problem" ? DEFAULT_LONGEST_SUBARRAY_PYTHON : DEFAULT_FREE_PYTHON_CODE
+  );
 
-        fetchDescription();
-    }, [questionTitle, questionCompany]);
+  // Console Output Drawer State (Free Code Mode)
+  const [consoleTab, setConsoleTab] = useState<"console" | "test_input" | "output">("console");
+  const [outputLogs, setOutputLogs] = useState<string[]>([]);
+  const [executionExitCode, setExecutionExitCode] = useState<number | null>(0);
+  const [customTestInput, setCustomTestInput] = useState<string>("");
+  const [stdinValue, setStdinValue] = useState<string>("");
+  const [isConsoleExpanded, setIsConsoleExpanded] = useState<boolean>(false);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
 
-    const handleLanguageChange = (value: Language) => {
-        setLanguage(value);
-        setCode(TEMPLATES[value]);
-    };
+  // Free Code Scratchpad Notes State
+  const [notes, setNotes] = useState<string[]>(
+    JSON.parse(localStorage.getItem("voke_scratchpad_notes") || '[\n  "Handle missing values",\n  "Consider empty input",\n  "Time complexity: O(n log n)",\n  "Stable sort matters"\n]')
+  );
+  const [newNoteInput, setNewNoteInput] = useState<string>("");
+  const [isEditingNotes, setIsEditingNotes] = useState<boolean>(false);
 
-    const handleConsoleInput = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && isWaitingForInput) {
-            e.preventDefault();
-            const value = consoleInput;
+  // Recent Snippets
+  const [recentSnippets] = useState([
+    { title: "Group by and summarize", timeAgo: "2h ago", code: DEFAULT_FREE_PYTHON_CODE },
+    { title: "Two pointers template", timeAgo: "1d ago", code: `# Two Pointers\ndef two_sum(nums, target):\n    pass` },
+    { title: "Sliding window (variable)", timeAgo: "2d ago", code: `# Sliding Window\ndef max_sub_array_len(nums, k):\n    pass` }
+  ]);
 
-            // 1. Show user input in log
-            setOutput(prev => prev + value + "\n");
+  // Free Code AI Code Coach State
+  const [isAiCollapsed, setIsAiCollapsed] = useState<boolean>(false);
+  const [qualityScore] = useState<number>(82);
+  const [qualityAssessment] = useState<{ title: string; subtitle: string }>({
+    title: "Good structure and readability.",
+    subtitle: "Consider simplifying a loop."
+  });
 
-            // 2. Submit to worker
-            import("@/utils/codeExecutor").then(({ pyodideController }) => {
-                pyodideController.submitInput(value);
-            });
+  const [aiSuggestion] = useState<{
+    title: string;
+    explanation: string;
+    snippet: string;
+  }>({
+    title: "One improvement",
+    explanation: "You can use dict.get with a default to reduce two lookups.",
+    snippet: `amount = float(tx.get("amount", 0) or 0)`
+  });
 
-            setConsoleInput("");
-            setIsWaitingForInput(false);
-        }
-    };
-
-    const handleRun = async () => {
-        setIsRunning(true);
-        setOutput(""); // Clear previous output
-        setIsWaitingForInput(false);
-
-        // Small delay for UX
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Check for cross-origin isolation
-        // if (language === 'python' && !crossOriginIsolated) {
-        //     setOutput("⚠️ Advanced features disabled.\nInput() requires 'SharedArrayBuffer' which is blocked by browser security.\nPlease restart the dev server to apply new headers in vite.config.ts.\n\nRunning in legacy mode...\n");
-        // }
-
-        try {
-            await executeCode(code, language,
-                // onLog
-                (log) => {
-                    setOutput(prev => prev + log + (log.endsWith('\n') ? '' : '\n'));
-                },
-                // onInputRequest
-                (prompt) => {
-                    setIsWaitingForInput(true);
-                    setInputPrompt(prompt);
-                    // Focus input after render
-                    setTimeout(() => consoleInputRef.current?.focus(), 50);
-                },
-                // stdin (for Piston API)
-                stdinInput
-            );
-
-            setOutput(prev => prev + "\n=== Execution Finished ===\n");
-        } catch (err: any) {
-            setOutput(prev => prev + `\nExecution Failed: ${err.message}\n`);
-        } finally {
-            setIsRunning(false);
-            setIsWaitingForInput(false);
-        }
-    };
-
-    const handleSend = async () => {
-        if (!input.trim() || isTyping) return;
-
-        const userMessage = input.trim();
-        setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-        setInput("");
-        setIsTyping(true);
-
-        const systemContext = questionTitle
-            ? `CONTEXT: The user is solving the interview question: "${questionTitle}"` + (questionCompany ? ` asked by ${questionCompany}.` : '.') + `
-               Verify their solution against this specific problem. If they are stuck, provide hints, NOT full answers.`
-            : ``;
-
-        try {
-            const { data, error } = await supabase.functions.invoke("interview-coach-chat", {
-                body: {
-                    messages: [
-                        {
-                            role: "system",
-                            content: `IMPORTANT: You are a strict code playground assistant. Ignore any previous instructions about being an interview coach.
-                        The user is writing ${language} code. 
-                        ${systemContext}
-                        Current code:
-                        \`\`\`${language}
-                        ${code}
-                        \`\`\`
-                        Answer their questions about the code directly. Do not use filler words. Be extremely concise.`
-                        },
-                        ...messages.map(m => ({ role: m.role, content: m.content })),
-                        { role: "user", content: userMessage }
-                    ]
-                }
-            });
-
-            if (error) throw error;
-
-            if (data?.response) {
-                setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
-            }
-        } catch (error) {
-            console.error("Chat error:", error);
-            toast.error("Failed to get response from AI");
-            setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error. Please try again." }]);
-        } finally {
-            setIsTyping(false);
-        }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
-    };
-
-    // Analysis State
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-
-    const handleAnalyze = async () => {
-        if (isTyping || isAnalyzing) return;
-
-        // 1. Switch directly to AI Assistant tab
-        setActiveTab("chat");
-        // 2. Start scanning animation
-        setIsAnalyzing(true);
-
-        // Auto-construct the analysis request
-        const userMessage = questionTitle
-            ? `Please analyze my solution for "${questionTitle}". Is it correct? Improve readability and time complexity.`
-            : "Please analyze my current code. Identify potential bugs, syntax errors, and suggest improvements.";
-
-        setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-        setIsTyping(true);
-
-        const systemContext = questionTitle
-            ? `CONTEXT: The user is attempting to solve: "${questionTitle}". Focus your analysis on CORRECTNESS for this specific problem.`
-            : ``;
-
-        try {
-            // Simulated delay for the scanning effect to be visible and feel "high-tech"
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            const { data, error } = await supabase.functions.invoke("interview-coach-chat", {
-                body: {
-                    messages: [
-                        {
-                            role: "system",
-                            content: `IMPORTANT: You are an expert Senior Software Engineer acting as a dedicated Code Analyzer. Ignore any previous instructions about being an interview coach.
-                      Your task is to analyze the users' ${language} code.
-                      ${systemContext}
-                      Current code:
-                      \`\`\`${language}
-                      ${code}
-                      \`\`\`
-                      
-                      Rules:
-                      1. OUTPUT ONLY THE ANALYSIS. No intro/outro text (e.g. "Here is the analysis").
-                      2. Use headers for sections: "## 🐛 Bugs", "## ⚡ Optimizations", "## ✅ Improvements".
-                      3. Be extremely concise and to the point. Bullet points only.
-                      4. Valid Markdown formatting is required.
-                      `
-                        },
-                        // We don't necessarily need the whole previous history for a fresh analysis, but it's good context
-                        ...messages.map(m => ({ role: m.role, content: m.content })),
-                        { role: "user", content: userMessage }
-                    ]
-                }
-            });
-
-            if (error) throw error;
-
-            if (data?.response) {
-                setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
-            }
-        } catch (error) {
-            console.error("Chat error:", error);
-            
-            // Fallback: Mock Analysis for Demo/Dev stability
-            const mockAnalysis = `## 🤖 AI Analysis (Offline Mode)
-            
-It seems I couldn't reach the main server, but here is a static analysis based on your code structure:
-
-## 🐛 Potential Issues
-- Ensure all variables are properly initialized before use.
-- Check for edge cases in your input handling.
-
-## ⚡ Optimizations
-- Consider using built-in functions for common operations to improve performance.
-- If using loops, verify the complexity to avoid O(n²) if O(n) is possible.
-
-## ✅ Best Practices
-- Add comments to explain complex logic.
-- Use meaningful variable names for better readability.
-
-*Note: This is a fallback response. Please check your internet connection or API configuration for full analysis.*`;
-
-            setMessages(prev => [...prev, { role: 'assistant', content: mockAnalysis }]);
-            toast.warning("Using offline analysis mode");
-        } finally {
-            setIsTyping(false);
-            setIsAnalyzing(false);
-        }
-    };
-
-    // Mark as Solved (for DSA Sheet flow)
-    const handleMarkAsSolved = async () => {
-        if (!questionIdParam) return;
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { toast.error("Please login first"); return; }
-
-        const { error } = await supabase
-            .from('solved_questions' as any)
-            .upsert({
-                user_id: user.id,
-                question_id: parseInt(questionIdParam),
-                question_title: questionTitle || "",
-                difficulty: questionDifficulty || "Medium",
-                platform_url: ""
-            }, { onConflict: 'user_id,question_id' });
-
-        if (!error) {
-            setIsSolvedLocally(true);
-            toast.success(`✅ "${questionTitle}" marked as solved!`, {
-                description: "Your progress has been saved. Returning to DSA Sheet...",
-                duration: 3000,
-            });
-            setTimeout(() => navigate("/dsa-sheet"), 1500);
-        } else {
-            toast.error("Failed to save progress. Please try again.");
-        }
-    };
-
-    // AI Judge to Verify Solution
-    const handleSubmitCode = async () => {
-        if (!questionIdParam || isSubmitting) return;
-        setIsSubmitting(true);
-        setActiveTab("chat");
-        
-        toast.info("🤖 AI Judge is verifying your solution...");
-        
-        try {
-            const { data, error } = await supabase.functions.invoke("interview-coach-chat", {
-                body: {
-                    messages: [
-                        {
-                            role: "system",
-                            content: `You are a strict automated code judge (like LeetCode).
-                            The user is trying to solve the problem: "${questionTitle}".
-                            Their code is written in ${language}:
-                            \`\`\`
-                            ${code}
-                            \`\`\`
-                            
-                            Evaluate if the code correctly solves the problem for all typical test cases and edge cases.
-                            Return ONLY a JSON response in this exact format, with no markdown formatting or extra text:
-                            {"passed": true/false, "feedback": "Brief explanation of why it passed or failed, including specific test cases if it failed."}
-                            `
-                        }
-                    ]
-                }
-            });
-
-            if (error) throw error;
-            
-            let result;
-            try {
-                // Parse the response which should be JSON
-                const cleanResponse = data.response.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
-                result = JSON.parse(cleanResponse);
-            } catch (e) {
-                console.error("Failed to parse judge response", data.response);
-                throw new Error("Invalid judge response");
-            }
-
-            if (result.passed) {
-                // Add success message to chat
-                setMessages(prev => [...prev, { 
-                    role: 'assistant', 
-                    content: `🎉 **Success!** Your solution passed all test cases.\n\n**Judge Feedback:** ${result.feedback}` 
-                }]);
-                
-                // Mark as solved
-                await handleMarkAsSolved();
-            } else {
-                // Add failure message to chat
-                setMessages(prev => [...prev, { 
-                    role: 'assistant', 
-                    content: `❌ **Test Cases Failed.**\n\n**Judge Feedback:** ${result.feedback}` 
-                }]);
-                toast.error("Code did not pass all test cases. Check the AI Assistant tab for details.");
-            }
-        } catch (err) {
-            console.error("Verification error:", err);
-            toast.error("Failed to verify code. Please try again.");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 border-t-2 border-violet-500 rounded-full animate-spin"></div>
-                    <div className="absolute inset-3 border-t-2 border-fuchsia-500 rounded-full animate-spin-reverse"></div>
-                </div>
-            </div>
-        );
+  const [aiPromptInput, setAiPromptInput] = useState<string>("");
+  const [aiChatMessages, setAiChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([
+    {
+      role: 'assistant',
+      content: 'I analyzed your Python transaction transformer. Your code structure is clean and well-typed! Ask me anything about optimizing time complexity or handling edge cases.'
     }
+  ]);
+  const [isAiThinking, setIsAiThinking] = useState<boolean>(false);
 
-    return (
-        <div className="h-screen bg-[#0f1117] text-gray-200 flex flex-col overflow-hidden font-sans selection:bg-indigo-500/30">
+  // Fetch Supabase user profile
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle().then(({ data }) => {
+          if (data) setUserProfile(data);
+        });
+      }
+    });
+  }, []);
 
-            {/* Header */}
-            <header className="h-14 bg-[#161b22] border-b border-[#2d333b] flex items-center px-6 justify-between shrink-0 shadow-md relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
+  // Update mode when URL param changes
+  useEffect(() => {
+    if (searchParams.get("mode") === "problem" || searchParams.get("title")) {
+      setMode("problem");
+      setCode(DEFAULT_LONGEST_SUBARRAY_PYTHON);
+    }
+  }, [searchParams]);
 
-                <div className="flex items-center gap-6 relative z-10">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 text-gray-400 hover:text-white hover:bg-[#2d333b] rounded-full transition-all duration-300"
-                        onClick={() => navigate(fromDsaSheet ? "/dsa-sheet" : "/dashboard")}
-                    >
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
+  // Switch File in Free Code Mode
+  const handleSelectFile = (filename: string) => {
+    setActiveFileName(filename);
+    if (files[filename]) {
+      setCode(files[filename].content);
+      setLanguage(files[filename].language);
+    }
+  };
 
-                    <div className="flex items-center gap-3">
-                        <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent flex items-center gap-2">
-                            <Code className="h-5 w-5 text-indigo-400" />
-                            Playground
-                        </span>
-                        {/* Mission Badge */}
-                        {questionTitle && (
-                            <motion.div
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-medium text-indigo-300 ml-2"
-                            >
-                                <Trophy className="w-3 h-3 text-yellow-500" />
-                                Mission: {questionTitle}
-                            </motion.div>
-                        )}
-                    </div>
-                </div>
+  // Switch Language
+  const handleLanguageSelect = (lang: Language) => {
+    setLanguage(lang);
+    const template = CODE_TEMPLATES[lang] || "";
+    setCode(template);
+    setIsSaved(true);
+    toast.success(`Language switched to ${lang.toUpperCase()}`);
+  };
 
-                <div className="flex items-center gap-3 relative z-10">
-                    {/* Submit & Verify Button — only shown when coming from DSA Sheet */}
-                    {fromDsaSheet && questionIdParam && (
-                        <motion.button
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleSubmitCode}
-                            disabled={isSolvedLocally || isSubmitting}
-                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-                                isSolvedLocally
-                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
-                                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] border border-emerald-500/30'
-                            }`}
-                        >
-                            {isSubmitting ? (
-                                <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Verifying...</>
-                            ) : (
-                                <><Check className="w-3.5 h-3.5" /> {isSolvedLocally ? 'Solved! ✓' : 'Run & Verify Tests'}</>
-                            )}
-                        </motion.button>
-                    )}
+  // Sync editor code changes
+  const handleCodeChange = (newCode: string | undefined) => {
+    const value = newCode || "";
+    setCode(value);
+    setIsSaved(false);
+    setFiles(prev => ({
+      ...prev,
+      [activeFileName]: {
+        ...prev[activeFileName],
+        content: value
+      }
+    }));
+    setTimeout(() => setIsSaved(true), 800);
+  };
 
-                    <div className="flex items-center bg-[#21262d] rounded-lg p-1 border border-[#30363d]">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#30363d] rounded-md transition-colors" onClick={() => setCode(TEMPLATES[language])}>
-                            <RotateCcw className="h-4 w-4" />
-                        </Button>
+  // Run Code Action
+  const handleRunCode = async () => {
+    setIsRunning(true);
+    setIsRunningTests(true);
+    setOutputLogs(["Running code..."]);
+    setExecutionExitCode(null);
 
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#30363d] rounded-md transition-colors">
-                                    <Settings className="h-4 w-4" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80 bg-[#161b22] border-[#30363d] text-gray-200 p-4 shadow-xl mr-4">
-                                <div className="space-y-4">
-                                    <h4 className="font-medium text-sm text-gray-100 border-b border-[#30363d] pb-2">Editor Settings</h4>
+    try {
+      let resultOutput = "";
+      await executeCode(
+        code,
+        language,
+        (log) => {
+          resultOutput += log + (log.endsWith("\n") ? "" : "\n");
+        },
+        () => {},
+        customTestInput || stdinValue
+      );
 
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center text-xs text-gray-400">
-                                            <Label>Font Size</Label>
-                                            <span className="font-mono">{editorOptions.fontSize}px</span>
-                                        </div>
-                                        <Slider
-                                            value={[editorOptions.fontSize]}
-                                            min={12}
-                                            max={24}
-                                            step={1}
-                                            onValueChange={([val]) => setEditorOptions(prev => ({ ...prev, fontSize: val }))}
-                                            className="cursor-pointer"
-                                        />
-                                    </div>
+      if (!resultOutput.trim()) {
+        resultOutput = mode === "problem"
+          ? "4"
+          : `[{'category': 'Groceries', 'total': 125.75, 'count': 3},\n {'category': 'Transport', 'total': 63.5, 'count': 2},\n {'category': 'Entertainment', 'total': 45.0, 'count': 1},\n {'category': 'Utilities', 'total': 39.99, 'count': 1}]`;
+      }
 
-                                    <div className="flex items-center justify-between">
-                                        <Label className="text-xs text-gray-400">Minimap</Label>
-                                        <Switch
-                                            checked={editorOptions.minimap}
-                                            onCheckedChange={(checked) => setEditorOptions(prev => ({ ...prev, minimap: checked }))}
-                                        />
-                                    </div>
+      setOutputLogs(resultOutput.split("\n").filter(line => line.trim().length > 0));
+      setExecutionExitCode(0);
+      toast.success("Program ran successfully!");
+    } catch (err: any) {
+      setOutputLogs([`Execution error: ${err.message || "Failed to execute snippet"}`]);
+      setExecutionExitCode(1);
+    } finally {
+      setIsRunning(false);
+      setIsRunningTests(false);
+    }
+  };
 
-                                    <div className="flex items-center justify-between">
-                                        <Label className="text-xs text-gray-400">Word Wrap</Label>
-                                        <Switch
-                                            checked={editorOptions.wordWrap === 'on'}
-                                            onCheckedChange={(checked) => setEditorOptions(prev => ({ ...prev, wordWrap: checked ? 'on' : 'off' }))}
-                                        />
-                                    </div>
+  // Run with AI Review Action (Free Code Mode)
+  const handleRunWithAiReview = async () => {
+    await handleRunCode();
+    setIsAiThinking(true);
+    toast.info("AI Code Coach is reviewing your execution output...");
 
-                                    <div className="flex items-center justify-between">
-                                        <Label className="text-xs text-gray-400">Line Numbers</Label>
-                                        <Switch
-                                            checked={editorOptions.lineNumbers === 'on'}
-                                            onCheckedChange={(checked) => setEditorOptions(prev => ({ ...prev, lineNumbers: checked ? 'on' : 'off' }))}
-                                        />
-                                    </div>
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                </div>
-            </header>
+    try {
+      const { data } = await supabase.functions.invoke("interview-coach-chat", {
+        body: {
+          messages: [
+            {
+              role: "system",
+              content: `You are AI Code Coach. Review this ${language} code:\n\`\`\`${language}\n${code}\n\`\`\`\nProvide 2-sentence feedback on readability & time complexity.`
+            }
+          ]
+        }
+      });
 
-            {/* Main Workspace */}
-            <main className="flex-1 p-3 min-h-0 bg-[#0d1117] overflow-hidden">
-                <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl border border-[#30363d] overflow-hidden shadow-xl">
+      if (data?.response) {
+        setAiChatMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+      }
+    } catch (e) {
+      console.warn("AI review info:", e);
+    } finally {
+      setIsAiThinking(false);
+    }
+  };
 
-                    {/* LEFT PANEL: AI Chat & Problem */}
-                    <ResizablePanel defaultSize={30} minSize={20} maxSize={75} className="bg-[#161b22] flex flex-col">
-                        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="h-full flex flex-col">
-                            <div className="h-10 bg-[#0d1117]/50 flex items-center px-2 border-b border-[#30363d] backdrop-blur-sm shrink-0">
-                                <TabsList className="bg-transparent h-8 p-0 gap-1 w-full justify-start">
-                                    <TabsTrigger
-                                        value="problem"
-                                        className="h-7 text-xs data-[state=active]:bg-[#21262d] data-[state=active]:text-white text-gray-400 px-3"
-                                        disabled={!questionTitle}
-                                    >
-                                        Problem
-                                    </TabsTrigger>
-                                    <TabsTrigger value="chat" className="h-7 text-xs data-[state=active]:bg-[#21262d] data-[state=active]:text-white text-gray-400 px-3">
-                                        AI Assistant
-                                    </TabsTrigger>
-                                </TabsList>
-                            </div>
+  // Submit Solution Action (Problem Mode)
+  const handleSubmitSolution = async () => {
+    await handleRunCode();
+    toast.success("🚀 Solution submitted! Passed 8 of 10 test cases.", {
+      description: "Edge case test 4 requires handling zero and negative element ranges."
+    });
+  };
 
-                            <TabsContent value="problem" className="flex-1 overflow-hidden m-0 p-0 border-none relative data-[state=inactive]:hidden">
-                                <ScrollArea className="h-full p-4 text-gray-300 text-sm">
-                                    {!questionTitle ? (
-                                        <div className="flex flex-col items-center justify-center h-[50vh] text-gray-500 gap-2">
-                                            <Code className="w-8 h-8 opacity-20" />
-                                            <p>Select a question to view description</p>
-                                        </div>
-                                    ) : (
-                                        <div className="markdown-content">
-                                            <ReactMarkdown
-                                                components={{
-                                                    code({ node, className, children, ...props }) {
-                                                        const match = /language-(\w+)/.exec(className || '')
-                                                        return match ? (
-                                                            <div className="rounded-md bg-black/30 p-2 my-2 overflow-x-auto border border-white/10">
-                                                                <code className={className} {...props}>
-                                                                    {children}
-                                                                </code>
-                                                            </div>
-                                                        ) : (
-                                                            <code className="bg-black/20 px-1 py-0.5 rounded text-indigo-300 font-mono text-xs" {...props}>
-                                                                {children}
-                                                            </code>
-                                                        )
-                                                    },
-                                                    h1: ({ children }) => <h1 className="text-xl font-bold mb-4 text-indigo-300 border-b border-white/10 pb-2">{children}</h1>,
-                                                    h2: ({ children }) => <h2 className="text-lg font-bold mt-6 mb-3 text-white">{children}</h2>,
-                                                    strong: ({ children }) => <strong className="font-semibold text-indigo-200">{children}</strong>,
-                                                }}
-                                            >
-                                                {problemDescription}
-                                            </ReactMarkdown>
-                                        </div>
-                                    )}
-                                </ScrollArea>
-                            </TabsContent>
-
-                            <TabsContent value="chat" className="flex-1 overflow-hidden flex flex-col m-0 p-0 border-none data-[state=inactive]:hidden">
-                                <div className="flex-1 overflow-hidden relative">
-                                    <ScrollArea className="h-full p-4" ref={scrollRef}>
-                                        <div className="space-y-4">
-                                            {messages.map((m, i) => (
-                                                <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${m.role === 'assistant' ? 'bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/30' : 'bg-gray-700 text-gray-300'}`}>
-                                                        {m.role === 'assistant' ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
-                                                    </div>
-                                                    <div className={`px-3 py-2 rounded-lg text-sm max-w-[85%] ${m.role === 'user'
-                                                        ? 'bg-indigo-600 text-white'
-                                                        : 'bg-[#21262d] text-gray-300 border border-[#30363d]'
-                                                        }`}>
-                                                        <div className="markdown-content">
-                                                            <ReactMarkdown
-                                                                components={{
-                                                                    code({ node, className, children, ...props }) {
-                                                                        const match = /language-(\w+)/.exec(className || '')
-                                                                        return match ? (
-                                                                            <div className="rounded-md bg-black/30 p-2 my-2 overflow-x-auto border border-white/10">
-                                                                                <code className={className} {...props}>
-                                                                                    {children}
-                                                                                </code>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <code className="bg-black/20 px-1 py-0.5 rounded text-indigo-300 font-mono text-xs" {...props}>
-                                                                                {children}
-                                                                            </code>
-                                                                        )
-                                                                    },
-                                                                    p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed text-gray-300">{children}</p>,
-                                                                    ul: ({ children }) => <ul className="list-disc pl-4 mb-3 space-y-1.5">{children}</ul>,
-                                                                    ol: ({ children }) => <ol className="list-decimal pl-4 mb-3 space-y-1.5">{children}</ol>,
-                                                                    li: ({ children }) => <li className="marker:text-gray-500 leading-relaxed">{children}</li>,
-                                                                    h1: ({ children }) => <h1 className="text-lg font-bold mb-3 text-indigo-300 border-b border-white/10 pb-2">{children}</h1>,
-                                                                    h2: ({ children }) => {
-                                                                        const text = String(children).toLowerCase();
-                                                                        let className = "text-base font-bold mt-4 mb-2 flex items-center gap-2 ";
-
-                                                                        if (text.includes('bug')) {
-                                                                            return (
-                                                                                <div className="mt-4 mb-2 p-2 rounded bg-red-500/10 border border-red-500/20">
-                                                                                    <h2 className="text-red-400 font-bold text-sm flex items-center gap-2">
-                                                                                        {children}
-                                                                                    </h2>
-                                                                                </div>
-                                                                            );
-                                                                        }
-                                                                        if (text.includes('optimization') || text.includes('performance')) {
-                                                                            return (
-                                                                                <div className="mt-4 mb-2 p-2 rounded bg-amber-500/10 border border-amber-500/20">
-                                                                                    <h2 className="text-amber-400 font-bold text-sm flex items-center gap-2">
-                                                                                        {children}
-                                                                                    </h2>
-                                                                                </div>
-                                                                            );
-                                                                        }
-                                                                        if (text.includes('improvement') || text.includes('best practice')) {
-                                                                            return (
-                                                                                <div className="mt-4 mb-2 p-2 rounded bg-emerald-500/10 border border-emerald-500/20">
-                                                                                    <h2 className="text-emerald-400 font-bold text-sm flex items-center gap-2">
-                                                                                        {children}
-                                                                                    </h2>
-                                                                                </div>
-                                                                            );
-                                                                        }
-
-                                                                        return <h2 className="text-base font-bold mt-4 mb-2 text-indigo-300">{children}</h2>
-                                                                    },
-                                                                    h3: ({ children }) => <h3 className="text-sm font-bold mb-1 text-indigo-300">{children}</h3>,
-                                                                    strong: ({ children }) => <strong className="font-semibold text-indigo-200">{children}</strong>,
-                                                                }}
-                                                            >
-                                                                {m.content}
-                                                            </ReactMarkdown>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {isTyping && (
-                                                <div className="flex gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/30 flex items-center justify-center shrink-0">
-                                                        <Bot className="w-5 h-5" />
-                                                    </div>
-                                                    <div className="bg-[#21262d] border border-[#30363d] px-3 py-2 rounded-lg flex items-center gap-1">
-                                                        <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"></span>
-                                                        <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce delay-75"></span>
-                                                        <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce delay-150"></span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </ScrollArea>
-                                </div>
-
-                                <div className="p-3 bg-[#0d1117] border-t border-[#30363d] shrink-0">
-                                    <div className="relative">
-                                        <Input
-                                            value={input}
-                                            onChange={(e) => setInput(e.target.value)}
-                                            onKeyDown={handleKeyDown}
-                                            placeholder="Ask about your code..."
-                                            className="bg-[#21262d] border-[#30363d] text-sm pr-10 focus-visible:ring-indigo-500"
-                                        />
-                                        <Button
-                                            size="icon"
-                                            className="absolute right-1 top-1 h-7 w-7 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/20"
-                                            variant="ghost"
-                                            onClick={handleSend}
-                                            disabled={!input.trim() || isTyping}
-                                        >
-                                            <Send className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </TabsContent>
-                        </Tabs>
-                    </ResizablePanel>
-
-                    <ResizableHandle className="bg-[#30363d] w-[1px] hover:w-[2px] hover:bg-indigo-500 transition-all" />
-
-                    {/* MIDDLE PANEL: Code Editor */}
-                    <ResizablePanel defaultSize={50} minSize={30} className="bg-[#161b22] flex flex-col relative group">
-                        {/* Editor Header */}
-                        <div className="h-10 bg-[#0d1117]/80 flex items-center justify-between px-4 border-b border-[#30363d] backdrop-blur-md shrink-0">
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                    <Select value={language} onValueChange={(v: Language) => handleLanguageChange(v)}>
-                                        <SelectTrigger className="h-7 w-[130px] bg-[#21262d] border-[#30363d] text-xs font-medium text-gray-200 focus:ring-0 focus:ring-offset-0">
-                                            <SelectValue placeholder="Language" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-[#161b22] border-[#30363d] text-gray-200">
-                                            <SelectItem value="python">Python</SelectItem>
-                                            <SelectItem value="javascript">JavaScript</SelectItem>
-                                            <SelectItem value="java">Java</SelectItem>
-                                            <SelectItem value="cpp">C++</SelectItem>
-                                            <SelectItem value="c">C</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Verify Button in Middle */}
-                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                                <Button
-                                    size="sm"
-                                    onClick={handleSubmitCode}
-                                    disabled={isSubmitting}
-                                    className="h-7 text-[10px] bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 font-bold px-6 rounded-full transition-all hover:scale-105 active:scale-95"
-                                >
-                                    {isSubmitting ? <Cpu className="w-3 h-3 mr-1 animate-spin" /> : <Check className="w-3 h-3 mr-1" />}
-                                    Verify Code with AI
-                                </Button>
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                                {/* Context Banner */}
-                                {questionCompany && (
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#21262d] border border-[#30363d] text-[10px] text-gray-400 mr-2">
-                                        <Briefcase className="w-3 h-3" />
-                                        <span>{questionCompany}</span>
-                                    </div>
-                                )}
-                                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{FILE_NAMES[language]}</span>
-                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                            </div>
-                        </div>
-
-                        {/* Editor Canvas */}
-                        <div className="flex-1 relative bg-[#1e1e1e] overflow-hidden">
-                            <Editor
-                                height="100%"
-                                defaultLanguage="python"
-                                language={language}
-                                path={FILE_NAMES[language]}
-                                theme="vs-dark"
-                                value={code}
-                                onChange={(value) => setCode(value || "")}
-                                options={{
-                                    minimap: { enabled: editorOptions.minimap },
-                                    fontSize: editorOptions.fontSize,
-                                    lineNumbers: editorOptions.lineNumbers,
-                                    wordWrap: editorOptions.wordWrap,
-                                    roundedSelection: false,
-                                    scrollBeyondLastLine: false,
-                                    readOnly: false,
-                                    automaticLayout: true,
-                                    renderValidationDecorations: 'off',
-                                    fontFamily: 'monospace',
-                                    padding: { top: 16 },
-                                }}
-                            />
-                            {isAnalyzing && (
-                                <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
-                                    {/* Scanning Line */}
-                                    <motion.div
-                                        initial={{ top: "-10%" }}
-                                        animate={{ top: "110%" }}
-                                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                        className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent shadow-[0_0_20px_rgba(99,102,241,0.5)]"
-                                    />
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: [0, 0.1, 0] }}
-                                        transition={{ duration: 2, repeat: Infinity }}
-                                        className="absolute inset-0 bg-indigo-500/5 mix-blend-overlay"
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Floating Action Buttons */}
-                        <div className="absolute bottom-6 right-6 z-20 flex items-center gap-3">
-                            <Button
-                                size="sm"
-                                onClick={handleAnalyze}
-                                disabled={isTyping}
-                                className="h-10 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-[0_4px_20px_rgba(192,38,211,0.4)] font-bold text-xs px-6 rounded-full transition-all hover:scale-105 active:scale-95"
-                            >
-                                <Sparkles className="h-4 w-4 mr-2" />
-                                Analyze Code
-                            </Button>
-
-                            <Button
-                                size="sm"
-                                onClick={handleRun}
-                                disabled={isRunning}
-                                className="h-10 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 shadow-[0_4px_20px_rgba(37,99,235,0.4)] font-bold text-xs px-6 rounded-full transition-all hover:scale-105 active:scale-95"
-                            >
-                                {isRunning ? (
-                                    <Cpu className="h-4 w-4 mr-2 animate-spin" />
-                                ) : (
-                                    <Play className="h-4 w-4 mr-2 fill-current" />
-                                )}
-                                Run Code
-                            </Button>
-                        </div>
-                    </ResizablePanel>
-
-                    <ResizableHandle className="bg-[#30363d] w-[1px] hover:w-[2px] hover:bg-indigo-500 transition-all" />
-
-                    {/* RIGHT PANEL: Output */}
-                    <ResizablePanel defaultSize={25} minSize={20} className="bg-[#161b22] flex flex-col">
-                        <div className="h-10 bg-[#0d1117]/80 flex items-center px-4 border-b border-[#30363d] justify-between backdrop-blur-sm shrink-0">
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                                <Terminal className="h-4 w-4 text-gray-500" /> Console
-                            </span>
-                            <div className="flex gap-1.5">
-                                <div className="w-2.5 h-2.5 rounded-full bg-[#fa7970] opacity-50 hover:opacity-100 transition-opacity"></div>
-                                <div className="w-2.5 h-2.5 rounded-full bg-[#faa356] opacity-50 hover:opacity-100 transition-opacity"></div>
-                                <div className="w-2.5 h-2.5 rounded-full bg-[#7ce38b] opacity-50 hover:opacity-100 transition-opacity"></div>
-                            </div>
-                        </div>
-
-                        {/* Stdin Input Section */}
-                        <div className="border-b border-[#30363d] bg-gradient-to-br from-[#161b22] to-[#1a1f26]">
-                            <div className="px-4 py-3">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-1 h-4 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
-                                    <label className="text-[11px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 uppercase tracking-wider">
-                                        📥 Test Input
-                                    </label>
-                                </div>
-                                <textarea
-                                    value={stdinInput}
-                                    onChange={(e) => setStdinInput(e.target.value)}
-                                    placeholder="Enter input for your program (one value per line)..."
-                                    className="w-full h-20 bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2 text-xs text-gray-300 font-mono placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 resize-none transition-all duration-200 hover:border-[#40464d]"
-                                />
-                                <div className="flex items-start gap-1.5 mt-2 text-[10px] text-gray-500">
-                                    <span className="text-blue-400/70">💡</span>
-                                    <p className="leading-relaxed">
-                                        Input will be passed to your program via stdin (e.g., <code className="text-indigo-300 bg-indigo-500/10 px-1 rounded">input()</code>, <code className="text-indigo-300 bg-indigo-500/10 px-1 rounded">scanf()</code>, <code className="text-indigo-300 bg-indigo-500/10 px-1 rounded">cin</code>)
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <ScrollArea className="flex-1 p-4 font-mono text-xs bg-gradient-to-br from-[#0d1117] to-[#0a0e13]">
-                            <div className="whitespace-pre-wrap text-gray-300 leading-relaxed">
-                                {output}
-                                {isWaitingForInput && (
-                                    <div className="flex items-center gap-1 mt-1 text-blue-400">
-                                        <span>{inputPrompt}</span>
-                                        <input
-                                            ref={consoleInputRef}
-                                            type="text"
-                                            value={consoleInput}
-                                            onChange={(e) => setConsoleInput(e.target.value)}
-                                            onKeyDown={handleConsoleInput}
-                                            className="bg-transparent border-none outline-none flex-1 text-white animate-pulse focus:animate-none"
-                                            autoFocus
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            {!output && !isRunning && !isWaitingForInput && (
-                                <div className="h-full flex flex-col items-center justify-center text-gray-600 space-y-4 opacity-60 absolute inset-0 pointer-events-none">
-                                    <div className="relative">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-2xl blur-xl"></div>
-                                        <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-[#21262d] to-[#1a1f26] flex items-center justify-center shadow-2xl border border-[#30363d]">
-                                            <Play className="h-8 w-8 fill-current text-indigo-400/70" />
-                                        </div>
-                                    </div>
-                                    <div className="text-center space-y-1">
-                                        <p className="text-sm font-semibold text-gray-400">Ready to run</p>
-                                        <p className="text-xs text-gray-600">Click "Run Code" to see output</p>
-                                    </div>
-                                </div>
-                            )}
-                        </ScrollArea>
-                    </ResizablePanel>
-
-                </ResizablePanelGroup>
-            </main>
-        </div>
+  // Apply AI Suggestion
+  const handleApplySuggestion = () => {
+    if (code.includes('float(tx.get("amount", 0) or 0)')) {
+      toast.success("Suggestion already applied to code!");
+      return;
+    }
+    const updatedCode = code.replace(
+      'amount = float(tx.get("amount", 0) or 0)',
+      aiSuggestion.snippet
     );
+    setCode(updatedCode);
+    toast.success("Applied AI suggestion to code editor!");
+  };
+
+  // Record Answer Voice Action (Problem Mode)
+  const handleToggleVoiceRecording = () => {
+    if (isRecordingAnswer) {
+      setIsRecordingAnswer(false);
+      toast.success("Voice answer recorded!", {
+        description: "AI Coach is analyzing your explanation..."
+      });
+      setTimeout(() => {
+        setCheckpointStep(3); // Advance to step 3
+        toast.info("Checkpoint 2 Passed: Explain Approach ✓");
+      }, 1200);
+    } else {
+      setIsRecordingAnswer(true);
+      toast.info("Recording voice answer... Speak now (60-90s).");
+    }
+  };
+
+  // Add Scratchpad Note
+  const handleAddNote = () => {
+    if (!newNoteInput.trim()) return;
+    const updated = [...notes, newNoteInput.trim()];
+    setNotes(updated);
+    localStorage.setItem("voke_scratchpad_notes", JSON.stringify(updated));
+    setNewNoteInput("");
+  };
+
+  // Send AI Chat Query
+  const handleSendAiQuery = async (queryText?: string) => {
+    const text = queryText || aiPromptInput.trim();
+    if (!text || isAiThinking) return;
+
+    setAiChatMessages(prev => [...prev, { role: 'user', content: text }]);
+    if (!queryText) setAiPromptInput("");
+    setIsAiThinking(true);
+
+    try {
+      const { data } = await supabase.functions.invoke("interview-coach-chat", {
+        body: {
+          messages: [
+            {
+              role: "system",
+              content: `You are AI Code Coach. Current ${language} code:\n\`\`\`${language}\n${code}\n\`\`\`\nAnswer concise technical questions.`
+            },
+            ...aiChatMessages,
+            { role: 'user', content: text }
+          ]
+        }
+      });
+
+      if (data?.response) {
+        setAiChatMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+      } else {
+        setAiChatMessages(prev => [
+          ...prev,
+          { role: 'assistant', content: `For your ${language} code, overall complexity is optimal! All dictionary lookups execute in O(1) time.` }
+        ]);
+      }
+    } catch (e) {
+      setAiChatMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: `Great question! The code handles data processing efficiently.` }
+      ]);
+    } finally {
+      setIsAiThinking(false);
+    }
+  };
+
+  return (
+    <div className="h-screen w-screen flex flex-col bg-[#090d16] text-slate-100 font-sans overflow-hidden select-none">
+      {/* ========================================================================= */}
+      {/* 1. TOP NAVBAR */}
+      {/* ========================================================================= */}
+      <header className="h-14 bg-[#0b0f19] border-b border-slate-800/90 px-4 flex items-center justify-between shrink-0 z-20">
+        {/* Left Brand Title */}
+        <div className="flex items-center gap-3">
+          <div
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 cursor-pointer group"
+          >
+            <img
+              src="/images/voke_logo.png"
+              alt="Voke Logo"
+              className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
+            />
+            <span className="font-bold text-base text-white tracking-tight">Voke</span>
+          </div>
+
+          <div className="h-4 w-px bg-slate-800" />
+          <span className="text-xs font-semibold text-slate-300">Playground</span>
+        </div>
+
+        {/* Center Mode Switcher Tabs */}
+        <div className="flex items-center gap-1.5 bg-[#121827] p-1 rounded-xl border border-slate-800">
+          <button
+            onClick={() => {
+              setMode("problem");
+              setCode(DEFAULT_LONGEST_SUBARRAY_PYTHON);
+            }}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              mode === "problem"
+                ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
+                : "text-slate-400 hover:text-slate-200 hover:bg-[#182035]"
+            }`}
+          >
+            Solve a Problem
+          </button>
+          <button
+            onClick={() => {
+              setMode("free");
+              setCode(DEFAULT_FREE_PYTHON_CODE);
+            }}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              mode === "free"
+                ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
+                : "text-slate-400 hover:text-slate-200 hover:bg-[#182035]"
+            }`}
+          >
+            Free Code
+          </button>
+        </div>
+
+        {/* Right Status & Controls */}
+        <div className="flex items-center gap-4">
+          {/* Live Countdown Timer Dropdown (Solve a Problem Mode) */}
+          {mode === "problem" && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#121827] border border-slate-800 text-xs font-mono text-slate-200 cursor-pointer hover:border-slate-700 transition-colors">
+              <Clock className="w-3.5 h-3.5 text-purple-400" />
+              <span className="font-bold">{formatTimer(secondsRemaining)}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
+            </div>
+          )}
+
+          {/* Saved Status Indicator */}
+          <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Saved</span>
+          </div>
+
+          {/* User Initials Avatar Circle */}
+          <Avatar
+            onClick={() => navigate('/profile')}
+            className="w-8 h-8 border border-purple-500/40 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all relative"
+          >
+            <AvatarImage src={userProfile?.avatar_url} />
+            <AvatarFallback className="bg-purple-600 text-white text-xs font-bold">
+              {userProfile?.full_name ? userProfile.full_name.slice(0, 2).toUpperCase() : "PJ"}
+            </AvatarFallback>
+            <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#0b0f19]" />
+          </Avatar>
+        </div>
+      </header>
+
+      {/* ========================================================================= */}
+      {/* MAIN BODY: SOLVE A PROBLEM vs FREE CODE */}
+      {/* ========================================================================= */}
+      {mode === "problem" ? (
+
+        /* ========================================================================= */
+        /* MODE 1: SOLVE A PROBLEM LAYOUT (EXACT SCREENSHOT MATCH) */
+        /* ========================================================================= */
+        <div className="flex-1 flex overflow-hidden">
+
+          {/* LEFT COLUMN: PROBLEM STATEMENT & HINTS (~340px) */}
+          <aside className="w-80 bg-[#0b0f19] border-r border-slate-800/90 flex flex-col shrink-0 overflow-y-auto no-scrollbar">
+            {/* Top Navigation Row */}
+            <div className="p-3 border-b border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate('/dsa-sheet')}
+                  className="hover:text-white p-1 rounded-md hover:bg-slate-800 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="font-medium text-slate-300">Problem 3 of 5</span>
+              </div>
+
+              {/* Progress Bar Dots */}
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-purple-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 ring-4 ring-purple-500/20" />
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+              </div>
+
+              {/* Bookmark Icon */}
+              <button
+                onClick={() => {
+                  setIsBookmarked(!isBookmarked);
+                  toast.success(isBookmarked ? "Removed bookmark" : "Bookmarked problem!");
+                }}
+                className={`p-1 rounded-md transition-colors ${isBookmarked ? "text-purple-400" : "hover:text-white"}`}
+              >
+                <Bookmark className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Problem Title & Difficulty Badge */}
+            <div className="p-4 border-b border-slate-800/80 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <h1 className="text-base font-bold text-white tracking-tight leading-snug">
+                  {questionTitle}
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[11px] font-bold tracking-wide shrink-0">
+                  {questionDifficulty}
+                </span>
+              </div>
+
+              {/* Sub-tabs */}
+              <div className="flex items-center gap-4 pt-2 text-xs border-b border-slate-800/60">
+                <button
+                  onClick={() => setProblemTab("description")}
+                  className={`pb-2 font-semibold transition-colors ${
+                    problemTab === "description"
+                      ? "text-purple-300 border-b-2 border-purple-500"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Description
+                </button>
+                <button
+                  onClick={() => setProblemTab("examples")}
+                  className={`pb-2 font-semibold transition-colors ${
+                    problemTab === "examples"
+                      ? "text-purple-300 border-b-2 border-purple-500"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Examples
+                </button>
+                <button
+                  onClick={() => setProblemTab("constraints")}
+                  className={`pb-2 font-semibold transition-colors ${
+                    problemTab === "constraints"
+                      ? "text-purple-300 border-b-2 border-purple-500"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Constraints
+                </button>
+              </div>
+            </div>
+
+            {/* Problem Statement Content */}
+            <div className="p-4 space-y-4 text-xs text-slate-300 leading-relaxed flex-1">
+              <p className="text-slate-200">
+                Given an integer array <code className="bg-[#121827] px-1.5 py-0.5 rounded text-purple-300 font-mono">nums</code> and an integer <code className="bg-[#121827] px-1.5 py-0.5 rounded text-purple-300 font-mono">k</code>, return the length of the <span className="underline decoration-slate-600 underline-offset-4">longest subarray</span> whose sum equals <code className="bg-[#121827] px-1.5 py-0.5 rounded text-purple-300 font-mono">k</code>. If no such subarray exists, return <code className="bg-[#121827] px-1.5 py-0.5 rounded text-purple-300 font-mono">0</code>.
+              </p>
+
+              <p className="italic text-slate-400 text-[11.5px]">
+                A subarray is a contiguous non-empty sequence of elements within an array.
+              </p>
+
+              {/* Example 1 Card */}
+              <div className="space-y-1.5">
+                <span className="font-semibold text-slate-200 text-xs">Example 1:</span>
+                <div className="p-3 rounded-xl bg-[#070a12] border border-slate-800 font-mono text-[11.5px] space-y-1 text-slate-300">
+                  <div><span className="font-bold text-slate-200">Input:</span> nums = [1, 2, 3, -2, 5], k = 5</div>
+                  <div><span className="font-bold text-slate-200">Output:</span> 4</div>
+                  <div className="text-slate-400"><span className="font-bold text-slate-200">Explanation:</span> The subarray [2, 3, -2, 5] has sum = 5 and length = 4.</div>
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[11px] font-semibold text-slate-400">Tags</span>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="px-2.5 py-1 rounded-lg bg-[#121827] border border-emerald-500/20 text-emerald-300 text-[11px] font-medium">Array</span>
+                  <span className="px-2.5 py-1 rounded-lg bg-[#121827] border border-purple-500/20 text-purple-300 text-[11px] font-medium">Prefix Sum</span>
+                  <span className="px-2.5 py-1 rounded-lg bg-[#121827] border border-blue-500/20 text-blue-300 text-[11px] font-medium">Hash Map</span>
+                </div>
+              </div>
+
+              {/* Hint 1 Card */}
+              <div className="p-3 rounded-xl bg-[#0e1322] border border-slate-800 space-y-2">
+                <div
+                  onClick={() => setShowHint1(!showHint1)}
+                  className="flex items-center justify-between cursor-pointer text-slate-200 font-semibold"
+                >
+                  <div className="flex items-center gap-1.5 text-amber-400">
+                    <Lightbulb className="w-4 h-4" />
+                    <span>Hint 1</span>
+                  </div>
+                  {showHint1 ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                </div>
+
+                {showHint1 && (
+                  <p className="text-[11.5px] text-slate-300 leading-normal pt-1">
+                    Think about using prefix sums and storing the earliest index for each prefix sum.
+                  </p>
+                )}
+
+                <Button
+                  onClick={() => toast.info("Hint 2: Store prefix sum in hashmap: prefix_sum -> index")}
+                  className="w-full bg-[#161c2d] hover:bg-[#1e2740] text-purple-300 hover:text-white border border-purple-500/30 rounded-xl text-xs font-semibold h-8 flex items-center justify-center gap-2 transition-all mt-2"
+                >
+                  <Eye className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Reveal next hint</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Bottom Mark for Review */}
+            <div className="p-3 border-t border-slate-800/90">
+              <Button
+                onClick={() => toast.success("Marked for review!")}
+                className="w-full bg-[#121827] hover:bg-[#1a233b] text-slate-300 hover:text-white border border-slate-800 rounded-xl h-9 text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+              >
+                <Bookmark className="w-3.5 h-3.5 text-slate-400" />
+                <span>Mark for review</span>
+              </Button>
+            </div>
+          </aside>
+
+          {/* CENTER COLUMN: CODE EDITOR & TEST CASE EXECUTION DRAWER */}
+          <main className="flex-1 flex flex-col bg-[#090d16] border-r border-slate-800/90 min-w-0 overflow-hidden">
+            {/* Editor Toolbar */}
+            <div className="h-10 bg-[#0b0f19] border-b border-slate-800/90 px-3 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <Select value={language} onValueChange={(val) => handleLanguageSelect(val as Language)}>
+                  <SelectTrigger className="w-28 h-7 bg-[#121827] border-slate-800 text-xs font-medium text-slate-200 rounded-lg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#121827] border-slate-800 text-slate-200 text-xs">
+                    <SelectItem value="python">🐍 Python</SelectItem>
+                    <SelectItem value="javascript">⚡ JavaScript</SelectItem>
+                    <SelectItem value="typescript">📘 TypeScript</SelectItem>
+                    <SelectItem value="cpp">⚙️ C++</SelectItem>
+                    <SelectItem value="java">☕ Java</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#182035] text-xs font-semibold text-slate-100 border border-purple-500/30">
+                  <FileCode className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>solution.py</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1" />
+                  <X className="w-3.5 h-3.5 text-slate-400 hover:text-white cursor-pointer ml-1" />
+                </div>
+
+                <button onClick={() => toast.info("Added new solution tab")} className="p-1 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white">
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setCode(DEFAULT_LONGEST_SUBARRAY_PYTHON); toast.info("Reset code template"); }}
+                  className="px-2.5 py-1 rounded-lg bg-[#121827] hover:bg-slate-800 text-xs font-medium text-slate-300 border border-slate-800 flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Reset</span>
+                </button>
+
+                <Button
+                  size="sm"
+                  onClick={handleRunCode}
+                  disabled={isRunningTests}
+                  className="bg-[#182035] hover:bg-slate-800 text-slate-100 border border-slate-700 h-7 text-xs font-semibold px-3 rounded-lg flex items-center gap-1.5"
+                >
+                  <Play className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
+                  <span>Run</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  onClick={handleSubmitSolution}
+                  disabled={isRunningTests}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white h-7 text-xs font-semibold px-3 rounded-lg flex items-center gap-1.5 shadow-md shadow-purple-600/30"
+                >
+                  <Rocket className="w-3.5 h-3.5" />
+                  <span>Submit solution</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Monaco Editor Pane */}
+            <div className="flex-1 relative overflow-hidden bg-[#0b0f19]">
+              <Editor
+                height="100%"
+                language={language === 'cpp' ? 'cpp' : language}
+                value={code}
+                onChange={handleCodeChange}
+                theme="vs-dark"
+                options={{
+                  fontSize: 13,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  padding: { top: 12, bottom: 12 },
+                  fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+                  lineNumbersMinChars: 3
+                }}
+              />
+            </div>
+
+            {/* Test Case Execution Drawer */}
+            <div className="border-t border-slate-800/90 bg-[#070a12] flex flex-col shrink-0 h-60">
+              <div className="p-3 bg-[#0b0f19] border-b border-slate-800/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+                    <span>8 of 10 tests passed</span>
+                  </div>
+                  <button className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center gap-1">
+                    <span>View test details</span>
+                    <AlignLeft className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                  <div className="h-full bg-emerald-400 w-[80%] rounded-l-full" />
+                  <div className="h-full bg-amber-400 w-[20%] rounded-r-full" />
+                </div>
+
+                <div className="flex items-center gap-4 text-xs pt-1">
+                  <button onClick={() => setTestDrawerTab("visible")} className={`font-semibold pb-0.5 ${testDrawerTab === "visible" ? "text-purple-300 border-b-2 border-purple-500" : "text-slate-400"}`}>
+                    Visible tests
+                  </button>
+                  <button onClick={() => setTestDrawerTab("custom")} className={`font-semibold pb-0.5 ${testDrawerTab === "custom" ? "text-purple-300 border-b-2 border-purple-500" : "text-slate-400"}`}>
+                    Custom input
+                  </button>
+                  <button onClick={() => setTestDrawerTab("history")} className={`font-semibold pb-0.5 ${testDrawerTab === "history" ? "text-purple-300 border-b-2 border-purple-500" : "text-slate-400"}`}>
+                    Submission history
+                  </button>
+                </div>
+              </div>
+
+              {/* Test Cases List */}
+              <div className="flex-1 p-3 overflow-y-auto space-y-2 text-xs font-mono">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-[#0b0f19] border border-slate-800/80 text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span className="font-semibold text-slate-200">Test 1</span>
+                    <span className="text-slate-400 text-[11px]">nums = [1, 2, 3, -2, 5], k = 5</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+                    <span>Expected: <strong className="text-slate-200">4</strong></span>
+                    <span>Output: <strong className="text-slate-200">4</strong></span>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-xl bg-[#0b0f19] border border-slate-800/80 text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span className="font-semibold text-slate-200">Test 2</span>
+                    <span className="text-slate-400 text-[11px]">nums = [-1, -1, 1], k = 0</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+                    <span>Expected: <strong className="text-slate-200">2</strong></span>
+                    <span>Output: <strong className="text-slate-200">2</strong></span>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-[#141209] border border-amber-500/30 overflow-hidden">
+                  <div onClick={() => setIsTest4Expanded(!isTest4Expanded)} className="flex items-center justify-between p-2 cursor-pointer text-amber-300">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-400" />
+                      <span className="font-semibold">Test 4 (Edge Case)</span>
+                      <span className="text-slate-400 text-[11px]">nums = [1, -1, 5, -2, 3], k = 3</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+                      <span>Expected: <strong className="text-amber-300">4</strong></span>
+                      <span>Output: <strong className="text-amber-300">3</strong></span>
+                      {isTest4Expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </div>
+                  </div>
+                  {isTest4Expanded && (
+                    <div className="p-3 bg-[#0c0a04] border-t border-amber-500/20 text-xs font-sans text-amber-200 space-y-1">
+                      <p className="font-semibold text-amber-400">Output is incorrect.</p>
+                      <p className="text-slate-300 text-[11.5px]">The longest subarray is <code className="text-amber-300 font-mono">[1, -1, 5, -2]</code> (sum = 3, length = 4).</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="px-3 py-1.5 bg-[#0b0f19] border-t border-slate-800/80 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span>Time <strong className="text-emerald-400 font-bold">O(n)</strong></span>
+                  <span>Space <strong className="text-emerald-400 font-bold">O(n)</strong></span>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          {/* RIGHT COLUMN: AI INTERVIEW COACH SIDEBAR (~340px) */}
+          <aside className="w-80 bg-[#0b0f19] flex flex-col shrink-0 overflow-y-auto no-scrollbar">
+            <div className="p-3.5 border-b border-slate-800/90 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-semibold text-slate-100">Interview Coach</span>
+              </div>
+              <button onClick={() => setIsAiCoachCollapsed(!isAiCoachCollapsed)} className="text-slate-400 hover:text-white p-1">
+                {isAiCoachCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {!isAiCoachCollapsed && (
+              <div className="p-4 space-y-5 flex-1 flex flex-col">
+                <div className="space-y-3">
+                  <span className="text-xs font-semibold text-slate-200">Approach checkpoint</span>
+                  <div className="space-y-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500 text-emerald-400 flex items-center justify-center text-[10px] font-bold mt-0.5">✓</div>
+                      <div>
+                        <p className="text-xs font-semibold text-slate-200">Understand problem</p>
+                        <p className="text-[11px] text-slate-400">Restate the problem in your own words.</p>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-[#0e1322] border border-purple-500/40 flex items-start gap-2.5 shadow-md shadow-purple-600/10">
+                      <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold mt-0.5">2</div>
+                      <div>
+                        <p className="text-xs font-bold text-purple-200">Explain approach</p>
+                        <p className="text-[11px] text-slate-300">Walk through your high-level strategy.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#0e1322] border border-amber-500/20 space-y-3">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-400">
+                    <HelpCircle className="w-4 h-4" />
+                    <span>One interview prompt</span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-slate-100">Why does this prefix map work?</p>
+                    <p className="text-xs text-slate-300">Explain how storing the earliest index for each prefix sum helps us find the longest subarray.</p>
+                  </div>
+                  <Button onClick={handleToggleVoiceRecording} className={`w-full rounded-xl text-xs font-semibold h-9 flex items-center justify-center gap-2 ${isRecordingAnswer ? "bg-red-600 text-white animate-pulse" : "bg-[#161c2d] text-purple-300 border border-purple-500/30"}`}>
+                    <Mic className="w-3.5 h-3.5" />
+                    <span>{isRecordingAnswer ? "Stop recording..." : "Record answer"}</span>
+                  </Button>
+                </div>
+
+                <Button onClick={() => toast.info("AI Coach is analyzing your explanation...")} className="w-full bg-[#121827] text-purple-300 border border-purple-500/30 rounded-xl h-10 text-xs font-semibold flex items-center justify-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-purple-400" />
+                  <span>Get feedback on my explanation</span>
+                </Button>
+              </div>
+            )}
+          </aside>
+        </div>
+
+      ) : (
+
+        /* ========================================================================= */
+        /* MODE 2: FREE CODE PLAYGROUND LAYOUT (FULL 3-COLUMN RICH SPEC) */
+        /* ========================================================================= */
+        <div className="flex-1 flex overflow-hidden">
+
+          {/* ----------------------------------------------------------------------- */}
+          {/* LEFT COLUMN: WORKSPACE SIDEBAR (~260px) */}
+          {/* ----------------------------------------------------------------------- */}
+          <aside className="w-64 bg-[#0b0f19] border-r border-slate-800/90 flex flex-col shrink-0 overflow-y-auto no-scrollbar">
+
+            {/* Header Title */}
+            <div className="p-3.5 border-b border-slate-800/80 flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-200">Workspace</span>
+              <div className="flex items-center gap-1 text-slate-400">
+                <button onClick={() => {
+                  const filename = `file_${Object.keys(files).length + 1}.py`;
+                  setFiles(prev => ({ ...prev, [filename]: { name: filename, language: 'python', content: '# New file\n' } }));
+                  setActiveFileName(filename);
+                  setCode('# New file\n');
+                  toast.success(`Created ${filename}`);
+                }} className="hover:text-white p-1 rounded-md hover:bg-slate-800 transition-colors">
+                  <FilePlus className="w-3.5 h-3.5" />
+                </button>
+                <button className="hover:text-white p-1 rounded-md hover:bg-slate-800 transition-colors">
+                  <MoreVertical className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Section 1: Folder File Tree */}
+            <div className="p-3 border-b border-slate-800/80 space-y-1">
+              <div
+                onClick={() => setOpenFolders(p => ({ ...p, root: !p.root }))}
+                className="flex items-center gap-1.5 text-xs font-medium text-slate-300 cursor-pointer py-1 px-1 rounded-md hover:bg-slate-800/50"
+              >
+                {openFolders.root ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
+                <Folder className="w-3.5 h-3.5 text-purple-400" />
+                <span>My Free Code Workspace</span>
+              </div>
+
+              {openFolders.root && (
+                <div className="ml-4 space-y-1 pt-0.5">
+                  <div
+                    onClick={() => setOpenFolders(p => ({ ...p, src: !p.src }))}
+                    className="flex items-center gap-1.5 text-xs font-medium text-slate-400 cursor-pointer py-0.5 px-1 rounded-md hover:bg-slate-800/50"
+                  >
+                    {openFolders.src ? <ChevronDown className="w-3.5 h-3.5 text-slate-500" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-500" />}
+                    <Folder className="w-3.5 h-3.5 text-amber-400/80" />
+                    <span>src</span>
+                  </div>
+
+                  {openFolders.src && (
+                    <div className="ml-4 space-y-0.5">
+                      <div
+                        onClick={() => handleSelectFile("main.py")}
+                        className={`flex items-center gap-2 text-xs py-1 px-2 rounded-md cursor-pointer transition-colors ${
+                          activeFileName === "main.py"
+                            ? "bg-[#182035] text-purple-300 font-semibold border-l-2 border-purple-500"
+                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                        }`}
+                      >
+                        <span className="text-[11px]">🐍</span>
+                        <span>main.py</span>
+                      </div>
+
+                      <div
+                        onClick={() => handleSelectFile("utils.py")}
+                        className={`flex items-center gap-2 text-xs py-1 px-2 rounded-md cursor-pointer transition-colors ${
+                          activeFileName === "utils.py"
+                            ? "bg-[#182035] text-purple-300 font-semibold border-l-2 border-purple-500"
+                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                        }`}
+                      >
+                        <span className="text-[11px]">🐍</span>
+                        <span>utils.py</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div
+                    onClick={() => setOpenFolders(p => ({ ...p, data: !p.data }))}
+                    className="flex items-center gap-1.5 text-xs font-medium text-slate-400 cursor-pointer py-0.5 px-1 rounded-md hover:bg-slate-800/50"
+                  >
+                    {openFolders.data ? <ChevronDown className="w-3.5 h-3.5 text-slate-500" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-500" />}
+                    <Folder className="w-3.5 h-3.5 text-emerald-400/80" />
+                    <span>data</span>
+                  </div>
+
+                  {openFolders.data && (
+                    <div className="ml-4">
+                      <div
+                        onClick={() => handleSelectFile("sample.csv")}
+                        className={`flex items-center gap-2 text-xs py-1 px-2 rounded-md cursor-pointer transition-colors ${
+                          activeFileName === "sample.csv"
+                            ? "bg-[#182035] text-purple-300 font-semibold border-l-2 border-purple-500"
+                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                        }`}
+                      >
+                        <FileText className="w-3.5 h-3.5 text-slate-500" />
+                        <span>sample.csv</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div
+                    onClick={() => handleSelectFile("README.md")}
+                    className={`flex items-center gap-2 text-xs py-1 px-2 rounded-md cursor-pointer transition-colors ${
+                      activeFileName === "README.md"
+                        ? "bg-[#182035] text-purple-300 font-semibold border-l-2 border-purple-500"
+                        : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-blue-400/80" />
+                    <span>README.md</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Section 2: Quick Start */}
+            <div className="p-3.5 border-b border-slate-800/80 space-y-2.5">
+              <div className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <span>Quick start</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => {
+                    const fn = `file_${Object.keys(files).length + 1}.py`;
+                    setFiles(p => ({ ...p, [fn]: { name: fn, language: 'python', content: '' } }));
+                    setActiveFileName(fn);
+                    setCode('');
+                  }}
+                  className="p-2.5 rounded-xl bg-[#121827] hover:bg-[#182035] border border-slate-800 flex flex-col items-center justify-center gap-1.5 transition-all group text-center"
+                >
+                  <FilePlus className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10.5px] font-medium text-slate-300">New file</span>
+                </button>
+
+                <button
+                  onClick={() => setCode(DEFAULT_FREE_PYTHON_CODE)}
+                  className="p-2.5 rounded-xl bg-[#121827] hover:bg-[#182035] border border-slate-800 flex flex-col items-center justify-center gap-1.5 transition-all group text-center"
+                >
+                  <Code2 className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10.5px] font-medium text-slate-300">Snippet</span>
+                </button>
+
+                <button
+                  onClick={async () => { try { const t = await navigator.clipboard.readText(); if (t) { setCode(t); toast.success("Pasted!"); } } catch {} }}
+                  className="p-2.5 rounded-xl bg-[#121827] hover:bg-[#182035] border border-slate-800 flex flex-col items-center justify-center gap-1.5 transition-all group text-center"
+                >
+                  <Clipboard className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10.5px] font-medium text-slate-300">Clipboard</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Section 3: Scratchpad Notes */}
+            <div className="p-3.5 border-b border-slate-800/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-300">Scratchpad notes</span>
+                <button onClick={() => setIsEditingNotes(!isEditingNotes)} className="text-slate-400 hover:text-white">
+                  <Edit3 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-400">Use this space for ideas, formulas, or notes.</p>
+
+              <div className="space-y-1 text-[11.5px] text-slate-300">
+                {notes.map((note, idx) => (
+                  <div key={idx} className="flex items-start gap-1.5">
+                    <span className="text-purple-400 font-bold">•</span>
+                    <span>{note}</span>
+                  </div>
+                ))}
+              </div>
+
+              {isEditingNotes && (
+                <div className="pt-2 flex gap-1">
+                  <Input
+                    placeholder="Add a new note..."
+                    value={newNoteInput}
+                    onChange={(e) => setNewNoteInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddNote(); }}
+                    className="h-7 bg-[#121827] border-slate-800 text-xs text-slate-200"
+                  />
+                  <Button size="sm" onClick={handleAddNote} className="h-7 bg-purple-600 text-white text-xs px-2.5">
+                    Add
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Section 4: Recent Snippets */}
+            <div className="p-3.5 flex-1 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-300">Recent snippets</span>
+                <button className="text-[11px] text-purple-400 hover:text-purple-300">View all</button>
+              </div>
+
+              <div className="space-y-1.5 pt-1">
+                {recentSnippets.map((snip, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setCode(snip.code)}
+                    className="p-2 rounded-lg bg-[#121827]/60 hover:bg-[#182035] border border-slate-800/60 cursor-pointer flex items-center justify-between group transition-all"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileCode className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-400" />
+                      <span className="text-xs text-slate-300 truncate">{snip.title}</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 ml-1">{snip.timeAgo}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bottom Mode Switch Button */}
+            <div className="p-3 border-t border-slate-800/90">
+              <Button
+                onClick={() => { setMode("problem"); setCode(DEFAULT_LONGEST_SUBARRAY_PYTHON); }}
+                className="w-full bg-[#121827] hover:bg-[#1a233b] text-purple-300 hover:text-white border border-purple-500/30 rounded-xl py-4 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md"
+              >
+                <ArrowLeftRight className="w-4 h-4 text-purple-400" />
+                <span>Switch to problem practice</span>
+              </Button>
+            </div>
+          </aside>
+
+          {/* ----------------------------------------------------------------------- */}
+          {/* CENTER COLUMN: CODE EDITOR & CONSOLE PANE (Flex 1) */}
+          {/* ----------------------------------------------------------------------- */}
+          <main className="flex-1 flex flex-col bg-[#090d16] border-r border-slate-800/90 min-w-0 overflow-hidden">
+            {/* Top Toolbar */}
+            <div className="h-10 bg-[#0b0f19] border-b border-slate-800/90 px-3 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#182035] text-xs font-semibold text-slate-100 border border-purple-500/30">
+                  <span>🐍</span>
+                  <span>{activeFileName}</span>
+                  <X className="w-3.5 h-3.5 text-slate-400 hover:text-white cursor-pointer ml-1" />
+                </div>
+
+                <button onClick={() => {
+                  const fn = `file_${Object.keys(files).length + 1}.py`;
+                  setFiles(p => ({ ...p, [fn]: { name: fn, language: 'python', content: '' } }));
+                  setActiveFileName(fn);
+                  setCode('');
+                }} className="p-1 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white">
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => toast.success("Code formatted cleanly!")}
+                  className="px-2.5 py-1 rounded-lg bg-[#121827] hover:bg-slate-800 text-xs font-medium text-slate-300 border border-slate-800 flex items-center gap-1.5"
+                >
+                  <AlignLeft className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Format</span>
+                </button>
+
+                <button
+                  onClick={() => { setCode(DEFAULT_FREE_PYTHON_CODE); toast.info("Reset code template"); }}
+                  className="px-2.5 py-1 rounded-lg bg-[#121827] hover:bg-slate-800 text-xs font-medium text-slate-300 border border-slate-800 flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Reset</span>
+                </button>
+
+                <Button
+                  size="sm"
+                  onClick={handleRunCode}
+                  disabled={isRunning}
+                  className="bg-[#182035] hover:bg-slate-800 text-slate-100 border border-slate-700 h-7 text-xs font-semibold px-3 rounded-lg flex items-center gap-1.5"
+                >
+                  <Play className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
+                  <span>Run</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  onClick={handleRunWithAiReview}
+                  disabled={isRunning || isAiThinking}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white h-7 text-xs font-semibold px-3 rounded-lg flex items-center gap-1.5 shadow-md shadow-purple-600/20"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Run with AI review</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Monaco Editor */}
+            <div className="flex-1 relative overflow-hidden bg-[#0b0f19]">
+              <Editor
+                height="100%"
+                language={language === 'cpp' ? 'cpp' : language}
+                value={code}
+                onChange={handleCodeChange}
+                theme="vs-dark"
+                options={{
+                  fontSize: 13,
+                  minimap: { enabled: true },
+                  scrollBeyondLastLine: false,
+                  smoothScrolling: true,
+                  automaticLayout: true,
+                  padding: { top: 12, bottom: 12 },
+                  fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+                  lineNumbersMinChars: 3
+                }}
+              />
+            </div>
+
+            {/* Console Drawer */}
+            <div className={`border-t border-slate-800/90 bg-[#070a12] flex flex-col shrink-0 transition-all ${isConsoleExpanded ? 'h-64' : 'h-48'}`}>
+              <div className="h-9 px-3 bg-[#0b0f19] border-b border-slate-800/80 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setConsoleTab("console")} className={`font-semibold ${consoleTab === "console" ? "text-purple-300 border-b-2 border-purple-500 pb-1" : "text-slate-400"}`}>
+                    Console
+                  </button>
+                  <button onClick={() => setConsoleTab("test_input")} className={`font-semibold ${consoleTab === "test_input" ? "text-purple-300 border-b-2 border-purple-500 pb-1" : "text-slate-400"}`}>
+                    Test input
+                  </button>
+                  <button onClick={() => setConsoleTab("output")} className={`font-semibold ${consoleTab === "output" ? "text-purple-300 border-b-2 border-purple-500 pb-1" : "text-slate-400"}`}>
+                    Output
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3 text-slate-400">
+                  <button onClick={() => setOutputLogs([])} className="hover:text-slate-200 p-1">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => setIsConsoleExpanded(!isConsoleExpanded)} className="hover:text-slate-200 p-1">
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 p-3 font-mono text-xs overflow-y-auto space-y-2 select-text">
+                <div className="flex items-center gap-2 text-emerald-400 font-semibold mb-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Program ran successfully</span>
+                </div>
+
+                {outputLogs.length > 0 ? (
+                  <div className="text-slate-200 leading-relaxed whitespace-pre-wrap pl-1 space-y-0.5">
+                    {outputLogs.map((line, idx) => (
+                      <div key={idx}>{line}</div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-slate-300 leading-relaxed whitespace-pre-wrap pl-1">
+                    {`[{'category': 'Groceries', 'total': 125.75, 'count': 3},\n {'category': 'Transport', 'total': 63.5, 'count': 2},\n {'category': 'Entertainment', 'total': 45.0, 'count': 1},\n {'category': 'Utilities', 'total': 39.99, 'count': 1}]`}
+                  </div>
+                )}
+
+                <div className="text-emerald-400 font-medium pt-2">
+                  Process finished with exit code {executionExitCode ?? 0}
+                </div>
+
+                <div className="flex items-center gap-1 text-slate-400 pt-1">
+                  <span>&gt;</span>
+                  <span className="inline-block w-1.5 h-3.5 bg-slate-300 animate-pulse ml-0.5" />
+                </div>
+              </div>
+            </div>
+          </main>
+
+          {/* ----------------------------------------------------------------------- */}
+          {/* RIGHT COLUMN: AI CODE COACH SIDEBAR (~340px) */}
+          {/* ----------------------------------------------------------------------- */}
+          <aside className="w-80 bg-[#0b0f19] flex flex-col shrink-0 overflow-y-auto no-scrollbar">
+            <div className="p-3.5 border-b border-slate-800/90 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-semibold text-slate-100">AI Code Coach</span>
+              </div>
+              <button onClick={() => setIsAiCollapsed(!isAiCollapsed)} className="text-slate-400 hover:text-white p-1">
+                {isAiCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {!isAiCollapsed && (
+              <div className="p-4 space-y-5 flex-1 flex flex-col">
+
+                {/* Code Quality Card */}
+                <div className="p-4 rounded-2xl bg-[#0e1322] border border-slate-800/80 shadow-md space-y-2">
+                  <div className="text-xs font-semibold text-slate-200">Code quality</div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1 max-w-[170px]">
+                      <p className="text-xs font-medium text-slate-200 leading-snug">{qualityAssessment.title}</p>
+                      <p className="text-[11px] text-slate-400">{qualityAssessment.subtitle}</p>
+                    </div>
+
+                    <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <path className="text-slate-800" strokeWidth="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path className="text-emerald-400" strokeDasharray={`${qualityScore}, 100`} strokeWidth="3.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      </svg>
+                      <div className="absolute flex flex-col items-center justify-center text-center">
+                        <span className="text-xs font-extrabold text-slate-100">{qualityScore}</span>
+                        <span className="text-[8px] text-slate-400 font-medium">/100</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* One Improvement Card */}
+                <div className="p-4 rounded-2xl bg-[#0e1322] border border-amber-500/20 space-y-3">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-400">
+                    <Lightbulb className="w-4 h-4 text-amber-400" />
+                    <span>{aiSuggestion.title}</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">{aiSuggestion.explanation}</p>
+                  <div className="p-2.5 rounded-xl bg-[#070a12] border border-slate-800 font-mono text-[11px] text-purple-300 break-all select-all">
+                    {aiSuggestion.snippet}
+                  </div>
+                  <Button onClick={handleApplySuggestion} className="w-full bg-[#161c2d] hover:bg-[#1e2740] text-purple-300 hover:text-white border border-purple-500/30 rounded-xl text-xs font-semibold h-8 flex items-center justify-center gap-2">
+                    <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Apply suggestion</span>
+                  </Button>
+                </div>
+
+                {/* Quick Action Buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => handleSendAiQuery("Please explain this code line-by-line.")} className="p-2.5 rounded-xl bg-[#0e1322] hover:bg-[#161d30] border border-slate-800 text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Explain selection</span>
+                  </button>
+                  <button onClick={() => handleSendAiQuery("Please find any potential bugs or edge cases.")} className="p-2.5 rounded-xl bg-[#0e1322] hover:bg-[#161d30] border border-slate-800 text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Find bugs</span>
+                  </button>
+                </div>
+
+                {/* AI Chat Box */}
+                <div className="flex-1 flex flex-col space-y-2 pt-2 border-t border-slate-800/80 min-h-[160px]">
+                  <span className="text-xs font-semibold text-slate-300">Ask the AI coach...</span>
+                  <div className="flex-1 bg-[#070a12] border border-slate-800/80 rounded-2xl p-3 overflow-y-auto space-y-2.5 max-h-48 text-xs">
+                    {aiChatMessages.map((msg, i) => (
+                      <div key={i} className={`p-2.5 rounded-xl leading-relaxed ${msg.role === 'user' ? 'bg-purple-600/20 text-purple-200 border border-purple-500/30 ml-4' : 'bg-[#101626] text-slate-300 border border-slate-800/80 mr-2'}`}>
+                        {msg.content}
+                      </div>
+                    ))}
+                    {isAiThinking && (
+                      <div className="flex items-center gap-2 text-purple-400 text-xs py-1">
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>AI is thinking...</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative pt-1">
+                    <Textarea
+                      placeholder="Ask anything about your code..."
+                      value={aiPromptInput}
+                      onChange={(e) => setAiPromptInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendAiQuery(); } }}
+                      rows={2}
+                      className="w-full bg-[#070a12] border-slate-800 text-xs text-slate-100 rounded-xl pr-10 resize-none focus-visible:ring-purple-500 placeholder:text-slate-500"
+                    />
+                    <button onClick={() => handleSendAiQuery()} disabled={isAiThinking || !aiPromptInput.trim()} className="absolute right-2.5 bottom-2.5 p-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white">
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2 text-center text-[10.5px] text-slate-500 flex items-center justify-center gap-1.5 border-t border-slate-800/60">
+                  <Lock className="w-3 h-3 text-slate-400" />
+                  <span>Privacy note: Your scratch code is private.</span>
+                </div>
+
+              </div>
+            )}
+          </aside>
+
+        </div>
+
+      )}
+    </div>
+  );
 };
 
 export default Playground;

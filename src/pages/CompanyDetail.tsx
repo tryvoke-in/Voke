@@ -294,7 +294,7 @@ const CompanyDetail = () => {
                                                             variant="outline"
                                                             size="sm"
                                                             className="gap-2"
-                                                            onClick={() => navigate(`/playground?title=${encodeURIComponent(q.title)}&company=${encodeURIComponent(company.name)}`)}
+                                                            onClick={() => navigate(`/playground?title=${encodeURIComponent(q.title)}&company=${encodeURIComponent(company.name)}&mode=problem`)}
                                                         >
                                                             Solve <Code2 className="h-3 w-3" />
                                                         </Button>
