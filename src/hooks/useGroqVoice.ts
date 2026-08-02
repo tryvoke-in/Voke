@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { LiveStatus, MessageLog } from '../types/voice';
 import { toast } from 'sonner';
 const SYSTEM_INSTRUCTION = `YOU ARE:
@@ -190,19 +190,26 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             }
         }
 
-        // TERTIARY FALLBACK: Groq Llama 3.3 70B
-        if (!aiText && groqClient) {
+        // TERTIARY FALLBACK: Groq Llama 3.3 70B via groq-proxy Edge Function
+        if (!aiText) {
             try {
                 console.log('DEBUG: Tertiary Fallback - Generating question with Groq Llama 3.3 70B...');
-                const completion = await groqClient.chat.completions.create({
-                    messages: fullMessages,
-                    model: 'llama-3.3-70b-versatile',
-                    temperature: 0.7,
-                    max_tokens: 800,
+                const { data: groqData, error: groqErr } = await supabase.functions.invoke('groq-proxy', {
+                    body: {
+                        messages: fullMessages,
+                        model: 'llama-3.3-70b-versatile',
+                        temperature: 0.7,
+                        max_tokens: 800,
+                    }
                 });
-                aiText = completion.choices[0]?.message?.content || "";
+                if (!groqErr && groqData?.choices?.[0]?.message?.content) {
+                    aiText = groqData.choices[0].message.content.trim();
+                    console.log('✓ Success with Tertiary Fallback (Groq Llama 3.3 70B):', aiText);
+                } else if (groqErr) {
+                    console.warn('Groq proxy fallback note:', groqErr);
+                }
             } catch (groqErr) {
-                console.error("Groq fallback error:", groqErr);
+                console.error("Groq fallback exception:", groqErr);
             }
         }
 
@@ -378,7 +385,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             formData.append('temperature', '0');
             formData.append('response_format', 'verbose_json');
 
-            const res = await fetch(`${supabase.supabaseUrl}/functions/v1/groq-proxy`, {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/groq-proxy`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData
@@ -679,7 +686,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 if (!token) throw new Error("Not authenticated");
 
                 const makeGreetingReq = async (model: string, msgs: any[], max: number) => {
-                    const res = await fetch(`${supabase.supabaseUrl}/functions/v1/groq-proxy`, {
+                    const res = await fetch(`${SUPABASE_URL}/functions/v1/groq-proxy`, {
                         method: "POST",
                         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                         body: JSON.stringify({ messages: msgs, model, temperature: 0.8, max_tokens: max })

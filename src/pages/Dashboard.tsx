@@ -257,16 +257,16 @@ const Dashboard = () => {
         ...(videoSessions || []).map(s => ({ ...s, type: 'Video', date: s.created_at, score: s.overall_score })),
         ...(peerSessions || []).map(s => {
           const myRating = s.peer_interview_ratings?.find((r: any) => r.rated_user_id === user.id);
-          const ratingScore = myRating ? (myRating.overall_rating ? myRating.overall_rating * 20 : (myRating.overall_score ? myRating.overall_score * 10 : null)) : null;
+          const ratingScore = myRating?.overall_score ? myRating.overall_score * 20 : null;
           return {
             ...s,
             type: 'Peer',
             date: s.scheduled_at || s.created_at,
             score: ratingScore,
             overall_score: ratingScore,
-            confidence_score: myRating?.confidence_rating ? myRating.confidence_rating * 20 : null,
-            delivery_score: myRating?.communication_rating ? myRating.communication_rating * 20 : null,
-            body_language_score: myRating?.presentation_rating ? myRating.presentation_rating * 20 : null
+            confidence_score: myRating?.technical_score ? myRating.technical_score * 20 : null,
+            delivery_score: myRating?.communication_score ? myRating.communication_score * 20 : null,
+            body_language_score: myRating?.problem_solving_score ? myRating.problem_solving_score * 20 : null
           };
         }),
         ...(solvedQuestions || []).map((sq: any) => ({
@@ -354,7 +354,7 @@ const Dashboard = () => {
     // Peer (Fetch ratings where user was rated)
     peer.forEach((p: any) => {
       const myRating = p.peer_interview_ratings?.find((r: any) => r.rated_user_id === userId);
-      if (myRating) { totalScore += myRating.overall_score * 10; scoredCount++; } // Convert 1-10 to 1-100 if needed, assuming 10 scale
+      if (myRating && myRating.overall_score) { totalScore += myRating.overall_score * 20; scoredCount++; } // 1-5 scale mapped to percentage
     });
     // Note: Peer ratings might be 1-10 or 1-5, adjust normalization if user confirms scale. Assuming 1-100 for text/video.
     // Let's assume Peer is 1-10 and map to 1-100 for consistency if average is distinct.

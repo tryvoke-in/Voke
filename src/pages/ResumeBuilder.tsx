@@ -17,7 +17,7 @@ import {
   ZoomIn, ZoomOut, RotateCcw, Check, BadgeAlert
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import ResumeAnalysisDisplay from "@/components/ResumeAnalysisDisplay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ADMIN_EMAIL } from "@/config/admin";
@@ -218,7 +218,7 @@ const ResumeBuilder = () => {
 
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
-          const res = await fetch(`${supabase.supabaseUrl}/functions/v1/groq-proxy`, {
+          const res = await fetch(`${SUPABASE_URL}/functions/v1/groq-proxy`, {
             method: "POST",
             headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
             body: JSON.stringify(attemptBody),

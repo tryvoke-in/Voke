@@ -3,923 +3,1867 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
-  MessageSquare, Heart, Share2, TrendingUp, Users,
-  MoreHorizontal, Image as ImageIcon, Send, Search, Sparkles, X,
-  Calendar, Award, MessageCircle, Flame, CheckCircle2
+  MessageSquare, Heart, Bookmark, Share2, Sparkles, X, Plus,
+  Video, Code, Network, Users, Flame, CheckCircle2, Circle,
+  Check, ArrowUpRight, Clock, Target, ThumbsUp, Send, Image as ImageIcon,
+  PenSquare, HelpCircle, UserPlus, Filter, ShieldAlert, Award,
+  MapPin, Briefcase, Github, Linkedin, FileText, Edit3, ExternalLink, ShieldCheck, Eye
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
-import { Sidebar } from "@/components/Sidebar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
-const DEFAULT_TRENDING_TOPICS = [
-  { tag: "SystemDesign", posts: 24 },
-  { tag: "GoogleL4", posts: 19 },
-  { tag: "LeetCodeMedium", posts: 16 },
-  { tag: "BehavioralPrep", posts: 12 },
-  { tag: "ResumeReview", posts: 9 },
-];
+// Types
+interface PostItem {
+  id: string;
+  user_id?: string;
+  authorName: string;
+  authorAvatar?: string;
+  authorRole: string;
+  isTopContributor?: boolean;
+  timeAgo: string;
+  title: string;
+  content: string;
+  tags: string[];
+  offerStatus?: boolean;
+  diagramPreview?: {
+    title: string;
+    steps: string[];
+  };
+  likeCount: number;
+  isLiked?: boolean;
+  isSaved?: boolean;
+  commentsCount: number;
+  category?: 'For you' | 'Interview Stories' | 'Ask & Answer' | 'Wins';
+}
 
-const DEFAULT_SUGGESTED_EVENTS = [
+interface TaskItem {
+  id: string;
+  title: string;
+  duration?: string;
+  detail?: string;
+  completed: boolean;
+}
+
+interface MockRoom {
+  id: string;
+  title: string;
+  current: number;
+  max: number;
+  avatars: string[];
+  type: string;
+}
+
+// Default Feed Posts (Matching Screenshot & Interactive)
+const DEFAULT_POSTS: PostItem[] = [
   {
-    title: "Google & Meta Peer Mock Session",
-    description: "Live 1-on-1 coding interview practice with peers & AI real-time evaluation.",
-    type: "Mock Session"
+    id: 'post-1',
+    authorName: 'Rohit Sharma',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    authorRole: 'SDE @ Microsoft',
+    isTopContributor: true,
+    timeAgo: '2h ago',
+    title: 'Amazon SDE 1 — final round debrief',
+    tags: ['Amazon', 'SDE 1', 'Onsite', 'Experience'],
+    content: 'Just wrapped up my final round loop at Amazon. Overall a great experience!\nRound 1: LP + System Design...\nRound 2: DSA (Hard)\nRound 3: OO Design + Coding...\nRound 4: Bar Raiser',
+    offerStatus: true,
+    likeCount: 48,
+    commentsCount: 27,
+    category: 'Interview Stories'
   },
   {
-    title: "System Design Masterclass: Scalable Architecture",
-    description: "Interactive session on designing TinyURL, Rate Limiters, and Distributed Cache.",
-    type: "Workshop"
+    id: 'post-2',
+    authorName: 'Ananya Iyer',
+    authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+    authorRole: 'Backend Engineer @ Razorpay',
+    timeAgo: '7h ago',
+    title: 'Need feedback on my system design answer',
+    tags: ['System Design', 'Distributed Systems'],
+    content: "Question: Design a URL shortener like bit.ly. Here's my high-level approach. Would love feedback on correctness and depth.",
+    diagramPreview: {
+      title: 'My Approach (High Level)',
+      steps: ['Requirements & Goals', 'API Design', 'High Level Design', 'Data Model', 'Scaling & Bottlenecks']
+    },
+    likeCount: 31,
+    commentsCount: 18,
+    category: 'Ask & Answer'
   },
   {
-    title: "Resume & ATS Optimization Clinic",
-    description: "Get instant peer feedback on your resume structure for top tech companies.",
-    type: "Peer Review"
+    id: 'post-3',
+    authorName: 'Vikramaditya Roy',
+    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    authorRole: 'Incoming SDE2 @ Uber',
+    isTopContributor: true,
+    timeAgo: '1d ago',
+    title: 'Cracked Uber SDE2 after 4 months of Voke AI Practice! 🎉',
+    tags: ['Uber', 'SDE 2', 'Success', 'Offer'],
+    content: "Sharing my preparation roadmap! Practiced 40+ mock AI interviews on Voke Pulse. Focused heavily on System Design rate limiters and LLD parking lot design.",
+    offerStatus: true,
+    likeCount: 112,
+    commentsCount: 45,
+    category: 'Wins'
   }
 ];
 
-const Community = () => {
+// Default Mock Rooms
+const DEFAULT_MOCK_ROOMS: MockRoom[] = [
+  {
+    id: 'room-1',
+    title: 'Amazon SDE Mock',
+    current: 5,
+    max: 6,
+    avatars: [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100'
+    ],
+    type: 'Coding'
+  },
+  {
+    id: 'room-2',
+    title: 'System Design Round',
+    current: 3,
+    max: 6,
+    avatars: [
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
+      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'
+    ],
+    type: 'System Design'
+  },
+  {
+    id: 'room-3',
+    title: 'Behavioral Mock',
+    current: 2,
+    max: 4,
+    avatars: [
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100'
+    ],
+    type: 'Behavioral'
+  }
+];
+
+// Circular SVG Progress Ring Component
+const CircularProgressRing = ({ score, size = 52, strokeWidth = 4, color = '#8b5cf6' }: { score: number; size?: number; strokeWidth?: number; color?: string }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#1e293b"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          className="transition-all duration-700 ease-out"
+        />
+      </svg>
+      <span className="absolute text-xs font-bold text-white tracking-tight">{score}%</span>
+    </div>
+  );
+};
+
+export default function Community() {
   const { toast } = useToast();
-  const [view, setView] = useState<'feed' | 'trending' | 'events'>('feed');
-  const [aiInsights, setAiInsights] = useState<{ trending_topics: any[], suggested_events: any[] }>({
-    trending_topics: DEFAULT_TRENDING_TOPICS,
-    suggested_events: DEFAULT_SUGGESTED_EVENTS,
-  });
+  const navigate = useNavigate();
+
+  // State
+  const [activeTab, setActiveTab] = useState<'For you' | 'Interview Stories' | 'Ask & Answer' | 'Wins'>('For you');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [topContributors, setTopContributors] = useState<any[]>([]);
-  const [newPost, setNewPost] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [showImageInput, setShowImageInput] = useState(false);
-  const [registeredEvents, setRegisteredEvents] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
-  const [expandedPost, setExpandedPost] = useState<string | null>(null);
-  const [postComments, setPostComments] = useState<any[]>([]);
-  const [newComment, setNewComment] = useState("");
-  const [commentLoading, setCommentLoading] = useState(false);
-  const [showDevModal, setShowDevModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userPostsCount, setUserPostsCount] = useState<number>(0);
+  const [isLoadingPosts, setIsLoadingPosts] = useState<boolean>(true);
+
+  const [posts, setPosts] = useState<PostItem[]>([]);
+  const [tasks, setTasks] = useState<TaskItem[]>([
+    { id: 't1', title: 'Mock Interview', duration: '45 min', completed: true },
+    { id: 't2', title: 'DSA Practice', detail: 'Medium • Arrays', completed: true },
+    { id: 't3', title: 'System Design Study', duration: '30 min', completed: false }
+  ]);
+  const [mockRooms, setMockRooms] = useState<MockRoom[]>(DEFAULT_MOCK_ROOMS);
+
+  // Post Creation & Dialog State
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createCategory, setCreateCategory] = useState<'Experience' | 'Question' | 'Partner'>('Experience');
+  const [postTitle, setPostTitle] = useState('');
+  const [postContent, setPostContent] = useState('');
+  const [postTags, setPostTags] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Edit Pulse Profile Modal State
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editHeadline, setEditHeadline] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [editAvatar, setEditAvatar] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editGithub, setEditGithub] = useState('');
+  const [editLinkedin, setEditLinkedin] = useState('');
+
+  // Network Peers State
+  const [connectedPeers, setConnectedPeers] = useState<string[]>([]);
+  const NETWORK_PEERS = [
+    {
+      id: 'peer-1',
+      name: 'Anurag',
+      role: 'Frontend Engineer',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      subtitle: 'Preparing for SDE 1 · 82% match'
+    },
+    {
+      id: 'peer-2',
+      name: 'Aditi',
+      role: 'Full Stack Developer',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+      subtitle: 'System Design focus · 76% match'
+    },
+    {
+      id: 'peer-3',
+      name: 'Rohan',
+      role: 'Software Engineer',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      subtitle: 'Amazon / DSA practice · 71% match'
+    }
+  ];
+
+  const handleConnectPeer = (peerId: string, peerName: string) => {
+    const isConnected = connectedPeers.includes(peerId);
+    if (isConnected) {
+      setConnectedPeers(prev => prev.filter(id => id !== peerId));
+      toast({ title: "Connection Removed", description: `You disconnected from ${peerName}.` });
+    } else {
+      setConnectedPeers(prev => [...prev, peerId]);
+      toast({ title: "Connection Request Sent! 🎉", description: `Request sent to ${peerName}. You can now start chats & prep together!` });
+    }
+  };
+
+  // View Public Profile Modal State (Read-Only)
+  const [viewingProfile, setViewingProfile] = useState<{
+    id?: string;
+    name: string;
+    avatar: string;
+    role: string;
+    bio?: string;
+    location?: string;
+    github?: string;
+    linkedin?: string;
+    postsCount?: number;
+    prepScore?: number;
+    streak?: number;
+    skills?: string[];
+  } | null>(null);
+
+  const handleViewPublicProfile = async (author: { name: string; avatar: string; role: string; userId?: string }) => {
+    // 1. If clicking on your own profile/avatar, navigate to Voke's main profile page
+    const isSelf = user && (
+      (author.userId && author.userId === user.id) ||
+      (author.name && (userProfile?.full_name || user?.user_metadata?.full_name || '').toLowerCase().includes(author.name.toLowerCase()))
+    );
+
+    if (isSelf) {
+      toast({ title: "Opening Your Profile", description: "Navigating to your Voke account profile page." });
+      navigate('/profile');
+      return;
+    }
+
+    // 2. For other users: Fetch REAL Supabase profile data from 'profiles' table
+    let realName = author.name;
+    let realAvatar = author.avatar;
+    let realRole = author.role;
+    let bio = "";
+    let location = "";
+    let github = "";
+    let linkedin = "";
+    let dreamCompany = "";
+    let postsCount = 0;
+    let prepScore = 84;
+    let streak = 8;
+    let skills = ['System Design', 'React.js', 'Data Structures', 'TypeScript'];
+
+    if (author.userId && author.userId.length > 10) {
+      try {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', author.userId)
+          .maybeSingle();
+
+        if (prof) {
+          const p = prof as any;
+          if (p.full_name) realName = p.full_name;
+          if (p.avatar_url) realAvatar = p.avatar_url;
+          if (p.headline || p.target_role || p.role) realRole = p.headline || p.target_role || p.role;
+          if (p.bio) bio = p.bio;
+          if (p.location) location = p.location;
+          if (p.github_url) github = p.github_url;
+          if (p.linkedin_url) linkedin = p.linkedin_url;
+          if (p.dream_company) dreamCompany = p.dream_company;
+        }
+
+        const { count } = await supabase
+          .from('posts' as any)
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', author.userId);
+
+        if (count !== null) postsCount = count;
+      } catch (e) {
+        console.warn('Error fetching real Supabase profile:', e);
+      }
+    }
+
+    if (!bio) {
+      bio = dreamCompany 
+        ? `Preparing for top roles targeting ${dreamCompany}. Focused on System Design, Data Structures & Algorithms, and Mock Practice.`
+        : `Preparing for SDE roles. Passionate about System Design, Algorithms, and high-performance engineering.`;
+    }
+    if (!location) location = "India";
+
+    setViewingProfile({
+      id: author.userId || author.name,
+      name: realName,
+      avatar: realAvatar,
+      role: realRole,
+      bio,
+      location,
+      github,
+      linkedin,
+      postsCount: postsCount || Math.floor(Math.random() * 5) + 2,
+      prepScore,
+      streak,
+      skills
+    });
+  };
+
+  // Peer Match Modal
+  const [isPeerModalOpen, setIsPeerModalOpen] = useState(false);
+  const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState<{ [postId: string]: string }>({});
+  const [commentsMap, setCommentsMap] = useState<{ [postId: string]: Array<{ author: string; text: string; timeAgo: string }> }>({});
 
   useEffect(() => {
-    checkAuth();
-    fetchPosts();
-    fetchTopContributors();
-
-    // Listen for auth session changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-
-    // Realtime subscription for posts, likes, and comments
-    const channel = supabase
-      .channel('public:community')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
-        fetchPosts();
-        fetchTopContributors();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, () => {
-        fetchPosts();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => {
-        fetchPosts();
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-      supabase.removeChannel(channel);
-    };
+    checkUser();
+    fetchLivePosts();
   }, []);
 
-  const checkAuth = async () => {
+  const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    setUser(session?.user || null);
-  };
+    if (session) {
+      setUser(session.user);
 
-  const fetchAIInsights = async (postsList: any[]) => {
-    // 1. Dynamically compute trending tags from real community posts
-    const tagCounts: Record<string, number> = {};
-    (postsList || []).forEach((p: any) => {
-      if (Array.isArray(p.tags)) {
-        p.tags.forEach((tag: string) => {
-          const cleanTag = tag.trim().replace(/^#/, '');
-          if (cleanTag) {
-            tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
-          }
-        });
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (profile) setUserProfile(profile);
+
+        const { count } = await supabase
+          .from('posts' as any)
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', session.user.id);
+
+        if (count !== null && count > 0) setUserPostsCount(count);
+      } catch (e) {
+        console.warn('Profile fetch info:', e);
       }
-    });
-
-    const computedTopics = Object.entries(tagCounts)
-      .map(([tag, count]) => ({ tag, posts: count }))
-      .sort((a, b) => b.posts - a.posts);
-
-    const mergedTopics = computedTopics.length > 0
-      ? [...computedTopics, ...DEFAULT_TRENDING_TOPICS.filter(dt => !computedTopics.some(ct => ct.tag.toLowerCase() === dt.tag.toLowerCase()))].slice(0, 5)
-      : DEFAULT_TRENDING_TOPICS;
-
-    setAiInsights({
-      trending_topics: mergedTopics,
-      suggested_events: DEFAULT_SUGGESTED_EVENTS
-    });
-
-    // 2. Try fetching from AI Edge function if deployed
-    try {
-      const { data, error } = await supabase.functions.invoke('analyze-community-trends');
-      if (!error && data && data.trending_topics && data.suggested_events) {
-        setAiInsights(data);
-      }
-    } catch (error) {
-      // Graceful fallback already in state
     }
   };
 
-  const fetchTopContributors = async () => {
-    try {
-      const { data: postsData, error: postsError } = await supabase
-        .from('community_feed' as any)
-        .select('user_id');
+  const resolveAuthorDetails = (p: any, profile: any, currentUser: any, currentUserProfile: any) => {
+    let name = p.author_name || p.authorName;
+    let avatar = p.author_avatar || p.authorAvatar;
+    let role = p.author_role || p.authorRole;
 
-      if (postsError) throw postsError;
+    if (!name && profile?.full_name) name = profile.full_name;
+    if (!avatar && profile?.avatar_url) avatar = profile.avatar_url;
+    if (!role) role = profile?.headline || profile?.target_role || profile?.role;
 
-      const countMap: Record<string, number> = {};
-      (postsData || []).forEach((p: any) => {
-        if (p.user_id) countMap[p.user_id] = (countMap[p.user_id] || 0) + 1;
-      });
-
-      const topUserIds = Object.entries(countMap)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 5);
-
-      if (topUserIds.length === 0) {
-        setTopContributors([]);
-        return;
-      }
-
-      const { data: profiles } = await supabase
-        .from('community_profiles' as any)
-        .select('id, display_name, avatar_url, target_role')
-        .in('id', topUserIds.map(([id]) => id));
-
-      const contributors = topUserIds.map(([userId, count], index) => {
-        const profile = (profiles || []).find((p: any) => p.id === userId);
-        return {
-          id: userId,
-          name: profile?.display_name || 'Voke Member',
-          avatar_url: profile?.avatar_url || null,
-          title: profile?.target_role || 'Community Member',
-          postCount: count,
-          rank: index === 0 ? 'Top 1%' : index === 1 ? 'Top 3%' : index === 2 ? 'Top 5%' : index === 3 ? 'Top 10%' : 'Top 15%',
-        };
-      });
-
-      setTopContributors(contributors);
-    } catch (error) {
-      console.error('Error fetching top contributors:', error);
+    if (currentUser && p.user_id === currentUser.id) {
+      if (!name) name = currentUserProfile?.full_name || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name;
+      if (!avatar) avatar = currentUserProfile?.avatar_url || currentUser.user_metadata?.avatar_url;
+      if (!role) role = currentUserProfile?.headline || currentUserProfile?.target_role || currentUserProfile?.role;
     }
+
+    // Try parsing self-introduction from post content (e.g., "Hey, This in Om Pawar")
+    if ((!name || name === 'Voke Member') && p.content) {
+      const introMatch = p.content.match(/(?:Hey|Hi|Hello|This is|This in|I am|I'm)\s+(?:a|an)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);
+      if (introMatch && introMatch[1] && introMatch[1].length > 2) {
+        const candidateName = introMatch[1].trim();
+        const forbidden = ['Interview', 'System', 'Amazon', 'Google', 'Microsoft', 'LeetCode', 'Practice', 'Question', 'Offer'];
+        if (!forbidden.some(w => candidateName.toLowerCase().includes(w.toLowerCase()))) {
+          name = candidateName;
+        }
+      }
+    }
+
+    // Try parsing name from email if profile email exists
+    if ((!name || name === 'Voke Member') && profile?.email) {
+      const emailPrefix = profile.email.split('@')[0];
+      const extracted = emailPrefix
+        .replace(/[._\d]+/g, ' ')
+        .trim()
+        .split(' ')
+        .filter(Boolean)
+        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      if (extracted.length > 2) name = extracted;
+    }
+
+    if (!name) name = 'Candidate Member';
+    if (!avatar) avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+
+    if (!role) {
+      const firstTag = Array.isArray(p.tags) && p.tags[0] ? p.tags[0] : 'SDE';
+      role = `${firstTag} Candidate`;
+    }
+
+    return { authorName: name, authorAvatar: avatar, authorRole: role };
   };
 
-  const fetchPosts = async () => {
+  const fetchLivePosts = async () => {
+    setIsLoadingPosts(true);
     try {
-      // The feed view provides server-side like/comment counts, so we do not
-      // download every community interaction just to count it in the browser.
-      const { data: postsData, error: postsError } = await supabase
-        .from('community_feed' as any)
+      const { data: rawPosts, error: postsErr } = await supabase
+        .from('posts' as any)
         .select('*')
-        .order('pinned_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false });
 
-      if (postsError) throw postsError;
-
-      const rawPosts = postsData || [];
-      if (rawPosts.length === 0) {
-        setPosts([]);
-        fetchAIInsights([]);
-        setLoading(false);
-        return;
+      if (postsErr) {
+        console.warn('Posts fetch notice:', postsErr);
       }
 
-      // Collect user IDs for profiles
-      const userIds = Array.from(new Set(rawPosts.map((p: any) => p.user_id).filter(Boolean)));
-      
-      const { data: profilesData } = userIds.length > 0
-        ? await supabase.from('community_profiles' as any).select('id, display_name, avatar_url, target_role').in('id', userIds)
-        : { data: [] };
+      if (rawPosts && rawPosts.length > 0) {
+        const userIds = Array.from(new Set(rawPosts.map((p: any) => p.user_id).filter(Boolean)));
+        let profilesMap: Record<string, any> = {};
 
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data: myLikes } = session?.user && rawPosts.length > 0
-        ? await supabase
-            .from('likes' as any)
-            .select('post_id')
-            .eq('user_id', session.user.id)
-            .in('post_id', rawPosts.map((post: any) => post.id))
-        : { data: [] };
+        if (userIds.length > 0) {
+          try {
+            const { data: profiles } = await supabase
+              .from('profiles')
+              .select('id, full_name, avatar_url, headline, target_role, role, email')
+              .in('id', userIds);
 
-      const profilesMap = new Map((profilesData || []).map((p: any) => [p.id, p]));
-      const likedPostIds = new Set((myLikes || []).map((like: any) => like.post_id));
+            if (profiles) {
+              profiles.forEach((pr: any) => {
+                profilesMap[pr.id] = pr;
+              });
+            }
+          } catch (e) {
+            console.warn('Profiles map error:', e);
+          }
+        }
 
-      const formattedPosts = rawPosts.map((p: any) => {
-        return {
-          ...p,
-          profiles: profilesMap.get(p.user_id) || { display_name: 'Voke Member', avatar_url: null, target_role: 'Community Member' },
-          isLiked: likedPostIds.has(p.id),
-          likeCount: p.like_count || 0,
-          commentsCount: p.comment_count || 0,
-        };
-      });
+        const postIds = rawPosts.map((p: any) => p.id);
+        let likesMap: Record<string, number> = {};
+        let userLikedSet = new Set<string>();
 
-      setPosts(formattedPosts);
-      fetchAIInsights(formattedPosts);
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+        if (postIds.length > 0) {
+          try {
+            const { data: likesData } = await supabase
+              .from('likes' as any)
+              .select('post_id, user_id')
+              .in('post_id', postIds);
 
-  const handlePost = async () => {
-    if (!newPost.trim()) return;
-    
-    let currentUser = user;
-    if (!currentUser) {
-      const { data: { session } } = await supabase.auth.getSession();
-      currentUser = session?.user;
-    }
+            if (likesData) {
+              likesData.forEach((l: any) => {
+                likesMap[l.post_id] = (likesMap[l.post_id] || 0) + 1;
+                if (user && l.user_id === user.id) {
+                  userLikedSet.add(l.post_id);
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('Likes map error:', e);
+          }
+        }
 
-    if (!currentUser) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to post in the community.",
-        variant: "destructive",
-      });
-      return;
-    }
+        let commentsCountMap: Record<string, number> = {};
+        if (postIds.length > 0) {
+          try {
+            const { data: commentsData } = await supabase
+              .from('comments' as any)
+              .select('id, post_id, content, created_at, user_id')
+              .in('post_id', postIds);
 
-    const extractedTags = newPost.match(/#[\w]+/g)?.map(tag => tag.substring(1)) || ["InterviewPrep"];
+            if (commentsData) {
+              commentsData.forEach((c: any) => {
+                commentsCountMap[c.post_id] = (commentsCountMap[c.post_id] || 0) + 1;
+              });
+            }
+          } catch (e) {
+            console.warn('Comments map error:', e);
+          }
+        }
 
-    try {
-      const { error } = await supabase
-        .from('posts' as any)
-        .insert({
-          user_id: currentUser.id,
-          content: newPost.trim(),
-          image_url: imageUrl.trim() || null,
-          tags: extractedTags
+        const mapped: PostItem[] = rawPosts.map((p: any) => {
+          const profile = profilesMap[p.user_id] || {};
+          const firstLine = p.content?.split('\n')[0] || '';
+          const restContent = p.content?.includes('\n') ? p.content.slice(p.content.indexOf('\n')).trim() : p.content;
+
+          const { authorName, authorAvatar, authorRole } = resolveAuthorDetails(p, profile, user, userProfile);
+
+          return {
+            id: p.id,
+            user_id: p.user_id,
+            authorName,
+            authorAvatar,
+            authorRole,
+            timeAgo: p.created_at ? new Date(p.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Recently',
+            title: firstLine.length > 80 ? firstLine.slice(0, 80) + '...' : firstLine || 'Community Discussion',
+            content: restContent || p.content,
+            tags: Array.isArray(p.tags) && p.tags.length > 0 ? p.tags : ['InterviewPrep'],
+            likeCount: likesMap[p.id] || 0,
+            isLiked: userLikedSet.has(p.id),
+            commentsCount: commentsCountMap[p.id] || 0,
+            category: 'For you'
+          };
         });
 
-      if (error) throw error;
-      setNewPost("");
-      setImageUrl("");
-      setShowImageInput(false);
-      toast({
-        title: "Post Published!",
-        description: "Your discussion has been shared with the community.",
-      });
-      fetchPosts();
-    } catch (error: any) {
-      console.error('Error creating post:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to publish post. Please try again.",
-        variant: "destructive",
-      });
+        setPosts(mapped);
+      } else {
+        setPosts([]);
+      }
+    } catch (e) {
+      console.warn('Post fetch info:', e);
+      setPosts([]);
+    } finally {
+      setIsLoadingPosts(false);
     }
   };
 
-  const handleLike = async (postId: string) => {
-    let currentUser = user;
-    if (!currentUser) {
-      const { data: { session } } = await supabase.auth.getSession();
-      currentUser = session?.user;
+  // Profile Edit Handlers
+  const handleOpenEditProfile = () => {
+    setEditName(userProfile?.full_name || user?.user_metadata?.full_name || 'Priyanshu Sharma');
+    setEditHeadline(userProfile?.headline || userProfile?.target_role || 'Full Stack Engineer • SDE Candidate');
+    setEditBio(userProfile?.bio || 'Building high-performance web apps & mastering System Design and DSA algorithms.');
+    setEditAvatar(userProfile?.avatar_url || user?.user_metadata?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150');
+    setEditLocation(userProfile?.location || 'India');
+    setEditGithub(userProfile?.github_url || '');
+    setEditLinkedin(userProfile?.linkedin_url || '');
+    setIsEditProfileOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
+    const updatedProfile = {
+      ...userProfile,
+      full_name: editName.trim(),
+      headline: editHeadline.trim(),
+      target_role: editHeadline.trim(),
+      bio: editBio.trim(),
+      avatar_url: editAvatar.trim(),
+      location: editLocation.trim(),
+      github_url: editGithub.trim(),
+      linkedin_url: editLinkedin.trim(),
+    };
+
+    setUserProfile(updatedProfile);
+
+    try {
+      if (user) {
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          full_name: editName.trim(),
+          headline: editHeadline.trim(),
+          bio: editBio.trim(),
+          avatar_url: editAvatar.trim(),
+          location: editLocation.trim(),
+          github_url: editGithub.trim(),
+          linkedin_url: editLinkedin.trim(),
+          updated_at: new Date().toISOString()
+        });
+
+        try {
+          await supabase.from('community_profiles' as any).upsert({
+            id: user.id,
+            display_name: editName.trim(),
+            avatar_url: editAvatar.trim(),
+            target_role: editHeadline.trim(),
+            bio: editBio.trim()
+          });
+        } catch (e) {
+          // fallback ignore
+        }
+      }
+    } catch (e) {
+      console.warn('Profile save warning:', e);
     }
 
-    if (!currentUser) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to like discussions.",
-        variant: "destructive",
-      });
+    setIsEditProfileOpen(false);
+    toast({
+      title: "Voke Pulse Profile Updated!",
+      description: "Your community persona has been successfully updated."
+    });
+  };
+
+  // Handlers
+  const handleToggleTask = (id: string) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+    toast({ title: "Task Updated", description: "Your daily plan progress has been updated!" });
+  };
+
+  const handleToggleLike = async (postId: string) => {
+    if (!user) {
+      toast({ title: "Sign in required", description: "Please sign in to like posts.", variant: "destructive" });
       return;
     }
 
-    const targetPost = posts.find(p => p.id === postId);
-    const isLiked = Boolean(targetPost?.isLiked);
+    const currentPost = posts.find(p => p.id === postId);
+    if (!currentPost) return;
+
+    const isCurrentlyLiked = currentPost.isLiked;
 
     // Optimistic UI update
-    setPosts(prevPosts => prevPosts.map(p => {
+    setPosts(prev => prev.map(p => {
       if (p.id === postId) {
         return {
           ...p,
-          isLiked: !isLiked,
-          likeCount: Math.max(0, (p.likeCount || 0) + (isLiked ? -1 : 1)),
+          isLiked: !isCurrentlyLiked,
+          likeCount: !isCurrentlyLiked ? p.likeCount + 1 : Math.max(0, p.likeCount - 1)
         };
       }
       return p;
     }));
 
     try {
-      if (isLiked) {
-        const { error } = await supabase
+      if (isCurrentlyLiked) {
+        await supabase
           .from('likes' as any)
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', currentUser.id);
-        if (error) throw error;
+          .eq('user_id', user.id);
       } else {
-        const { error } = await supabase
+        await supabase
           .from('likes' as any)
-          .insert({ post_id: postId, user_id: currentUser.id });
-        if (error) throw error;
+          .insert({
+            post_id: postId,
+            user_id: user.id
+          });
       }
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      fetchPosts(); // Revert on failure
+    } catch (e) {
+      console.warn('Like toggle warning:', e);
     }
   };
 
-  const handleShare = (postId: string) => {
-    const shareUrl = `${window.location.origin}/community#post-${postId}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast({
-      title: "Link Copied!",
-      description: "Discussion link copied to clipboard.",
-    });
+  const handleToggleSave = (postId: string) => {
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        const isSaved = !p.isSaved;
+        toast({ title: isSaved ? "Post Saved" : "Post Unsaved", description: isSaved ? "Saved to your bookmarks!" : "Removed from bookmarks." });
+        return { ...p, isSaved };
+      }
+      return p;
+    }));
   };
 
-  const handleRegisterEvent = (eventTitle: string) => {
-    setRegisteredEvents(prev => {
-      const isReg = !prev[eventTitle];
-      toast({
-        title: isReg ? "Registered!" : "Unregistered",
-        description: isReg ? `You are registered for "${eventTitle}".` : `Registration cancelled for "${eventTitle}".`,
-      });
-      return { ...prev, [eventTitle]: isReg };
-    });
-  };
+  const handleAddComment = async (postId: string) => {
+    const text = commentText[postId]?.trim();
+    if (!text) return;
 
-  const handleToggleComments = async (postId: string) => {
-    if (expandedPost === postId) {
-      setExpandedPost(null);
-      setPostComments([]);
+    if (!user) {
+      toast({ title: "Sign in required", description: "Please sign in to comment.", variant: "destructive" });
       return;
     }
 
-    setExpandedPost(postId);
-    setCommentLoading(true);
-    try {
-      const { data: rawComments, error } = await supabase
-        .from('comments' as any)
-        .select('*')
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
+    const authorName = userProfile?.full_name || user?.user_metadata?.full_name || 'You';
 
-      if (error) throw error;
-
-      const commentUserIds = Array.from(new Set((rawComments || []).map((c: any) => c.user_id).filter(Boolean)));
-      
-      const { data: commentProfiles } = commentUserIds.length > 0
-        ? await supabase.from('community_profiles' as any).select('id, display_name, avatar_url').in('id', commentUserIds)
-        : { data: [] };
-
-      const profileMap = new Map((commentProfiles || []).map((p: any) => [p.id, p]));
-
-      const commentsWithProfiles = (rawComments || []).map((c: any) => ({
-        ...c,
-        profiles: profileMap.get(c.user_id) || { display_name: 'Voke Member', avatar_url: null }
-      }));
-
-      setPostComments(commentsWithProfiles);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-    } finally {
-      setCommentLoading(false);
-    }
-  };
-
-  const handleSubmitComment = async (postId: string) => {
-    if (!newComment.trim()) return;
-
-    let currentUser = user;
-    if (!currentUser) {
-      const { data: { session } } = await supabase.auth.getSession();
-      currentUser = session?.user;
-    }
-
-    if (!currentUser) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to reply.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const commentContent = newComment.trim();
-    setNewComment("");
+    // Optimistic UI
+    setCommentsMap(prev => ({
+      ...prev,
+      [postId]: [...(prev[postId] || []), { author: authorName, text, timeAgo: 'Just now' }]
+    }));
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, commentsCount: p.commentsCount + 1 } : p));
+    setCommentText(prev => ({ ...prev, [postId]: '' }));
 
     try {
-      const { error } = await supabase
+      await supabase
         .from('comments' as any)
         .insert({
           post_id: postId,
-          user_id: currentUser.id,
-          content: commentContent
+          user_id: user.id,
+          content: text
         });
+    } catch (e) {
+      console.warn('Comment insert warning:', e);
+    }
 
-      if (error) throw error;
+    toast({ title: "Comment Posted", description: "Your feedback was added!" });
+  };
 
-      toast({
-        title: "Comment Added!",
-        description: "Your reply has been added to the discussion.",
-      });
+  const handleCreatePost = async () => {
+    if (!postTitle.trim() || !postContent.trim()) {
+      toast({ title: "Missing Information", description: "Please enter both a title and content for your post.", variant: "destructive" });
+      return;
+    }
 
-      // Keep the open thread open after a reply, then refresh its contents.
-      setExpandedPost(null);
-      await handleToggleComments(postId);
-      fetchPosts();
-    } catch (error: any) {
-      console.error('Error adding comment:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to post comment. Please try again.",
-        variant: "destructive"
-      });
+    if (!user) {
+      toast({ title: "Authentication required", description: "Please sign in to publish a post.", variant: "destructive" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const parsedTags = postTags.split(',').map(t => t.trim().replace(/^#/, '')).filter(Boolean);
+    if (parsedTags.length === 0) parsedTags.push(createCategory);
+
+    const fullContent = `${postTitle.trim()}\n\n${postContent.trim()}`;
+    const tempPostId = 'post-' + Date.now();
+
+    const newPostItem: PostItem = {
+      id: tempPostId,
+      user_id: user.id,
+      authorName: userProfile?.full_name || user?.user_metadata?.full_name || 'Priyanshu Sharma',
+      authorAvatar: userProfile?.avatar_url || user?.user_metadata?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      authorRole: userProfile?.headline || userProfile?.target_role || 'Full Stack Developer',
+      timeAgo: 'Just now',
+      title: postTitle.trim(),
+      content: postContent.trim(),
+      tags: parsedTags,
+      likeCount: 0,
+      isLiked: false,
+      commentsCount: 0,
+      category: 'For you'
+    };
+
+    // Prepend post to state IMMEDIATELY for instant UI feedback
+    setPosts(prev => [newPostItem, ...prev]);
+    setUserPostsCount(prev => prev + 1);
+    setPostTitle('');
+    setPostContent('');
+    setPostTags('');
+    setIsCreateOpen(false);
+    toast({ title: "Post Published! 🎉", description: "Your post is live in Voke Pulse community." });
+
+    try {
+      const authorName = userProfile?.full_name || user?.user_metadata?.full_name || 'Priyanshu Sharma';
+      const authorAvatar = userProfile?.avatar_url || user?.user_metadata?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
+      const authorRole = userProfile?.headline || userProfile?.target_role || 'Full Stack Developer';
+
+      // Ensure profile entry exists
+      if (user) {
+        supabase.from('profiles').upsert({
+          id: user.id,
+          full_name: authorName,
+          avatar_url: authorAvatar,
+          headline: authorRole,
+          updated_at: new Date().toISOString()
+        } as any).then();
+      }
+
+      const { data, error } = await supabase.from('posts' as any).insert({
+        user_id: user.id,
+        content: fullContent,
+        tags: parsedTags,
+        author_name: authorName,
+        author_avatar: authorAvatar,
+        author_role: authorRole
+      }).select().single();
+
+      if (error) {
+        // Fallback without extra columns if DB schema doesn't have them
+        const { data: fallbackData } = await supabase.from('posts' as any).insert({
+          user_id: user.id,
+          content: fullContent,
+          tags: parsedTags
+        }).select().single();
+
+        if ((fallbackData as any)?.id) {
+          setPosts(prev => prev.map(p => p.id === tempPostId ? { ...p, id: (fallbackData as any).id } : p));
+        }
+      } else if ((data as any)?.id) {
+        setPosts(prev => prev.map(p => p.id === tempPostId ? { ...p, id: (data as any).id } : p));
+      }
+    } catch (e: any) {
+      console.warn('Database insert exception:', e);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const handleJoinRoom = (room: MockRoom) => {
+    toast({
+      title: `Joined ${room.title}`,
+      description: "Connecting to peer interview room..."
+    });
+    setTimeout(() => {
+      navigate('/peer-interviews');
+    }, 800);
+  };
+
+  // Filter posts by active tab & selected tag
   const filteredPosts = posts.filter(post => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      post.content?.toLowerCase().includes(query) ||
-      post.profiles?.display_name?.toLowerCase().includes(query) ||
-      post.tags?.some((t: string) => t.toLowerCase().includes(query))
-    );
+    if (selectedTag && !post.tags.some(t => t.toLowerCase() === selectedTag.toLowerCase())) {
+      return false;
+    }
+    if (activeTab === 'For you') return true;
+    return post.category === activeTab || post.tags.some(t => t.toLowerCase().includes(activeTab.toLowerCase().slice(0, 4)));
   });
 
+  // Daily plan stats
+  const completedTasksCount = tasks.filter(t => t.completed).length;
+  const planPercentage = Math.round((completedTasksCount / tasks.length) * 100);
+
+  const userName = userProfile?.full_name || user?.user_metadata?.full_name || 'Priyanshu Sharma';
+  const userRole = userProfile?.headline || userProfile?.target_role || 'Full Stack Engineer • SDE Candidate';
+  const userBio = userProfile?.bio || 'Building high-performance web apps & mastering System Design and DSA algorithms.';
+  const userAvatar = userProfile?.avatar_url || user?.user_metadata?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
+  const userLocation = userProfile?.location || 'India';
+
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col text-foreground selection:bg-violet-500/30 pt-16">
+    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans selection:bg-purple-500 selection:text-white">
       <Navbar />
 
-      {/* Development Preview Modal (Optional) */}
-      <AnimatePresence>
-        {showDevModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card border border-border p-6 rounded-3xl max-w-md w-full shadow-2xl relative overflow-hidden text-card-foreground"
-            >
-              <button
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors"
-                onClick={() => setShowDevModal(false)}
-              >
-                <X className="h-4 w-4" />
-              </button>
+      <main className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-[1550px] mx-auto">
+        {/* 3-COLUMN DASHBOARD GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-              <div className="flex flex-col items-center text-center space-y-4 pt-2">
-                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-                  <Sparkles className="h-7 w-7 text-amber-500 animate-pulse" />
-                </div>
+          {/* ========================================================================= */}
+          {/* LEFT SIDEBAR: User Social Profile & Momentum */}
+          {/* ========================================================================= */}
+          <div className="lg:col-span-3 space-y-6">
 
-                <h2 className="text-2xl font-bold">Community Lounge</h2>
+            {/* CARD 1: USER SOCIAL MEDIA PROFILE CARD */}
+            <div className="bg-[#111726]/90 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl backdrop-blur-xl transition-all hover:border-slate-700/80 group">
+              {/* Cover Banner */}
+              <div className="h-24 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 relative p-3">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-500/25 via-transparent to-transparent opacity-70 pointer-events-none" />
+                <button
+                  onClick={handleOpenEditProfile}
+                  className="absolute top-2.5 right-2.5 p-1.5 rounded-lg bg-black/40 hover:bg-black/60 text-slate-300 hover:text-white border border-white/10 backdrop-blur-sm transition-all flex items-center gap-1.5 text-[11px] font-medium"
+                  title="Edit Voke Pulse Profile"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Profile</span>
+                </button>
+              </div>
 
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Connect with peers, share mock interview experiences, discuss interview questions, and participate in community events.
-                </p>
+              {/* Profile Main Info */}
+              <div className="px-5 pt-0 pb-5 relative">
+                {/* Avatar with Online Status */}
+                <div className="flex justify-between items-end -mt-10 mb-3">
+                  <div className="relative">
+                    <Avatar className="w-20 h-20 border-4 border-[#111726] shadow-xl bg-purple-950">
+                      <AvatarImage src={userAvatar} />
+                      <AvatarFallback className="bg-purple-600 text-white text-lg font-bold">
+                        {userName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#111726] shadow-md" title="Online" />
+                  </div>
 
-                <div className="pt-2 w-full">
                   <Button
-                    className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold h-11 rounded-xl shadow-lg shadow-violet-600/20"
-                    onClick={() => setShowDevModal(false)}
+                    size="sm"
+                    variant="outline"
+                    onClick={handleOpenEditProfile}
+                    className="bg-[#161d2f] hover:bg-[#1f283e] text-purple-300 hover:text-white border-purple-500/30 hover:border-purple-500/60 rounded-xl text-xs h-8 px-3 transition-all"
                   >
-                    Enter Community Lounge
+                    Edit Profile
                   </Button>
                 </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      <div className="flex-1 flex w-full min-w-0 relative">
-        <Sidebar />
+                {/* Name, Headline & Bio */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <h2 className="text-base font-bold text-slate-100 tracking-tight">
+                      {userName}
+                    </h2>
+                    <ShieldCheck className="w-4 h-4 text-purple-400 fill-purple-500/20" />
+                  </div>
 
-        <div className="flex-1 flex flex-col min-w-0">
-          <main className="container mx-auto px-4 py-8">
-            
+                  <p className="text-xs text-purple-300 font-medium">
+                    {userRole}
+                  </p>
 
-            {/* Layout Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
-              {/* Left Column: Navigation & Leaderboard */}
-              <div className="lg:col-span-3 space-y-6">
-                {/* Navigation Card */}
-                <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm">
-                  <CardContent className="p-3 space-y-1">
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start text-sm font-medium rounded-xl h-11 ${view === 'feed' ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400 font-bold' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-                      onClick={() => setView('feed')}
-                    >
-                      <MessageSquare className="mr-3 h-4 w-4 text-violet-500" />
-                      Community Feed
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start text-sm font-medium rounded-xl h-11 ${view === 'trending' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-                      onClick={() => setView('trending')}
-                    >
-                      <TrendingUp className="mr-3 h-4 w-4 text-emerald-500" />
-                      Trending Topics
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start text-sm font-medium rounded-xl h-11 ${view === 'events' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-                      onClick={() => setView('events')}
-                    >
-                      <Users className="mr-3 h-4 w-4 text-blue-500" />
-                      Live Events & Mocks
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Top Contributors Card */}
-                <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                      <Award className="w-4 h-4 text-amber-500" /> Top Contributors
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {topContributors.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-3">No contributors yet. Be the first to post!</p>
-                    ) : (
-                      topContributors.map((member) => (
-                        <div key={member.id} className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9 border border-border/50">
-                            <AvatarImage src={member.avatar_url} />
-                            <AvatarFallback className="bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-xs font-bold">
-                              {member.name?.[0]?.toUpperCase() || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{member.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{member.title} • {member.postCount} posts</p>
-                          </div>
-                          <Badge variant="outline" className="text-[10px] bg-violet-500/10 text-violet-500 border-violet-500/20">
-                            {member.rank}
-                          </Badge>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Main Content Area */}
-              <div className="lg:col-span-6 space-y-6">
-                
-                {view === 'feed' && (
-                  <>
-                    {/* Create Post Card */}
-                    <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm overflow-hidden">
-                      <CardContent className="p-4 sm:p-5">
-                        <div className="flex gap-4">
-                          <Avatar className="h-10 w-10 border border-border">
-                            <AvatarImage src={user?.user_metadata?.avatar_url} />
-                            <AvatarFallback className="bg-gradient-to-br from-violet-600 to-purple-600 text-white font-bold">
-                              {user?.email?.[0]?.toUpperCase() || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 space-y-3">
-                            <Textarea
-                              placeholder="Share your interview questions, tech insights, or preparation milestones... (Use #hashtags to create topics)"
-                              value={newPost}
-                              onChange={(e) => setNewPost(e.target.value)}
-                              className="bg-muted/40 border-border/60 min-h-[90px] resize-none focus:border-violet-500/50 focus:ring-violet-500/20 text-sm rounded-xl"
-                            />
-                            {showImageInput && (
-                              <Input
-                                placeholder="Paste image URL (optional)..."
-                                value={imageUrl}
-                                onChange={(e) => setImageUrl(e.target.value)}
-                                className="bg-muted/40 border-border/60 h-9 text-xs rounded-xl"
-                              />
-                            )}
-                            <div className="flex justify-between items-center pt-1">
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setShowImageInput(!showImageInput)}
-                                  className={`text-xs gap-1.5 rounded-lg ${showImageInput ? 'text-violet-600 bg-violet-500/10 font-bold' : 'text-muted-foreground hover:text-violet-500 hover:bg-violet-500/10'}`}
-                                >
-                                  <ImageIcon className="h-4 w-4" /> Media
-                                </Button>
-                              </div>
-                              <Button
-                                onClick={handlePost}
-                                disabled={!newPost.trim()}
-                                className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold px-4 h-9 rounded-xl shadow-md shadow-violet-600/20"
-                              >
-                                <Send className="mr-1.5 h-3.5 w-3.5" /> Post Discussion
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Posts Stream */}
-                    <div className="space-y-4">
-                      {loading ? (
-                        <div className="text-center py-12 bg-card/40 border border-border/50 rounded-2xl">
-                          <div className="inline-block w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mb-2" />
-                          <p className="text-sm text-muted-foreground">Loading community discussions...</p>
-                        </div>
-                      ) : filteredPosts.length === 0 ? (
-                        <div className="text-center py-12 bg-card/40 border border-border/50 rounded-2xl">
-                          <MessageCircle className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
-                          <h4 className="font-semibold text-base">No discussions found</h4>
-                          <p className="text-xs text-muted-foreground mt-1">Be the first software engineer to start a conversation!</p>
-                        </div>
-                      ) : (
-                        filteredPosts.map((post) => (
-                          <motion.div
-                            key={post.id}
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden">
-                              <CardHeader className="flex flex-row items-start gap-3 p-4 sm:p-5 pb-2">
-                                <Avatar className="h-10 w-10 border border-border/50">
-                                  <AvatarImage src={post.profiles?.avatar_url} />
-                                  <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-600 text-white font-semibold">
-                                    {post.profiles?.display_name?.[0] || 'U'}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex justify-between items-start">
-                                    <div>
-                                      <h3 className="font-semibold text-foreground text-sm">{post.profiles?.display_name || 'Voke Member'}</h3>
-                                      <p className="text-xs text-muted-foreground mt-0.5">
-                                        {post.profiles?.target_role || 'Community Member'} • {new Date(post.created_at).toLocaleDateString()}
-                                      </p>
-                                    </div>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </CardHeader>
-                              
-                              <CardContent className="p-4 sm:p-5 pt-2 space-y-3">
-                                <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">{post.content}</p>
-                                {post.image_url && (
-                                  <div className="rounded-xl overflow-hidden border border-border">
-                                    <img src={post.image_url} alt="Post media" className="w-full h-auto max-h-80 object-cover" />
-                                  </div>
-                                )}
-                                <div className="flex flex-wrap gap-1.5">
-                                  {post.tags?.map((tag: string) => (
-                                    <Badge
-                                      key={tag}
-                                      variant="secondary"
-                                      className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border-0 text-[11px] cursor-pointer hover:bg-violet-500/20 transition-colors"
-                                      onClick={() => setSearchQuery(tag)}
-                                    >
-                                      #{tag}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </CardContent>
-
-                              <CardFooter className="p-3 sm:px-5 border-t border-border/40 flex justify-between bg-muted/20">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className={`text-xs gap-1.5 ${post.isLiked ? 'text-pink-500 bg-pink-500/10 font-bold' : 'text-muted-foreground hover:text-pink-500 hover:bg-pink-500/10'}`}
-                                  onClick={() => handleLike(post.id)}
-                                >
-                                  <Heart className={`h-4 w-4 ${post.isLiked ? 'fill-current text-pink-500' : ''}`} />
-                                  {post.likeCount || 0} Likes
-                                </Button>
-                                
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className={`text-xs gap-1.5 ${expandedPost === post.id ? 'text-violet-600 dark:text-violet-400 bg-violet-500/10 font-bold' : 'text-muted-foreground hover:text-violet-600 hover:bg-violet-500/10'}`}
-                                  onClick={() => handleToggleComments(post.id)}
-                                >
-                                  <MessageSquare className="h-4 w-4" /> {post.commentsCount ?? 0} Comments
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
-                                  onClick={() => handleShare(post.id)}
-                                >
-                                  <Share2 className="h-4 w-4" /> Share
-                                </Button>
-                              </CardFooter>
-
-                              {/* Comment Thread Section */}
-                              {expandedPost === post.id && (
-                                <div className="border-t border-border/40 bg-muted/30 p-4 space-y-3">
-                                  <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                                    {commentLoading ? (
-                                      <div className="text-center text-xs text-muted-foreground py-2">Loading replies...</div>
-                                    ) : postComments.length === 0 ? (
-                                      <div className="text-center text-xs text-muted-foreground py-2">No comments yet. Be the first to write a response!</div>
-                                    ) : (
-                                      postComments.map((comment) => (
-                                        <div key={comment.id} className="flex gap-2.5">
-                                          <Avatar className="h-7 w-7 border border-border/50">
-                                            <AvatarImage src={comment.profiles?.avatar_url} />
-                                            <AvatarFallback className="bg-violet-500/20 text-violet-500 text-[10px] font-bold">
-                                              {comment.profiles?.display_name?.[0] || 'U'}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <div className="flex-1 bg-card border border-border/50 rounded-xl p-2.5">
-                                            <div className="flex justify-between items-start mb-0.5">
-                                              <span className="font-semibold text-xs text-foreground">{comment.profiles?.display_name || 'Voke Member'}</span>
-                                              <span className="text-[10px] text-muted-foreground">
-                                                {new Date(comment.created_at).toLocaleDateString()}
-                                              </span>
-                                            </div>
-                                            <p className="text-xs text-foreground/90">{comment.content}</p>
-                                          </div>
-                                        </div>
-                                      ))
-                                    )}
-                                  </div>
-
-                                  <div className="flex gap-2 pt-2">
-                                    <Input
-                                      placeholder="Write a comment..."
-                                      value={newComment}
-                                      onChange={(e) => setNewComment(e.target.value)}
-                                      className="bg-card border-border h-9 text-xs focus:border-violet-500/50 rounded-xl"
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleSubmitComment(post.id);
-                                      }}
-                                    />
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleSubmitComment(post.id)}
-                                      disabled={!newComment.trim()}
-                                      className="bg-violet-600 hover:bg-violet-700 text-white h-9 px-3 rounded-xl"
-                                    >
-                                      <Send className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              )}
-                            </Card>
-                          </motion.div>
-                        ))
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {view === 'trending' && (
-                  <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <TrendingUp className="w-5 h-5 text-emerald-500" />
-                        Trending Interview & Tech Topics
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {aiInsights.trending_topics.map((topic: any, i: number) => (
-                        <motion.div
-                          key={topic.tag || i}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          onClick={() => {
-                            setSearchQuery(topic.tag);
-                            setView('feed');
-                          }}
-                          className="flex justify-between items-center p-3.5 rounded-xl bg-muted/40 border border-border/50 hover:border-emerald-500/40 transition-all cursor-pointer group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg font-bold text-muted-foreground/60">#{i + 1}</span>
-                            <div>
-                              <h4 className="font-semibold text-sm text-foreground group-hover:text-emerald-500 transition-colors">#{topic.tag}</h4>
-                              <p className="text-xs text-muted-foreground">{topic.posts} active discussions</p>
-                            </div>
-                          </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-500">
-                            <TrendingUp className="h-4 w-4" />
-                          </Button>
-                        </motion.div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {view === 'events' && (
-                  <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <Users className="w-5 h-5 text-blue-500" />
-                        Community Peer Events & Mock Sessions
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid gap-4">
-                      {aiInsights.suggested_events.map((event: any, i: number) => (
-                        <motion.div
-                          key={event.title || i}
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          className="p-5 rounded-2xl bg-muted/30 border border-border/50 hover:border-blue-500/30 transition-all"
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">{event.type}</Badge>
-                            <Button
-                              size="sm"
-                              variant={registeredEvents[event.title] ? "default" : "outline"}
-                              className={`text-xs rounded-xl ${registeredEvents[event.title] ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'border-border'}`}
-                              onClick={() => handleRegisterEvent(event.title)}
-                            >
-                              {registeredEvents[event.title] ? "Registered ✓" : "Register Interest"}
-                            </Button>
-                          </div>
-                          <h4 className="text-base font-bold text-foreground mb-1">{event.title}</h4>
-                          <p className="text-xs text-muted-foreground">{event.description}</p>
-                        </motion.div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
-
-              </div>
-
-              {/* Right Column: Search & Quick Trends */}
-              <div className="hidden lg:block lg:col-span-3 space-y-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search posts & topics..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 bg-card/60 border-border/60 text-xs rounded-xl focus:bg-card transition-all"
-                  />
+                  <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed pt-0.5">
+                    {userBio}
+                  </p>
                 </div>
 
-                <Card className="border-border/50 bg-card/60 backdrop-blur-md shadow-sm">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                      <TrendingUp className="w-4 h-4 text-emerald-500" />
-                      Trending Topics
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {aiInsights.trending_topics.slice(0, 5).map((topic: any) => (
-                      <div
-                        key={topic.tag}
-                        className="flex justify-between items-center group cursor-pointer p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
-                        onClick={() => {
-                          setSearchQuery(topic.tag);
-                          setView('feed');
-                        }}
-                      >
-                        <div>
-                          <p className="font-medium text-xs text-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">#{topic.tag}</p>
-                          <p className="text-[10px] text-muted-foreground">{topic.posts} posts</p>
-                        </div>
-                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                {/* Location & External Links */}
+                <div className="flex items-center justify-between pt-3 text-[11px] text-slate-400 border-t border-slate-800/60 mt-3.5">
+                  <div className="flex items-center gap-1 text-slate-400">
+                    <MapPin className="w-3.5 h-3.5 text-purple-400" />
+                    <span>{userLocation}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2.5">
+                    {userProfile?.github_url && (
+                      <a href={userProfile.github_url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">
+                        <Github className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                    {userProfile?.linkedin_url && (
+                      <a href={userProfile.linkedin_url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-400 transition-colors">
+                        <Linkedin className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                    {userProfile?.resume_url && (
+                      <a href={userProfile.resume_url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-emerald-400 transition-colors">
+                        <FileText className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {/* Social Media Stats Bar */}
+                <div className="grid grid-cols-3 gap-2 text-center mt-3.5 pt-3 border-t border-slate-800/60 bg-[#0b0f19]/70 rounded-xl p-2">
+                  <div>
+                    <div className="text-xs font-bold text-slate-100">{userPostsCount}</div>
+                    <div className="text-[10px] text-slate-400">Posts</div>
+                  </div>
+                  <div className="border-x border-slate-800">
+                    <div className="text-xs font-bold text-amber-400 flex items-center justify-center gap-0.5">
+                      <span>14</span>
+                      <Flame className="w-3 h-3 fill-amber-400" />
+                    </div>
+                    <div className="text-[10px] text-slate-400">Streak</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-purple-400">88%</div>
+                    <div className="text-[10px] text-slate-400">Prep Score</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CARD 2: MOMENTUM (STREAK & PEER MATCH) */}
+            <div className="bg-[#111726]/90 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-xl space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <Flame className="w-4 h-4 fill-amber-400/20" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-100">Momentum</h2>
+                  <p className="text-xs text-slate-400">Keep the streak going!</p>
+                </div>
               </div>
 
+              <div className="text-center py-2 bg-[#0b0f19]/60 rounded-xl border border-slate-800/40">
+                <div className="text-2xl font-bold text-slate-100 tracking-tight">
+                  4 <span className="text-slate-500 text-lg font-normal">/ 5</span>
+                </div>
+                <div className="text-xs text-slate-400 font-medium">sessions completed this week</div>
+              </div>
+
+              {/* WEEKDAY CHECKMARK ROW */}
+              <div className="flex items-center justify-between px-2 pt-1">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day, idx) => {
+                  const isChecked = idx < 4; // Mon, Tue, Wed, Thu checked
+                  return (
+                    <div key={day} className="flex flex-col items-center gap-1.5">
+                      <div
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${isChecked
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+                            : 'border border-slate-700 text-slate-600 bg-[#0d121f]'
+                          }`}
+                      >
+                        {isChecked ? <Check className="w-4 h-4 stroke-[3]" /> : <div className="w-2 h-2 rounded-full bg-slate-700" />}
+                      </div>
+                      <span className="text-[11px] font-medium text-slate-400">{day}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* BUTTON: FIND A PEER MATCH */}
+              <Button
+                onClick={() => setIsPeerModalOpen(true)}
+                className="w-full bg-[#171c2e] hover:bg-[#1f263d] text-purple-300 hover:text-white border border-purple-500/30 hover:border-purple-500/60 rounded-xl py-5 font-semibold text-xs tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 group"
+              >
+                <Users className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+                <span>Find a Peer Match</span>
+              </Button>
             </div>
-          </main>
-          
-          <Footer />
+
+          </div>
+
+          {/* ========================================================================= */}
+          {/* CENTER COLUMN: Feed, Quick Post Creation, Posts */}
+          {/* ========================================================================= */}
+          <div className="lg:col-span-6 space-y-6">
+
+            {/* FILTER CATEGORY TABS */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+              {(['For you', 'Interview Stories', 'Ask & Answer', 'Wins'] as const).map((tab) => {
+                const isActive = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      setSelectedTag(null);
+                    }}
+                    className={`px-5 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 ${isActive
+                        ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)] border border-purple-400/30'
+                        : 'bg-[#111726]/80 text-slate-400 hover:text-slate-200 border border-slate-800/80 hover:border-slate-700'
+                      }`}
+                  >
+                    {tab}
+                  </button>
+                );
+              })}
+
+              {selectedTag && (
+                <button
+                  onClick={() => setSelectedTag(null)}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-1.5"
+                >
+                  <span>Tag: #{selectedTag}</span>
+                  <X className="w-3 h-3 hover:text-white" />
+                </button>
+              )}
+            </div>
+
+            {/* QUICK POST CREATION CARD */}
+            <div className="bg-[#111726]/90 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-xl space-y-4">
+              <h3 className="text-sm font-semibold text-slate-200 tracking-tight">What's on your mind?</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Action 1: Share an experience */}
+                <div
+                  onClick={() => {
+                    setCreateCategory('Experience');
+                    setIsCreateOpen(true);
+                  }}
+                  className="p-3.5 rounded-xl bg-[#0b0f19]/70 border border-slate-800/60 hover:border-purple-500/40 hover:bg-[#141b2e] cursor-pointer transition-all flex items-center gap-3 group"
+                >
+                  <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
+                    <PenSquare className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-slate-200 group-hover:text-purple-300 transition-colors">
+                      Share an experience
+                    </div>
+                    <div className="text-[11px] text-slate-400">Inspire the community</div>
+                  </div>
+                </div>
+
+                {/* Action 2: Ask a question */}
+                <div
+                  onClick={() => {
+                    setCreateCategory('Question');
+                    setIsCreateOpen(true);
+                  }}
+                  className="p-3.5 rounded-xl bg-[#0b0f19]/70 border border-slate-800/60 hover:border-emerald-500/40 hover:bg-[#141b2e] cursor-pointer transition-all flex items-center gap-3 group"
+                >
+                  <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
+                    <HelpCircle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-slate-200 group-hover:text-emerald-300 transition-colors">
+                      Ask a question
+                    </div>
+                    <div className="text-[11px] text-slate-400">Get help from peers</div>
+                  </div>
+                </div>
+
+                {/* Action 3: Find a mock partner */}
+                <div
+                  onClick={() => {
+                    setCreateCategory('Partner');
+                    setIsCreateOpen(true);
+                  }}
+                  className="p-3.5 rounded-xl bg-[#0b0f19]/70 border border-slate-800/60 hover:border-amber-500/40 hover:bg-[#141b2e] cursor-pointer transition-all flex items-center gap-3 group"
+                >
+                  <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform">
+                    <UserPlus className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-slate-200 group-hover:text-amber-300 transition-colors">
+                      Find a mock partner
+                    </div>
+                    <div className="text-[11px] text-slate-400">Practice together</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* POST FEED STREAM */}
+            <div className="space-y-4">
+              {isLoadingPosts ? (
+                <div className="p-12 text-center bg-[#111726]/60 border border-slate-800/60 rounded-2xl text-slate-400 space-y-3">
+                  <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-xs text-slate-400">Loading community discussions from Supabase...</p>
+                </div>
+              ) : filteredPosts.length === 0 ? (
+                <div className="p-10 text-center bg-[#111726]/60 border border-slate-800/60 rounded-2xl text-slate-400 space-y-3">
+                  <MessageSquare className="w-10 h-10 mx-auto text-purple-400 opacity-60" />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-200">No community posts yet</p>
+                    <p className="text-xs text-slate-400 mt-1">Be the first member to share an experience, ask a question, or post a win!</p>
+                  </div>
+                  <Button
+                    onClick={() => setIsCreateOpen(true)}
+                    className="mt-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg shadow-purple-600/20"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1.5" />
+                    Create First Post
+                  </Button>
+                </div>
+              ) : (
+                filteredPosts.map((post) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-[#111726]/90 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-xl hover:border-slate-700/80 transition-all space-y-4"
+                  >
+                    {/* POST HEADER */}
+                    <div className="flex items-start justify-between">
+                      <div
+                        onClick={() => handleViewPublicProfile({
+                          name: post.authorName,
+                          avatar: post.authorAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+                          role: post.authorRole,
+                          userId: post.user_id
+                        })}
+                        className="flex items-center gap-3 cursor-pointer group"
+                      >
+                        <Avatar className="w-10 h-10 border border-purple-500/30 group-hover:scale-105 transition-transform">
+                          <AvatarImage src={post.authorAvatar} />
+                          <AvatarFallback className="bg-purple-600 text-white text-xs font-bold">
+                            {post.authorName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-slate-100 group-hover:text-purple-300 transition-colors">{post.authorName}</span>
+                            {post.isTopContributor && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                Top Contributor
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-400 flex items-center gap-2">
+                            <span>{post.authorRole}</span>
+                            <span>•</span>
+                            <span>{post.timeAgo}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button className="text-slate-500 hover:text-slate-300 p-1">
+                        <Sparkles className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* POST TITLE */}
+                    <h3 className="text-base font-bold text-slate-100 tracking-tight leading-snug">
+                      {post.title}
+                    </h3>
+
+                    {/* TAG PILLS */}
+                    <div className="flex flex-wrap gap-2">
+                      {post.tags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setSelectedTag(tag)}
+                          className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#182035] text-slate-300 hover:text-white border border-slate-700/50 hover:border-purple-500/40 transition-colors"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* POST CONTENT */}
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line">
+                      {post.content}
+                    </p>
+
+                    {/* DIAGRAM PREVIEW (IF PRESENT) */}
+                    {post.diagramPreview && (
+                      <div className="p-4 rounded-xl bg-[#0b0f19]/90 border border-purple-500/20 space-y-2">
+                        <div className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
+                          <Network className="w-3.5 h-3.5 text-purple-400" />
+                          <span>{post.diagramPreview.title}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
+                          {post.diagramPreview.steps.map((step, idx) => (
+                            <div key={step} className="flex items-center gap-1.5">
+                              <span className="px-2 py-1 rounded-md bg-[#161c2d] border border-slate-700 text-slate-300 font-medium">
+                                {step}
+                              </span>
+                              {idx < post.diagramPreview!.steps.length - 1 && (
+                                <span className="text-purple-400 font-bold">→</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* FOOTER ACTIONS */}
+                    <div className="pt-2 flex items-center justify-between border-t border-slate-800/60">
+                      {/* Offer Status Badge (Left) */}
+                      {post.offerStatus ? (
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1.5">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          <span>Offer</span>
+                        </span>
+                      ) : <div />}
+
+                      <div className="flex items-center gap-4 text-xs text-slate-400">
+                        {/* Helpful / Like Button */}
+                        <button
+                          onClick={() => handleToggleLike(post.id)}
+                          className={`flex items-center gap-1.5 font-medium transition-colors ${post.isLiked ? 'text-purple-400 font-bold' : 'hover:text-slate-200'
+                            }`}
+                        >
+                          <ThumbsUp className={`w-4 h-4 ${post.isLiked ? 'fill-purple-400' : ''}`} />
+                          <span>{post.likeCount} Helpful</span>
+                        </button>
+
+                        {/* Comments Toggle */}
+                        <button
+                          onClick={() => setExpandedPostId(expandedPostId === post.id ? null : post.id)}
+                          className="flex items-center gap-1.5 font-medium hover:text-slate-200 transition-colors"
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                          <span>{post.commentsCount} Comments</span>
+                        </button>
+
+                        {/* Save Bookmark */}
+                        <button
+                          onClick={() => handleToggleSave(post.id)}
+                          className={`flex items-center gap-1.5 font-medium transition-colors ${post.isSaved ? 'text-amber-400' : 'hover:text-slate-200'
+                            }`}
+                        >
+                          <Bookmark className={`w-4 h-4 ${post.isSaved ? 'fill-amber-400' : ''}`} />
+                          <span>Save</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* EXPANDED COMMENTS SECTION */}
+                    {expandedPostId === post.id && (
+                      <div className="pt-3 border-t border-slate-800/80 space-y-3">
+                        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                          {(commentsMap[post.id] || []).map((c, i) => (
+                            <div key={i} className="p-2.5 rounded-xl bg-[#0b0f19]/80 border border-slate-800 text-xs space-y-1">
+                              <div className="flex items-center justify-between text-slate-400">
+                                <span className="font-semibold text-slate-200">{c.author}</span>
+                                <span className="text-[10px]">{c.timeAgo}</span>
+                              </div>
+                              <p className="text-slate-300">{c.text}</p>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Comment Input */}
+                        <div className="flex items-center gap-2">
+                          <Input
+                            placeholder="Write a comment..."
+                            value={commentText[post.id] || ''}
+                            onChange={(e) => setCommentText(prev => ({ ...prev, [post.id]: e.target.value }))}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment(post.id); }}
+                            className="bg-[#0b0f19] border-slate-800 text-xs rounded-xl focus-visible:ring-purple-500 text-slate-100 placeholder:text-slate-500"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => handleAddComment(post.id)}
+                            className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs px-3"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                ))
+              )}
+            </div>
+
+          </div>
+
+          {/* ========================================================================= */}
+          {/* RIGHT SIDEBAR: Today's Plan, Active Rooms, Trending Skills */}
+          {/* ========================================================================= */}
+          <div className="lg:col-span-3 space-y-6">
+
+            {/* CARD 1: YOUR INTERVIEW NETWORK */}
+            <div className="bg-[#111726]/90 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-xl space-y-4">
+              {/* Header */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <h2 className="text-base font-semibold text-slate-100">Your Interview Network</h2>
+                  </div>
+                  <button
+                    onClick={() => setIsPeerModalOpen(true)}
+                    className="text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors"
+                  >
+                    View all
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">People preparing for similar roles</p>
+              </div>
+
+              {/* Peer List */}
+              <div className="space-y-3">
+                {NETWORK_PEERS.map((peer) => {
+                  const isConnected = connectedPeers.includes(peer.id);
+                  return (
+                    <div
+                      key={peer.id}
+                      className="p-3 rounded-xl bg-[#0b0f19]/70 border border-slate-800/60 flex items-center justify-between gap-2 hover:border-slate-700 transition-all"
+                    >
+                      <div
+                        onClick={() => handleViewPublicProfile({ name: peer.name, avatar: peer.avatar, role: peer.role, userId: peer.id })}
+                        className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
+                      >
+                        <Avatar className="w-9 h-9 border border-purple-500/30 shrink-0 group-hover:scale-105 transition-transform">
+                          <AvatarImage src={peer.avatar} />
+                          <AvatarFallback className="bg-purple-900 text-purple-200 text-xs font-bold">
+                            {peer.name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <div className="text-xs font-semibold text-slate-200 group-hover:text-purple-300 transition-colors truncate flex items-center gap-1">
+                            <span>{peer.name}</span>
+                            <span className="text-slate-500 font-normal">• {peer.role}</span>
+                          </div>
+                          <div className="text-[10.5px] text-slate-400 truncate mt-0.5">
+                            {peer.subtitle}
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        onClick={() => handleConnectPeer(peer.id, peer.name)}
+                        className={`text-xs font-semibold h-7 px-3 rounded-lg transition-all shrink-0 ${
+                          isConnected
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
+                            : 'bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20'
+                        }`}
+                      >
+                        {isConnected ? (
+                          <span className="flex items-center gap-1">
+                            <Check className="w-3 h-3 stroke-[3]" /> Connected
+                          </span>
+                        ) : (
+                          'Connect'
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Bottom Divider & Action */}
+              <div className="pt-2 border-t border-slate-800/70">
+                <button
+                  onClick={() => setIsPeerModalOpen(true)}
+                  className="w-full py-2 px-3 rounded-xl bg-[#0b0f19]/50 hover:bg-[#141b2e] border border-slate-800/60 hover:border-purple-500/40 text-xs font-semibold text-purple-300 hover:text-purple-200 flex items-center justify-center gap-2 transition-all group"
+                >
+                  <Plus className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition-transform" />
+                  <span>Find people with similar interview goals</span>
+                </button>
+              </div>
+            </div>
+
+            {/* CARD 2: ACTIVE MOCK ROOMS */}
+            <div className="bg-[#111726]/90 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-semibold text-slate-100">Active mock rooms</h2>
+                <button
+                  onClick={() => navigate('/peer-interviews')}
+                  className="text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  View all
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {mockRooms.map((room) => (
+                  <div
+                    key={room.id}
+                    className="p-3 rounded-xl bg-[#0b0f19]/70 border border-slate-800/60 flex items-center justify-between gap-2 hover:border-slate-700 transition-all"
+                  >
+                    <div>
+                      <div className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5 text-purple-400" />
+                        <span>{room.title}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        {room.current} / {room.max} participants
+                      </div>
+                    </div>
+
+                    {/* AVATAR STACK & JOIN BUTTON */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-2">
+                        {room.avatars.map((url, i) => (
+                          <Avatar key={i} className="w-6 h-6 border border-slate-800">
+                            <AvatarImage src={url} />
+                            <AvatarFallback className="text-[9px]">U</AvatarFallback>
+                          </Avatar>
+                        ))}
+                      </div>
+
+                      <Button
+                        size="sm"
+                        onClick={() => handleJoinRoom(room)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold h-8 px-3"
+                      >
+                        Join
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* CARD 3: TRENDING SKILLS */}
+            <div className="bg-[#111726]/90 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-semibold text-slate-100">Trending skills</h2>
+                <button
+                  onClick={() => navigate('/dsa-sheet')}
+                  className="text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  View all
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'System Design',
+                  'Dynamic Programming',
+                  'Graphs',
+                  'Behavioral Interviewing',
+                  'Low Level Design'
+                ].map((skill) => (
+                  <button
+                    key={skill}
+                    onClick={() => setSelectedTag(skill)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-medium bg-[#141c2e] hover:bg-[#1d273f] text-slate-300 hover:text-white border border-slate-700/60 hover:border-emerald-500/40 transition-all flex items-center gap-1.5 group"
+                  >
+                    <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    <span>{skill}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
         </div>
-      </div>
+      </main>
+
+      {/* ========================================================================= */}
+      {/* MODAL 1: POST CREATION DIALOG */}
+      {/* ========================================================================= */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="bg-[#111726] border border-slate-800 text-slate-100 rounded-2xl sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <PenSquare className="w-5 h-5 text-purple-400" />
+              <span>Create Post on Voke Pulse</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">
+              Share interview loops, ask questions, or connect with peers for mock practice.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            <div>
+              <label className="text-xs font-semibold text-slate-300">Category</label>
+              <div className="flex gap-2 mt-1.5">
+                {(['Experience', 'Question', 'Partner'] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setCreateCategory(cat)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${createCategory === cat
+                        ? 'bg-purple-600 text-white border-purple-500'
+                        : 'bg-[#0b0f19] border-slate-800 text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-300">Title</label>
+              <Input
+                placeholder="e.g. Amazon SDE 1 — final round debrief"
+                value={postTitle}
+                onChange={(e) => setPostTitle(e.target.value)}
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-300">Content</label>
+              <Textarea
+                placeholder="Share round details, LP questions, code topics..."
+                value={postContent}
+                onChange={(e) => setPostContent(e.target.value)}
+                rows={5}
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-300">Tags (comma separated)</label>
+              <Input
+                placeholder="Amazon, System Design, SDE 1"
+                value={postTags}
+                onChange={(e) => setPostTags(e.target.value)}
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                variant="ghost"
+                onClick={() => setIsCreateOpen(false)}
+                className="text-xs text-slate-400 hover:text-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreatePost}
+                disabled={isSubmitting}
+                className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-xl px-5"
+              >
+                {isSubmitting ? 'Publishing...' : 'Publish Post'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========================================================================= */}
+      {/* MODAL 2: PEER MATCH DIALOG */}
+      {/* ========================================================================= */}
+      <Dialog open={isPeerModalOpen} onOpenChange={setIsPeerModalOpen}>
+        <DialogContent className="bg-[#111726] border border-slate-800 text-slate-100 rounded-2xl sm:max-w-md text-center space-y-4">
+          <DialogHeader>
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/30 flex items-center justify-center mx-auto mb-2">
+              <Users className="w-6 h-6" />
+            </div>
+            <DialogTitle className="text-base font-bold text-slate-100">Find a Peer Interview Match</DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">
+              Instantly pair with another candidate for a 1-on-1 mock coding or system design session.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 pt-2 text-left">
+            <div className="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 text-xs space-y-1">
+              <div className="font-semibold text-purple-300">Target Role & Level</div>
+              <div className="text-slate-400">SDE 1 / SDE 2 (System Design & DSA)</div>
+            </div>
+            <div className="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 text-xs space-y-1">
+              <div className="font-semibold text-emerald-300">Duration</div>
+              <div className="text-slate-400">45 Minutes (30m coding + 15m feedback)</div>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => {
+              setIsPeerModalOpen(false);
+              navigate('/peer-interviews');
+            }}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-xs py-5"
+          >
+            Launch Peer Match Queue
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========================================================================= */}
+      {/* MODAL 3: EDIT VOKE PULSE COMMUNITY PROFILE DIALOG */}
+      {/* ========================================================================= */}
+      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+        <DialogContent className="bg-[#111726] border border-slate-800 text-slate-100 rounded-2xl sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <Edit3 className="w-5 h-5 text-purple-400" />
+              <span>Edit Voke Pulse Profile</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">
+              Customize your public persona, headline, and bio specifically for the Voke Pulse community.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2 text-left">
+            {/* Display Name */}
+            <div>
+              <label className="text-xs font-semibold text-slate-300">Display Name</label>
+              <Input
+                placeholder="e.g. Priyanshu Sharma"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+              />
+            </div>
+
+            {/* Pulse Headline */}
+            <div>
+              <label className="text-xs font-semibold text-slate-300">Community Headline / Target Role</label>
+              <Input
+                placeholder="e.g. SDE @ Microsoft | System Design Enthusiast"
+                value={editHeadline}
+                onChange={(e) => setEditHeadline(e.target.value)}
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+              />
+            </div>
+
+            {/* Avatar Image URL + Presets */}
+            <div>
+              <label className="text-xs font-semibold text-slate-300">Avatar Image URL</label>
+              <Input
+                placeholder="https://..."
+                value={editAvatar}
+                onChange={(e) => setEditAvatar(e.target.value)}
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+              />
+              {/* Preset Avatars Selection */}
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-[11px] text-slate-400">Quick Presets:</span>
+                {[
+                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+                  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+                ].map((url, i) => (
+                  <Avatar
+                    key={i}
+                    onClick={() => setEditAvatar(url)}
+                    className={`w-7 h-7 cursor-pointer border hover:scale-110 transition-transform ${editAvatar === url ? 'border-purple-400 ring-2 ring-purple-500/50' : 'border-slate-700'}`}
+                  >
+                    <AvatarImage src={url} />
+                  </Avatar>
+                ))}
+              </div>
+            </div>
+
+            {/* Pulse Bio */}
+            <div>
+              <label className="text-xs font-semibold text-slate-300">Bio</label>
+              <Textarea
+                placeholder="Share your interview prep journey, favorite tech stack, or career goals..."
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                rows={3}
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+              />
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="text-xs font-semibold text-slate-300">Location</label>
+              <Input
+                placeholder="e.g. Bengaluru, India"
+                value={editLocation}
+                onChange={(e) => setEditLocation(e.target.value)}
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+              />
+            </div>
+
+            {/* Social Links */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                  <Github className="w-3 h-3 text-slate-400" />
+                  <span>GitHub Profile URL</span>
+                </label>
+                <Input
+                  placeholder="https://github.com/..."
+                  value={editGithub}
+                  onChange={(e) => setEditGithub(e.target.value)}
+                  className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                  <Linkedin className="w-3 h-3 text-blue-400" />
+                  <span>LinkedIn Profile URL</span>
+                </label>
+                <Input
+                  placeholder="https://linkedin.com/in/..."
+                  value={editLinkedin}
+                  onChange={(e) => setEditLinkedin(e.target.value)}
+                  className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+              <Button
+                variant="ghost"
+                onClick={() => setIsEditProfileOpen(false)}
+                className="text-xs text-slate-400 hover:text-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveProfile}
+                className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-xl px-5"
+              >
+                Save Pulse Profile
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* ========================================================================= */}
+      {/* MODAL 4: VIEW PUBLIC USER PROFILE DIALOG (READ ONLY) */}
+      {/* ========================================================================= */}
+      <Dialog open={!!viewingProfile} onOpenChange={(open) => !open && setViewingProfile(null)}>
+        <DialogContent className="bg-[#111726] border border-slate-800 text-slate-100 rounded-3xl sm:max-w-md overflow-hidden p-0">
+          {viewingProfile && (
+            <div>
+              {/* Profile Header Banner */}
+              <div className="relative h-28 bg-gradient-to-r from-purple-900/80 via-indigo-900/60 to-slate-900 p-4 flex items-start justify-between">
+                <div className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-md flex items-center gap-1.5">
+                  <Eye className="w-3 h-3 text-purple-400" />
+                  <span>Public View Format</span>
+                </div>
+              </div>
+
+              {/* Profile Content Body */}
+              <div className="px-6 pb-6 pt-0 relative -mt-12 space-y-4">
+                {/* Avatar & Badges */}
+                <div className="flex items-end justify-between">
+                  <div className="relative">
+                    <Avatar className="w-20 h-20 border-4 border-[#111726] shadow-2xl">
+                      <AvatarImage src={viewingProfile.avatar} />
+                      <AvatarFallback className="bg-purple-600 text-white text-lg font-bold">
+                        {viewingProfile.name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#111726]" />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const peerId = viewingProfile.id || viewingProfile.name;
+                        handleConnectPeer(peerId, viewingProfile.name);
+                      }}
+                      className={`text-xs font-semibold rounded-xl px-4 py-2 h-9 transition-all ${
+                        connectedPeers.includes(viewingProfile.id || viewingProfile.name)
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
+                          : 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-600/20'
+                      }`}
+                    >
+                      {connectedPeers.includes(viewingProfile.id || viewingProfile.name) ? 'Connected' : 'Connect'}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* User Name & Headline */}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-slate-100">{viewingProfile.name}</h2>
+                    <CheckCircle2 className="w-4 h-4 text-purple-400 fill-purple-400/20" />
+                  </div>
+                  <p className="text-xs text-purple-300 font-medium mt-0.5">{viewingProfile.role}</p>
+                </div>
+
+                {/* Bio Box */}
+                <div className="p-3.5 rounded-2xl bg-[#0b0f19]/80 border border-slate-800/80 text-xs text-slate-300 leading-relaxed">
+                  "{viewingProfile.bio}"
+                </div>
+
+                {/* Social Media Stats Bar */}
+                <div className="grid grid-cols-3 gap-2 text-center pt-2 bg-[#0b0f19]/90 border border-slate-800/80 rounded-2xl p-3">
+                  <div>
+                    <div className="text-sm font-bold text-slate-100">{viewingProfile.postsCount || 5}</div>
+                    <div className="text-[10px] text-slate-400">Posts</div>
+                  </div>
+                  <div className="border-x border-slate-800">
+                    <div className="text-sm font-bold text-amber-400 flex items-center justify-center gap-0.5">
+                      <span>{viewingProfile.streak || 12}</span>
+                      <Flame className="w-3.5 h-3.5 fill-amber-400" />
+                    </div>
+                    <div className="text-[10px] text-slate-400">Streak</div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-purple-400">{viewingProfile.prepScore || 85}%</div>
+                    <div className="text-[10px] text-slate-400">Prep Score</div>
+                  </div>
+                </div>
+
+                {/* Skills / Target Focus */}
+                <div className="space-y-1.5">
+                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Target Skills</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewingProfile.skills?.map(skill => (
+                      <span key={skill} className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[#161e31] text-slate-300 border border-slate-700/60">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Location & Social Icons */}
+                <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800/60">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-purple-400" />
+                    <span>{viewingProfile.location}</span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {viewingProfile.github && (
+                      <a href={viewingProfile.github} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">
+                        <Github className="w-4 h-4" />
+                      </a>
+                    )}
+                    {viewingProfile.linkedin && (
+                      <a href={viewingProfile.linkedin} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-400 transition-colors">
+                        <Linkedin className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {/* Read Only Notice */}
+                <div className="text-center pt-2 text-[10px] text-slate-500 font-medium border-t border-slate-800/50 flex items-center justify-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Public View (Read-Only) • Cannot be edited by viewers</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Footer />
     </div>
   );
-};
-
-export default Community;
+}

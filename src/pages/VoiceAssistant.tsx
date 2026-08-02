@@ -3,7 +3,7 @@ import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { AudioVisualizerSimple } from '@/components/AudioVisualizerSimple';
 import { LiveStatus, MessageLog } from '@/types/voice';
 import { Mic, X, MessageSquare, Sparkles, AlertCircle, ArrowLeft, Code, Play, Send, Maximize2, Minimize2, FileText, LogOut, Video, VideoOff, Camera, User, Briefcase, Building, Layers, Award, Target, Settings, ChevronRight, Check } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -290,7 +290,7 @@ const VoiceAssistant: React.FC = () => {
               const token = session.data.session?.access_token;
               
               if (token) {
-                const reposResponse = await fetch(`${supabase.supabaseUrl}/functions/v1/github-proxy`, {
+                const reposResponse = await fetch(`${SUPABASE_URL}/functions/v1/github-proxy`, {
                   method: 'POST',
                   headers: {
                     'Authorization': `Bearer ${token}`,
