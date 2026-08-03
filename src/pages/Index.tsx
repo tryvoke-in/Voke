@@ -256,7 +256,7 @@ const Index = () => {
             {/* Left Column: Headlines & Actions */}
             <div className="lg:col-span-6 space-y-8 text-center lg:text-left">
               <motion.div
-                initial={{ opacity: 0, y: 15 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
                 className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/[0.03] border border-white/10 text-violet-300 text-xs font-semibold tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(124,58,237,0.1)]"
@@ -266,7 +266,7 @@ const Index = () => {
               </motion.div>
 
               <motion.h1
-                initial={{ opacity: 0, y: 20 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.1]"
@@ -278,7 +278,7 @@ const Index = () => {
               </motion.h1>
 
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-base md:text-lg text-gray-400 leading-relaxed max-w-xl"
@@ -288,7 +288,7 @@ const Index = () => {
               </motion.p>
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2"
@@ -335,7 +335,7 @@ const Index = () => {
 
               {/* CARD 1 (Main Base Card): Webcam Feed & Live Dialogue simulation */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={false}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
                 whileHover={{ scale: 1.01 }}
