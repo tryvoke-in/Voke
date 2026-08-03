@@ -337,12 +337,12 @@ const Index = () => {
               <motion.div
                 initial={false}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
+                transition={{ duration: 0.8 }}
                 whileHover={{ scale: 1.01 }}
-                className="w-full md:w-[85%] bg-zinc-950/80 border border-white/10 rounded-3xl p-3.5 sm:p-5 shadow-2xl backdrop-blur-xl relative"
+                className="w-full md:w-[85%] bg-zinc-950/90 border border-white/15 rounded-3xl p-3.5 sm:p-5 shadow-2xl backdrop-blur-xl relative opacity-100 z-10"
               >
                 {/* Simulated Webcam layout with live typing dialogue overlay rendering INSIDE the aspect-video screen container */}
-                <div className="bg-black/80 border border-white/5 rounded-2xl p-3 sm:p-4 relative aspect-video flex flex-col justify-between overflow-hidden min-h-[150px] sm:min-h-[180px] md:min-h-[220px]">
+                <div className="bg-black/90 border border-white/10 rounded-2xl p-3 sm:p-4 relative aspect-video flex flex-col justify-between overflow-hidden min-h-[150px] sm:min-h-[180px] md:min-h-[220px]">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,#000_100%)] opacity-75 z-10 pointer-events-none" />
                   
                   {/* Fine face mesh scanning visualizer lines */}
@@ -415,9 +415,10 @@ const Index = () => {
 
               {/* CARD 2 (Floating Top-Left Card): AI Confidence Monitor */}
               <motion.div
+                initial={false}
                 animate={{ y: [0, -12, 0] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-[30px] left-0 z-20 w-[220px] bg-zinc-900/90 border border-white/15 rounded-2xl p-4 shadow-xl backdrop-blur-2xl items-center gap-3 animate-none hidden md:flex"
+                className="absolute top-[20px] left-0 z-20 w-[220px] bg-zinc-900/95 border border-white/20 rounded-2xl p-4 shadow-2xl backdrop-blur-2xl hidden md:flex items-center gap-3 opacity-100"
               >
                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0">
                   <Smile className="w-4 h-4 text-emerald-400" />
@@ -431,9 +432,10 @@ const Index = () => {
 
               {/* CARD 3 (Floating Bottom-Right Card): Match Scorecard */}
               <motion.div
+                initial={false}
                 animate={{ y: [0, 12, 0] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute bottom-[20px] right-0 z-20 w-[230px] bg-zinc-900/90 border border-white/15 rounded-2xl p-4 shadow-xl backdrop-blur-2xl space-y-2.5 animate-none hidden md:block"
+                className="absolute bottom-[10px] right-0 z-20 w-[230px] bg-zinc-900/95 border border-white/20 rounded-2xl p-4 shadow-2xl backdrop-blur-2xl hidden md:block space-y-2.5 opacity-100"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Match Scorecard</span>
