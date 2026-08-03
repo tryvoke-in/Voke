@@ -18,23 +18,17 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
-            if (id.includes("react") || id.includes("react-dom") || id.includes("react-router")) {
+            if (id.includes("react/") || id.includes("react-dom/") || id.includes("react-router")) {
               return "vendor-react";
-            }
-            if (id.includes("@radix-ui") || id.includes("lucide-react") || id.includes("clsx") || id.includes("tailwind-merge")) {
-              return "vendor-ui";
             }
             if (id.includes("recharts") || id.includes("d3-")) {
               return "vendor-charts";
             }
-            if (id.includes("framer-motion") || id.includes("motion")) {
+            if (id.includes("framer-motion")) {
               return "vendor-animation";
             }
-            if (id.includes("@supabase")) {
-              return "vendor-supabase";
-            }
-            if (id.includes("@tanstack")) {
-              return "vendor-query";
+            if (id.includes("pdfjs-dist")) {
+              return "vendor-pdf";
             }
           }
         },

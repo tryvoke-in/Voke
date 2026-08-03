@@ -31,7 +31,16 @@
       ]
     },
     {
-      "source": "/(assets|images)/(.*)",
+      "source": "/((?!assets/|images/|.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|json|txt|xml|mjs|woff|woff2)$).*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -40,7 +49,7 @@
       ]
     },
     {
-      "source": "/(favicon.png|og-image.png|manifest.json|llms.txt|llms-full.txt)",
+      "source": "/(favicon.png|og-image.png|manifest.json|llms.txt|llms-full.txt|robots.txt|sitemap.xml)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -51,11 +60,11 @@
   ],
   "redirects": [
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|images/|api/|.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|json|txt|xml|mjs|woff|woff2)$).*)",
       "has": [
         {
           "type": "host",
-          "value": "(?!tryvoke\\.in).*\\.vercel\\.app"
+          "value": "^tryvoke\\.in$"
         }
       ],
       "destination": "https://www.tryvoke.in/$1",
