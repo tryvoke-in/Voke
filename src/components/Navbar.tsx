@@ -123,36 +123,10 @@ export const Navbar = () => {
                                 className="w-11 h-11 object-contain group-hover:scale-110 transition-transform duration-300"
                             />
                             <div className="flex items-baseline gap-2">
-                                <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-purple-300 via-indigo-200 to-white bg-clip-text text-transparent">
+                                <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40 bg-clip-text text-transparent">
                                     Voke Pulse
                                 </span>
-                                <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 tracking-wide uppercase">
-                                    Community
-                                </span>
                             </div>
-                        </div>
-
-                        {/* Center Community Links */}
-                        <div className="hidden md:flex items-center gap-1.5">
-                            {[
-                                { name: "Feed", path: "/community" },
-                                { name: "Peer Match", path: "/peer-interviews" },
-                            ].map((link) => {
-                                const isActive = location.pathname === link.path;
-                                return (
-                                    <button
-                                        key={link.name}
-                                        onClick={() => navigate(link.path)}
-                                        className={`relative text-xs font-semibold px-3.5 py-2 rounded-xl transition-all ${
-                                            isActive
-                                                ? "text-white bg-purple-600/20 border border-purple-500/40 shadow-[0_0_15px_rgba(124,58,237,0.2)]"
-                                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-                                        }`}
-                                    >
-                                        {link.name}
-                                    </button>
-                                );
-                            })}
                         </div>
 
                         {/* Right Side Community Actions */}

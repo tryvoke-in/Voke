@@ -60,94 +60,59 @@ interface MockRoom {
   type: string;
 }
 
-// Default Feed Posts (Matching Screenshot & Interactive)
-const DEFAULT_POSTS: PostItem[] = [
-  {
-    id: 'post-1',
-    authorName: 'Rohit Sharma',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    authorRole: 'SDE @ Microsoft',
-    isTopContributor: true,
-    timeAgo: '2h ago',
-    title: 'Amazon SDE 1 — final round debrief',
-    tags: ['Amazon', 'SDE 1', 'Onsite', 'Experience'],
-    content: 'Just wrapped up my final round loop at Amazon. Overall a great experience!\nRound 1: LP + System Design...\nRound 2: DSA (Hard)\nRound 3: OO Design + Coding...\nRound 4: Bar Raiser',
-    offerStatus: true,
-    likeCount: 48,
-    commentsCount: 27,
-    category: 'Interview Stories'
-  },
-  {
-    id: 'post-2',
-    authorName: 'Ananya Iyer',
-    authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-    authorRole: 'Backend Engineer @ Razorpay',
-    timeAgo: '7h ago',
-    title: 'Need feedback on my system design answer',
-    tags: ['System Design', 'Distributed Systems'],
-    content: "Question: Design a URL shortener like bit.ly. Here's my high-level approach. Would love feedback on correctness and depth.",
-    diagramPreview: {
-      title: 'My Approach (High Level)',
-      steps: ['Requirements & Goals', 'API Design', 'High Level Design', 'Data Model', 'Scaling & Bottlenecks']
-    },
-    likeCount: 31,
-    commentsCount: 18,
-    category: 'Ask & Answer'
-  },
-  {
-    id: 'post-3',
-    authorName: 'Vikramaditya Roy',
-    authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    authorRole: 'Incoming SDE2 @ Uber',
-    isTopContributor: true,
-    timeAgo: '1d ago',
-    title: 'Cracked Uber SDE2 after 4 months of Voke AI Practice! 🎉',
-    tags: ['Uber', 'SDE 2', 'Success', 'Offer'],
-    content: "Sharing my preparation roadmap! Practiced 40+ mock AI interviews on Voke Pulse. Focused heavily on System Design rate limiters and LLD parking lot design.",
-    offerStatus: true,
-    likeCount: 112,
-    commentsCount: 45,
-    category: 'Wins'
-  }
-];
+// Helper functions for real metric calculations
+const calculateRealStreak = (dates: string[]): number => {
+  if (!dates.length) return 0;
+  const uniqueDays = Array.from(
+    new Set(dates.map(d => {
+      try { return new Date(d).toISOString().split('T')[0]; } catch { return ''; }
+    }).filter(Boolean))
+  ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
-// Default Mock Rooms
-const DEFAULT_MOCK_ROOMS: MockRoom[] = [
-  {
-    id: 'room-1',
-    title: 'Amazon SDE Mock',
-    current: 5,
-    max: 6,
-    avatars: [
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100'
-    ],
-    type: 'Coding'
-  },
-  {
-    id: 'room-2',
-    title: 'System Design Round',
-    current: 3,
-    max: 6,
-    avatars: [
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'
-    ],
-    type: 'System Design'
-  },
-  {
-    id: 'room-3',
-    title: 'Behavioral Mock',
-    current: 2,
-    max: 4,
-    avatars: [
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100'
-    ],
-    type: 'Behavioral'
+  if (!uniqueDays.length) return 0;
+
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+  if (uniqueDays[0] !== today && uniqueDays[0] !== yesterday) return 0;
+
+  let streak = 0;
+  let currentCheck = new Date(uniqueDays[0]);
+
+  for (let i = 0; i < uniqueDays.length; i++) {
+    const d = new Date(uniqueDays[i]);
+    const diffDays = Math.round((currentCheck.getTime() - d.getTime()) / 86400000);
+    if (diffDays === 0 || diffDays === 1) {
+      streak++;
+      currentCheck = d;
+    } else {
+      break;
+    }
   }
-];
+  return streak;
+};
+
+const getWeeklyCompletions = (dates: string[]): Set<number> => {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const distanceToMon = (dayOfWeek + 6) % 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - distanceToMon);
+  monday.setHours(0, 0, 0, 0);
+
+  const completedDays = new Set<number>();
+  dates.forEach(dStr => {
+    try {
+      const d = new Date(dStr);
+      if (d >= monday) {
+        const dayIndex = (d.getDay() + 6) % 7;
+        if (dayIndex < 5) completedDays.add(dayIndex);
+      }
+    } catch {}
+  });
+
+  return completedDays;
+};
 
 // Circular SVG Progress Ring Component
 const CircularProgressRing = ({ score, size = 52, strokeWidth = 4, color = '#8b5cf6' }: { score: number; size?: number; strokeWidth?: number; color?: string }) => {
@@ -202,7 +167,12 @@ export default function Community() {
     { id: 't2', title: 'DSA Practice', detail: 'Medium • Arrays', completed: true },
     { id: 't3', title: 'System Design Study', duration: '30 min', completed: false }
   ]);
-  const [mockRooms, setMockRooms] = useState<MockRoom[]>(DEFAULT_MOCK_ROOMS);
+  // Real Metrics & Network State
+  const [userStreak, setUserStreak] = useState<number>(0);
+  const [userPrepScore, setUserPrepScore] = useState<number>(0);
+  const [weeklyDaysSet, setWeeklyDaysSet] = useState<Set<number>>(new Set());
+  const [networkPeers, setNetworkPeers] = useState<Array<{ id: string; name: string; role: string; avatar: string; subtitle: string }>>([]);
+  const [mockRooms, setMockRooms] = useState<MockRoom[]>([]);
 
   // Post Creation & Dialog State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -222,40 +192,80 @@ export default function Community() {
   const [editGithub, setEditGithub] = useState('');
   const [editLinkedin, setEditLinkedin] = useState('');
 
-  // Network Peers State
-  const [connectedPeers, setConnectedPeers] = useState<string[]>([]);
-  const NETWORK_PEERS = [
-    {
-      id: 'peer-1',
-      name: 'Anurag',
-      role: 'Frontend Engineer',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      subtitle: 'Preparing for SDE 1 · 82% match'
-    },
-    {
-      id: 'peer-2',
-      name: 'Aditi',
-      role: 'Full Stack Developer',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-      subtitle: 'System Design focus · 76% match'
-    },
-    {
-      id: 'peer-3',
-      name: 'Rohan',
-      role: 'Software Engineer',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-      subtitle: 'Amazon / DSA practice · 71% match'
-    }
-  ];
+  // Network Peers & Following State
+  const [followedPeers, setFollowedPeers] = useState<string[]>([]);
+  const [searchPeerQuery, setSearchPeerQuery] = useState('');
 
-  const handleConnectPeer = (peerId: string, peerName: string) => {
-    const isConnected = connectedPeers.includes(peerId);
-    if (isConnected) {
-      setConnectedPeers(prev => prev.filter(id => id !== peerId));
-      toast({ title: "Connection Removed", description: `You disconnected from ${peerName}.` });
+  const handleFollowPeer = (peerId: string, peerName: string) => {
+    const isFollowed = followedPeers.includes(peerId);
+    if (isFollowed) {
+      setFollowedPeers(prev => prev.filter(id => id !== peerId));
+      toast({ title: "Unfollowed", description: `You unfollowed ${peerName}.` });
     } else {
-      setConnectedPeers(prev => [...prev, peerId]);
-      toast({ title: "Connection Request Sent! 🎉", description: `Request sent to ${peerName}. You can now start chats & prep together!` });
+      setFollowedPeers(prev => [...prev, peerId]);
+      toast({ title: "Following! 🎉", description: `You are now following ${peerName}.` });
+    }
+  };
+
+  const fetchCommunityProfiles = async (currentUserId?: string) => {
+    try {
+      // 1. Fetch ALL registered profiles from Supabase profiles table
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, headline, target_role, role, location, dream_company, email, created_at')
+        .order('created_at', { ascending: false });
+
+      let list: Array<{ id: string; name: string; role: string; avatar: string; subtitle: string }> = [];
+      const seenIds = new Set<string>();
+
+      if (profs && profs.length > 0) {
+        profs.forEach(p => {
+          if (currentUserId && p.id === currentUserId) return;
+
+          let name = p.full_name;
+          if (!name && p.email) {
+            const emailPrefix = p.email.split('@')[0];
+            name = emailPrefix.replace(/[._\d]+/g, ' ').trim().split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          }
+          if (!name) name = 'Candidate Member';
+
+          const role = p.headline || p.target_role || p.role || 'SDE Candidate';
+          const subtitle = p.dream_company ? `Targeting ${p.dream_company}` : (p.location || 'Software Engineer');
+          const avatar = p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+
+          seenIds.add(p.id);
+          list.push({ id: p.id, name, role, avatar, subtitle });
+        });
+      }
+
+      // 2. Also fetch distinct post authors from posts table to ensure all active posting users are listed
+      const { data: postsData } = await supabase
+        .from('posts' as any)
+        .select('user_id, author_name, author_avatar, author_role, tags')
+        .order('created_at', { ascending: false });
+
+      if (postsData && postsData.length > 0) {
+        postsData.forEach((p: any) => {
+          const authorId = p.user_id || p.author_name;
+          if (authorId && (!currentUserId || authorId !== currentUserId) && !seenIds.has(authorId)) {
+            seenIds.add(authorId);
+            const name = p.author_name || 'Candidate Member';
+            const role = p.author_role || (p.tags && p.tags[0] ? `${p.tags[0]} Candidate` : 'SDE Candidate');
+            const avatar = p.author_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+            list.push({
+              id: authorId,
+              name,
+              role,
+              avatar,
+              subtitle: 'Active Member'
+            });
+          }
+        });
+      }
+
+      setNetworkPeers(list);
+    } catch (e) {
+      console.warn('Error loading community profiles:', e);
     }
   };
 
@@ -298,9 +308,8 @@ export default function Community() {
     let linkedin = "";
     let dreamCompany = "";
     let postsCount = 0;
-    let prepScore = 84;
-    let streak = 8;
-    let skills = ['System Design', 'React.js', 'Data Structures', 'TypeScript'];
+    let prepScore = 0;
+    let streak = 0;
 
     if (author.userId && author.userId.length > 10) {
       try {
@@ -322,12 +331,22 @@ export default function Community() {
           if (p.dream_company) dreamCompany = p.dream_company;
         }
 
-        const { count } = await supabase
-          .from('posts' as any)
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', author.userId);
+        const [postRes, textRes, videoRes] = await Promise.all([
+          supabase.from('posts' as any).select('*', { count: 'exact', head: true }).eq('user_id', author.userId),
+          supabase.from('interview_sessions').select('created_at, overall_score').eq('user_id', author.userId),
+          supabase.from('video_interview_sessions').select('created_at, overall_score').eq('user_id', author.userId)
+        ]);
 
-        if (count !== null) postsCount = count;
+        if (postRes.count !== null) postsCount = postRes.count;
+
+        const textS = textRes.data || [];
+        const videoS = videoRes.data || [];
+
+        const allDates = [...textS.map(s=>s.created_at), ...videoS.map(s=>s.created_at)].filter(Boolean);
+        streak = calculateRealStreak(allDates);
+
+        const scores = [...textS.map(s=>s.overall_score), ...videoS.map(s=>s.overall_score)].filter((s): s is number => typeof s === 'number' && s > 0);
+        prepScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
       } catch (e) {
         console.warn('Error fetching real Supabase profile:', e);
       }
@@ -349,15 +368,13 @@ export default function Community() {
       location,
       github,
       linkedin,
-      postsCount: postsCount || Math.floor(Math.random() * 5) + 2,
+      postsCount,
       prepScore,
       streak,
-      skills
+      skills: ['System Design', 'React.js', 'Data Structures', 'TypeScript']
     });
   };
 
-  // Peer Match Modal
-  const [isPeerModalOpen, setIsPeerModalOpen] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState<{ [postId: string]: string }>({});
   const [commentsMap, setCommentsMap] = useState<{ [postId: string]: Array<{ author: string; text: string; timeAgo: string }> }>({});
@@ -365,12 +382,14 @@ export default function Community() {
   useEffect(() => {
     checkUser();
     fetchLivePosts();
+    fetchCommunityProfiles();
   }, []);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       setUser(session.user);
+      fetchCommunityProfiles(session.user.id);
 
       try {
         const { data: profile } = await supabase
@@ -387,6 +406,55 @@ export default function Community() {
           .eq('user_id', session.user.id);
 
         if (count !== null && count > 0) setUserPostsCount(count);
+
+        // Fetch REAL session data for streak, prep score & weekly momentum
+        const [textRes, videoRes, peerRes] = await Promise.all([
+          supabase.from('interview_sessions').select('created_at, overall_score').eq('user_id', session.user.id),
+          supabase.from('video_interview_sessions').select('created_at, overall_score').eq('user_id', session.user.id),
+          supabase.from('peer_interview_sessions').select('created_at, scheduled_at').or(`host_user_id.eq.${session.user.id},guest_user_id.eq.${session.user.id}`)
+        ]);
+
+        const textS = textRes.data || [];
+        const videoS = videoRes.data || [];
+        const peerS = peerRes.data || [];
+
+        const allDates = [
+          ...textS.map(s => s.created_at),
+          ...videoS.map(s => s.created_at),
+          ...peerS.map(s => (s as any).scheduled_at || s.created_at)
+        ].filter(Boolean);
+
+        setUserStreak(calculateRealStreak(allDates));
+
+        const scores = [
+          ...textS.map(s => s.overall_score),
+          ...videoS.map(s => s.overall_score)
+        ].filter((s): s is number => typeof s === 'number' && s > 0);
+
+        setUserPrepScore(scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0);
+        setWeeklyDaysSet(getWeeklyCompletions(allDates));
+
+        // Fetch REAL active peer mock rooms
+        const { data: realRooms } = await supabase
+          .from('peer_interview_sessions')
+          .select('*')
+          .neq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(4);
+
+        if (realRooms && realRooms.length > 0) {
+          setMockRooms(realRooms.map(r => ({
+            id: r.id,
+            title: r.topic || `${r.interview_type || 'General'} Mock`,
+            current: r.guest_user_id ? 2 : 1,
+            max: 2,
+            avatars: [],
+            type: r.interview_type || 'Practice'
+          })));
+        } else {
+          setMockRooms([]);
+        }
+
       } catch (e) {
         console.warn('Profile fetch info:', e);
       }
@@ -935,13 +1003,13 @@ export default function Community() {
                   </div>
                   <div className="border-x border-slate-800">
                     <div className="text-xs font-bold text-amber-400 flex items-center justify-center gap-0.5">
-                      <span>14</span>
+                      <span>{userStreak}</span>
                       <Flame className="w-3 h-3 fill-amber-400" />
                     </div>
                     <div className="text-[10px] text-slate-400">Streak</div>
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-purple-400">88%</div>
+                    <div className="text-xs font-bold text-purple-400">{userPrepScore > 0 ? `${userPrepScore}%` : '--'}</div>
                     <div className="text-[10px] text-slate-400">Prep Score</div>
                   </div>
                 </div>
@@ -962,15 +1030,15 @@ export default function Community() {
 
               <div className="text-center py-2 bg-[#0b0f19]/60 rounded-xl border border-slate-800/40">
                 <div className="text-2xl font-bold text-slate-100 tracking-tight">
-                  4 <span className="text-slate-500 text-lg font-normal">/ 5</span>
+                  {weeklyDaysSet.size} <span className="text-slate-500 text-lg font-normal">/ 5</span>
                 </div>
-                <div className="text-xs text-slate-400 font-medium">sessions completed this week</div>
+                <div className="text-xs text-slate-400 font-medium">active practice days this week</div>
               </div>
 
               {/* WEEKDAY CHECKMARK ROW */}
               <div className="flex items-center justify-between px-2 pt-1">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day, idx) => {
-                  const isChecked = idx < 4; // Mon, Tue, Wed, Thu checked
+                  const isChecked = weeklyDaysSet.has(idx);
                   return (
                     <div key={day} className="flex flex-col items-center gap-1.5">
                       <div
@@ -987,14 +1055,7 @@ export default function Community() {
                 })}
               </div>
 
-              {/* BUTTON: FIND A PEER MATCH */}
-              <Button
-                onClick={() => setIsPeerModalOpen(true)}
-                className="w-full bg-[#171c2e] hover:bg-[#1f263d] text-purple-300 hover:text-white border border-purple-500/30 hover:border-purple-500/60 rounded-xl py-5 font-semibold text-xs tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 group"
-              >
-                <Users className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
-                <span>Find a Peer Match</span>
-              </Button>
+
             </div>
 
           </div>
@@ -1303,7 +1364,7 @@ export default function Community() {
           {/* ========================================================================= */}
           <div className="lg:col-span-3 space-y-6">
 
-            {/* CARD 1: YOUR INTERVIEW NETWORK */}
+            {/* CARD 1: ALL PROFILES TO FOLLOW */}
             <div className="bg-[#111726]/90 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-xl space-y-4">
               {/* Header */}
               <div>
@@ -1312,131 +1373,89 @@ export default function Community() {
                     <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
                       <Users className="w-4 h-4" />
                     </div>
-                    <h2 className="text-base font-semibold text-slate-100">Your Interview Network</h2>
+                    <h2 className="text-base font-semibold text-slate-100">Profiles to Follow</h2>
                   </div>
-                  <button
-                    onClick={() => setIsPeerModalOpen(true)}
-                    className="text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors"
-                  >
-                    View all
-                  </button>
+                  <span className="text-[11px] font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">
+                    {networkPeers.length} Registered
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">People preparing for similar roles</p>
+                <p className="text-[11px] text-slate-400 mt-1">Discover candidates preparing on Voke</p>
               </div>
 
-              {/* Peer List */}
-              <div className="space-y-3">
-                {NETWORK_PEERS.map((peer) => {
-                  const isConnected = connectedPeers.includes(peer.id);
-                  return (
-                    <div
-                      key={peer.id}
-                      className="p-3 rounded-xl bg-[#0b0f19]/70 border border-slate-800/60 flex items-center justify-between gap-2 hover:border-slate-700 transition-all"
-                    >
-                      <div
-                        onClick={() => handleViewPublicProfile({ name: peer.name, avatar: peer.avatar, role: peer.role, userId: peer.id })}
-                        className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
-                      >
-                        <Avatar className="w-9 h-9 border border-purple-500/30 shrink-0 group-hover:scale-105 transition-transform">
-                          <AvatarImage src={peer.avatar} />
-                          <AvatarFallback className="bg-purple-900 text-purple-200 text-xs font-bold">
-                            {peer.name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <div className="text-xs font-semibold text-slate-200 group-hover:text-purple-300 transition-colors truncate flex items-center gap-1">
-                            <span>{peer.name}</span>
-                            <span className="text-slate-500 font-normal">• {peer.role}</span>
-                          </div>
-                          <div className="text-[10.5px] text-slate-400 truncate mt-0.5">
-                            {peer.subtitle}
-                          </div>
-                        </div>
-                      </div>
+              {/* Search Filter Bar */}
+              {networkPeers.length > 3 && (
+                <div className="relative">
+                  <Input
+                    placeholder="Search members by name or role..."
+                    value={searchPeerQuery}
+                    onChange={(e) => setSearchPeerQuery(e.target.value)}
+                    className="bg-[#0b0f19] border-slate-800/80 text-xs rounded-xl focus-visible:ring-purple-500 text-slate-100 placeholder:text-slate-500 h-8 px-3"
+                  />
+                </div>
+              )}
 
-                      <Button
-                        size="sm"
-                        onClick={() => handleConnectPeer(peer.id, peer.name)}
-                        className={`text-xs font-semibold h-7 px-3 rounded-lg transition-all shrink-0 ${
-                          isConnected
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
-                            : 'bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20'
-                        }`}
-                      >
-                        {isConnected ? (
-                          <span className="flex items-center gap-1">
-                            <Check className="w-3 h-3 stroke-[3]" /> Connected
-                          </span>
-                        ) : (
-                          'Connect'
-                        )}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Bottom Divider & Action */}
-              <div className="pt-2 border-t border-slate-800/70">
-                <button
-                  onClick={() => setIsPeerModalOpen(true)}
-                  className="w-full py-2 px-3 rounded-xl bg-[#0b0f19]/50 hover:bg-[#141b2e] border border-slate-800/60 hover:border-purple-500/40 text-xs font-semibold text-purple-300 hover:text-purple-200 flex items-center justify-center gap-2 transition-all group"
-                >
-                  <Plus className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition-transform" />
-                  <span>Find people with similar interview goals</span>
-                </button>
-              </div>
-            </div>
-
-            {/* CARD 2: ACTIVE MOCK ROOMS */}
-            <div className="bg-[#111726]/90 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-xl space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-semibold text-slate-100">Active mock rooms</h2>
-                <button
-                  onClick={() => navigate('/peer-interviews')}
-                  className="text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors"
-                >
-                  View all
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {mockRooms.map((room) => (
-                  <div
-                    key={room.id}
-                    className="p-3 rounded-xl bg-[#0b0f19]/70 border border-slate-800/60 flex items-center justify-between gap-2 hover:border-slate-700 transition-all"
-                  >
-                    <div>
-                      <div className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-                        <Award className="w-3.5 h-3.5 text-purple-400" />
-                        <span>{room.title}</span>
-                      </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">
-                        {room.current} / {room.max} participants
-                      </div>
-                    </div>
-
-                    {/* AVATAR STACK & JOIN BUTTON */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {room.avatars.map((url, i) => (
-                          <Avatar key={i} className="w-6 h-6 border border-slate-800">
-                            <AvatarImage src={url} />
-                            <AvatarFallback className="text-[9px]">U</AvatarFallback>
-                          </Avatar>
-                        ))}
-                      </div>
-
-                      <Button
-                        size="sm"
-                        onClick={() => handleJoinRoom(room)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold h-8 px-3"
-                      >
-                        Join
-                      </Button>
-                    </div>
+              {/* Scrollable Peer List */}
+              <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1 no-scrollbar">
+                {networkPeers.length === 0 ? (
+                  <div className="p-4 text-center bg-[#0b0f19]/50 rounded-xl border border-slate-800/60 text-xs text-slate-400">
+                    No registered Voke candidates found right now. Invite your friends to join Voke!
                   </div>
-                ))}
+                ) : (
+                  networkPeers
+                    .filter(peer => {
+                      if (!searchPeerQuery.trim()) return true;
+                      const q = searchPeerQuery.toLowerCase();
+                      return peer.name.toLowerCase().includes(q) || peer.role.toLowerCase().includes(q) || peer.subtitle.toLowerCase().includes(q);
+                    })
+                    .map((peer) => {
+                      const isFollowed = followedPeers.includes(peer.id);
+                      return (
+                        <div
+                          key={peer.id}
+                          className="p-3 rounded-xl bg-[#0b0f19]/70 border border-slate-800/60 flex items-center justify-between gap-2 hover:border-slate-700 transition-all"
+                        >
+                          <div
+                            onClick={() => handleViewPublicProfile({ name: peer.name, avatar: peer.avatar, role: peer.role, userId: peer.id })}
+                            className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
+                          >
+                            <Avatar className="w-9 h-9 border border-purple-500/30 shrink-0 group-hover:scale-105 transition-transform">
+                              <AvatarImage src={peer.avatar} />
+                              <AvatarFallback className="bg-purple-900 text-purple-200 text-xs font-bold">
+                                {peer.name[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="text-xs font-semibold text-slate-200 group-hover:text-purple-300 transition-colors truncate flex items-center gap-1">
+                                <span>{peer.name}</span>
+                                <span className="text-slate-500 font-normal">• {peer.role}</span>
+                              </div>
+                              <div className="text-[10.5px] text-slate-400 truncate mt-0.5">
+                                {peer.subtitle}
+                              </div>
+                            </div>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            onClick={() => handleFollowPeer(peer.id, peer.name)}
+                            className={`text-xs font-semibold h-7 px-3 rounded-lg transition-all shrink-0 ${
+                              isFollowed
+                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30'
+                                : 'bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20'
+                            }`}
+                          >
+                            {isFollowed ? (
+                              <span className="flex items-center gap-1">
+                                <Check className="w-3 h-3 stroke-[3]" /> Following
+                              </span>
+                            ) : (
+                              'Follow'
+                            )}
+                          </Button>
+                        </div>
+                      );
+                    })
+                )}
               </div>
             </div>
 
@@ -1563,43 +1582,7 @@ export default function Community() {
         </DialogContent>
       </Dialog>
 
-      {/* ========================================================================= */}
-      {/* MODAL 2: PEER MATCH DIALOG */}
-      {/* ========================================================================= */}
-      <Dialog open={isPeerModalOpen} onOpenChange={setIsPeerModalOpen}>
-        <DialogContent className="bg-[#111726] border border-slate-800 text-slate-100 rounded-2xl sm:max-w-md text-center space-y-4">
-          <DialogHeader>
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/30 flex items-center justify-center mx-auto mb-2">
-              <Users className="w-6 h-6" />
-            </div>
-            <DialogTitle className="text-base font-bold text-slate-100">Find a Peer Interview Match</DialogTitle>
-            <DialogDescription className="text-xs text-slate-400">
-              Instantly pair with another candidate for a 1-on-1 mock coding or system design session.
-            </DialogDescription>
-          </DialogHeader>
 
-          <div className="space-y-3 pt-2 text-left">
-            <div className="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 text-xs space-y-1">
-              <div className="font-semibold text-purple-300">Target Role & Level</div>
-              <div className="text-slate-400">SDE 1 / SDE 2 (System Design & DSA)</div>
-            </div>
-            <div className="p-3 rounded-xl bg-[#0b0f19] border border-slate-800 text-xs space-y-1">
-              <div className="font-semibold text-emerald-300">Duration</div>
-              <div className="text-slate-400">45 Minutes (30m coding + 15m feedback)</div>
-            </div>
-          </div>
-
-          <Button
-            onClick={() => {
-              setIsPeerModalOpen(false);
-              navigate('/peer-interviews');
-            }}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-xs py-5"
-          >
-            Launch Peer Match Queue
-          </Button>
-        </DialogContent>
-      </Dialog>
 
       {/* ========================================================================= */}
       {/* MODAL 3: EDIT VOKE PULSE COMMUNITY PROFILE DIALOG */}
@@ -1773,15 +1756,15 @@ export default function Community() {
                       size="sm"
                       onClick={() => {
                         const peerId = viewingProfile.id || viewingProfile.name;
-                        handleConnectPeer(peerId, viewingProfile.name);
+                        handleFollowPeer(peerId, viewingProfile.name);
                       }}
                       className={`text-xs font-semibold rounded-xl px-4 py-2 h-9 transition-all ${
-                        connectedPeers.includes(viewingProfile.id || viewingProfile.name)
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
+                        followedPeers.includes(viewingProfile.id || viewingProfile.name)
+                          ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30'
                           : 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-600/20'
                       }`}
                     >
-                      {connectedPeers.includes(viewingProfile.id || viewingProfile.name) ? 'Connected' : 'Connect'}
+                      {followedPeers.includes(viewingProfile.id || viewingProfile.name) ? 'Following' : 'Follow'}
                     </Button>
                   </div>
                 </div>
