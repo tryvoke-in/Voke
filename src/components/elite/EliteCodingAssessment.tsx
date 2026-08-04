@@ -562,26 +562,56 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
       setIsEditorUnlocked(false);
       await connect({
         systemPrompt,
-        initialGreeting: `Welcome to Round 3 — Coding Assessment at ${company.name}! Problem 1 is on your screen: "${problems[0].title}". Before you start coding, please explain your algorithmic approach — what data structure and strategy will you use to solve this?`
+        initialGreeting: `Welcome to Round 3 — Coding Assessment at ${company.name}! Problem 1 is on your screen: "${problems[0].title}". Before writing code, please explain your algorithmic approach — what data structure and strategy will you use?`
       });
-      toast.success('AI Interviewer connected. Explain your approach to unlock the editor.');
+      toast.success('AI Interviewer connected. Explain your approach in voice or scratch pad to unlock the editor.');
     } catch (err) {
       console.error('[EliteCodingAssessment] Voice connect error:', err);
-      toast.error('Could not connect to Voice AI. Manually click "Unlock Editor" to start coding.');
-      // Fallback: unlock editor directly if voice fails
-      setIsEditorUnlocked(true);
-      setPhase('coding');
+      toast.error('Could not connect to Voice AI. Manually submit your approach to start coding.');
     }
   };
 
-  // Watch AI logs for approach verification signal
+  // Explicit handler for submitting & verifying approach from scratch pad
+  const handleVerifyApproach = async () => {
+    if (!scratchPadText.trim()) {
+      toast.error('Please write or speak your approach in the scratch pad first!');
+      return;
+    }
+    setIsEditorUnlocked(true);
+    setApproachVerified(true);
+    setPhase('coding');
+    setIsSilentMode(true); // AI goes completely silent while student is coding
+    toast.success('✅ Approach verified! Editor is now unlocked. Code your solution.');
+    if (status === LiveStatus.CONNECTED) {
+      await sendHiddenContext(`Candidate submitted their algorithmic approach: "${scratchPadText}". Approach verified! Editor is now unlocked. Go COMPLETELY SILENT while they code.`);
+    }
+  };
+
+  const handleVerifyDebugApproach = async () => {
+    if (!debugScratchPad.trim()) {
+      toast.error('Please write or speak your debugging approach in the scratch pad first!');
+      return;
+    }
+    setIsDebugEditorUnlocked(true);
+    setDebugPhase('coding');
+    setIsSilentMode(true); // AI goes silent while fixing bug
+    toast.success('✅ Debug approach verified! Editor unlocked. Fix the bug.');
+    if (status === LiveStatus.CONNECTED) {
+      await sendHiddenContext(`Candidate submitted debugging approach: "${debugScratchPad}". Approach verified! Editor unlocked. Go COMPLETELY SILENT while they fix code.`);
+    }
+  };
+
+  // Watch AI logs for approach verification signal (STRICT: Ignore initial greeting!)
   useEffect(() => {
     if (phase !== 'approach_explain' || !hasStartedSession) return;
+    if (logs.length <= 1) return; // CRITICAL: Never unlock on initial greeting!
     const lastAiMsg = logs[logs.length - 1];
-    if (!lastAiMsg || lastAiMsg.role !== 'assistant') return;
-    const text = lastAiMsg.text?.toLowerCase() || '';
-    // Detect when AI says editor is unlocked
-    if (text.includes('editor is now unlocked') || text.includes('go ahead and code') || text.includes('editor unlocked') || text.includes('start coding')) {
+    if (!lastAiMsg || lastAiMsg.role !== 'assistant' || lastAiMsg.id === 'init') return;
+    const text = lastAiMsg.text || '';
+    const textLower = text.toLowerCase();
+    
+    // Check for explicit verification phrase or tag
+    if (text.includes('[APPROACH_VERIFIED]') || (textLower.includes('great approach') && textLower.includes('unlocked')) || textLower.includes('editor is now unlocked')) {
       setIsEditorUnlocked(true);
       setApproachVerified(true);
       setPhase('coding');
@@ -1029,29 +1059,44 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
 
                 {/* Scratch Pad — visible during approach phase */}
                 {!isEditorUnlocked && phase === 'approach_explain' && (
-                  <div className="space-y-2">
-                    <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <BookOpen className="w-3.5 h-3.5" /> Scratch Pad — Explain Your Approach
+                  <div className="space-y-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+                    <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen className="w-4 h-4 text-amber-400" />
+                        <span>Scratch Pad — Write & Explain Your Approach</span>
+                      </div>
+                      <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-300 text-[10px]">
+                        Editor Locked 🔒
+                      </Badge>
                     </div>
                     <textarea
                       value={scratchPadText}
                       onChange={e => setScratchPadText(e.target.value)}
-                      placeholder="Write your approach here while explaining to the AI...&#10;e.g. I'll use two pointers: left at start, right at end. Move them inward based on the sum vs target..."
-                      className="w-full h-36 bg-zinc-900 border border-amber-500/20 rounded-2xl p-3 text-xs text-zinc-200 font-mono resize-none focus:outline-none focus:border-amber-500/60 placeholder-zinc-600 leading-relaxed"
+                      placeholder="Type your strategy, algorithms, or data structures here while speaking...&#10;e.g. Using two pointers (left at 0, right at end). Move left right inward based on target sum comparison..."
+                      className="w-full h-32 bg-zinc-950 border border-amber-500/30 rounded-xl p-3 text-xs text-zinc-200 font-mono resize-none focus:outline-none focus:border-amber-400 placeholder-zinc-600 leading-relaxed"
                     />
-                    <div className="flex items-center justify-between">
-                      <p className="text-[10px] text-zinc-500">Speak your approach to the AI interviewer. Editor unlocks when approach is verified.</p>
-                      <button
-                        onClick={async () => {
-                          setIsEditorUnlocked(true);
-                          setPhase('coding');
-                          setIsSilentMode(true);
-                          toast.info('Editor manually unlocked.');
-                        }}
-                        className="text-[10px] text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={handleVerifyApproach}
+                        className="w-full h-10 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        Skip (unlock manually)
-                      </button>
+                        <CheckCircle2 className="w-4 h-4 fill-black text-amber-500" />
+                        Submit Approach & Unlock Code Editor
+                      </Button>
+                      <div className="flex items-center justify-between text-[10px] text-zinc-500 px-1">
+                        <span>Explain verbally to AI or write in scratch pad to unlock editor.</span>
+                        <button
+                          onClick={() => {
+                            setIsEditorUnlocked(true);
+                            setPhase('coding');
+                            setIsSilentMode(true);
+                            toast.info('Editor manually unlocked.');
+                          }}
+                          className="hover:text-zinc-300 underline cursor-pointer"
+                        >
+                          Manual Skip
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1093,24 +1138,39 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
                 </div>
                 {/* Scratch Pad for Debug Approach */}
                 {!isDebugEditorUnlocked && debugPhase === 'approach_explain' && currentSection === 'B_DEBUGGING' && (
-                  <div className="space-y-2">
-                    <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <BookOpen className="w-3.5 h-3.5" /> Scratch Pad — Debugging Approach
+                  <div className="space-y-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+                    <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen className="w-4 h-4 text-amber-400" />
+                        <span>Scratch Pad — Debugging Approach & Root Cause</span>
+                      </div>
+                      <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-300 text-[10px]">
+                        Editor Locked 🔒
+                      </Badge>
                     </div>
                     <textarea
                       value={debugScratchPad}
                       onChange={e => setDebugScratchPad(e.target.value)}
-                      placeholder="Write your debugging approach here...&#10;e.g. I see Bug 1 is that cache[key] check doesn't verify TTL expiry. Bug 2 is missing in-flight deduplication..."
-                      className="w-full h-36 bg-zinc-900 border border-amber-500/20 rounded-2xl p-3 text-xs text-zinc-200 font-mono resize-none focus:outline-none focus:border-amber-500/60 placeholder-zinc-600 leading-relaxed"
+                      placeholder="Write your debugging approach here...&#10;e.g. Bug 1: cache[key] doesn't check TTL expiration. Bug 2: Missing promise deduplication in inFlight object..."
+                      className="w-full h-32 bg-zinc-950 border border-amber-500/30 rounded-xl p-3 text-xs text-zinc-200 font-mono resize-none focus:outline-none focus:border-amber-400 placeholder-zinc-600 leading-relaxed"
                     />
-                    <div className="flex items-center justify-between">
-                      <p className="text-[10px] text-zinc-500">Explain root cause to AI interviewer. Editor unlocks when approach is verified.</p>
-                      <button
-                        onClick={() => { setIsDebugEditorUnlocked(true); setDebugPhase('coding'); setIsSilentMode(true); toast.info('Debug editor unlocked.'); }}
-                        className="text-[10px] text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={handleVerifyDebugApproach}
+                        className="w-full h-10 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        Skip (unlock manually)
-                      </button>
+                        <CheckCircle2 className="w-4 h-4 fill-black text-amber-500" />
+                        Submit Debug Approach & Unlock Editor
+                      </Button>
+                      <div className="flex items-center justify-between text-[10px] text-zinc-500 px-1">
+                        <span>Explain root cause to AI or write in scratch pad to unlock editor.</span>
+                        <button
+                          onClick={() => { setIsDebugEditorUnlocked(true); setDebugPhase('coding'); setIsSilentMode(true); toast.info('Debug editor manually unlocked.'); }}
+                          className="hover:text-zinc-300 underline cursor-pointer"
+                        >
+                          Manual Skip
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
