@@ -218,7 +218,7 @@ const Waitlist = () => {
             alt="Voke Logo" 
             className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-300"
           />
-          <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+          <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40">
             Voke
           </span>
         </div>

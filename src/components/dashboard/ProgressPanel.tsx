@@ -133,16 +133,21 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
     };
   });
 
-  // 4. Calculate total practice stats
+  // 4. Calculate total practice stats dynamically
   const totalInterviews = allSessions.length;
 
   let totalSeconds = 0;
   allSessions.forEach(s => {
-    if (s.total_duration_seconds) totalSeconds += Number(s.total_duration_seconds);
-    else if (s.duration_seconds) totalSeconds += Number(s.duration_seconds);
-    else if (s.duration_minutes) totalSeconds += Number(s.duration_minutes) * 60;
-    else if (s.type === 'Peer' && s.status === 'completed') totalSeconds += 1800; // 30 min default
-    else totalSeconds += 300; // 5 min fallback
+    if (s.total_duration_seconds && Number(s.total_duration_seconds) > 0) {
+      totalSeconds += Number(s.total_duration_seconds);
+    } else if (s.duration_seconds && Number(s.duration_seconds) > 0) {
+      totalSeconds += Number(s.duration_seconds);
+    } else if (s.duration_minutes && Number(s.duration_minutes) > 0) {
+      totalSeconds += Number(s.duration_minutes) * 60;
+    } else if (s.completed_at && s.created_at) {
+      const diff = (new Date(s.completed_at).getTime() - new Date(s.created_at).getTime()) / 1000;
+      if (diff > 0 && diff < 14400) totalSeconds += diff;
+    }
   });
 
   const hours = Math.floor(totalSeconds / 3600);
@@ -257,24 +262,24 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Overall Score</span>
+          {scoredSessions.length >= 2 && (
+            <span className="text-[11px] text-muted-foreground font-medium">
+              Day 1 Baseline: {startingScore}%
+            </span>
+          )}
           {scoredSessions.length === 1 && (
             <span className="text-[11px] text-violet-400 font-medium">1st Session Baseline</span>
           )}
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-2xl font-bold text-foreground/95">{startingScore}%</span>
-          <div className="flex-1 h-2 bg-muted rounded-full relative">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl font-bold text-foreground/95 min-w-[52px]">{currentScore}%</span>
+          <div className="flex-1 h-2.5 bg-muted/60 rounded-full relative overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-violet-600 to-purple-500 rounded-full transition-all duration-500"
-              style={{ width: `${Math.max(5, currentScore)}%` }}
-            />
-            {/* Knob */}
-            <div 
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border border-violet-500 rounded-full shadow-[0_0_10px_rgba(139,92,246,0.8)] transition-all duration-500"
-              style={{ left: `${Math.max(5, currentScore)}%`, transform: 'translate(-50%, -50%)' }}
+              className="h-full bg-gradient-to-r from-violet-600 via-purple-500 to-indigo-500 rounded-full transition-all duration-500"
+              style={{ width: `${Math.max(2, currentScore)}%` }}
             />
           </div>
-          <span className="text-2xl font-bold text-foreground/95">{currentScore}%</span>
+          <span className="text-2xl font-bold text-foreground/95">100%</span>
         </div>
       </div>
 

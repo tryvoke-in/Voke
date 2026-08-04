@@ -62,7 +62,7 @@ const Blog = () => {
                                     alt="Voke Logo" 
                                     className="w-10 h-10 object-contain" 
                                 />
-                                <h1 className="text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+                                <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">
                                     Voke Blog
                                 </h1>
                             </div>

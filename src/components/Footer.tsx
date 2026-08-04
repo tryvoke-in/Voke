@@ -65,7 +65,7 @@ export const Footer = () => {
                                         className="w-12 h-12 object-contain relative z-10"
                                     />
                                 </div>
-                                <span className="text-3xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent tracking-tight">
+                                <span className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">
                                     Voke
                                 </span>
                             </Link>

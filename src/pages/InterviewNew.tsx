@@ -440,7 +440,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
               className="w-8 h-8 object-contain"
             />
             <div>
-              <h1 className="font-bold text-lg tracking-tight bg-gradient-to-r from-violet-200 to-white bg-clip-text text-transparent">Voke AI</h1>
+              <h1 className="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40">Voke AI</h1>
               <p className="text-[10px] text-violet-400/60 font-semibold uppercase tracking-wider">Interview Suite</p>
             </div>
           </div>
@@ -575,7 +575,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
               alt="Voke Logo" 
               className="w-7 h-7 object-contain"
             />
-            <span className="font-bold text-sm tracking-tight text-white md:hidden">Voke AI Arena</span>
+            <span className="font-bold text-sm tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 md:hidden">Voke AI Arena</span>
             <div className="hidden md:flex items-center gap-2">
               <span className="text-xs text-violet-400 font-semibold uppercase tracking-wider">Practice Arena</span>
               <span className="h-1 w-1 bg-white/20 rounded-full" />

@@ -242,7 +242,7 @@ export const Navbar = () => {
                             decoding="async"
                             className="w-12 h-12 object-contain group-hover:scale-110 transition-transform duration-300"
                         />
-                        <span className="text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 dark:from-violet-400 dark:via-purple-400 dark:to-fuchsia-400 bg-clip-text text-transparent">
+                        <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">
                             {brandName}
                         </span>
                     </div>

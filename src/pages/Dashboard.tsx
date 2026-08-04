@@ -366,16 +366,32 @@ const Dashboard = () => {
 
     const avgScore = scoredCount > 0 ? Math.round(totalScore / scoredCount) : 0;
 
-    // 3. Hours
-    // Text: total_duration_seconds
-    // Video: duration_seconds
-    // Peer: duration_minutes
+    // 3. Hours & Practice Time
     let totalSeconds = 0;
-    text.forEach(s => totalSeconds += (s.total_duration_seconds || 0));
-    video.forEach(s => totalSeconds += (s.duration_seconds || 0));
-    peer.filter((p: any) => p.status === 'completed').forEach((p: any) => totalSeconds += ((p.duration_minutes || 0) * 60));
+    text.forEach(s => {
+      if (s.total_duration_seconds) totalSeconds += Number(s.total_duration_seconds);
+      else if (s.duration_seconds) totalSeconds += Number(s.duration_seconds);
+      else if (s.completed_at && s.created_at) {
+        const diff = (new Date(s.completed_at).getTime() - new Date(s.created_at).getTime()) / 1000;
+        if (diff > 0 && diff < 14400) totalSeconds += diff;
+      }
+    });
+    video.forEach(s => {
+      if (s.duration_seconds) totalSeconds += Number(s.duration_seconds);
+      else if (s.total_duration_seconds) totalSeconds += Number(s.total_duration_seconds);
+      else if (s.completed_at && s.created_at) {
+        const diff = (new Date(s.completed_at).getTime() - new Date(s.created_at).getTime()) / 1000;
+        if (diff > 0 && diff < 14400) totalSeconds += diff;
+      }
+    });
+    peer.filter((p: any) => p.status === 'completed').forEach((p: any) => {
+      if (p.duration_minutes) totalSeconds += Number(p.duration_minutes) * 60;
+      else if (p.duration_seconds) totalSeconds += Number(p.duration_seconds);
+    });
 
-    const totalHours = Math.round(totalSeconds / 3600);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const hoursDisplay = hours > 0 ? (minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`) : `${minutes}m`;
 
     // 4. Streak
     const allDates = [
@@ -388,7 +404,7 @@ const Dashboard = () => {
     return [
       { label: "Interviews", value: total.toString(), icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10" },
       { label: "Avg. Score", value: `${avgScore}%`, icon: Trophy, color: "text-amber-500", bg: "bg-amber-500/10" },
-      { label: "Hours", value: `${totalHours}h`, icon: Clock, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+      { label: "Hours", value: hoursDisplay, icon: Clock, color: "text-emerald-500", bg: "bg-emerald-500/10" },
       { label: "Streak", value: `${streak} Days`, icon: Flame, color: "text-orange-500", bg: "bg-orange-500/10" },
     ];
   };
@@ -518,7 +534,7 @@ const Dashboard = () => {
               alt="Voke Logo"
               className="w-14 h-14 object-contain"
             />
-            <h1 className="text-2xl font-extrabold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">Voke</h1>
+            <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">Voke</h1>
           </div>
 
           <div className="flex-1 max-w-md ml-3 mr-9 hidden md:flex items-center gap-3">

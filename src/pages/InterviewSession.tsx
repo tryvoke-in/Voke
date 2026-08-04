@@ -354,7 +354,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
               className="w-8 h-8 object-contain"
             />
             <div>
-              <h1 className="font-bold text-lg tracking-tight bg-gradient-to-r from-violet-200 to-white bg-clip-text text-transparent">Voke AI</h1>
+              <h1 className="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40">Voke AI</h1>
               <p className="text-[10px] text-violet-400/60 font-semibold uppercase tracking-wider">Interview Suite</p>
             </div>
           </div>

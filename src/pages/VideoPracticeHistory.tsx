@@ -77,7 +77,7 @@ const VideoPracticeHistory = () => {
               alt="Voke Logo" 
               className="w-8 h-8 object-contain" 
             />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">Voke</h1>
+            <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">Voke</h1>
           </div>
           <nav className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => navigate("/dashboard")}>

@@ -127,7 +127,7 @@ export default function AdaptiveInterview() {
                 className="w-10 h-10 object-contain"
               />
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">Adaptive Interview</h1>
+                <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">Adaptive Interview</h1>
                 <p className="text-xs text-muted-foreground">AI-Powered Practice</p>
               </div>
             </div>

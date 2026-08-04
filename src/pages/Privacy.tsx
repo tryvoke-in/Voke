@@ -130,7 +130,7 @@ const Privacy = () => {
                                     className="w-9 h-9 object-contain relative z-10"
                                 />
                             </div>
-                            <span className="text-xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
+                            <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">
                                 Privacy Policy
                             </span>
                         </div>

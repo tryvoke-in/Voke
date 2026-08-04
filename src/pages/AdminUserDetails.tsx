@@ -324,7 +324,7 @@ const AdminUserDetails = () => {
             className="w-10 h-10 object-contain"
           />
           <div>
-            <span className="text-xl font-bold block leading-none">Voke</span>
+            <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 block leading-none">Voke</span>
             <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">Admin Portal</span>
           </div>
         </div>
