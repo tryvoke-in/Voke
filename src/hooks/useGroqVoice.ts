@@ -137,9 +137,9 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                         contents.unshift({ role: 'user', parts: [{ text: 'Hello! I am ready for the interview.' }] });
                     }
 
-                    const isCodingRound = systemPromptMsg.includes('Round 3') || systemPromptMsg.includes('Coding Assessment');
-                    const isProjectRound = systemPromptMsg.includes('Round 2') || systemPromptMsg.includes('Project Deep Dive');
-                    const isRound1 = systemPromptMsg.includes('Round 1') && !isCodingRound && !isProjectRound;
+                    const isCodingRound = /round\s*3|coding|live\s*coding|assessment|two\s*sum|longest\s*substring|algorithm|debugging|system\s*design|approach\s*phase/i.test(systemPromptMsg);
+                    const isProjectRound = (/round\s*2|project\s*deep\s*dive/i.test(systemPromptMsg)) && !isCodingRound;
+                    const isRound1 = (/round\s*1/i.test(systemPromptMsg)) && !isCodingRound && !isProjectRound;
                     const assistantTurnCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
                     let turnHint = "";
 
@@ -149,7 +149,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                         turnHint = "\n\nCRITICAL ROUND 2 MANDATE: Focus strictly on project architecture, technical bottlenecks, and code structure!";
                     } else if (isRound1) {
                         if (assistantTurnCount === 1) {
-                            turnHint = "\n\nTURN 2 DIRECTIVE: Ask about candidate's EDUCATION or DEGREE at Newton School of Technology (B.Tech CS & AI). Ask what specific web development coursework they focused on!";
+                            turnHint = "\n\nTURN 2 DIRECTIVE: Ask about candidate's EDUCATION or DEGREE in CS / Web Development. Ask what specific web development coursework they focused on!";
                         } else if (assistantTurnCount === 2) {
                             turnHint = "\n\nTURN 3 DIRECTIVE: Ask about candidate's CORE CLAIMED SKILLS (React, JavaScript, HTML/CSS) listed on their resume!";
                         } else if (assistantTurnCount === 3) {

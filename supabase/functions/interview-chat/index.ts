@@ -91,28 +91,24 @@ STRICT QUESTIONING INSTRUCTION:
 
     const assistantTurnCount = conversationMessages.filter((m: any) => m.role === 'assistant').length;
 
-    const isCodingRound = systemPrompt.includes("Round 3") || systemPrompt.includes("Coding Assessment") || interviewType === "coding" || interviewType === "round3";
-    const isProjectRound = systemPrompt.includes("Round 2") || systemPrompt.includes("Project Deep Dive") || interviewType === "project" || interviewType === "round2";
-    const isRound1 = (interviewType === "round1" || interviewType === "resume" || interviewType === "screening" || systemPrompt.includes("Round 1")) && !isCodingRound && !isProjectRound;
+    const isCodingRound = /round\s*3|coding|live\s*coding|assessment|two\s*sum|longest\s*substring|algorithm|debugging|system\s*design|approach\s*phase/i.test(systemPrompt) || interviewType === "coding" || interviewType === "round3";
+    const isProjectRound = (/round\s*2|project\s*deep\s*dive/i.test(systemPrompt) || interviewType === "project" || interviewType === "round2") && !isCodingRound;
+    const isRound1 = (interviewType === "round1" || interviewType === "resume" || interviewType === "screening" || /round\s*1/i.test(systemPrompt)) && !isCodingRound && !isProjectRound;
 
     // Inject explicit Turn Directive based on the exact Interview Round
     let turnDirective = "";
     if (isCodingRound) {
       turnDirective = `CRITICAL ROUND 3 TECHNICAL CODING MANDATE:
 You are a Principal Software Engineer conducting a FAANG-tier Live Technical Assessment. Structure your questioning dynamically:
-1. PROBLEM APPROACH & INTUITION: When starting or when candidate talks through code, discuss their algorithmic intuition, state management, and data structure choice.
-2. AFTER CODE PASSES / CANDIDATE ASKS: Actively ask focused follow-up questions across these core technical pillars:
-   - TIME & SPACE COMPLEXITY: Ask candidate to analyze the exact $O(N)$ Big-O Time and Auxiliary Space Complexity of their implementation.
-   - EDGE CASES & BOUNDARY CONDITIONS: Ask how the solution behaves on extreme edge cases (e.g. empty arrays, duplicate elements, negative numbers, or maximum input constraints).
-   - ALTERNATIVE TRADE-OFFS: Ask about alternative algorithms (e.g. hash map vs two-pointer vs binary search vs sorting) and memory-time trade-offs.
-   - DEBUGGING (Section B): Ask for the root cause of the bug, why the failure happens, and how the fix guarantees correctness.
-   - PRACTICAL SYSTEM DESIGN (Section C): Ask practical scalability, caching, and state management trade-offs.
-3. NEVER ask resume questions, intro questions, or education questions. Keep responses concise and professional (1-3 sentences max).`;
+1. APPROACH PHASE: When candidate explains their approach (spoken or written), check if it is relevant to the problem. If it is relevant, say: "[APPROACH_VERIFIED] Great approach! The editor is now unlocked — go ahead and code your solution."
+2. CODING PHASE: When candidate is coding, be COMPLETELY SILENT. Do NOT ask any questions.
+3. POST-RUN PHASE (AFTER TESTS PASS): Ask: (a) Time Complexity Big-O, (b) Auxiliary Space Complexity, (c) Edge cases that could break the code, (d) Further optimizations.
+4. NEVER ask resume, college, education, degree, background, or introductory questions. EVER. Keep responses concise (1-2 sentences max).`;
     } else if (isProjectRound) {
       turnDirective = "CRITICAL ROUND 2 PROJECT DEEP DIVE MANDATE: You are conducting the Project Deep Dive. ONLY ask questions about project architecture, technical bottlenecks, scalability, and code structure. NEVER ask generic introductory screening questions!";
     } else if (isRound1) {
       if (assistantTurnCount === 1) {
-        turnDirective = "CURRENT TURN DIRECTIVE (TURN 2 OF 10 - EDUCATION & ACADEMIC FOCUS): Ask about candidate's EDUCATION, DEGREE, or RELEVANT ACADEMIC COURSEWORK (e.g., 'You're studying B.Tech CS & AI at Newton School of Technology — what specific frontend or web development coursework have you focused on?'). DO NOT ask about projects yet!";
+        turnDirective = "CURRENT TURN DIRECTIVE (TURN 2 OF 10 - EDUCATION FOCUS): Ask about candidate's relevant academic coursework or degree in CS/Web Development. DO NOT ask about projects yet!";
       } else if (assistantTurnCount === 2) {
         turnDirective = "CURRENT TURN DIRECTIVE (TURN 3 OF 10 - CORE RESUME SKILLS): Ask about candidate's CORE TECHNICAL SKILLS listed on their resume (e.g. React, JavaScript, HTML/CSS). Ask which skill or framework they feel most proficient in!";
       } else if (assistantTurnCount === 3) {

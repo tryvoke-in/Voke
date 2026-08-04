@@ -423,6 +423,48 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   const [isDebugEditorUnlocked, setIsDebugEditorUnlocked] = useState(false);
   const [debugScratchPad, setDebugScratchPad] = useState('');
 
+  // Scratch Pad Dual-Mode (Text + Drawing Canvas) State
+  const [scratchPadMode, setScratchPadMode] = useState<'text' | 'draw'>('text');
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawColor, setDrawColor] = useState('#f59e0b');
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    setIsDrawing(true);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.strokeStyle = drawColor;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
   // Video Stream state
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
@@ -1045,46 +1087,80 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
                 <h1 className="text-lg font-black text-white">{currentProblem.title}</h1>
                 <div className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">{currentProblem.description}</div>
 
-                {/* Examples */}
-                <div className="space-y-3">
-                  <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Examples</div>
-                  {currentProblem.examples.map((ex, i) => (
-                    <div key={i} className="p-3 rounded-2xl bg-zinc-900 border border-white/10 text-xs font-mono space-y-1">
-                      <div><strong className="text-zinc-400">Input:</strong> <span className="text-amber-300">{ex.input}</span></div>
-                      <div><strong className="text-zinc-400">Output:</strong> <span className="text-emerald-300">{ex.output}</span></div>
-                      {ex.explanation && <div className="text-zinc-500 text-[11px] font-sans pt-1"><strong>Explanation:</strong> {ex.explanation}</div>}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Scratch Pad — visible during approach phase */}
+                {/* Scratch Pad — prominently placed directly below description during approach phase */}
                 {!isEditorUnlocked && phase === 'approach_explain' && (
-                  <div className="space-y-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
-                    <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
+                  <div className="space-y-3 p-4 rounded-2xl bg-amber-500/10 border-2 border-amber-500/40 shadow-xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
                         <BookOpen className="w-4 h-4 text-amber-400" />
-                        <span>Scratch Pad — Write & Explain Your Approach</span>
+                        <span className="text-xs font-black text-amber-300 uppercase tracking-wider">Scratch Pad — Explain Approach</span>
                       </div>
-                      <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-300 text-[10px]">
-                        Editor Locked 🔒
-                      </Badge>
+                      <div className="flex items-center gap-1 bg-zinc-900 border border-amber-500/30 rounded-lg p-0.5">
+                        <button
+                          onClick={() => setScratchPadMode('text')}
+                          className={`px-2.5 py-0.5 rounded text-[10px] font-bold transition-all ${scratchPadMode === 'text' ? 'bg-amber-500 text-black' : 'text-zinc-400 hover:text-white'}`}
+                        >
+                          Text Notes
+                        </button>
+                        <button
+                          onClick={() => setScratchPadMode('draw')}
+                          className={`px-2.5 py-0.5 rounded text-[10px] font-bold transition-all ${scratchPadMode === 'draw' ? 'bg-amber-500 text-black' : 'text-zinc-400 hover:text-white'}`}
+                        >
+                          Draw / Sketch
+                        </button>
+                      </div>
                     </div>
-                    <textarea
-                      value={scratchPadText}
-                      onChange={e => setScratchPadText(e.target.value)}
-                      placeholder="Type your strategy, algorithms, or data structures here while speaking...&#10;e.g. Using two pointers (left at 0, right at end). Move left right inward based on target sum comparison..."
-                      className="w-full h-32 bg-zinc-950 border border-amber-500/30 rounded-xl p-3 text-xs text-zinc-200 font-mono resize-none focus:outline-none focus:border-amber-400 placeholder-zinc-600 leading-relaxed"
-                    />
-                    <div className="flex flex-col gap-2">
+
+                    {scratchPadMode === 'text' ? (
+                      <textarea
+                        value={scratchPadText}
+                        onChange={e => setScratchPadText(e.target.value)}
+                        placeholder="Type your approach strategy, algorithms, or pointer logic here...&#10;e.g. Use two pointers left=0, right=n-1. Sum current numbers and move pointers inward based on target comparison..."
+                        className="w-full h-36 bg-zinc-950 border border-amber-500/30 rounded-xl p-3 text-xs text-zinc-200 font-mono resize-none focus:outline-none focus:border-amber-400 placeholder-zinc-600 leading-relaxed"
+                      />
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+                          <div className="flex items-center gap-1.5">
+                            <span>Color:</span>
+                            {['#f59e0b', '#06b6d4', '#ffffff'].map(col => (
+                              <button
+                                key={col}
+                                onClick={() => setDrawColor(col)}
+                                className={`w-3.5 h-3.5 rounded-full border ${drawColor === col ? 'ring-2 ring-white scale-110' : 'opacity-70'}`}
+                                style={{ backgroundColor: col }}
+                              />
+                            ))}
+                          </div>
+                          <button onClick={clearCanvas} className="text-zinc-400 hover:text-white underline">
+                            Clear Canvas
+                          </button>
+                        </div>
+                        <div className="relative h-40 bg-zinc-950 border border-amber-500/30 rounded-xl overflow-hidden cursor-crosshair">
+                          <canvas
+                            ref={canvasRef}
+                            width={400}
+                            height={160}
+                            onMouseDown={startDrawing}
+                            onMouseMove={draw}
+                            onMouseUp={stopDrawing}
+                            onMouseLeave={stopDrawing}
+                            className="w-full h-full touch-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-2 pt-1">
                       <Button
                         onClick={handleVerifyApproach}
-                        className="w-full h-10 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs rounded-xl shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <CheckCircle2 className="w-4 h-4 fill-black text-amber-500" />
                         Submit Approach & Unlock Code Editor
                       </Button>
                       <div className="flex items-center justify-between text-[10px] text-zinc-500 px-1">
-                        <span>Explain verbally to AI or write in scratch pad to unlock editor.</span>
+                        <span>Speak to AI or type/draw approach to unlock editor.</span>
                         <button
                           onClick={() => {
                             setIsEditorUnlocked(true);
@@ -1100,6 +1176,18 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
                     </div>
                   </div>
                 )}
+
+                {/* Examples */}
+                <div className="space-y-3">
+                  <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Examples</div>
+                  {currentProblem.examples.map((ex, i) => (
+                    <div key={i} className="p-3 rounded-2xl bg-zinc-900 border border-white/10 text-xs font-mono space-y-1">
+                      <div><strong className="text-zinc-400">Input:</strong> <span className="text-amber-300">{ex.input}</span></div>
+                      <div><strong className="text-zinc-400">Output:</strong> <span className="text-emerald-300">{ex.output}</span></div>
+                      {ex.explanation && <div className="text-zinc-500 text-[11px] font-sans pt-1"><strong>Explanation:</strong> {ex.explanation}</div>}
+                    </div>
+                  ))}
+                </div>
 
                 {/* Constraints */}
                 <div className="space-y-2">
