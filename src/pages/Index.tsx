@@ -255,15 +255,7 @@ const Index = () => {
             
             {/* Left Column: Headlines & Actions */}
             <div className="lg:col-span-6 space-y-8 text-center lg:text-left">
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/[0.03] border border-white/10 text-violet-300 text-xs font-semibold tracking-wider uppercase backdrop-blur-md shadow-[0_0_15px_rgba(124,58,237,0.1)]"
-              >
-                <span className="hidden sm:inline">Voke Platform • Advanced Interview Sandbox</span>
-                <span className="inline sm:hidden text-[10px]">Voke • AI Interview Sandbox</span>
-              </motion.div>
+
 
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
