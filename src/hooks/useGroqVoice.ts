@@ -2,51 +2,41 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { LiveStatus, MessageLog } from '../types/voice';
 import { toast } from 'sonner';
-const SYSTEM_INSTRUCTION = `YOU ARE:
-A real-time voice-based conversational assistant designed to conduct a professional yet friendly interview.
+export type GroqVoiceConnectOptions = string | {
+    systemPrompt?: string;
+    initialGreeting?: string;
+    mode?: 'conversational' | 'coding_silent';
+};
 
-1. Core Personality & Speaking Style
-- Speak in a friendly, warm, and natural tone.
-- Keep responses concise (1-3 sentences max) unless asked for detail.
-- Use spoken-language style (short sentences, natural fillers).
+const SYSTEM_INSTRUCTION = `YOU ARE:
+A real-time voice-based technical interviewer conducting an elite software engineering interview.
+
+CRITICAL LANGUAGE MANDATE:
+- You MUST communicate, ask questions, and respond ONLY in clear, natural, professional English.
+- NEVER output Japanese, Chinese, Hindi, or any non-English language under any circumstance.
+
+1. Core Personality & Speaking Style:
+- Speak in a friendly, concise, natural, and professional tone.
+- Keep responses concise (1-3 sentences max) unless explicitly asked for in-depth explanation.
 - Never sound robotic or overly formal.
 
-2. Interaction Rules
-- Respond quickly.
-- If unclear, ask "Could you repeat that?".
-- Do not mention you are an AI unless asked.
+2. Interview Etiquette & Candidate Focus:
+- Respect the candidate's focus. When the candidate is working on code or thinking silently, do NOT interrupt them.
+- When they explain their approach or ask questions, respond directly and constructively.
 
-3. INTERVIEW FLOW & CODING CHALLENGE (IMPORTANT):
-- Start with 2-3 behavioral or technical screening questions based on their background.
-- Once you are satisfied with the verbal screening, say exactly: "[START_CODING]" followed by a brief intro to the coding problem.
-- DO NOT ask "Are you ready for a coding challenge?". Just announce it naturally like "Great, let's move on to a practical problem. [START_CODING] I'd like you to solve..." giving a brief 1-sentence summary of the task.
-
-4. DURING CODING:
-- When the user submits code, DO NOT just give the answer or say "Correct".
-- Use **Socratic Questioning**: Ask probing questions about their choices. Examples:
-    - "Why did you choose this data structure?"
-    - "How does this handle edge case X?"
-    - "Can you explain the time complexity?"
-- If the code is buggy, ask: "Walk me through your logic for [specific part]. What happens if input is X?"
-
-5. ENDING CODING & FEEDBACK:
-- Once you are satisfied with the coding discussion (or if user asks to stop), you MUST provide:
-    - Spoken transition: "Excellent work on that. Let's move on."
-    - Token: "[END_CODING]" (to switch back to voice mode).
-    - Detailed Feedback (Hidden from speech): "[DETAILED_FEEDBACK]" followed by a structured Markdown summary of their code quality, correct logic, and areas for improvement.
-
-Example Output when finishing coding:
-"That was a great solution. [END_CODING] Let's discuss your experience with..."
-[DETAILED_FEEDBACK]
-### Code Review
-- **Logic**: Correct approach using Hash Map.
-- **Style**: Good variable naming, but missed type hints.
-- **Optimization**: O(n) is optimal.
+3. Coding Assessment (Round 3) Strict Protocol:
+- ONLY discuss the coding challenge, algorithms, complexity, edge cases, and debugging.
+- NEVER ask resume, college, education, degree, or introductory questions.
+- While solving, let the student code in peace without unnecessary interruptions.
+- When the code is solved / tests pass, actively ask about:
+  (a) Time & Space Big-O Complexity ($O(N)$).
+  (b) Extreme Edge Cases & Boundary Conditions (empty array, duplicates, single elements, max constraints).
+  (c) Alternative data structures or space-time trade-offs.
 `;
 
 interface UseGroqVoiceReturn {
     status: LiveStatus;
-    connect: (context?: string) => Promise<void>;
+    connect: (context?: GroqVoiceConnectOptions) => Promise<void>;
     disconnect: () => void;
     isUserSpeaking: boolean;
     isAiSpeaking: boolean;
@@ -55,6 +45,8 @@ interface UseGroqVoiceReturn {
     errorDetails: string | null;
     sendHiddenContext: (text: string) => Promise<void>;
     apiLabel: string;
+    isSilentMode: boolean;
+    setIsSilentMode: (silent: boolean) => void;
 }
 
 interface UseGroqVoiceProps {
@@ -63,6 +55,7 @@ interface UseGroqVoiceProps {
 
 export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const [status, setStatus] = useState<LiveStatus>(LiveStatus.DISCONNECTED);
+    const [isSilentMode, setIsSilentMode] = useState<boolean>(false);
     const [errorDetails, setErrorDetails] = useState<string | null>(null);
     const [isUserSpeaking, setIsUserSpeaking] = useState(false);
     const [isAiSpeaking, setIsAiSpeaking] = useState(false);
@@ -80,6 +73,8 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
+    const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+    const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         statusRef.current = status;
@@ -142,34 +137,46 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                         contents.unshift({ role: 'user', parts: [{ text: 'Hello! I am ready for the interview.' }] });
                     }
 
+                    const isCodingRound = systemPromptMsg.includes('Round 3') || systemPromptMsg.includes('Coding Assessment');
+                    const isProjectRound = systemPromptMsg.includes('Round 2') || systemPromptMsg.includes('Project Deep Dive');
+                    const isRound1 = systemPromptMsg.includes('Round 1') && !isCodingRound && !isProjectRound;
                     const assistantTurnCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
                     let turnHint = "";
-                    if (assistantTurnCount === 1) {
-                        turnHint = "\n\nTURN 2 DIRECTIVE: Ask about candidate's EDUCATION or DEGREE at Newton School of Technology (B.Tech CS & AI). Ask what specific web development coursework they focused on!";
-                    } else if (assistantTurnCount === 2) {
-                        turnHint = "\n\nTURN 3 DIRECTIVE: Ask about candidate's CORE CLAIMED SKILLS (React, JavaScript, HTML/CSS) listed on their resume!";
-                    } else if (assistantTurnCount === 3) {
-                        turnHint = "\n\nTURN 4 DIRECTIVE: Ask about PRACTICAL SKILL APPLICATION in coursework or projects!";
-                    } else if (assistantTurnCount === 4) {
-                        turnHint = "\n\nTURN 5 DIRECTIVE: Ask a targeted question about candidate's FIRST project BY NAME (e.g. HirePath)!";
-                    } else if (assistantTurnCount === 5) {
-                        turnHint = "\n\nTURN 6 DIRECTIVE: Ask a targeted question about candidate's SECOND project BY NAME (e.g. Prodex)!";
-                    } else if (assistantTurnCount === 6) {
-                        turnHint = "\n\nTURN 7 DIRECTIVE: Ask about DEVELOPMENT TOOLS, Git workflow, or build tools!";
-                    } else if (assistantTurnCount === 7) {
-                        turnHint = "\n\nTURN 8 DIRECTIVE: Ask about ROLE MOTIVATION for this position!";
-                    } else if (assistantTurnCount === 8) {
-                        turnHint = "\n\nTURN 9 DIRECTIVE: Ask about SKILL GROWTH & new concepts they are studying!";
-                    } else if (assistantTurnCount >= 9) {
-                        turnHint = "\n\nTURN 10 DIRECTIVE: Ask about career vision and speak a warm closing goodbye speech!";
+
+                    if (isCodingRound) {
+                        turnHint = "\n\nCRITICAL ROUND 3 CODING MANDATE: You are conducting a FAANG-tier Technical Coding Assessment. When candidate explains logic or solves code, dynamically ask about: (1) Big-O Time & Auxiliary Space Complexity, (2) Extreme Edge Cases & Boundary Conditions (empty arrays, duplicates, large inputs), (3) Alternative Optimization Trade-offs, and (4) Root-cause Debugging. NEVER ask about resume, degree, or introductory questions!";
+                    } else if (isProjectRound) {
+                        turnHint = "\n\nCRITICAL ROUND 2 MANDATE: Focus strictly on project architecture, technical bottlenecks, and code structure!";
+                    } else if (isRound1) {
+                        if (assistantTurnCount === 1) {
+                            turnHint = "\n\nTURN 2 DIRECTIVE: Ask about candidate's EDUCATION or DEGREE at Newton School of Technology (B.Tech CS & AI). Ask what specific web development coursework they focused on!";
+                        } else if (assistantTurnCount === 2) {
+                            turnHint = "\n\nTURN 3 DIRECTIVE: Ask about candidate's CORE CLAIMED SKILLS (React, JavaScript, HTML/CSS) listed on their resume!";
+                        } else if (assistantTurnCount === 3) {
+                            turnHint = "\n\nTURN 4 DIRECTIVE: Ask about PRACTICAL SKILL APPLICATION in coursework or projects!";
+                        } else if (assistantTurnCount === 4) {
+                            turnHint = "\n\nTURN 5 DIRECTIVE: Ask a targeted question about candidate's FIRST project BY NAME (e.g. HirePath)!";
+                        } else if (assistantTurnCount === 5) {
+                            turnHint = "\n\nTURN 6 DIRECTIVE: Ask a targeted question about candidate's SECOND project BY NAME (e.g. Prodex)!";
+                        } else if (assistantTurnCount === 6) {
+                            turnHint = "\n\nTURN 7 DIRECTIVE: Ask about DEVELOPMENT TOOLS, Git workflow, or build tools!";
+                        } else if (assistantTurnCount === 7) {
+                            turnHint = "\n\nTURN 8 DIRECTIVE: Ask about ROLE MOTIVATION for this position!";
+                        } else if (assistantTurnCount === 8) {
+                            turnHint = "\n\nTURN 9 DIRECTIVE: Ask about SKILL GROWTH & new concepts they are studying!";
+                        } else if (assistantTurnCount >= 9) {
+                            turnHint = "\n\nTURN 10 DIRECTIVE: Ask about career vision and speak a warm closing goodbye speech!";
+                        }
                     }
+
+                    const englishMandate = "\n\nCRITICAL MANDATE: You MUST communicate and ask questions ONLY in English. Never output Japanese, Chinese, or any other language.";
 
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${geminiApiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: contents.slice(-6),
-                            systemInstruction: { parts: [{ text: systemPromptMsg + turnHint }] },
+                            systemInstruction: { parts: [{ text: systemPromptMsg + turnHint + englishMandate }] },
                             generationConfig: { temperature: 0.6, maxOutputTokens: 100 }
                         })
                     });
@@ -227,21 +234,43 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             const proj1 = projectMatches[0] || 'your main project';
             const proj2 = projectMatches[1] || 'your second project';
             
+            const isCoding = sysPrompt.includes('Round 3') || sysPrompt.includes('Coding Assessment');
+            const isProject = sysPrompt.includes('Round 2') || sysPrompt.includes('Project Deep Dive');
+
             // Emergency turn-based questions (only used if ALL 3 AI engines fail)
-            const emergencyQuestions: Record<number, string> = {
-                0: "Welcome! Could you introduce yourself and tell me about your technical background?",
-                1: "What specific coursework or academic modules have shaped your skills as a developer?",
-                2: "Which programming languages or frameworks on your resume are you most confident with?",
-                3: "Can you walk me through how you've applied those skills in a real coding scenario?",
-                4: `Tell me about the technical architecture behind ${proj1}. What were the key engineering decisions?`,
-                5: `In ${proj2}, what was the most challenging technical problem you solved?`,
-                6: "What development tools and workflow practices do you use for version control and testing?",
-                7: "What excites you most about this role and how does it align with your career goals?",
-                8: "What new technologies or concepts are you currently learning to grow as an engineer?",
-                9: "Thank you for a great conversation! Where do you see your engineering career in the next few years?"
-            };
+            let emergencyQuestions: Record<number, string>;
+            if (isCoding) {
+                emergencyQuestions = {
+                    0: "Take a look at the problem on your screen. When you're ready, talk me through your initial algorithmic approach.",
+                    1: "What time and space complexity are you aiming for with this implementation?",
+                    2: "How will your code handle key edge cases such as empty inputs or duplicates?",
+                    3: "Can we optimize the inner loops or memory allocation further?",
+                    4: "Let's move on to the debugging challenge. Where do you suspect the root bug is located?"
+                };
+            } else if (isProject) {
+                emergencyQuestions = {
+                    0: `Welcome to the Project Deep Dive! Walk me through the core technical architecture of ${proj1}.`,
+                    1: `In ${proj1}, what was the most difficult technical bottleneck you solved?`,
+                    2: `How did you handle state management, API synchronization, and error handling in ${proj1}?`,
+                    3: `Let's discuss ${proj2}. What key engineering trade-offs did you make during development?`,
+                    4: `How did you test and guarantee performance for ${proj2}?`
+                };
+            } else {
+                emergencyQuestions = {
+                    0: "Welcome! Could you introduce yourself and tell me about your technical background?",
+                    1: "What specific coursework or academic modules have shaped your skills as a developer?",
+                    2: "Which programming languages or frameworks on your resume are you most confident with?",
+                    3: "Can you walk me through how you've applied those skills in a real coding scenario?",
+                    4: `Tell me about the technical architecture behind ${proj1}. What were the key engineering decisions?`,
+                    5: `In ${proj2}, what was the most challenging technical problem you solved?`,
+                    6: "What development tools and workflow practices do you use for version control and testing?",
+                    7: "What excites you most about this role and how does it align with your career goals?",
+                    8: "What new technologies or concepts are you currently learning to grow as an engineer?",
+                    9: "Thank you for a great conversation! Where do you see your engineering career in the next few years?"
+                };
+            }
             
-            const turnKey = Math.min(assistantTurnCount, 9);
+            const turnKey = Math.min(assistantTurnCount, Object.keys(emergencyQuestions).length - 1);
             aiText = emergencyQuestions[turnKey] || "Could you tell me more about your technical experience?";
         }
 
@@ -306,8 +335,10 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
         // Strip out tokens and hidden content for speech
         let speechText = text
-            .replace('[START_CODING]', '')
-            .replace('[END_CODING]', '');
+            .replace(/\[START_CODING\]/g, '')
+            .replace(/\[END_CODING\]/g, '')
+            .replace(/\[VERDICT:[^\]]*\]/g, '')
+            .replace(/\[REASON:[^\]]*\]/g, '');
 
         // Remove detailed feedback content (everything after the token)
         if (speechText.includes('[DETAILED_FEEDBACK]')) {
@@ -316,50 +347,132 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
         speechText = speechText.trim();
         if (!speechText || statusRef.current === LiveStatus.DISCONNECTED) {
-            window.speechSynthesis.cancel();
+            try {
+                window.speechSynthesis.cancel();
+            } catch (e) {}
             return;
         }
 
         try {
             console.log('DEBUG: Speaking AI response via Web Speech API:', speechText);
+
+            // Clear any active resume interval
+            if (resumeTimerRef.current) {
+                clearInterval(resumeTimerRef.current);
+                resumeTimerRef.current = null;
+            }
+
+            // Stop any currently playing speech cleanly
+            if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+                window.speechSynthesis.cancel();
+                await new Promise(r => setTimeout(r, 60));
+            }
+
+            // Ensure speech synthesis is un-paused
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            }
+
             setIsAiSpeaking(true);
             setVolume(0.8);
 
-            window.speechSynthesis.cancel(); // Cancel any previous active speech
             const utterance = new SpeechSynthesisUtterance(speechText);
+            // CRITICAL GC PROTECTION: Prevent V8 garbage collection while speech is playing
+            activeUtteranceRef.current = utterance;
+            (window as any).__vokeUtterance = utterance;
 
-            // Select natural english voice if available
-            const voices = window.speechSynthesis.getVoices();
+            // Load and select high quality English voice
+            let voices = window.speechSynthesis.getVoices();
+            if (!voices || voices.length === 0) {
+                await new Promise<void>(resolve => {
+                    const onVoices = () => {
+                        window.speechSynthesis.removeEventListener('voiceschanged', onVoices);
+                        resolve();
+                    };
+                    window.speechSynthesis.addEventListener('voiceschanged', onVoices);
+                    setTimeout(resolve, 250);
+                });
+                voices = window.speechSynthesis.getVoices();
+            }
+
             const preferredVoice = voices.find(v => 
                 v.lang.startsWith('en') && 
-                (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Karen'))
-            ) || voices.find(v => v.lang.startsWith('en'));
+                (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Jenny') || v.name.includes('Guy') || v.name.includes('Aria') || v.name.includes('Zira') || v.name.includes('David'))
+            ) || voices.find(v => v.lang.startsWith('en') || v.lang.includes('en'));
 
             if (preferredVoice) {
                 utterance.voice = preferredVoice;
+                utterance.lang = preferredVoice.lang;
+            } else {
+                utterance.lang = 'en-US';
             }
 
             utterance.rate = 1.0;
             utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            // Chrome/Edge watchdog: unstick paused or stalled synthesis on Windows
+            resumeTimerRef.current = setInterval(() => {
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.pause();
+                    window.speechSynthesis.resume();
+                } else {
+                    if (resumeTimerRef.current) {
+                        clearInterval(resumeTimerRef.current);
+                        resumeTimerRef.current = null;
+                    }
+                }
+            }, 4000);
+
+            utterance.onstart = () => {
+                console.log('DEBUG: AI speech playback started successfully.');
+                setIsAiSpeaking(true);
+                setVolume(0.8);
+            };
 
             utterance.onend = () => {
                 console.log('DEBUG: AI speech finished.');
+                if (resumeTimerRef.current) {
+                    clearInterval(resumeTimerRef.current);
+                    resumeTimerRef.current = null;
+                }
+                activeUtteranceRef.current = null;
+                (window as any).__vokeUtterance = null;
                 setIsAiSpeaking(false);
                 setVolume(0);
 
                 // Resume candidate microphone listening after AI finishes speaking
                 if (statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
-                    setTimeout(() => startListeningRef.current!(), 500);
+                    setTimeout(() => {
+                        if (statusRef.current === LiveStatus.CONNECTED && !isAiSpeakingRef.current) {
+                            startListeningRef.current?.();
+                        }
+                    }, 400);
                 }
             };
 
             utterance.onerror = (e) => {
-                console.warn('DEBUG: Speech synthesis note:', e);
+                console.warn('DEBUG: Speech synthesis event note:', e);
+                if (resumeTimerRef.current) {
+                    clearInterval(resumeTimerRef.current);
+                    resumeTimerRef.current = null;
+                }
+                activeUtteranceRef.current = null;
+                (window as any).__vokeUtterance = null;
                 setIsAiSpeaking(false);
                 setVolume(0);
+
+                if (statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
+                    setTimeout(() => {
+                        if (statusRef.current === LiveStatus.CONNECTED && !isAiSpeakingRef.current) {
+                            startListeningRef.current?.();
+                        }
+                    }, 400);
+                }
             };
 
             window.speechSynthesis.speak(utterance);
+            window.speechSynthesis.resume();
 
         } catch (error) {
             console.error('DEBUG: Speech synthesis error:', error);
@@ -370,7 +483,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
     const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
         try {
-            console.log('DEBUG: Transcribing audio with Groq Whisper...');
+            console.log('DEBUG: Transcribing audio with Groq Whisper (English strictly enforced)...');
 
             // Convert blob to File
             const audioFile = new File([audioBlob], 'audio.webm', { type: 'audio/webm' });
@@ -382,6 +495,8 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             const formData = new FormData();
             formData.append('file', audioFile);
             formData.append('model', 'whisper-large-v3-turbo');
+            formData.append('language', 'en');
+            formData.append('prompt', 'Technical software engineering interview speech strictly in English.');
             formData.append('temperature', '0');
             formData.append('response_format', 'verbose_json');
 
@@ -394,16 +509,38 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const transcription = await res.json();
 
-            console.log('DEBUG: Transcription:', transcription.text);
+            let rawText = (transcription.text || '').trim();
+            console.log('DEBUG: Raw Transcription:', rawText);
 
-            if (!transcription.text) {
-                toast.warning("Hears silence (empty transcript)");
+            if (!rawText) {
+                return '';
             }
 
-            return transcription.text || '';
+            // CRITICAL: Reject Japanese / CJK Unicode characters (Hiragana, Katakana, Kanji, Hangul)
+            const hasCjk = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/.test(rawText);
+            if (hasCjk) {
+                console.log('DEBUG: Filtered out non-English / CJK Whisper artifact:', rawText);
+                return '';
+            }
+
+            // CRITICAL: Reject common Whisper hallucination subtitles during background silence
+            const silenceArtifacts = [
+                /thank you for watching/i,
+                /thanks for watching/i,
+                /subtitles by/i,
+                /amara\.org/i,
+                /translated by/i,
+                /subscribe/i,
+                /closed captioning/i
+            ];
+            if (silenceArtifacts.some(pattern => pattern.test(rawText))) {
+                console.log('DEBUG: Filtered out Whisper silence hallucination:', rawText);
+                return '';
+            }
+
+            return rawText;
         } catch (error: any) {
             console.error('DEBUG: Whisper transcription error:', error);
-            toast.error(`Transcription Failed: ${error.message}`);
             return '';
         }
     };
@@ -663,12 +800,26 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         startListeningRef.current = startListening;
     });
 
-    const connect = useCallback(async (context?: string) => {
+    const connect = useCallback(async (context?: GroqVoiceConnectOptions) => {
         if (status === LiveStatus.CONNECTED) return;
 
-        console.log('DEBUG: Connect called');
+        console.log('DEBUG: Connect called with options:', typeof context === 'string' ? 'string context' : context);
         setStatus(LiveStatus.CONNECTING);
-        contextRef.current = context || '';
+
+        let initialGreetingText = '';
+        let systemPromptText = '';
+
+        if (typeof context === 'string') {
+            systemPromptText = context || '';
+        } else if (context && typeof context === 'object') {
+            systemPromptText = context.systemPrompt || '';
+            initialGreetingText = context.initialGreeting || '';
+            if (context.mode === 'coding_silent') {
+                setIsSilentMode(true);
+            }
+        }
+
+        contextRef.current = systemPromptText;
         conversationHistoryRef.current = [];
 
         try {
@@ -678,9 +829,23 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
             setStatus(LiveStatus.CONNECTED);
 
-            // Generate personalized greeting using Groq
+            // If an explicit initialGreeting was provided (e.g. Round 3 Coding Assessment or Round 2), use it directly!
+            if (initialGreetingText) {
+                console.log('DEBUG: Using custom initial greeting:', initialGreetingText);
+                conversationHistoryRef.current.push({ role: 'assistant', content: initialGreetingText });
+                setLogs([{
+                    id: 'init',
+                    role: 'assistant',
+                    text: initialGreetingText,
+                    timestamp: new Date()
+                }]);
+                speakResponse(initialGreetingText);
+                return;
+            }
+
+            // Otherwise, generate personalized greeting using Groq (English strictly enforced)
             try {
-                console.log('DEBUG: Generating personalized greeting...');
+                console.log('DEBUG: Generating personalized greeting in English...');
                 const session = await supabase.auth.getSession();
                 const token = session.data.session?.access_token;
                 if (!token) throw new Error("Not authenticated");
@@ -696,24 +861,39 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 };
 
                 let greetingCompletion;
+                const isCoding = contextRef.current.includes('Round 3') || contextRef.current.includes('Coding Assessment');
+                const isProj = contextRef.current.includes('Round 2') || contextRef.current.includes('Project Deep Dive');
+
+                const greetingPrompt = isCoding
+                    ? 'Generate a professional 1-2 sentence greeting in English welcoming the candidate to Round 3 Coding Assessment and asking them to explain their initial algorithmic approach to the coding challenge on screen.'
+                    : isProj
+                    ? 'Generate a professional 1-2 sentence greeting in English welcoming the candidate to Round 2 Project Deep Dive and asking them to introduce their featured project.'
+                    : 'Generate a warm, professional, 1-2 sentence English greeting welcoming the candidate to the interview and inviting them to introduce themselves.';
+
+                const defaultFallback = isCoding
+                    ? "Hello and welcome to Round 3 — Coding Assessment! Look at the coding challenge on your screen, and let's discuss your initial approach."
+                    : isProj
+                    ? "Hello and welcome to Round 2 — Project Deep Dive! Walk me through the architecture of your primary project."
+                    : "Hello! Welcome to the interview. Please introduce yourself.";
+
                 try {
                     greetingCompletion = await makeGreetingReq('llama-3.3-70b-versatile', [
-                        { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCONTEXT:\n' + contextRef.current },
-                        { role: 'user', content: 'Generate a warm, personalized greeting for the user. Address them by name if available in the context. Keep it to 1-2 sentences and invite them to introduce themselves or talk about their experience.' }
+                        { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCRITICAL: Respond ONLY in English.\n\nCONTEXT:\n' + contextRef.current },
+                        { role: 'user', content: greetingPrompt }
                     ], 100);
                 } catch (error: any) {
                     if (error?.message?.includes('429')) {
                         console.log('DEBUG: Rate limit reached during greeting, switching to fallback...');
                         greetingCompletion = await makeGreetingReq('llama-3.1-8b-instant', [
-                            { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCONTEXT:\n' + contextRef.current },
-                            { role: 'user', content: 'Say hello and ask for introduction.' }
+                            { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCRITICAL: Respond ONLY in English.\n\nCONTEXT:\n' + contextRef.current },
+                            { role: 'user', content: greetingPrompt }
                         ], 60);
                     } else {
                         throw error;
                     }
                 }
 
-                const greeting = greetingCompletion.choices[0]?.message?.content || "Hello! I'm ready to interview you. Please introduce yourself.";
+                const greeting = greetingCompletion?.choices?.[0]?.message?.content || defaultFallback;
                 console.log('DEBUG: Generated greeting:', greeting);
 
                 conversationHistoryRef.current.push({ role: 'assistant', content: greeting });
@@ -727,7 +907,13 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 speakResponse(greeting);
             } catch (error) {
                 console.error('DEBUG: Failed to generate greeting:', error);
-                const fallbackGreeting = "Hello! I'm ready to interview you. Please introduce yourself.";
+                const isCoding = contextRef.current.includes('Round 3') || contextRef.current.includes('Coding Assessment');
+                const isProj = contextRef.current.includes('Round 2') || contextRef.current.includes('Project Deep Dive');
+                const fallbackGreeting = isCoding
+                    ? "Hello and welcome to Round 3 — Coding Assessment! Look at the coding challenge on your screen, and let's discuss your initial approach."
+                    : isProj
+                    ? "Hello and welcome to Round 2 — Project Deep Dive! Walk me through the architecture of your primary project."
+                    : "Hello! Welcome to the interview. Please introduce yourself.";
                 conversationHistoryRef.current.push({ role: 'assistant', content: fallbackGreeting });
                 setLogs([{
                     id: 'init',
@@ -811,6 +997,8 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         logs,
         errorDetails,
         sendHiddenContext,
-        apiLabel
+        apiLabel,
+        isSilentMode,
+        setIsSilentMode
     };
 }

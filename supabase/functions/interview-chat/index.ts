@@ -91,30 +91,50 @@ STRICT QUESTIONING INSTRUCTION:
 
     const assistantTurnCount = conversationMessages.filter((m: any) => m.role === 'assistant').length;
 
-    // Inject explicit Turn Directive based on Round 1 Resume Screening Allocation
+    const isCodingRound = systemPrompt.includes("Round 3") || systemPrompt.includes("Coding Assessment") || interviewType === "coding" || interviewType === "round3";
+    const isProjectRound = systemPrompt.includes("Round 2") || systemPrompt.includes("Project Deep Dive") || interviewType === "project" || interviewType === "round2";
+    const isRound1 = (interviewType === "round1" || interviewType === "resume" || interviewType === "screening" || systemPrompt.includes("Round 1")) && !isCodingRound && !isProjectRound;
+
+    // Inject explicit Turn Directive based on the exact Interview Round
     let turnDirective = "";
-    if (assistantTurnCount === 1) {
-      turnDirective = "CURRENT TURN DIRECTIVE (TURN 2 OF 10 - EDUCATION & ACADEMIC FOCUS): Ask about candidate's EDUCATION, DEGREE, or RELEVANT ACADEMIC COURSEWORK (e.g., 'You're studying B.Tech CS & AI at Newton School of Technology — what specific frontend or web development coursework have you focused on?'). DO NOT ask about projects yet!";
-    } else if (assistantTurnCount === 2) {
-      turnDirective = "CURRENT TURN DIRECTIVE (TURN 3 OF 10 - CORE RESUME SKILLS): Ask about candidate's CORE TECHNICAL SKILLS listed on their resume (e.g. React, JavaScript, HTML/CSS). Ask which skill or framework they feel most proficient in!";
-    } else if (assistantTurnCount === 3) {
-      turnDirective = "CURRENT TURN DIRECTIVE (TURN 4 OF 10 - PRACTICAL SKILL APPLICATION): Ask about how they learned or applied those specific resume skills in their practical coursework or initial study projects!";
-    } else if (assistantTurnCount === 4) {
-      turnDirective = "CURRENT TURN DIRECTIVE (TURN 5 OF 10 - PROJECT QUESTION 1 OF 2): Ask a targeted technical question about candidate's FIRST project BY NAME (e.g. HirePath, CodeCompass, or their main repo). Ask about UI component architecture or state management!";
-    } else if (assistantTurnCount === 5) {
-      turnDirective = "CURRENT TURN DIRECTIVE (TURN 6 OF 10 - PROJECT QUESTION 2 OF 2): Ask a targeted technical question about candidate's SECOND project BY NAME (e.g. Prodex or Truthlens). Ask about API integration, error handling, or performance optimization!";
-    } else if (assistantTurnCount === 6) {
-      turnDirective = "CURRENT TURN DIRECTIVE (TURN 7 OF 10 - TOOLS & WORKFLOW): Ask about DEVELOPMENT TOOLS, version control (Git), build tools (Vite/Webpack), or testing utilities listed on their resume!";
-    } else if (assistantTurnCount === 7) {
-      turnDirective = "CURRENT TURN DIRECTIVE (TURN 8 OF 10 - ROLE MOTIVATION): Ask why their background and resume skills make them excited to apply for this specific frontend engineering position!";
-    } else if (assistantTurnCount === 8) {
-      turnDirective = "CURRENT TURN DIRECTIVE (TURN 9 OF 10 - SKILL GROWTH): Ask what new web technologies, performance concepts, or frameworks they are currently learning to expand their resume!";
-    } else if (assistantTurnCount >= 9) {
-      turnDirective = "CURRENT TURN DIRECTIVE (TURN 10 OF 10 - OUTRO): Ask a brief wrap-up question on their long-term technical career goals, then speak a warm closing goodbye thanking them for their time!";
+    if (isCodingRound) {
+      turnDirective = `CRITICAL ROUND 3 TECHNICAL CODING MANDATE:
+You are a Principal Software Engineer conducting a FAANG-tier Live Technical Assessment. Structure your questioning dynamically:
+1. PROBLEM APPROACH & INTUITION: When starting or when candidate talks through code, discuss their algorithmic intuition, state management, and data structure choice.
+2. AFTER CODE PASSES / CANDIDATE ASKS: Actively ask focused follow-up questions across these core technical pillars:
+   - TIME & SPACE COMPLEXITY: Ask candidate to analyze the exact $O(N)$ Big-O Time and Auxiliary Space Complexity of their implementation.
+   - EDGE CASES & BOUNDARY CONDITIONS: Ask how the solution behaves on extreme edge cases (e.g. empty arrays, duplicate elements, negative numbers, or maximum input constraints).
+   - ALTERNATIVE TRADE-OFFS: Ask about alternative algorithms (e.g. hash map vs two-pointer vs binary search vs sorting) and memory-time trade-offs.
+   - DEBUGGING (Section B): Ask for the root cause of the bug, why the failure happens, and how the fix guarantees correctness.
+   - PRACTICAL SYSTEM DESIGN (Section C): Ask practical scalability, caching, and state management trade-offs.
+3. NEVER ask resume questions, intro questions, or education questions. Keep responses concise and professional (1-3 sentences max).`;
+    } else if (isProjectRound) {
+      turnDirective = "CRITICAL ROUND 2 PROJECT DEEP DIVE MANDATE: You are conducting the Project Deep Dive. ONLY ask questions about project architecture, technical bottlenecks, scalability, and code structure. NEVER ask generic introductory screening questions!";
+    } else if (isRound1) {
+      if (assistantTurnCount === 1) {
+        turnDirective = "CURRENT TURN DIRECTIVE (TURN 2 OF 10 - EDUCATION & ACADEMIC FOCUS): Ask about candidate's EDUCATION, DEGREE, or RELEVANT ACADEMIC COURSEWORK (e.g., 'You're studying B.Tech CS & AI at Newton School of Technology — what specific frontend or web development coursework have you focused on?'). DO NOT ask about projects yet!";
+      } else if (assistantTurnCount === 2) {
+        turnDirective = "CURRENT TURN DIRECTIVE (TURN 3 OF 10 - CORE RESUME SKILLS): Ask about candidate's CORE TECHNICAL SKILLS listed on their resume (e.g. React, JavaScript, HTML/CSS). Ask which skill or framework they feel most proficient in!";
+      } else if (assistantTurnCount === 3) {
+        turnDirective = "CURRENT TURN DIRECTIVE (TURN 4 OF 10 - PRACTICAL SKILL APPLICATION): Ask about how they learned or applied those specific resume skills in their practical coursework or initial study projects!";
+      } else if (assistantTurnCount === 4) {
+        turnDirective = "CURRENT TURN DIRECTIVE (TURN 5 OF 10 - PROJECT QUESTION 1 OF 2): Ask a targeted technical question about candidate's FIRST project BY NAME (e.g. HirePath, CodeCompass, or their main repo). Ask about UI component architecture or state management!";
+      } else if (assistantTurnCount === 5) {
+        turnDirective = "CURRENT TURN DIRECTIVE (TURN 6 OF 10 - PROJECT QUESTION 2 OF 2): Ask a targeted technical question about candidate's SECOND project BY NAME (e.g. Prodex or Truthlens). Ask about API integration, error handling, or performance optimization!";
+      } else if (assistantTurnCount === 6) {
+        turnDirective = "CURRENT TURN DIRECTIVE (TURN 7 OF 10 - TOOLS & WORKFLOW): Ask about DEVELOPMENT TOOLS, version control (Git), build tools (Vite/Webpack), or testing utilities listed on their resume!";
+      } else if (assistantTurnCount === 7) {
+        turnDirective = "CURRENT TURN DIRECTIVE (TURN 8 OF 10 - ROLE MOTIVATION): Ask why their background and resume skills make them excited to apply for this specific frontend engineering position!";
+      } else if (assistantTurnCount === 8) {
+        turnDirective = "CURRENT TURN DIRECTIVE (TURN 9 OF 10 - SKILL GROWTH): Ask what new web technologies, performance concepts, or frameworks they are currently learning to expand their resume!";
+      } else if (assistantTurnCount >= 9) {
+        turnDirective = "CURRENT TURN DIRECTIVE (TURN 10 OF 10 - OUTRO): Ask a brief wrap-up question on their long-term technical career goals, then speak a warm closing goodbye thanking them for their time!";
+      }
     }
 
-    // Build focused system prompt with turn directive as the FIRST instruction
-    const fullSystemPrompt = `${turnDirective ? '*** MOST IMPORTANT INSTRUCTION: ' + turnDirective + ' ***\n\n' : ''}${systemPrompt}${previousAssistantQuestions.length > 0 ? '\n\nNO-REPEAT RULE: You have already asked these questions. DO NOT repeat them:\n' + previousAssistantQuestions.map(q => `- "${q}"`).join('\n') : ''}`;
+    // Build focused system prompt with English mandate and turn directive
+    const languageMandate = "CRITICAL MANDATE: You MUST communicate, ask questions, and respond ONLY in clear, natural, professional English. NEVER output Japanese, Chinese, or any other language.";
+    const fullSystemPrompt = `${languageMandate}\n\n${turnDirective ? '*** MOST IMPORTANT INSTRUCTION: ' + turnDirective + ' ***\n\n' : ''}${systemPrompt}${previousAssistantQuestions.length > 0 ? '\n\nNO-REPEAT RULE: You have already asked these questions. DO NOT repeat them:\n' + previousAssistantQuestions.map(q => `- "${q}"`).join('\n') : ''}`;
 
     let content = "";
 
@@ -147,7 +167,7 @@ STRICT QUESTIONING INSTRUCTION:
       const retryRes = await callGeminiPipeline({
         modelName: "gemini-2.0-flash-lite",
         geminiContents: recentContents,
-        systemPrompt: fullSystemPrompt + `\n\nCRITICAL OVERRIDE: The question "${content}" WAS ALREADY ASKED. YOU MUST ASK A COMPLETELY DIFFERENT QUESTION MATCHING THE TURN DIRECTIVE!`,
+        systemPrompt: fullSystemPrompt + `\n\nCRITICAL OVERRIDE: The question "${content}" WAS ALREADY ASKED. YOU MUST ASK A COMPLETELY DIFFERENT QUESTION MATCHING THE ROUND DIRECTIVE!`,
         temperature: 0.85,
       });
 
@@ -200,21 +220,41 @@ STRICT QUESTIONING INSTRUCTION:
 
     // EMERGENCY TURN-BASED FALLBACK: Only if ALL AI engines failed
     if (!content) {
-      console.error("⚠️ ALL AI engines failed! Using emergency turn-based question.");
+      console.error("⚠️ ALL AI engines failed! Using emergency round-specific question.");
       const turnCount = conversationMessages.filter((m: any) => m.role === "assistant").length;
-      const emergencyQuestions: Record<number, string> = {
-        0: "Welcome! Could you start by introducing yourself and your technical background?",
-        1: "What specific academic coursework or modules have shaped your skills as a developer?",
-        2: "Which programming languages or frameworks listed on your resume are you most confident with?",
-        3: "Can you walk me through how you've applied those skills in a real coding project?",
-        4: "Tell me about the technical architecture behind your first project. What were the key engineering decisions?",
-        5: "In your second project, what was the most challenging technical problem you solved?",
-        6: "What development tools and workflow practices do you use for version control and testing?",
-        7: "What excites you most about this role and how does it align with your career goals?",
-        8: "What new technologies or concepts are you currently learning to grow as an engineer?",
-        9: "Thank you for a great conversation! Where do you see your engineering career heading next?"
-      };
-      content = emergencyQuestions[Math.min(turnCount, 9)] || "Could you tell me about a technical challenge you've solved recently?";
+
+      if (isCodingRound) {
+        const codingEmergency: Record<number, string> = {
+          0: "Take a look at the coding challenge on your left. Talk me through your algorithmic approach before you write code.",
+          1: "What time and space complexity are you aiming for with this data structure?",
+          2: "How will your solution handle key edge cases like empty inputs, single elements, or duplicates?",
+          3: "Let's optimize this further. Can we eliminate redundant checks or reduce space overhead?",
+          4: "Now let's switch to Section B for debugging. Walk me through where the root failure occurs."
+        };
+        content = codingEmergency[Math.min(turnCount, 4)] || "How would you optimize the time complexity of your solution?";
+      } else if (isProjectRound) {
+        const projectEmergency: Record<number, string> = {
+          0: "Walk me through the high-level architecture and component flow of your main project.",
+          1: "What was the most difficult technical bottleneck you solved in that project?",
+          2: "How did you manage state, concurrency, and error handling across your application?",
+          3: "If your user traffic scaled 100x overnight, what parts of your system would break first?"
+        };
+        content = projectEmergency[Math.min(turnCount, 3)] || "What architectural trade-offs did you make in your project?";
+      } else {
+        const emergencyQuestions: Record<number, string> = {
+          0: "Welcome! Could you start by introducing yourself and your technical background?",
+          1: "What specific academic coursework or modules have shaped your skills as a developer?",
+          2: "Which programming languages or frameworks listed on your resume are you most confident with?",
+          3: "Can you walk me through how you've applied those skills in a real coding project?",
+          4: "Tell me about the technical architecture behind your first project. What were the key engineering decisions?",
+          5: "In your second project, what was the most challenging technical problem you solved?",
+          6: "What development tools and workflow practices do you use for version control and testing?",
+          7: "What excites you most about this role and how does it align with your career goals?",
+          8: "What new technologies or concepts are you currently learning to grow as an engineer?",
+          9: "Thank you for a great conversation! Where do you see your engineering career heading next?"
+        };
+        content = emergencyQuestions[Math.min(turnCount, 9)] || "Could you tell me about a technical challenge you've solved recently?";
+      }
     }
 
     const apiLabel = geminiRes?.providerInfo?.apiLabel || "(primary 3.1)";
@@ -236,8 +276,8 @@ STRICT QUESTIONING INSTRUCTION:
     console.error("Error in interview-chat function:", error?.message, error?.stack);
     return new Response(
       JSON.stringify({ 
-        question: "That's interesting. Could you walk me through a specific technical challenge you've solved in one of your projects?", 
-        content: "That's interesting. Could you walk me through a specific technical challenge you've solved in one of your projects?"
+        question: "Walk me through your algorithmic approach and time complexity for this problem.", 
+        content: "Walk me through your algorithmic approach and time complexity for this problem."
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

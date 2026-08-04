@@ -406,7 +406,7 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   onExit
 }) => {
   const navigate = useNavigate();
-  const { status, connect, disconnect, isUserSpeaking, isAiSpeaking, volume, logs } = useGroqVoice();
+  const { status, connect, disconnect, isUserSpeaking, isAiSpeaking, volume, logs, sendHiddenContext } = useGroqVoice();
 
   // Section State
   const [currentSection, setCurrentSection] = useState<CodingSection>('A_CODING');
@@ -491,12 +491,27 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
     };
   }, []);
 
-  // Timer interval
+  const TOTAL_TIME_LIMIT_SECONDS = 45 * 60; // 45 minutes assessment limit
+  const timeLeft = Math.max(0, TOTAL_TIME_LIMIT_SECONDS - duration);
+
+  // Timer interval & Auto-submission on time limit
   useEffect(() => {
     let interval: any;
     if (hasStartedSession && !verdict) {
       interval = setInterval(() => {
-        setDuration(prev => prev + 1);
+        setDuration(prev => {
+          const next = prev + 1;
+          const remaining = TOTAL_TIME_LIMIT_SECONDS - next;
+          if (remaining === 300) {
+            toast.warning('⏳ 5 Minutes Remaining! Please wrap up your code and execute tests.');
+          } else if (remaining === 60) {
+            toast.error('⚠️ 1 Minute Remaining! Auto-submitting soon.');
+          } else if (remaining <= 0) {
+            toast.info('⏱️ Time limit reached! Automatically evaluating your submission.');
+            handleEndInterview();
+          }
+          return next;
+        });
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -512,43 +527,32 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   const handleStartSession = async () => {
     setHasStartedSession(true);
 
-    const systemPrompt = `You are the Lead Technical Interviewer and Principal Software Engineer at ${company.name} conducting "Round 3: Coding Assessment" for the ${role.title} position.
+    const systemPrompt = `You are the Lead Technical Interviewer and Principal Software Engineer at ${company.name} conducting "Round 3: Live Coding & Technical Assessment" for the ${role.title} position.
 
-CANDIDATE CONTEXT:
-${candidateProfileContext || 'Candidate applying for software engineering internship/role.'}
+CURRENT PROBLEM IN CONTEXT (SECTION A):
+- Problem: ${currentProblem.title}
+- Topic: ${currentProblem.topic}
+- Description: ${currentProblem.description.replace(/\n+/g, ' ')}
 
-INTERVIEW STRUCTURE (30–45 MINUTES):
-1. SECTION A: Live Algorithmic Coding (Topic: ${currentProblem.topic}, Problem: ${currentProblem.title})
-   - Ask the candidate to explain their thought process BEFORE typing code.
-   - Prompt them on edge cases (empty arrays, duplicates, large inputs).
-   - Evaluate code correctness, readability, variable naming, and efficiency.
-2. SECTION B: Code Debugging Challenge
-   - Candidate is presented with a buggy snippet (${currentDebugProblem.title}).
-   - Ask: "Where is the bug? Why does it happen? How will you fix and prevent it?"
-   - Evaluate root-cause analysis and code improvement skills.
-3. SECTION C: Practical System Design & Complexity Deep Dive
-   - Discuss practical system design question: "${systemDesignQuestions[0]?.title}".
-   - Evaluate Time & Space complexity ($O(N)$ vs $O(N^2)$, memory bottlenecks).
-   - Ask about scaling, caching, and state management trade-offs.
+SECTION B DEBUGGING PROBLEM:
+- Buggy Problem: ${currentDebugProblem.title}
+- Scenario: ${currentDebugProblem.scenario}
 
-EVALUATION RUBRIC (MINIMUM PASS SCORE: 75%):
-- Correctness & Test Pass Rate (25%)
-- Code Quality & Clean Structure (15%)
-- Problem Solving Logic & Algorithmic Intuition (20%)
-- Debugging & Root Cause Analysis (15%)
-- Practical System Design & Complexity Awareness (15%)
-- Real-time Technical Communication (10%)
+SECTION C SYSTEM DESIGN QUESTION:
+- Design: ${systemDesignQuestions[0]?.title}
+- Prompt: ${systemDesignQuestions[0]?.prompt}
 
-INTERVIEW BEHAVIOR RULES:
-- Be highly professional, collaborative, and encouraging yet rigorous like a FAANG/Tier-1 Tech Lead.
-- Do NOT read out long boilerplate or repetitive introductions.
-- Start directly by welcoming the candidate to Round 3, introducing the first coding challenge (${currentProblem.title}), and inviting them to talk through their initial approach.
-- Give constructive real-time hints if the candidate gets stuck for more than 2 turns.`;
+STRICT ROUND 3 RULES (ABSOLUTE MANDATES):
+1. ONLY FOCUS ON THE CODING PROBLEM, CODE LOGIC, ALGORITHMIC INTUITION, EDGE CASES, TIME/SPACE COMPLEXITY ($O(N)$ Big-O analysis), AND DEBUGGING.
+2. ABSOLUTELY NEVER ask about the candidate's resume, college, education, degree, Newton School of Technology, background, or past projects. Round 1 and Round 2 are ALREADY FINISHED!
+3. NEVER ask "introduce yourself" or "tell me about yourself".
+4. When the candidate explains their logic or asks questions, reply directly and constructively about the algorithm and code.
+5. All speech must strictly be in clear, professional English.`;
 
     try {
       await connect({
         systemPrompt,
-        initialGreeting: `Hello and welcome to Round 3 — Coding Assessment at ${company.name}! Today we will evaluate hands-on problem solving, live debugging, and system complexity. Let's start with Section A. Take a look at the problem on your left: ${currentProblem.title}. Before writing code, walk me through how you'd approach this.`
+        initialGreeting: `Hello and welcome to Round 3 — Coding Assessment at ${company.name}! We will evaluate hands-on problem solving, live debugging, and system complexity. Look at Section A on your screen: ${currentProblem.title}. Before writing code, walk me through how you plan to approach this algorithmically.`
       });
       toast.success('AI Technical Interviewer connected.');
     } catch (err) {
@@ -558,6 +562,21 @@ INTERVIEW BEHAVIOR RULES:
   };
 
   // Run Code Execution
+  // Switch sections and automatically notify Voice AI interviewer
+  const handleSectionChange = async (newSection: CodingSection) => {
+    setCurrentSection(newSection);
+    if (status === LiveStatus.CONNECTED) {
+      if (newSection === 'B_DEBUGGING') {
+        await sendHiddenContext(`Candidate just navigated to Section B: Code Debugging Challenge (${currentDebugProblem.title}). Welcome them to Section B, introduce the bug scenario ("${currentDebugProblem.scenario}"), and ask them to inspect the code to find the root cause.`);
+      } else if (newSection === 'C_SYSTEM_DESIGN') {
+        await sendHiddenContext(`Candidate just navigated to Section C: Practical System Design (${systemDesignQuestions[0]?.title}). Welcome them to Section C, introduce the design prompt ("${systemDesignQuestions[0]?.prompt}"), and ask them to outline their architecture and trade-offs.`);
+      } else if (newSection === 'A_CODING') {
+        await sendHiddenContext(`Candidate navigated back to Section A: Algorithmic Coding (${currentProblem.title}). Ask if they would like to review the algorithm, complexity, or edge cases.`);
+      }
+    }
+  };
+
+  // Run Code Execution & Dynamic Interviewer Follow-ups
   const handleRunCode = async () => {
     setIsRunningCode(true);
     setActiveTab('console');
@@ -569,8 +588,19 @@ INTERVIEW BEHAVIOR RULES:
 
       if (res.passed) {
         toast.success('All test cases passed cleanly!');
+        if (status === LiveStatus.CONNECTED) {
+          if (currentSection === 'A_CODING') {
+            await sendHiddenContext(`Candidate just ran their code for Section A (${currentProblem.title}) and ALL test cases passed! Congratulate them in 1 concise sentence, and proactively ask: 1. To analyze their exact Time & Auxiliary Space Complexity ($O(N)$ Big-O), and 2. What extreme edge cases (empty inputs, duplicates, boundary constraints) could stress or break this logic?`);
+          } else if (currentSection === 'B_DEBUGGING') {
+            await sendHiddenContext(`Candidate just ran their debugging code for Section B (${currentDebugProblem.title}) and ALL test cases passed! Briefly praise their fix in 1 sentence, and ask: What was the root cause of the bug and how does your fix prevent future regression?`);
+          }
+        }
       } else {
         toast.error('Execution encountered test failures or errors.');
+        if (status === LiveStatus.CONNECTED) {
+          const failSummary = res.results.filter(r => !r.passed).map(r => `Input: ${JSON.stringify(r.input)}, Expected: ${JSON.stringify(r.expected)}, Got: ${JSON.stringify(r.actual)}`).slice(0, 1).join('; ');
+          await sendHiddenContext(`Candidate ran their code but tests failed (${failSummary || res.error || 'Syntax or runtime error'}). Give a friendly, constructive 1-sentence hint without giving away the full answer.`);
+        }
       }
     } catch (e: any) {
       setExecutionResult({
@@ -665,7 +695,7 @@ INTERVIEW BEHAVIOR RULES:
         {/* Center: Section Stepper */}
         <div className="hidden md:flex items-center gap-1 bg-zinc-900/90 border border-white/10 rounded-2xl p-1 shadow-inner">
           <button
-            onClick={() => setCurrentSection('A_CODING')}
+            onClick={() => handleSectionChange('A_CODING')}
             className={`px-3 py-1 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
               currentSection === 'A_CODING'
                 ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
@@ -677,7 +707,7 @@ INTERVIEW BEHAVIOR RULES:
           </button>
 
           <button
-            onClick={() => setCurrentSection('B_DEBUGGING')}
+            onClick={() => handleSectionChange('B_DEBUGGING')}
             className={`px-3 py-1 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
               currentSection === 'B_DEBUGGING'
                 ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
@@ -689,7 +719,7 @@ INTERVIEW BEHAVIOR RULES:
           </button>
 
           <button
-            onClick={() => setCurrentSection('C_SYSTEM_DESIGN')}
+            onClick={() => handleSectionChange('C_SYSTEM_DESIGN')}
             className={`px-3 py-1 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
               currentSection === 'C_SYSTEM_DESIGN'
                 ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
@@ -701,11 +731,20 @@ INTERVIEW BEHAVIOR RULES:
           </button>
         </div>
 
-        {/* Right: Timer, AI Indicator & End Interview */}
+        {/* Right: Countdown Timer, AI Indicator & End Interview */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-zinc-300">
-            <Clock className="w-3.5 h-3.5 text-amber-400" />
-            <span>{formatTimer(duration)}</span>
+          <div
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border text-xs font-mono transition-all ${
+              timeLeft <= 300
+                ? 'bg-rose-950/60 border-rose-500/60 text-rose-300 animate-pulse shadow-lg shadow-rose-900/30'
+                : timeLeft <= 600
+                ? 'bg-amber-950/40 border-amber-500/40 text-amber-300'
+                : 'bg-zinc-900 border-white/10 text-zinc-300'
+            }`}
+          >
+            <Clock className={`w-3.5 h-3.5 ${timeLeft <= 300 ? 'text-rose-400' : 'text-amber-400'}`} />
+            <span className="font-bold">{formatTimer(timeLeft)}</span>
+            <span className="text-[10px] text-zinc-500 uppercase font-sans font-bold">Left</span>
           </div>
 
           {hasStartedSession && (
@@ -714,7 +753,7 @@ INTERVIEW BEHAVIOR RULES:
               variant="destructive"
               onClick={handleEndInterview}
               disabled={isEnding}
-              className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl h-8 px-3 shadow-lg shadow-rose-600/20"
+              className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl h-8 px-3 shadow-lg shadow-rose-600/20 cursor-pointer"
             >
               {isEnding ? <RefreshCw className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
               End Assessment
@@ -751,24 +790,29 @@ INTERVIEW BEHAVIOR RULES:
             </div>
 
             <div className="space-y-3 bg-zinc-950/60 border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 leading-relaxed">
-              <div className="font-extrabold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                Assessment Blueprint (30–45 Mins):
+              <div className="font-extrabold text-white flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>Assessment Structure & Rules:</span>
+                </div>
+                <Badge variant="outline" className="bg-rose-500/10 border-rose-500/30 text-rose-300 text-[10px] font-bold">
+                  ⏱️ 45 Min Limit
+                </Badge>
               </div>
               <ul className="space-y-2 pl-2">
                 <li className="flex items-start gap-2">
-                  <span className="text-violet-400 font-bold">1. Section A (Coding):</span> Solve 1–2 algorithmic challenges in Monaco editor with instant test execution.
+                  <span className="text-violet-400 font-bold">1. Section A (Coding):</span> Solve the algorithmic challenge on screen with instant test runs.
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-amber-400 font-bold">2. Section B (Debugging):</span> Analyze deliberate buggy code, explain root cause, and fix it live.
+                  <span className="text-amber-400 font-bold">2. Section B (Debugging):</span> Spot the bug root cause in the snippet and submit a working fix.
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 font-bold">3. Section C (System Design):</span> Voice-only discussion on 1–2 practical system design questions & Big-O complexity.
+                  <span className="text-emerald-400 font-bold">3. Section C (System Design):</span> Discuss practical architecture, latency, and $O(N)$ Big-O trade-offs.
                 </li>
               </ul>
               <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-zinc-400">
                 <span>Pass Threshold: <strong className="text-emerald-400 font-black">≥ 75%</strong></span>
-                <span>Voice AI Evaluation: <strong className="text-white">Active</strong></span>
+                <span>Time Limit: <strong className="text-amber-300 font-black">45:00 Mins</strong></span>
               </div>
             </div>
 
