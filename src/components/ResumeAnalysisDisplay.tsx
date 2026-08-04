@@ -31,32 +31,7 @@ const ResumeAnalysisDisplay: React.FC<ResumeAnalysisDisplayProps> = ({ analysis 
             exit={{ opacity: 0, y: -20 }}
             className="space-y-6"
         >
-            {/* ATS Score */}
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-primary" />
-                        ATS Compatibility Score
-                    </CardTitle>
-                    <CardDescription>How well your resume performs in Applicant Tracking Systems</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <p className={`text-6xl font-bold ${getScoreColor(analysis.ats_score || 0)}`}>
-                                {analysis.ats_score || 0}
-                            </p>
-                            <p className="text-sm text-muted-foreground mt-1">{getScoreLabel(analysis.ats_score || 0)}</p>
-                        </div>
-                        <div className="text-right">
-                            <Badge variant={analysis.ats_score >= 80 ? "default" : analysis.ats_score >= 60 ? "secondary" : "destructive"}>
-                                {getScoreLabel(analysis.ats_score || 0)}
-                            </Badge>
-                        </div>
-                    </div>
-                    <Progress value={analysis.ats_score || 0} className="h-3" />
-                </CardContent>
-            </Card>
+
 
             {/* Keywords */}
             {analysis.keywords && (

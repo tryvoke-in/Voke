@@ -27,28 +27,27 @@ const InterviewAnalytics = ({ userId }: InterviewAnalyticsProps) => {
 
     const loadAnalytics = async () => {
         try {
-            // Fetch all interview sessions
-            const { data: textSessions } = await supabase
-                .from("interview_sessions")
-                .select("*")
-                .eq("user_id", userId)
-                .not("overall_score", "is", null)
-                .order("created_at");
+            const [textRes, videoRes, peerRes] = await Promise.all([
+                supabase.from("interview_sessions").select("*").eq("user_id", userId).order("created_at"),
+                supabase.from("video_interview_sessions").select("*").eq("user_id", userId).order("created_at"),
+                supabase.from("peer_interview_sessions").select("*").or(`host_user_id.eq.${userId},guest_user_id.eq.${userId}`).order("created_at")
+            ]);
 
-            const { data: videoSessions } = await supabase
-                .from("video_interview_sessions")
-                .select("*")
-                .eq("user_id", userId)
-                .not("overall_score", "is", null)
-                .order("created_at");
+            const textSessions = textRes.data || [];
+            const videoSessions = videoRes.data || [];
+            const peerSessions = (peerRes.data || []).filter((p: any) => p.status === 'completed');
+
+            const totalInterviews = textSessions.length + videoSessions.length + peerSessions.length;
 
             const allSessions = [
-                ...(textSessions || []).map(s => ({ ...s, type: "text" })),
-                ...(videoSessions || []).map(s => ({ ...s, type: "video" }))
+                ...textSessions.map(s => ({ ...s, type: "text" })),
+                ...videoSessions.map(s => ({ ...s, type: "video" }))
             ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-            // Calculate score trends
-            const trends = allSessions.map((session, index) => ({
+            // Calculate score trends (scored sessions)
+            const scoredSessions = allSessions.filter(s => s.overall_score !== null && s.overall_score !== undefined && Number(s.overall_score) > 0);
+
+            const trends = scoredSessions.map((session, index) => ({
                 interview: index + 1,
                 score: session.overall_score,
                 date: new Date(session.created_at).toLocaleDateString(),
@@ -61,18 +60,24 @@ const InterviewAnalytics = ({ userId }: InterviewAnalyticsProps) => {
             const typePerformance = [
                 {
                     type: "Voice",
-                    avgScore: textSessions?.filter(s => s.interview_mode === "voice").reduce((acc, s) => acc + s.overall_score, 0) / (textSessions?.filter(s => s.interview_mode === "voice").length || 1) || 0,
-                    count: textSessions?.filter(s => s.interview_mode === "voice").length || 0
+                    avgScore: textSessions.filter(s => s.interview_mode === "voice" && s.overall_score).length > 0
+                        ? Math.round(textSessions.filter(s => s.interview_mode === "voice" && s.overall_score).reduce((acc, s) => acc + s.overall_score, 0) / textSessions.filter(s => s.interview_mode === "voice" && s.overall_score).length)
+                        : 0,
+                    count: textSessions.filter(s => s.interview_mode === "voice").length
                 },
                 {
                     type: "Video",
-                    avgScore: videoSessions?.reduce((acc, s) => acc + s.overall_score, 0) / (videoSessions?.length || 1) || 0,
-                    count: videoSessions?.length || 0
+                    avgScore: videoSessions.filter(s => s.overall_score).length > 0
+                        ? Math.round(videoSessions.filter(s => s.overall_score).reduce((acc, s) => acc + s.overall_score, 0) / videoSessions.filter(s => s.overall_score).length)
+                        : 0,
+                    count: videoSessions.length
                 },
                 {
                     type: "Text",
-                    avgScore: textSessions?.filter(s => !s.interview_mode || s.interview_mode !== "voice").reduce((acc, s) => acc + s.overall_score, 0) / (textSessions?.filter(s => !s.interview_mode || s.interview_mode !== "voice").length || 1) || 0,
-                    count: textSessions?.filter(s => !s.interview_mode || s.interview_mode !== "voice").length || 0
+                    avgScore: textSessions.filter(s => (!s.interview_mode || s.interview_mode !== "voice") && s.overall_score).length > 0
+                        ? Math.round(textSessions.filter(s => (!s.interview_mode || s.interview_mode !== "voice") && s.overall_score).reduce((acc, s) => acc + s.overall_score, 0) / textSessions.filter(s => (!s.interview_mode || s.interview_mode !== "voice") && s.overall_score).length)
+                        : 0,
+                    count: textSessions.filter(s => !s.interview_mode || s.interview_mode !== "voice").length
                 }
             ];
 
@@ -96,18 +101,54 @@ const InterviewAnalytics = ({ userId }: InterviewAnalyticsProps) => {
                 setSixQEvolution(evolution);
             }
 
-            // Calculate stats
-            const totalInterviews = allSessions.length;
-            const avgScore = allSessions.reduce((acc, s) => acc + s.overall_score, 0) / (totalInterviews || 1);
-            const bestScore = Math.max(...allSessions.map(s => s.overall_score), 0);
-            const improvementRate = allSessions.length > 1
-                ? ((allSessions[allSessions.length - 1].overall_score - allSessions[0].overall_score) / allSessions[0].overall_score) * 100
-                : 0;
+            // Calculate platform-wide average score
+            let totalScore = 0;
+            let scoredCount = 0;
+
+            textSessions.forEach(s => {
+                if (s.overall_score !== null && s.overall_score !== undefined && Number(s.overall_score) > 0) {
+                    totalScore += Number(s.overall_score);
+                    scoredCount++;
+                }
+            });
+
+            videoSessions.forEach(s => {
+                if (s.overall_score !== null && s.overall_score !== undefined && Number(s.overall_score) > 0) {
+                    totalScore += Number(s.overall_score);
+                    scoredCount++;
+                }
+            });
+
+            peerSessions.forEach((p: any) => {
+                const myRating = p.peer_interview_ratings?.find((r: any) => r.rated_user_id === userId);
+                if (myRating && myRating.overall_score) {
+                    totalScore += Number(myRating.overall_score) * 20;
+                    scoredCount++;
+                }
+            });
+
+            const avgScore = scoredCount > 0 ? Math.round(totalScore / scoredCount) : 0;
+            const allScores = [...textSessions.map(s => s.overall_score), ...videoSessions.map(s => s.overall_score)].filter((sc): sc is number => Boolean(sc && sc > 0));
+            const bestScore = allScores.length > 0 ? Math.max(...allScores, 0) : 0;
+
+            let improvementRate = 0;
+            if (scoredSessions.length > 1) {
+                const firstScore = scoredSessions[0]?.overall_score || 0;
+                const latestScore = scoredSessions[scoredSessions.length - 1]?.overall_score || 0;
+                if (firstScore > 0) {
+                    improvementRate = Math.round(((latestScore - firstScore) / firstScore) * 100);
+                } else {
+                    improvementRate = latestScore - firstScore;
+                }
+            }
+            if (!isFinite(improvementRate) || isNaN(improvementRate)) {
+                improvementRate = 0;
+            }
 
             setStats({
                 totalInterviews,
-                avgScore: Math.round(avgScore),
-                improvementRate: Math.round(improvementRate),
+                avgScore,
+                improvementRate,
                 bestScore
             });
 

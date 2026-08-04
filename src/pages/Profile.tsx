@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Brain, LogOut, Upload, FileText, TrendingUp, Target, Award, Calendar,
   User, Briefcase, Activity, Sparkles, MessageSquare, BarChart3,
-  Github, Code, Terminal, Zap, Shield, Crown, ChevronRight, Settings, Camera
+  Github, Code, Terminal, Zap, Shield, Crown, ChevronRight, Settings, Camera, Check
 } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -222,33 +222,55 @@ const Profile = () => {
 
   const loadStats = async (userId: string) => {
     try {
-      const { data: sessions } = await supabase
-        .from("interview_sessions")
-        .select("*")
-        .eq("user_id", userId);
+      const [textRes, videoRes, peerRes] = await Promise.all([
+        supabase.from("interview_sessions").select("overall_score, status, completed_at").eq("user_id", userId),
+        supabase.from("video_interview_sessions").select("overall_score, status, completed_at").eq("user_id", userId),
+        supabase.from("peer_interview_sessions").select("*").or(`host_user_id.eq.${userId},guest_user_id.eq.${userId}`)
+      ]);
 
-      const { data: videoSessions } = await supabase
-        .from("video_interview_sessions")
-        .select("overall_score")
-        .eq("user_id", userId)
-        .not("overall_score", "is", null);
+      const text = textRes.data || [];
+      const video = videoRes.data || [];
+      const peer = (peerRes.data || []).filter((p: any) => p.status === 'completed');
 
-      const { data: peerSessions } = await supabase
-        .from("peer_interview_sessions")
-        .select("*")
-        .or(`host_user_id.eq.${userId},guest_user_id.eq.${userId}`);
+      const totalInterviews = text.length + video.length + peer.length;
+      
+      const completedSessions = 
+        text.filter(s => s.status === 'completed' || s.completed_at || (s.overall_score !== null && s.overall_score > 0)).length +
+        video.filter(s => s.status === 'completed' || s.completed_at || (s.overall_score !== null && s.overall_score > 0)).length +
+        peer.length;
 
-      const totalInterviews = (sessions?.length || 0) + (videoSessions?.length || 0) + (peerSessions?.filter((p: any) => p.status === 'completed').length || 0);
-      const completedSessions = sessions?.filter(s => s.status === "completed").length || 0;
-      const avgScore = videoSessions?.length
-        ? videoSessions.reduce((acc, s) => acc + s.overall_score, 0) / videoSessions.length
-        : 0;
+      let totalScore = 0;
+      let scoredCount = 0;
+
+      text.forEach(s => {
+        if (s.overall_score !== null && s.overall_score !== undefined && Number(s.overall_score) > 0) {
+          totalScore += Number(s.overall_score);
+          scoredCount++;
+        }
+      });
+
+      video.forEach(s => {
+        if (s.overall_score !== null && s.overall_score !== undefined && Number(s.overall_score) > 0) {
+          totalScore += Number(s.overall_score);
+          scoredCount++;
+        }
+      });
+
+      peer.forEach((p: any) => {
+        const myRating = p.peer_interview_ratings?.find((r: any) => r.rated_user_id === userId);
+        if (myRating && myRating.overall_score) {
+          totalScore += Number(myRating.overall_score) * 20;
+          scoredCount++;
+        }
+      });
+
+      const averageScore = scoredCount > 0 ? Math.round(totalScore / scoredCount) : 0;
 
       setStats({
         totalInterviews,
         completedSessions,
-        averageScore: Math.round(avgScore),
-        peerSessions: peerSessions?.length || 0,
+        averageScore,
+        peerSessions: peer.length,
       });
     } catch (error: any) {
       console.error("Error loading stats:", error);
@@ -669,39 +691,73 @@ const Profile = () => {
                     </div>
 
                     {/* Social/External Links */}
-                    <div className="mt-8 pt-6 border-t border-border/50 grid grid-cols-2 gap-3">
-                      <button 
-                        className={`w-full border justify-start h-10 px-3.5 py-2 inline-flex items-center gap-2 rounded-xl text-xs font-bold transition-all ${
-                          formData.github_url || profile?.github_url
-                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 shadow-sm hover:bg-emerald-500/20'
-                            : 'border-border/50 bg-secondary/20 hover:bg-secondary/40 text-foreground'
-                        }`} 
-                        onClick={() => window.open(formData.github_url || profile?.github_url || 'https://github.com', '_blank')}
-                      >
-                        <Github className={`w-4 h-4 ${formData.github_url || profile?.github_url ? 'text-emerald-400' : ''}`} />
-                        <span>GitHub</span>
-                        {(formData.github_url || profile?.github_url) && (
-                          <span className="ml-auto text-[10px] font-black bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">
-                            ✓ Connected
-                          </span>
-                        )}
-                      </button>
-                      <button 
-                        className="w-full border border-border/50 bg-secondary/20 hover:bg-secondary/40 text-foreground hover:text-foreground justify-start h-10 px-4 py-2 inline-flex items-center gap-2 rounded-md text-sm font-medium transition-colors"
-                        onClick={() => {
-                          if (profile.leetcode_id) {
-                            const url = profile.leetcode_id.includes('http') 
-                              ? profile.leetcode_id 
-                              : `https://leetcode.com/u/${profile.leetcode_id}/`;
-                            window.open(url, '_blank');
-                          } else {
-                            window.open('https://leetcode.com', '_blank');
-                          }
-                        }}
-                      >
-                        <Terminal className="w-4 h-4" />
-                        LeetCode
-                      </button>
+                    <div className="mt-6 pt-5 border-t border-border/50 space-y-2.5">
+                      <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-0.5">
+                        Integrations
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {/* GitHub Card */}
+                        <button 
+                          className={`w-full h-11 px-3 py-2 rounded-xl border flex items-center justify-between transition-all group ${
+                            formData.github_url || profile?.github_url
+                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15 hover:border-emerald-500/50 shadow-sm'
+                              : 'border-slate-800 bg-[#0b0f19]/70 text-slate-400 hover:text-slate-200 hover:bg-[#121827] hover:border-slate-700'
+                          }`} 
+                          onClick={() => window.open(formData.github_url || profile?.github_url || 'https://github.com', '_blank')}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Github className={`w-4 h-4 shrink-0 ${formData.github_url || profile?.github_url ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                            <span className="text-xs font-semibold text-slate-200 truncate">GitHub</span>
+                          </div>
+                          
+                          {(formData.github_url || profile?.github_url) ? (
+                            <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              <span>Connected</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-300 shrink-0">
+                              + Connect
+                            </span>
+                          )}
+                        </button>
+
+                        {/* LeetCode Card */}
+                        <button 
+                          className={`w-full h-11 px-3 py-2 rounded-xl border flex items-center justify-between transition-all group ${
+                            profile?.leetcode_id
+                              ? 'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/15 hover:border-amber-500/50 shadow-sm'
+                              : 'border-slate-800 bg-[#0b0f19]/70 text-slate-400 hover:text-slate-200 hover:bg-[#121827] hover:border-slate-700'
+                          }`}
+                          onClick={() => {
+                            if (profile?.leetcode_id) {
+                              const url = profile.leetcode_id.includes('http') 
+                                ? profile.leetcode_id 
+                                : `https://leetcode.com/u/${profile.leetcode_id}/`;
+                              window.open(url, '_blank');
+                            } else {
+                              window.open('https://leetcode.com', '_blank');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Terminal className={`w-4 h-4 shrink-0 ${profile?.leetcode_id ? 'text-amber-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                            <span className="text-xs font-semibold text-slate-200 truncate">LeetCode</span>
+                          </div>
+
+                          {profile?.leetcode_id ? (
+                            <span className="text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                              <span>Connected</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-300 shrink-0">
+                              + Connect
+                            </span>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -1087,8 +1143,6 @@ const Profile = () => {
                         )}
                       </CardContent>
                     </Card>
-
-                    <ResumeAnalyzer userId={profile?.id || ""} resumeUrl={profile?.resume_url} />
                   </TabsContent>
 
                   {/* ANALYTICS TAB */}

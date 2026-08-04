@@ -170,7 +170,7 @@ const ResumeAnalyzer = ({ userId, resumeUrl }: ResumeAnalyzerProps) => {
                                                 {new Date(item.created_at).toLocaleDateString()}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
-                                                ATS Score: {item.ats_score}%
+                                                Resume Feedback Report
                                             </p>
                                         </div>
                                     </div>
