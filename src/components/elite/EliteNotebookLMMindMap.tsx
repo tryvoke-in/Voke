@@ -51,6 +51,27 @@ export const EliteNotebookLMMindMap: React.FC<EliteNotebookLMMindMapProps> = ({
 
   // Zoom & Scale control (Defaults to 1.0 = 100% on initial load)
   const [zoomLevel, setZoomLevel] = useState<number>(1.0);
+  const [isDevUnlocked, setIsDevUnlocked] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('voke_dev_unlock_all_rounds') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const handleDevUnlockChange = () => {
+      try {
+        setIsDevUnlocked(localStorage.getItem('voke_dev_unlock_all_rounds') === 'true');
+      } catch {}
+    };
+    window.addEventListener('voke-dev-unlock-change', handleDevUnlockChange);
+    window.addEventListener('storage', handleDevUnlockChange);
+    return () => {
+      window.removeEventListener('voke-dev-unlock-change', handleDevUnlockChange);
+      window.removeEventListener('storage', handleDevUnlockChange);
+    };
+  }, []);
 
   const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.1, 1.25));
   const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.1, 0.5));
@@ -58,18 +79,20 @@ export const EliteNotebookLMMindMap: React.FC<EliteNotebookLMMindMapProps> = ({
 
   // Dynamic Camera Auto-Focus & Smooth Scroll when user completes a step
   useEffect(() => {
-    if (!canvasRef.current) return;
-
-    if (selectedType && selectedCompany && selectedRole) {
-      canvasRef.current.scrollTo({ left: 1050, behavior: 'smooth' });
-    } else if (selectedType && selectedCompany) {
-      canvasRef.current.scrollTo({ left: 550, behavior: 'smooth' });
-    } else if (selectedType) {
-      canvasRef.current.scrollTo({ left: 220, behavior: 'smooth' });
-    } else {
-      canvasRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-    }
-  }, [selectedType, selectedCompany, selectedRole]);
+    const timer = setTimeout(() => {
+      if (!canvasRef.current) return;
+      if (selectedType && selectedCompany && selectedRole) {
+        canvasRef.current.scrollTo({ left: 1200, behavior: 'smooth' });
+      } else if (selectedType && selectedCompany) {
+        canvasRef.current.scrollTo({ left: 550, behavior: 'smooth' });
+      } else if (selectedType) {
+        canvasRef.current.scrollTo({ left: 220, behavior: 'smooth' });
+      } else {
+        canvasRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+      }
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [selectedType, selectedCompany, selectedRole, rounds]);
 
   const passedCount = progress?.rounds.filter(r => r.status === 'passed').length || 0;
 
@@ -367,20 +390,27 @@ export const EliteNotebookLMMindMap: React.FC<EliteNotebookLMMindMapProps> = ({
                   transition={{ duration: 0.35, ease: "easeOut" }}
                   className="flex flex-col gap-3.5 shrink-0 z-10 min-w-[300px] md:min-w-[340px]"
                 >
-                  <div className="text-[11px] font-mono font-extrabold text-amber-400 uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4" /> Step 4 • {selectedCompany.name} Pipeline ({passedCount}/4 Cleared)
+                  <div className="text-[11px] font-mono font-extrabold text-amber-400 uppercase tracking-wider mb-0.5 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4" /> Step 4 • {selectedCompany.name} Pipeline ({passedCount}/4 Cleared)
+                    </div>
+                    {isDevUnlocked && (
+                      <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold">
+                        DEV UNLOCKED
+                      </span>
+                    )}
                   </div>
 
                   {rounds.map((roundDef) => {
                     const roundProgress = progress?.rounds.find(r => r.roundNumber === roundDef.roundNumber) || {
-                      status: roundDef.roundNumber === 1 ? 'unlocked' : 'locked',
+                      status: (roundDef.roundNumber === 1 || isDevUnlocked) ? 'unlocked' : 'locked',
                       attempts: 0
                     };
 
                     const isPassed = roundProgress.status === 'passed';
                     const isFailed = roundProgress.status === 'failed';
-                    const isUnlocked = roundProgress.status === 'unlocked';
-                    const isLocked = roundProgress.status === 'locked';
+                    const isUnlocked = !isPassed && (isDevUnlocked || roundProgress.status === 'unlocked' || roundDef.roundNumber === 1);
+                    const isLocked = !isDevUnlocked && roundProgress.status === 'locked' && roundDef.roundNumber > 1 && !isPassed && !isFailed;
 
                     return (
                       <div

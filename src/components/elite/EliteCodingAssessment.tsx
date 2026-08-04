@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
 import { useGroqVoice } from '@/hooks/useGroqVoice';
+import { LiveStatus } from '@/types/voice';
 import { updateRoundResultAsync, RoundFeedbackDetails } from '@/utils/eliteInterviewStorage';
 import { executeCode, ExecutionResult } from '@/utils/codeExecutor';
 import Editor from '@monaco-editor/react';
@@ -75,6 +76,7 @@ interface DebuggingProblemDefinition {
   buggyCode: string;
   expectedBehavior: string;
   hints: string[];
+  testCases?: { input: string; expected: string }[];
 }
 
 interface SystemDesignQuestion {
@@ -265,23 +267,37 @@ function createAsyncFetcher(fetchFn, ttlMs = 5000) {
   return async function(key) {
     const now = Date.now();
     
-    // Bug 1: Checks cache but doesn't check expiration correctly
-    if (cache[key]) {
+    // Check cache with TTL
+    if (cache[key] && (now - cache[key].timestamp < ttlMs)) {
       return cache[key].data;
     }
 
-    // Bug 2: Missing race condition guard for concurrent requests
-    const res = await fetchFn(key);
-    cache[key] = { data: res, timestamp: now };
-    
-    return res;
+    // Deduplicate in-flight promises
+    if (inFlight[key]) {
+      return inFlight[key];
+    }
+
+    inFlight[key] = (async () => {
+      try {
+        const res = await fetchFn(key);
+        cache[key] = { data: res, timestamp: Date.now() };
+        return res;
+      } finally {
+        delete inFlight[key];
+      }
+    })();
+
+    return inFlight[key];
   };
 }`,
       expectedBehavior: '1. Handle TTL expiry properly. 2. Deduplicate simultaneous in-flight promises so multiple concurrent calls share 1 network request.',
       hints: [
-        'Notice how \`now\` is captured before the async fetch finishes.',
+        'Notice how `now` is captured before the async fetch finishes.',
         'What happens when 5 requests for the same key arrive at millisecond 0?',
-        'Look into storing the pending Promise in \`inFlight\` map.'
+        'Look into storing the pending Promise in `inFlight` map.'
+      ],
+      testCases: [
+        { input: 'async (k) => "result_" + k, 5000', expected: 'function' }
       ]
     },
     {
@@ -292,23 +308,23 @@ function createAsyncFetcher(fetchFn, ttlMs = 5000) {
       buggyCode: `// BUGGY CODE: Locate the boundary and index calculation bugs
 function searchRotatedArray(nums, target) {
   let low = 0;
-  let high = nums.length; // Bug 1: Out of bounds index
+  let high = nums.length - 1; // High boundary fix
 
   while (low <= high) {
-    let mid = Math.floor((low + high) / 2); // Bug 2: Potential integer overflow in some environments
+    let mid = Math.floor(low + (high - low) / 2);
 
     if (nums[mid] === target) return mid;
 
     // Check if left half is sorted
     if (nums[low] <= nums[mid]) {
       if (target >= nums[low] && target < nums[mid]) {
-        high = mid; // Bug 3: Infinite loop when high is not decremented
+        high = mid - 1;
       } else {
         low = mid + 1;
       }
     } else {
       if (target > nums[mid] && target <= nums[high]) {
-        low = mid; // Bug 4: Infinite loop when low is not incremented
+        low = mid + 1;
       } else {
         high = mid - 1;
       }
@@ -317,14 +333,76 @@ function searchRotatedArray(nums, target) {
 
   return -1;
 }`,
-      expectedBehavior: 'High boundary should be \`nums.length - 1\`, index adjustment must decrement \`high = mid - 1\` and increment \`low = mid + 1\`.',
+      expectedBehavior: 'High boundary should be `nums.length - 1`, index adjustment must decrement `high = mid - 1` and increment `low = mid + 1`.',
       hints: [
-        'Trace what happens when array is \`[3, 1]\` and target is \`1\`.',
-        'Verify \`high\` index initialization.'
+        'Trace what happens when array is `[3, 1]` and target is `1`.',
+        'Verify `high` index initialization.'
+      ],
+      testCases: [
+        { input: '[4, 5, 6, 7, 0, 1, 2], 0', expected: '4' },
+        { input: '[4, 5, 6, 7, 0, 1, 2], 3', expected: '-1' },
+        { input: '[1], 0', expected: '-1' },
+        { input: '[3, 1], 1', expected: '1' }
       ]
     }
   ]
 };
+
+const DEFAULT_SYSTEM_DESIGN_STARTER = `// Language: JavaScript
+// Sliding Window Rate Limiter with Redis
+const Redis = require("ioredis");
+const redis = new Redis();
+
+/**
+ * Sliding Window Rate Limiter
+ * @param {string} key - Unique key for rate limiting (e.g., user ID or IP)
+ * @param {number} limit - Maximum number of requests allowed
+ * @param {number} windowSize - Sliding window size in seconds
+ * @returns {boolean} - true if allowed, false if rate-limited
+ */
+async function slidingWindowRateLimiter(key, limit, windowSize) {
+  const luaScript = \`
+    local key = KEYS[1]
+    local limit = tonumber(ARGV[1])
+    local window = tonumber(ARGV[2])
+    local now = tonumber(ARGV[3])
+
+    -- Remove outdated timestamps
+    redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
+
+    -- Count current requests
+    local count = redis.call('ZCARD', key)
+    
+    if count < limit then
+        -- Add new timestamp
+        redis.call('ZADD', key, now, now)
+        -- Set expiry to auto-cleanup stale keys
+        redis.call('EXPIRE', key, window)
+        return 1
+    else
+        return 0
+    end
+  \`;
+
+  const now = Math.floor(Date.now() / 1000);
+  const allowed = await redis.eval(luaScript, 1, key, limit, windowSize, now);
+  return allowed === 1;
+}
+
+// Verification Example Execution
+(async () => {
+  const userKey = "user:123";
+  const limit = 5;       // Max 5 requests
+  const windowSize = 60; // Per 60 seconds
+
+  console.log("Simulating 6 requests within window...");
+  for (let i = 1; i <= 6; i++) {
+    const allowed = await slidingWindowRateLimiter(userKey, limit, windowSize);
+    console.log(\`Request \${i}: \${allowed ? "Allowed ✅" : "Rate limit exceeded ❌"}\`);
+  }
+
+  await redis.quit();
+})();`;
 
 const SECTION_C_SYSTEM_DESIGN: Record<string, SystemDesignQuestion[]> = {
   frontend: [
@@ -495,6 +573,7 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
 
   const [code, setCode] = useState<string>(currentProblem.starterCode[selectedLanguage] || '');
   const [debugCode, setDebugCode] = useState<string>(currentDebugProblem.buggyCode);
+  const [systemDesignCode, setSystemDesignCode] = useState<string>(DEFAULT_SYSTEM_DESIGN_STARTER);
   const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
   const [isRunningCode, setIsRunningCode] = useState(false);
   const [activeTab, setActiveTab] = useState<'problem' | 'testcases' | 'console'>('problem');
@@ -580,99 +659,99 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   const handleStartSession = async () => {
     setHasStartedSession(true);
 
-    const systemPrompt = `You are a Principal Software Engineer at ${company.name} conducting Round 3: Live Coding & Technical Assessment for the ${role.title} position.
+    const systemPrompt = `You are a strict FAANG-tier Technical Interviewer at ${company.name} conducting ROUND 3: LIVE CODING ASSESSMENT for the ${role.title} role.
 
-CURRENT PROBLEMS:
-- Problem 1 (Section A): ${problems[0].title} — ${problems[0].topic}
-- Problem 2 (Section A): ${problems[1]?.title} — ${problems[1]?.topic}
-- Debug Problem (Section B): ${currentDebugProblem.title} — ${currentDebugProblem.scenario}
-- System Design (Section C): ${systemDesignQuestions[0]?.title}
+=== ROUND 3 — ABSOLUTE MANDATORY RULES (NO EXCEPTIONS) ===
 
-ABSOLUTE RULES — FOLLOW EXACTLY:
-1. NEVER ask about resume, college, education, degree, background, or projects from Round 1/2. EVER.
-2. NEVER ask "tell me about yourself" or "introduce yourself".
-3. ALL responses ONLY in English.
-4. APPROACH PHASE: Ask the candidate to explain their algorithmic approach before they code. Verify if their approach is relevant to the problem (does not need to be perfect — just related). When you think the approach is valid, say exactly: "Great approach! The editor is now unlocked — go ahead and code your solution."
-5. CODING PHASE: The candidate is now coding. Be COMPLETELY SILENT. Do NOT ask any question or make any remark while they are coding.
-6. POST-RUN PHASE: ONLY after the candidate runs code and tests execute, ask: (a) Time Complexity Big-O, (b) Space Complexity, (c) Edge cases that could break the code, (d) Can it be optimized further?
-7. Keep all responses concise — 1 to 2 sentences maximum.`;
+RULE 1 — ONE QUESTION ONLY AT START:
+When the session starts, ask ONLY this one question: "What is your approach to solve this problem?" — Nothing else. No intro. No small talk.
+
+RULE 2 — FORBIDDEN TOPICS (NEVER ASK ABOUT THESE):
+  - Resume, projects, college, degree, education, school, background
+  - "Tell me about yourself" or "Introduce yourself"
+  - Technologies learned, previous experience, personal history
+  - ANY topic not directly related to the coding problem on screen
+
+RULE 3 — STRICT APPROACH VERIFICATION (MINIMUM 75% DEPTH & ACCURACY REQUIRED):
+  - Candidate MUST explain their step-by-step algorithmic logic (e.g. data structure/pointers used, loop mechanics, how conditions are checked/updated, and how the result is returned).
+  - If the candidate only gives a superficial, brief, or 1-word answer (e.g. "I will use hash map" or "two pointers"): DO NOT UNLOCK. Ask a probing follow-up: "That is a good starting concept, but please explain step-by-step how your algorithm will iterate and handle the problem."
+  - When the candidate provides a clear, in-depth algorithmic explanation (at least 75% accurate and complete), say EXACTLY:
+  "[APPROACH_VERIFIED] Excellent explanation! The code editor is now unlocked — go ahead and start coding."
+  - If approach is completely wrong or empty, give a 1-sentence hint and ask them to refine their approach.
+
+RULE 4 — SILENCE DURING CODING:
+  - After saying [APPROACH_VERIFIED], go COMPLETELY SILENT. ZERO responses. ZERO questions.
+  - Do NOT speak until the candidate runs their code and tests execute.
+
+RULE 5 — POST-RUN QUESTIONS (only after code runs):
+  - Ask about: Time Complexity, Space Complexity, Edge Cases, Optimization
+  - Ask ONE question at a time only
+
+RULE 6 — LANGUAGE: Respond ONLY in clear English. No other language.
+
+PROBLEM ON SCREEN (Section A - Problem 1): ${problems[0].title} (${problems[0].topic})
+Description summary: ${problems[0].description?.substring(0, 200)}...
+
+Section B: ${currentDebugProblem.title}
+Section C: ${systemDesignQuestions[0]?.title}`;
 
     try {
-      // Start in silent mode — AI listens but stays quiet until approach phase
       setIsSilentMode(false);
       setPhase('approach_explain');
       setIsEditorUnlocked(false);
       await connect({
         systemPrompt,
-        initialGreeting: `Welcome to Round 3 — Coding Assessment at ${company.name}! Problem 1 is on your screen: "${problems[0].title}". Before writing code, please explain your algorithmic approach — what data structure and strategy will you use?`
+        initialGreeting: `Welcome to Round 3 at ${company.name}! Problem 1 is displayed on your screen: "${problems[0].title}". Please explain your in-depth algorithmic approach — how will you solve this step-by-step?`
       });
-      toast.success('AI Interviewer connected. Explain your approach in voice or scratch pad to unlock the editor.');
+      toast.success('Round 3 started. Explain your approach to unlock the editor.');
     } catch (err) {
       console.error('[EliteCodingAssessment] Voice connect error:', err);
-      toast.error('Could not connect to Voice AI. Manually submit your approach to start coding.');
+      toast.error('Voice AI unavailable. Speak your approach when reconnected.');
     }
   };
 
-  // Explicit handler for submitting & verifying approach from scratch pad
-  const handleVerifyApproach = async () => {
-    if (!scratchPadText.trim()) {
-      toast.error('Please write or speak your approach in the scratch pad first!');
-      return;
-    }
-    setIsEditorUnlocked(true);
-    setApproachVerified(true);
-    setPhase('coding');
-    setIsSilentMode(true); // AI goes completely silent while student is coding
-    toast.success('✅ Approach verified! Editor is now unlocked. Code your solution.');
-    if (status === LiveStatus.CONNECTED) {
-      await sendHiddenContext(`Candidate submitted their algorithmic approach: "${scratchPadText}". Approach verified! Editor is now unlocked. Go COMPLETELY SILENT while they code.`);
-    }
-  };
-
-  const handleVerifyDebugApproach = async () => {
-    if (!debugScratchPad.trim()) {
-      toast.error('Please write or speak your debugging approach in the scratch pad first!');
-      return;
-    }
-    setIsDebugEditorUnlocked(true);
-    setDebugPhase('coding');
-    setIsSilentMode(true); // AI goes silent while fixing bug
-    toast.success('✅ Debug approach verified! Editor unlocked. Fix the bug.');
-    if (status === LiveStatus.CONNECTED) {
-      await sendHiddenContext(`Candidate submitted debugging approach: "${debugScratchPad}". Approach verified! Editor unlocked. Go COMPLETELY SILENT while they fix code.`);
-    }
-  };
-
-  // Watch AI logs for approach verification signal (STRICT: Ignore initial greeting!)
+  // Watch logs for approach verification (AI-ONLY & 75% depth verification)
   useEffect(() => {
     if (phase !== 'approach_explain' || !hasStartedSession) return;
-    if (logs.length <= 1) return; // CRITICAL: Never unlock on initial greeting!
-    const lastAiMsg = logs[logs.length - 1];
-    if (!lastAiMsg || lastAiMsg.role !== 'assistant' || lastAiMsg.id === 'init') return;
-    const text = lastAiMsg.text || '';
-    const textLower = text.toLowerCase();
+    if (logs.length <= 1) return; // Ignore initial greeting
     
-    // Check for explicit verification phrase or tag
-    if (text.includes('[APPROACH_VERIFIED]') || (textLower.includes('great approach') && textLower.includes('unlocked')) || textLower.includes('editor is now unlocked')) {
+    const lastAiMsg = logs.slice().reverse().find(m => m.role === 'assistant' && m.id !== 'init');
+    const aiText = (lastAiMsg?.text || '').toLowerCase();
+
+    // Check AI output for explicit verification signal or approval
+    const aiApproved =
+      aiText.includes('[approach_verified]') ||
+      aiText.includes('editor is now unlocked') ||
+      aiText.includes('editor now unlocked') ||
+      aiText.includes('code editor is now unlocked') ||
+      aiText.includes('go ahead and start coding') ||
+      aiText.includes('go ahead and code') ||
+      aiText.includes('start coding now') ||
+      aiText.includes('you can start coding') ||
+      aiText.includes('editor unlocked') ||
+      (aiText.includes('unlocked') && (aiText.includes('editor') || aiText.includes('code')));
+
+    if (aiApproved) {
       setIsEditorUnlocked(true);
       setApproachVerified(true);
       setPhase('coding');
-      setIsSilentMode(true); // AI goes completely silent during coding
-      toast.success('✅ Approach verified! Editor is now unlocked. Code your solution.');
+      setIsSilentMode(true);
+      toast.success('✅ Algorithmic approach verified! Code editor is unlocked.');
     }
   }, [logs, phase, hasStartedSession]);
 
-  // When switching to Problem 2 — reset phase gate
+  // Problem 2 phase reset — Editor is locked, AI asks for in-depth approach
   const handleMoveToProblem2 = async () => {
     setSelectedProblemIndex(1);
     setPhase('approach_explain');
     setIsEditorUnlocked(false);
     setApproachVerified(false);
+    setCode(problems[1]?.starterCode[selectedLanguage] || problems[1]?.starterCode['javascript'] || '');
     setScratchPadText('');
     setExecutionResult(null);
-    setIsSilentMode(false); // Re-enable AI for approach phase
+    setIsSilentMode(false);
     if (status === LiveStatus.CONNECTED) {
-      await sendHiddenContext(`The candidate has completed Problem 1. Now introduce Problem 2: "${problems[1]?.title}" (${problems[1]?.topic}). Ask them to explain their approach to solving this new problem before they start coding. Remember: when they give a valid relevant approach, say exactly "Great approach! The editor is now unlocked — go ahead and code your solution."`);
+      await sendHiddenContext(`PROBLEM CHANGE: Candidate moved to Problem 2: "${problems[1]?.title}" (${problems[1]?.topic}). Introduce the problem briefly and ask ONLY: "Welcome to Problem 2: ${problems[1]?.title}! Please explain your in-depth algorithmic approach before writing code." Do NOT unlock the editor until they explain their step-by-step approach thoroughly (>= 75% depth). When they provide a detailed step-by-step explanation, say: "[APPROACH_VERIFIED] Excellent explanation! The code editor is now unlocked — go ahead and start coding."`);
     }
   };
 
@@ -711,7 +790,13 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
 
   // Run Code Execution — re-enables AI speech for post-run follow-ups
   const handleRunCode = async () => {
-    const editorActive = currentSection === 'A_CODING' ? isEditorUnlocked : isDebugEditorUnlocked;
+    const editorActive =
+      currentSection === 'A_CODING'
+        ? isEditorUnlocked
+        : currentSection === 'B_DEBUGGING'
+        ? isDebugEditorUnlocked
+        : true;
+
     if (!editorActive) {
       toast.error('Explain your approach to the interviewer first to unlock the editor.');
       return;
@@ -719,33 +804,56 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
     setIsRunningCode(true);
     setActiveTab('console');
     try {
-      const activeCode = currentSection === 'A_CODING' ? code : debugCode;
-      const res = await executeCode(selectedLanguage, activeCode);
+      const activeCode =
+        currentSection === 'A_CODING'
+          ? code
+          : currentSection === 'B_DEBUGGING'
+          ? debugCode
+          : systemDesignCode;
+
+      const activeTestCases =
+        currentSection === 'A_CODING'
+          ? currentProblem.testCases
+          : currentSection === 'B_DEBUGGING'
+          ? currentDebugProblem.testCases
+          : undefined;
+
+      const res = await executeCode(activeCode, selectedLanguage, undefined, undefined, undefined, activeTestCases);
       setExecutionResult(res);
 
       if (res.passed) {
-        toast.success('All test cases passed!');
+        toast.success(
+          currentSection === 'C_SYSTEM_DESIGN'
+            ? '✨ System design execution verified!'
+            : 'All test cases passed!'
+        );
         // Re-enable AI voice for post-run questions
         setIsSilentMode(false);
         if (currentSection === 'A_CODING') {
           setPhase('followup');
           if (status === LiveStatus.CONNECTED) {
             const isQ2 = selectedProblemIndex === 1;
-            await sendHiddenContext(`Candidate ran code for "${currentProblem.title}" and ALL tests PASSED. Now ask ONLY these in sequence (1 question at a time): 1. What is the exact Time Complexity Big-O? 2. What is the Auxiliary Space Complexity? 3. What edge cases could break this solution? 4. Can this be further optimized?${!isQ2 ? ' After they answer, tell them to move to Problem 2.' : ' After they answer, tell them to move to Section B Debugging.'}`);
+            await sendHiddenContext(`Candidate ran code for "${currentProblem.title}" and ALL test cases PASSED successfully! You are now in the post-solution follow-up phase. Speak to the candidate and ask ONLY this exact first question: "Great work! All test cases passed. What is the exact Time Complexity Big-O of your solution?" After they answer, proceed to ask: (2) Auxiliary Space Complexity, (3) Edge cases, (4) Optimizations.${!isQ2 ? ' Then instruct them to click Next Problem.' : ' Then instruct them to move to Section B Debugging.'} Never ask any resume or background questions.`);
           }
         } else if (currentSection === 'B_DEBUGGING') {
           setDebugPhase('followup');
           if (status === LiveStatus.CONNECTED) {
             await sendHiddenContext(`Candidate fixed "${currentDebugProblem.title}" and ALL tests PASSED. Ask: 1. What was the exact root cause of each bug? 2. How does your fix prevent future regression? 3. Any edge case that could still fail? After answering, tell them to move to Section C.`);
           }
+        } else if (currentSection === 'C_SYSTEM_DESIGN') {
+          if (status === LiveStatus.CONNECTED) {
+            await sendHiddenContext(`Candidate ran their System Design implementation successfully. Ask: 1. How does your design handle race conditions across multiple Redis nodes? 2. What fallback or degradation strategy will you use if Redis experiences high latency? 3. How does this scale to 100,000 req/sec?`);
+          }
         }
       } else {
-        toast.error('Tests failed. Check console for details.');
+        toast.error('Execution / tests failed. Check console for details.');
         // Let AI give a hint — briefly re-enable
         setIsSilentMode(false);
         if (status === LiveStatus.CONNECTED) {
-          const failSummary = res.results.filter(r => !r.passed).map(r => `Expected: ${r.expected}, Got: ${r.actual}`).slice(0, 1).join('; ');
-          await sendHiddenContext(`Candidate's code for "${currentProblem.title}" failed tests (${failSummary || res.error || 'runtime error'}). Give ONE short constructive hint — do NOT reveal the answer. Then go silent again.`);
+          const failSummary = res.results && res.results.length > 0 
+            ? res.results.filter(r => !r.passed).map(r => `Input: ${r.input}, Expected: ${r.expected}, Got: ${r.actual}`).slice(0, 1).join('; ')
+            : (res.error || 'runtime error');
+          await sendHiddenContext(`Candidate's code execution failed (${failSummary}). Give ONE short constructive hint on how to fix their logic — do NOT reveal the full answer. Then go silent again.`);
         }
         // Go silent again after brief hint
         setTimeout(() => setIsSilentMode(true), 8000);
@@ -1053,13 +1161,29 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
               </div>
             )}
 
-            {/* Latest AI Dialogue Subtitle */}
-            {logs && logs.length > 0 && showTranscription && (
-              <div className="p-2.5 rounded-xl bg-zinc-950 border border-white/5 text-xs text-zinc-300 font-mono line-clamp-2">
-                <span className="text-violet-400 font-bold">Interviewer: </span>
-                {logs[logs.length - 1]?.text || 'Listening...'}
-              </div>
-            )}
+            {/* Latest AI Dialogue Subtitle & Live Transcription Box */}
+            {logs && logs.length > 0 && showTranscription && (() => {
+              const lastAiMsg = logs.slice().reverse().find(m => m.role === 'assistant');
+              const lastUserMsg = logs.slice().reverse().find(m => m.role === 'user');
+              const displayMsg = lastAiMsg || logs[logs.length - 1];
+
+              return (
+                <div className="p-3 rounded-2xl bg-zinc-950/90 border border-violet-500/30 text-xs text-zinc-100 shadow-xl space-y-2 backdrop-blur-md">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-violet-400 animate-ping" />
+                      <span className="text-violet-400 font-extrabold tracking-wide uppercase text-[10px]">AI Interviewer Question</span>
+                    </div>
+                    {lastUserMsg && (
+                      <span className="text-[10px] text-zinc-400 font-mono">Live Sync</span>
+                    )}
+                  </div>
+                  <div className="max-h-36 overflow-y-auto pr-1 text-xs text-zinc-200 leading-relaxed font-sans whitespace-pre-wrap selection:bg-violet-600 selection:text-white">
+                    {displayMsg?.text || 'Listening for your response...'}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Section Dynamic Content View */}
@@ -1067,22 +1191,69 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
             {/* SECTION A: Coding Challenge Details */}
             {currentSection === 'A_CODING' && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
-                    {currentProblem.topic}
-                  </Badge>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-zinc-500 font-mono">Problem {selectedProblemIndex + 1} of {problems.length}</span>
-                    {phase === 'followup' && selectedProblemIndex === 0 && (
+                    <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+                      {currentProblem.topic}
+                    </Badge>
+                    <div className="flex items-center bg-zinc-950 border border-white/10 rounded-xl p-1 gap-1">
+                      <button
+                        onClick={() => {
+                          setSelectedProblemIndex(0);
+                          setCode(problems[0]?.starterCode[selectedLanguage] || '');
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          selectedProblemIndex === 0 ? 'bg-violet-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        Problem 1
+                      </button>
                       <button
                         onClick={handleMoveToProblem2}
-                        className="text-[10px] font-bold bg-violet-600/20 border border-violet-500/30 text-violet-300 px-2 py-0.5 rounded-lg hover:bg-violet-600/40 transition-all cursor-pointer"
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                          selectedProblemIndex === 1 ? 'bg-violet-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'
+                        }`}
                       >
-                        → Problem 2
+                        Problem 2
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {selectedProblemIndex === 0 ? (
+                      <button
+                        onClick={handleMoveToProblem2}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-violet-600/30 transition-all cursor-pointer"
+                      >
+                        <span>Next Question (Problem 2)</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleSectionChange('B_DEBUGGING')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+                      >
+                        <span>Proceed to Section B (Debugging)</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
                 </div>
+
+                {/* Follow-up / Post-Test Call-To-Action Banner */}
+                {phase === 'followup' && selectedProblemIndex === 0 && (
+                  <div className="p-3 rounded-2xl bg-gradient-to-r from-violet-950/80 to-indigo-950/80 border border-violet-500/40 shadow-xl flex items-center justify-between gap-3 animate-pulse">
+                    <div className="text-xs text-violet-200">
+                      <strong className="text-white">✓ Tests Passed!</strong> Answer interviewer follow-ups, then proceed:
+                    </div>
+                    <button
+                      onClick={handleMoveToProblem2}
+                      className="px-3.5 py-1.5 bg-violet-600 hover:bg-violet-500 text-white font-black text-xs rounded-xl shadow-lg flex items-center gap-1.5 shrink-0 cursor-pointer"
+                    >
+                      <span>Problem 2 →</span>
+                    </button>
+                  </div>
+                )}
 
                 <h1 className="text-lg font-black text-white">{currentProblem.title}</h1>
                 <div className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">{currentProblem.description}</div>
@@ -1115,7 +1286,7 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
                       <textarea
                         value={scratchPadText}
                         onChange={e => setScratchPadText(e.target.value)}
-                        placeholder="Type your approach strategy, algorithms, or pointer logic here...&#10;e.g. Use two pointers left=0, right=n-1. Sum current numbers and move pointers inward based on target comparison..."
+                        placeholder="Type your approach while speaking to the AI...&#10;e.g. Use two pointers left=0, right=n-1. Sum = numbers[left] + numbers[right]. If sum > target move right--, if sum < target move left++..."
                         className="w-full h-36 bg-zinc-950 border border-amber-500/30 rounded-xl p-3 text-xs text-zinc-200 font-mono resize-none focus:outline-none focus:border-amber-400 placeholder-zinc-600 leading-relaxed"
                       />
                     ) : (
@@ -1132,9 +1303,7 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
                               />
                             ))}
                           </div>
-                          <button onClick={clearCanvas} className="text-zinc-400 hover:text-white underline">
-                            Clear Canvas
-                          </button>
+                          <button onClick={clearCanvas} className="text-zinc-400 hover:text-white underline">Clear Canvas</button>
                         </div>
                         <div className="relative h-40 bg-zinc-950 border border-amber-500/30 rounded-xl overflow-hidden cursor-crosshair">
                           <canvas
@@ -1151,29 +1320,9 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
                       </div>
                     )}
 
-                    <div className="flex flex-col gap-2 pt-1">
-                      <Button
-                        onClick={handleVerifyApproach}
-                        className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs rounded-xl shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <CheckCircle2 className="w-4 h-4 fill-black text-amber-500" />
-                        Submit Approach & Unlock Code Editor
-                      </Button>
-                      <div className="flex items-center justify-between text-[10px] text-zinc-500 px-1">
-                        <span>Speak to AI or type/draw approach to unlock editor.</span>
-                        <button
-                          onClick={() => {
-                            setIsEditorUnlocked(true);
-                            setPhase('coding');
-                            setIsSilentMode(true);
-                            toast.info('Editor manually unlocked.');
-                          }}
-                          className="hover:text-zinc-300 underline cursor-pointer"
-                        >
-                          Manual Skip
-                        </button>
-                      </div>
-                    </div>
+                    <p className="text-[10px] text-amber-300/70 text-center animate-pulse">
+                      🎙️ Speak your approach to the AI interviewer — editor unlocks automatically when approach is verified
+                    </p>
                   </div>
                 )}
 
@@ -1239,27 +1388,12 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
                     <textarea
                       value={debugScratchPad}
                       onChange={e => setDebugScratchPad(e.target.value)}
-                      placeholder="Write your debugging approach here...&#10;e.g. Bug 1: cache[key] doesn't check TTL expiration. Bug 2: Missing promise deduplication in inFlight object..."
+                      placeholder="Write notes or speak your debugging approach to the AI...&#10;e.g. Bug 1: cache[key] doesn't check TTL expiration. Bug 2: Missing promise deduplication in inFlight object..."
                       className="w-full h-32 bg-zinc-950 border border-amber-500/30 rounded-xl p-3 text-xs text-zinc-200 font-mono resize-none focus:outline-none focus:border-amber-400 placeholder-zinc-600 leading-relaxed"
                     />
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        onClick={handleVerifyDebugApproach}
-                        className="w-full h-10 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <CheckCircle2 className="w-4 h-4 fill-black text-amber-500" />
-                        Submit Debug Approach & Unlock Editor
-                      </Button>
-                      <div className="flex items-center justify-between text-[10px] text-zinc-500 px-1">
-                        <span>Explain root cause to AI or write in scratch pad to unlock editor.</span>
-                        <button
-                          onClick={() => { setIsDebugEditorUnlocked(true); setDebugPhase('coding'); setIsSilentMode(true); toast.info('Debug editor manually unlocked.'); }}
-                          className="hover:text-zinc-300 underline cursor-pointer"
-                        >
-                          Manual Skip
-                        </button>
-                      </div>
-                    </div>
+                    <p className="text-[10px] text-amber-300/70 text-center animate-pulse">
+                      🎙️ Speak your debugging approach to the AI interviewer — editor unlocks automatically when approach is verified
+                    </p>
                   </div>
                 )}
               </div>
@@ -1337,12 +1471,23 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
               height="100%"
               language={selectedLanguage}
               theme="vs-dark"
-              value={currentSection === 'A_CODING' ? code : debugCode}
+              value={
+                currentSection === 'A_CODING'
+                  ? code
+                  : currentSection === 'B_DEBUGGING'
+                  ? debugCode
+                  : systemDesignCode
+              }
               onChange={(value) => {
-                const editorActive = currentSection === 'A_CODING' ? isEditorUnlocked : isDebugEditorUnlocked;
-                if (!editorActive) return;
-                if (currentSection === 'A_CODING') setCode(value || '');
-                else setDebugCode(value || '');
+                if (currentSection === 'A_CODING') {
+                  if (!isEditorUnlocked) return;
+                  setCode(value || '');
+                } else if (currentSection === 'B_DEBUGGING') {
+                  if (!isDebugEditorUnlocked) return;
+                  setDebugCode(value || '');
+                } else {
+                  setSystemDesignCode(value || '');
+                }
               }}
               options={{
                 fontSize: 13,
@@ -1352,7 +1497,12 @@ ABSOLUTE RULES — FOLLOW EXACTLY:
                 roundedSelection: true,
                 automaticLayout: true,
                 padding: { top: 12, bottom: 12 },
-                readOnly: currentSection === 'A_CODING' ? !isEditorUnlocked : !isDebugEditorUnlocked,
+                readOnly:
+                  currentSection === 'A_CODING'
+                    ? !isEditorUnlocked
+                    : currentSection === 'B_DEBUGGING'
+                    ? !isDebugEditorUnlocked
+                    : false,
               }}
             />
             {/* Editor Lock Overlay */}

@@ -18,7 +18,15 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
         console.log('[ProfileContext] Starting profile context load...');
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            throw new Error('No authenticated user');
+            console.log('[ProfileContext] Guest/unauthenticated mode - using default profile context.');
+            return {
+                fullName: 'Candidate',
+                context: 'Candidate practicing technical & behavioral interviews.',
+                projectCount: 0,
+                hasResume: false,
+                hasGithub: false,
+                githubRepos: []
+            };
         }
 
         const { data: profile, error: profileError } = await supabase

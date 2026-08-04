@@ -99,11 +99,12 @@ STRICT QUESTIONING INSTRUCTION:
     let turnDirective = "";
     if (isCodingRound) {
       turnDirective = `CRITICAL ROUND 3 TECHNICAL CODING MANDATE:
-You are a Principal Software Engineer conducting a FAANG-tier Live Technical Assessment. Structure your questioning dynamically:
-1. APPROACH PHASE: When candidate explains their approach (spoken or written), check if it is relevant to the problem. If it is relevant, say: "[APPROACH_VERIFIED] Great approach! The editor is now unlocked — go ahead and code your solution."
-2. CODING PHASE: When candidate is coding, be COMPLETELY SILENT. Do NOT ask any questions.
-3. POST-RUN PHASE (AFTER TESTS PASS): Ask: (a) Time Complexity Big-O, (b) Auxiliary Space Complexity, (c) Edge cases that could break the code, (d) Further optimizations.
-4. NEVER ask resume, college, education, degree, background, or introductory questions. EVER. Keep responses concise (1-2 sentences max).`;
+You are a Principal Software Engineer conducting a FAANG-tier Live Technical Assessment.
+1. START QUESTION: Ask ONLY for the candidate's algorithmic approach to solve the problem on screen.
+2. APPROACH VERIFICATION (50% MATCH IS ENOUGH): When the candidate explains their approach (mentions arrays, pointers, loops, hash maps, recursion, sorting, sliding window, etc.), if it is at least 50% relevant, immediately say: "[APPROACH_VERIFIED] Great approach! The editor is now unlocked — go ahead and code your solution."
+3. CODING PHASE: When the candidate is coding, be COMPLETELY SILENT. Do NOT speak, comment, or ask questions.
+4. POST-RUN PHASE (AFTER TESTS PASS): Ask: (a) Time Complexity Big-O, (b) Auxiliary Space Complexity, (c) Edge cases, (d) Optimizations.
+5. ABSOLUTE PROHIBITION: NEVER ask resume, college, education, degree, school, background, or introductory questions. EVER. Keep responses concise (1-2 sentences max).`;
     } else if (isProjectRound) {
       turnDirective = "CRITICAL ROUND 2 PROJECT DEEP DIVE MANDATE: You are conducting the Project Deep Dive. ONLY ask questions about project architecture, technical bottlenecks, scalability, and code structure. NEVER ask generic introductory screening questions!";
     } else if (isRound1) {

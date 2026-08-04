@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { LiveStatus, MessageLog } from '../types/voice';
 import { toast } from 'sonner';
+
 export type GroqVoiceConnectOptions = string | {
     systemPrompt?: string;
     initialGreeting?: string;
@@ -26,7 +27,7 @@ CRITICAL LANGUAGE MANDATE:
 
 3. Coding Assessment (Round 3) Strict Protocol:
 - ONLY discuss the coding challenge, algorithms, complexity, edge cases, and debugging.
-- NEVER ask resume, college, education, degree, or introductory questions.
+- NEVER ask resume, college, education, degree, project, or introductory questions.
 - While solving, let the student code in peace without unnecessary interruptions.
 - When the code is solved / tests pass, actively ask about:
   (a) Time & Space Big-O Complexity ($O(N)$).
@@ -54,8 +55,9 @@ interface UseGroqVoiceProps {
 }
 
 export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
+    // 1. ALL useState hooks grouped at top to strictly preserve hook ordering across renders
     const [status, setStatus] = useState<LiveStatus>(LiveStatus.DISCONNECTED);
-    const [isSilentMode, setIsSilentMode] = useState<boolean>(false);
+    const [isSilentMode, _setIsSilentMode] = useState<boolean>(false);
     const [errorDetails, setErrorDetails] = useState<string | null>(null);
     const [isUserSpeaking, setIsUserSpeaking] = useState(false);
     const [isAiSpeaking, setIsAiSpeaking] = useState(false);
@@ -63,6 +65,8 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const [logs, setLogs] = useState<MessageLog[]>([]);
     const [apiLabel, setApiLabel] = useState<string>('(primary 3.1)');
 
+    // 2. All useRef hooks
+    const isSilentModeRef = useRef<boolean>(false);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const contextRef = useRef<string>('');
@@ -75,51 +79,69 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const audioContextRef = useRef<AudioContext | null>(null);
     const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
     const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const startListeningRef = useRef<() => Promise<void>>();
 
+    // Sync refs with state
     useEffect(() => {
         statusRef.current = status;
         isAiSpeakingRef.current = isAiSpeaking;
-    }, [status, isAiSpeaking]);
+        isSilentModeRef.current = isSilentMode;
+    }, [status, isAiSpeaking, isSilentMode]);
 
-    // Forward declaration for use in speakResponse
-    const startListeningRef = useRef<() => Promise<void>>();
+    // Setter for silent mode that immediately shuts down physical audio capture/output
+    const setIsSilentMode = useCallback((silent: boolean) => {
+        console.log('[useGroqVoice] setIsSilentMode:', silent);
+        isSilentModeRef.current = silent;
+        _setIsSilentMode(silent);
 
-    // Helper to send messages to Gemini 3.1 Flash Lite Edge Function (Primary) with Groq fallback
+        if (silent) {
+            // Hard silence: Stop microphone recording, stream tracks, and speech synthesis
+            isListeningRef.current = false;
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                try {
+                    mediaRecorderRef.current.stop();
+                } catch (e) {}
+            }
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(t => t.stop());
+                streamRef.current = null;
+            }
+            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+                try {
+                    audioContextRef.current.close();
+                } catch (e) {}
+                audioContextRef.current = null;
+            }
+            try {
+                window.speechSynthesis.cancel();
+            } catch (e) {}
+            setIsAiSpeaking(false);
+            setIsUserSpeaking(false);
+            setVolume(0);
+        }
+    }, []);
+
+    // Helper to send messages to AI engine
     const sendToGroq = async (fullMessages: any[]) => {
-        let aiText = "";
-
-        // PRIMARY ENGINE: Call Gemini 3.1 Flash Lite via interview-chat Edge Function
-        try {
-            console.log('DEBUG: Primary - Generating question with Gemini 3.1 Flash Lite via interview-chat Edge Function...');
-            const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('interview-chat', {
-                body: { messages: fullMessages }
-            });
-
-            const responseText = edgeData?.question || edgeData?.content || edgeData?.response;
-            const detectedLabel = edgeData?.apiLabel || edgeData?.providerInfo?.apiLabel;
-            if (detectedLabel) {
-                setApiLabel(detectedLabel);
-            }
-
-            if (!edgeErr && responseText && typeof responseText === 'string' && responseText.trim().length > 0) {
-                aiText = responseText.trim();
-                console.log('DEBUG: Gemini 3.1 Flash Lite response:', aiText, 'API:', detectedLabel || '(primary 3.1)');
-            } else if (edgeErr) {
-                console.warn('interview-chat Edge Function note:', edgeErr);
-            }
-        } catch (edgeEx) {
-            console.warn('interview-chat Edge Function exception:', edgeEx);
+        // If candidate is actively coding, AI must remain 100% silent
+        if (isSilentModeRef.current) {
+            console.log('[useGroqVoice] isSilentMode is TRUE. Candidate is coding — AI will not generate or speak responses.');
+            return;
         }
 
-        // SECONDARY AI ENGINE: Direct Gemini 3.1 Flash Lite API via VITE_GEMINI_API_KEY
-        if (!aiText) {
+        let aiText = "";
+
+        const sysPrompt = fullMessages.find((m: any) => m.role === 'system')?.content || contextRef.current || '';
+        const isCodingRound = /round\s*3|coding|live\s*coding|assessment|two\s*sum|longest\s*substring|algorithm|debugging|system\s*design|approach\s*phase/i.test(sysPrompt);
+
+        // FOR CODING ASSESSMENT (ROUND 3): Directly invoke Gemini API or Groq with strict Coding Prompt
+        // DO NOT call the screening edge function for coding rounds to prevent any turn-based screening questions
+        if (isCodingRound) {
             const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
             if (geminiApiKey) {
                 try {
-                    console.log('DEBUG: Secondary - Generating question with direct Gemini 3.1 Flash Lite API...');
-                    const systemPromptMsg = fullMessages.find((m: any) => m.role === 'system')?.content || '';
+                    console.log('DEBUG: Coding Assessment - Generating response directly with Gemini 3.1 Flash Lite...');
                     const userLogs = fullMessages.filter((m: any) => m.role !== 'system');
-                    
                     const contents: any[] = [];
                     for (const m of userLogs) {
                         const role = m.role === 'assistant' || m.role === 'model' ? 'model' : 'user';
@@ -134,50 +156,31 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                     }
 
                     if (contents.length === 0 || contents[0].role !== 'user') {
-                        contents.unshift({ role: 'user', parts: [{ text: 'Hello! I am ready for the interview.' }] });
+                        contents.unshift({ role: 'user', parts: [{ text: 'I am explaining my algorithmic approach.' }] });
                     }
 
-                    const isCodingRound = /round\s*3|coding|live\s*coding|assessment|two\s*sum|longest\s*substring|algorithm|debugging|system\s*design|approach\s*phase/i.test(systemPromptMsg);
-                    const isProjectRound = (/round\s*2|project\s*deep\s*dive/i.test(systemPromptMsg)) && !isCodingRound;
-                    const isRound1 = (/round\s*1/i.test(systemPromptMsg)) && !isCodingRound && !isProjectRound;
-                    const assistantTurnCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
-                    let turnHint = "";
-
-                    if (isCodingRound) {
-                        turnHint = "\n\nCRITICAL ROUND 3 CODING MANDATE: You are conducting a FAANG-tier Technical Coding Assessment. When candidate explains logic or solves code, dynamically ask about: (1) Big-O Time & Auxiliary Space Complexity, (2) Extreme Edge Cases & Boundary Conditions (empty arrays, duplicates, large inputs), (3) Alternative Optimization Trade-offs, and (4) Root-cause Debugging. NEVER ask about resume, degree, or introductory questions!";
-                    } else if (isProjectRound) {
-                        turnHint = "\n\nCRITICAL ROUND 2 MANDATE: Focus strictly on project architecture, technical bottlenecks, and code structure!";
-                    } else if (isRound1) {
-                        if (assistantTurnCount === 1) {
-                            turnHint = "\n\nTURN 2 DIRECTIVE: Ask about candidate's EDUCATION or DEGREE in CS / Web Development. Ask what specific web development coursework they focused on!";
-                        } else if (assistantTurnCount === 2) {
-                            turnHint = "\n\nTURN 3 DIRECTIVE: Ask about candidate's CORE CLAIMED SKILLS (React, JavaScript, HTML/CSS) listed on their resume!";
-                        } else if (assistantTurnCount === 3) {
-                            turnHint = "\n\nTURN 4 DIRECTIVE: Ask about PRACTICAL SKILL APPLICATION in coursework or projects!";
-                        } else if (assistantTurnCount === 4) {
-                            turnHint = "\n\nTURN 5 DIRECTIVE: Ask a targeted question about candidate's FIRST project BY NAME (e.g. HirePath)!";
-                        } else if (assistantTurnCount === 5) {
-                            turnHint = "\n\nTURN 6 DIRECTIVE: Ask a targeted question about candidate's SECOND project BY NAME (e.g. Prodex)!";
-                        } else if (assistantTurnCount === 6) {
-                            turnHint = "\n\nTURN 7 DIRECTIVE: Ask about DEVELOPMENT TOOLS, Git workflow, or build tools!";
-                        } else if (assistantTurnCount === 7) {
-                            turnHint = "\n\nTURN 8 DIRECTIVE: Ask about ROLE MOTIVATION for this position!";
-                        } else if (assistantTurnCount === 8) {
-                            turnHint = "\n\nTURN 9 DIRECTIVE: Ask about SKILL GROWTH & new concepts they are studying!";
-                        } else if (assistantTurnCount >= 9) {
-                            turnHint = "\n\nTURN 10 DIRECTIVE: Ask about career vision and speak a warm closing goodbye speech!";
-                        }
-                    }
-
-                    const englishMandate = "\n\nCRITICAL MANDATE: You MUST communicate and ask questions ONLY in English. Never output Japanese, Chinese, or any other language.";
+                    const codingDirective = `\n\nCRITICAL ROUND 3 TECHNICAL CODING MANDATE:
+1. START QUESTION: Ask ONLY for the candidate's algorithmic approach to solve the problem on screen.
+2. STRICT APPROACH VERIFICATION (MINIMUM 75% DEPTH & ACCURACY REQUIRED):
+   - Candidate MUST explain the actual step-by-step logic (e.g. how data structures/pointers are initialized, loop conditions, how values are checked/stored, and how the answer is constructed).
+   - If candidate only gives a superficial, brief, or 1-word answer (e.g. "I will use hash map" or "two pointers" without explaining the step-by-step mechanics): DO NOT unlock. Ask a probing follow-up: "That is a good starting concept, but please explain step-by-step how your algorithm will iterate and handle the problem."
+   - When the candidate provides a clear, in-depth algorithmic explanation (at least 75% accurate and complete), say EXACTLY:
+   "[APPROACH_VERIFIED] Excellent explanation! The code editor is now unlocked — go ahead and code your solution."
+3. CODING PHASE: When candidate is actively coding, be 100% SILENT. Do NOT ask any questions.
+4. POST-RUN PHASE: When candidate runs code and all tests pass, ask ONLY these 4 technical questions in sequence (1 at a time):
+   (1) What is the exact Time Complexity Big-O?
+   (2) What is the Auxiliary Space Complexity?
+   (3) What edge cases could break this solution?
+   (4) Can this solution be further optimized?
+5. ABSOLUTE PROHIBITION: NEVER ask resume, college, education, degree, school, project, or background questions. EVER. Keep responses concise (1-2 sentences max).`;
 
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${geminiApiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: contents.slice(-6),
-                            systemInstruction: { parts: [{ text: systemPromptMsg + turnHint + englishMandate }] },
-                            generationConfig: { temperature: 0.6, maxOutputTokens: 100 }
+                            systemInstruction: { parts: [{ text: sysPrompt + codingDirective }] },
+                            generationConfig: { temperature: 0.2, maxOutputTokens: 120 }
                         })
                     });
 
@@ -186,136 +189,96 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                         const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
                         if (text && text.trim()) {
                             aiText = text.trim();
-                            console.log('✓ Success with Direct Gemini 3.1 Flash Lite API question generation:', aiText);
+                            setApiLabel('(gemini 3.1 coding)');
+                            console.log('✓ Coding Assessment response generated directly:', aiText);
                         }
-                    } else {
-                        console.warn('Direct Gemini API status:', res.status);
                     }
-                } catch (directGeminiErr) {
-                    console.warn('Direct Gemini API exception:', directGeminiErr);
+                } catch (geminiErr) {
+                    console.warn('Direct Gemini Coding API exception:', geminiErr);
                 }
+            }
+        }
+
+        // PRIMARY ENGINE FOR OTHER ROUNDS (OR FALLBACK): interview-chat Edge Function
+        if (!aiText && !isCodingRound) {
+            try {
+                console.log('DEBUG: Primary - Generating question with interview-chat Edge Function...');
+                const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('interview-chat', {
+                    body: { 
+                        messages: fullMessages,
+                        interviewType: 'screening'
+                    }
+                });
+
+                const responseText = edgeData?.question || edgeData?.content || edgeData?.response;
+                const detectedLabel = edgeData?.apiLabel || edgeData?.providerInfo?.apiLabel;
+                if (detectedLabel) {
+                    setApiLabel(detectedLabel);
+                }
+
+                if (!edgeErr && responseText && typeof responseText === 'string' && responseText.trim().length > 0) {
+                    aiText = responseText.trim();
+                    console.log('DEBUG: Gemini 3.1 Flash Lite response:', aiText, 'API:', detectedLabel || '(primary 3.1)');
+                } else if (edgeErr) {
+                    console.warn('interview-chat Edge Function note:', edgeErr);
+                }
+            } catch (edgeEx) {
+                console.warn('interview-chat Edge Function exception:', edgeEx);
             }
         }
 
         // TERTIARY FALLBACK: Groq Llama 3.3 70B via groq-proxy Edge Function
         if (!aiText) {
             try {
-                console.log('DEBUG: Tertiary Fallback - Generating question with Groq Llama 3.3 70B...');
+                console.log('DEBUG: Fallback - Generating question with Groq Llama 3.3 70B...');
                 const { data: groqData, error: groqErr } = await supabase.functions.invoke('groq-proxy', {
                     body: {
                         messages: fullMessages,
                         model: 'llama-3.3-70b-versatile',
-                        temperature: 0.7,
-                        max_tokens: 800,
+                        temperature: 0.5,
+                        max_tokens: 200,
                     }
                 });
                 if (!groqErr && groqData?.choices?.[0]?.message?.content) {
                     aiText = groqData.choices[0].message.content.trim();
-                    console.log('✓ Success with Tertiary Fallback (Groq Llama 3.3 70B):', aiText);
-                } else if (groqErr) {
-                    console.warn('Groq proxy fallback note:', groqErr);
+                    console.log('✓ Success with Groq Llama 3.3 70B:', aiText);
                 }
             } catch (groqErr) {
                 console.error("Groq fallback exception:", groqErr);
             }
         }
 
-        // LAST RESORT: Only reached if Edge Function + Direct Gemini API + Groq ALL failed
+        // LAST RESORT: Emergency deterministic response
         if (!aiText) {
-            console.error('⚠️ ALL AI ENGINES FAILED! Using emergency last-resort question.');
-            const assistantTurnCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
-            
-            // Extract candidate details from system prompt for contextual emergency questions
-            const sysPrompt = fullMessages.find((m: any) => m.role === 'system')?.content || '';
-            
-            // Try to extract project names from the system prompt
-            const projectNameRegex = /(?:project|repo|repository)\s*(?:name)?\s*[:=]?\s*["\']?([A-Z][a-zA-Z0-9_-]+)/gi;
-            const projectMatches = [...sysPrompt.matchAll(projectNameRegex)].map(m => m[1]);
-            const proj1 = projectMatches[0] || 'your main project';
-            const proj2 = projectMatches[1] || 'your second project';
-            
-            const isCoding = sysPrompt.includes('Round 3') || sysPrompt.includes('Coding Assessment');
-            const isProject = sysPrompt.includes('Round 2') || sysPrompt.includes('Project Deep Dive');
-
-            // Emergency turn-based questions (only used if ALL 3 AI engines fail)
-            let emergencyQuestions: Record<number, string>;
-            if (isCoding) {
-                emergencyQuestions = {
-                    0: "Take a look at the problem on your screen. When you're ready, talk me through your initial algorithmic approach.",
-                    1: "What time and space complexity are you aiming for with this implementation?",
-                    2: "How will your code handle key edge cases such as empty inputs or duplicates?",
-                    3: "Can we optimize the inner loops or memory allocation further?",
-                    4: "Let's move on to the debugging challenge. Where do you suspect the root bug is located?"
-                };
-            } else if (isProject) {
-                emergencyQuestions = {
-                    0: `Welcome to the Project Deep Dive! Walk me through the core technical architecture of ${proj1}.`,
-                    1: `In ${proj1}, what was the most difficult technical bottleneck you solved?`,
-                    2: `How did you handle state management, API synchronization, and error handling in ${proj1}?`,
-                    3: `Let's discuss ${proj2}. What key engineering trade-offs did you make during development?`,
-                    4: `How did you test and guarantee performance for ${proj2}?`
-                };
+            if (isCodingRound) {
+                aiText = "Please explain your in-depth algorithmic approach step-by-step before we unlock the code editor.";
             } else {
-                emergencyQuestions = {
-                    0: "Welcome! Could you introduce yourself and tell me about your technical background?",
-                    1: "What specific coursework or academic modules have shaped your skills as a developer?",
-                    2: "Which programming languages or frameworks on your resume are you most confident with?",
-                    3: "Can you walk me through how you've applied those skills in a real coding scenario?",
-                    4: `Tell me about the technical architecture behind ${proj1}. What were the key engineering decisions?`,
-                    5: `In ${proj2}, what was the most challenging technical problem you solved?`,
-                    6: "What development tools and workflow practices do you use for version control and testing?",
-                    7: "What excites you most about this role and how does it align with your career goals?",
-                    8: "What new technologies or concepts are you currently learning to grow as an engineer?",
-                    9: "Thank you for a great conversation! Where do you see your engineering career in the next few years?"
-                };
+                aiText = "Could you tell me more about your technical experience?";
             }
-            
-            const turnKey = Math.min(assistantTurnCount, Object.keys(emergencyQuestions).length - 1);
-            aiText = emergencyQuestions[turnKey] || "Could you tell me more about your technical experience?";
         }
 
-        // STRICT CLIENT-SIDE ANTI-REPETITION INTERCEPTOR
-        const previousAssistantQuestions = conversationHistoryRef.current
-            .filter(m => m.role === 'assistant')
-            .map(m => m.content.trim().toLowerCase())
-            .filter(Boolean);
+        // CRITICAL ROUND 3 PROHIBITION SANITIZER (Client-side fail-safe)
+        if (isCodingRound && aiText) {
+            const lower = aiText.toLowerCase();
+            const forbiddenPatterns = [
+                'resume', 'hirepath', 'prodex', 'truthlens', 'codecompass', 'project', 'projects',
+                'college', 'degree', 'coursework', 'school', 'university', 'academic',
+                'core technical skills', 'skills or frameworks', 'round 1', 'round 2', 'screening',
+                'tell me about yourself', 'introduce yourself', 'practical coursework', 'initial study projects',
+                'ui component architecture', 'state management strategy', 'error handling or performance optimization'
+            ];
+            const isForbidden = forbiddenPatterns.some(pat => lower.includes(pat));
 
-        const isDuplicate = previousAssistantQuestions.some(prev => 
-            prev === aiText.trim().toLowerCase() ||
-            (prev.length > 15 && (prev.includes(aiText.trim().toLowerCase()) || aiText.trim().toLowerCase().includes(prev))) ||
-            (prev.length > 25 && prev.slice(0, 30) === aiText.trim().toLowerCase().slice(0, 30))
-        );
-
-        if (isDuplicate) {
-            console.warn(`[Client Anti-Repetition] Detected duplicate: "${aiText}". Requesting fresh AI question...`);
-            
-            // Try one more direct Gemini call with explicit anti-duplication
-            const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
-            if (geminiApiKey) {
-                try {
-                    const sysPrompt = fullMessages.find((m: any) => m.role === 'system')?.content || '';
-                    const assistantCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ role: 'user', parts: [{ text: `Generate a single fresh interview question for turn ${assistantCount + 1} of 10. Previously asked: ${previousAssistantQuestions.join('; ')}. Context: ${sysPrompt.slice(0, 500)}` }] }],
-                            systemInstruction: { parts: [{ text: 'You are a professional interviewer. Generate exactly ONE short interview question (under 40 words). Do NOT repeat any previously asked questions.' }] },
-                            generationConfig: { temperature: 0.9, maxOutputTokens: 100 }
-                        })
-                    });
-                    if (res.ok) {
-                        const json = await res.json();
-                        const freshQ = json.candidates?.[0]?.content?.parts?.[0]?.text;
-                        if (freshQ?.trim()) {
-                            aiText = freshQ.trim();
-                            console.log('✓ Anti-repetition recovery: Fresh AI question generated:', aiText);
-                        }
-                    }
-                } catch (e) {
-                    console.warn('Anti-repetition recovery failed:', e);
-                }
+            if (isForbidden) {
+                console.warn('[useGroqVoice] Intercepted and blocked forbidden resume question in Round 3:', aiText);
+                aiText = "Please explain your in-depth algorithmic approach step-by-step to solve the problem on screen before you start coding.";
             }
+        }
+
+        // If candidate is coding (isSilentMode is true), do NOT speak or log AI message
+        if (isSilentModeRef.current) {
+            console.log('[useGroqVoice] Candidate is coding (isSilentMode=true). Suppressing AI voice output.');
+            return;
         }
 
         const aiMsg: MessageLog = {
@@ -333,6 +296,12 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const speakResponse = async (text: string) => {
         if (!text) return;
 
+        // If in silent mode, do not speak
+        if (isSilentModeRef.current) {
+            console.log('[useGroqVoice] isSilentMode is true, skipping speakResponse');
+            return;
+        }
+
         // Strip out tokens and hidden content for speech
         let speechText = text
             .replace(/\[START_CODING\]/g, '')
@@ -340,7 +309,6 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             .replace(/\[VERDICT:[^\]]*\]/g, '')
             .replace(/\[REASON:[^\]]*\]/g, '');
 
-        // Remove detailed feedback content (everything after the token)
         if (speechText.includes('[DETAILED_FEEDBACK]')) {
             speechText = speechText.split('[DETAILED_FEEDBACK]')[0];
         }
@@ -356,19 +324,16 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         try {
             console.log('DEBUG: Speaking AI response via Web Speech API:', speechText);
 
-            // Clear any active resume interval
             if (resumeTimerRef.current) {
                 clearInterval(resumeTimerRef.current);
                 resumeTimerRef.current = null;
             }
 
-            // Stop any currently playing speech cleanly
             if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
                 window.speechSynthesis.cancel();
                 await new Promise(r => setTimeout(r, 60));
             }
 
-            // Ensure speech synthesis is un-paused
             if (window.speechSynthesis.paused) {
                 window.speechSynthesis.resume();
             }
@@ -377,50 +342,28 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             setVolume(0.8);
 
             const utterance = new SpeechSynthesisUtterance(speechText);
-            // CRITICAL GC PROTECTION: Prevent V8 garbage collection while speech is playing
             activeUtteranceRef.current = utterance;
             (window as any).__vokeUtterance = utterance;
 
-            // Load and select high quality English voice
             let voices = window.speechSynthesis.getVoices();
-            if (!voices || voices.length === 0) {
-                await new Promise<void>(resolve => {
-                    const onVoices = () => {
-                        window.speechSynthesis.removeEventListener('voiceschanged', onVoices);
-                        resolve();
-                    };
-                    window.speechSynthesis.addEventListener('voiceschanged', onVoices);
-                    setTimeout(resolve, 250);
-                });
-                voices = window.speechSynthesis.getVoices();
-            }
-
-            const preferredVoice = voices.find(v => 
-                v.lang.startsWith('en') && 
-                (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Jenny') || v.name.includes('Guy') || v.name.includes('Aria') || v.name.includes('Zira') || v.name.includes('David'))
-            ) || voices.find(v => v.lang.startsWith('en') || v.lang.includes('en'));
+            const preferredVoice = voices.find(v =>
+                (v.lang.includes('en') || v.lang.includes('EN')) &&
+                (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Guy'))
+            ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
 
             if (preferredVoice) {
                 utterance.voice = preferredVoice;
-                utterance.lang = preferredVoice.lang;
+                utterance.lang = preferredVoice.lang || 'en-US';
             } else {
                 utterance.lang = 'en-US';
             }
 
             utterance.rate = 1.0;
             utterance.pitch = 1.0;
-            utterance.volume = 1.0;
 
-            // Chrome/Edge watchdog: unstick paused or stalled synthesis on Windows
             resumeTimerRef.current = setInterval(() => {
-                if (window.speechSynthesis.speaking) {
-                    window.speechSynthesis.pause();
+                if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
                     window.speechSynthesis.resume();
-                } else {
-                    if (resumeTimerRef.current) {
-                        clearInterval(resumeTimerRef.current);
-                        resumeTimerRef.current = null;
-                    }
                 }
             }, 4000);
 
@@ -441,10 +384,10 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 setIsAiSpeaking(false);
                 setVolume(0);
 
-                // Resume candidate microphone listening after AI finishes speaking
-                if (statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
+                // Resume candidate microphone listening ONLY if NOT in silent mode!
+                if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
                     setTimeout(() => {
-                        if (statusRef.current === LiveStatus.CONNECTED && !isAiSpeakingRef.current) {
+                        if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && !isAiSpeakingRef.current) {
                             startListeningRef.current?.();
                         }
                     }, 400);
@@ -462,9 +405,9 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 setIsAiSpeaking(false);
                 setVolume(0);
 
-                if (statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
+                if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
                     setTimeout(() => {
-                        if (statusRef.current === LiveStatus.CONNECTED && !isAiSpeakingRef.current) {
+                        if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && !isAiSpeakingRef.current) {
                             startListeningRef.current?.();
                         }
                     }, 400);
@@ -485,7 +428,6 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         try {
             console.log('DEBUG: Transcribing audio with Groq Whisper (English strictly enforced)...');
 
-            // Convert blob to File
             const audioFile = new File([audioBlob], 'audio.webm', { type: 'audio/webm' });
 
             const session = await supabase.auth.getSession();
@@ -505,41 +447,30 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData
             });
-            
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const transcription = await res.json();
 
-            let rawText = (transcription.text || '').trim();
-            console.log('DEBUG: Raw Transcription:', rawText);
-
-            if (!rawText) {
+            if (!res.ok) {
+                console.warn(`Groq Proxy Whisper failed (HTTP ${res.status}), trying direct API...`);
+                const directApiKey = import.meta.env.VITE_GROQ_API_KEY;
+                if (directApiKey) {
+                    const directRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${directApiKey}` },
+                        body: formData
+                    });
+                    if (directRes.ok) {
+                        const directData = await directRes.json();
+                        return directData.text || '';
+                    }
+                }
                 return '';
             }
 
-            // CRITICAL: Reject Japanese / CJK Unicode characters (Hiragana, Katakana, Kanji, Hangul)
-            const hasCjk = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/.test(rawText);
-            if (hasCjk) {
-                console.log('DEBUG: Filtered out non-English / CJK Whisper artifact:', rawText);
-                return '';
-            }
+            const data = await res.json();
+            const text = data.text || '';
+            console.log('DEBUG: Raw Transcription:', text);
+            return text;
 
-            // CRITICAL: Reject common Whisper hallucination subtitles during background silence
-            const silenceArtifacts = [
-                /thank you for watching/i,
-                /thanks for watching/i,
-                /subtitles by/i,
-                /amara\.org/i,
-                /translated by/i,
-                /subscribe/i,
-                /closed captioning/i
-            ];
-            if (silenceArtifacts.some(pattern => pattern.test(rawText))) {
-                console.log('DEBUG: Filtered out Whisper silence hallucination:', rawText);
-                return '';
-            }
-
-            return rawText;
-        } catch (error: any) {
+        } catch (error) {
             console.error('DEBUG: Whisper transcription error:', error);
             return '';
         }
@@ -547,6 +478,12 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
     const handleUserMessage = async (text: string) => {
         if (!text.trim()) return;
+
+        // If candidate is actively coding (isSilentMode is true), do NOT call AI or log
+        if (isSilentModeRef.current) {
+            console.log('[useGroqVoice] Candidate is coding (isSilentMode=true). AI stays completely silent.');
+            return;
+        }
 
         const userMsg: MessageLog = {
             id: Date.now().toString() + '-user',
@@ -571,34 +508,14 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
         } catch (error: any) {
             console.error('DEBUG: Groq API Error:', error);
-
-            // Detailed Error Handling
-            let errorMessage = "I'm having trouble connecting to my brain right now.";
-
-            if (error?.status === 401) {
-                errorMessage = "My API key is missing or invalid. Please check your configuration.";
-                toast.error("Groq API Error: 401 Unauthorized. Please check VITE_GROQ_API_KEY in .env");
-            } else if (error?.status === 404) {
-                errorMessage = "I can't access the AI model. It might be unavailable.";
-                toast.error("Groq API Error: 404 Model Not Found. The model may differ or be deprecated.");
-            } else if (error?.status === 429) {
-                errorMessage = "My brain is tired. Please give me a minute to rest.";
-                toast.error("Groq Rate Limit Exceeded (429). Please wait a moment or upgrade plan.");
-            } else {
-                toast.error(`Voice Interview Error: ${error.message || "Unknown error"}`);
-            }
-
+            const errorMessage = "I'm having trouble connecting to my brain right now.";
             speakResponse(errorMessage);
         }
     };
 
     const sendHiddenContext = async (text: string) => {
         console.log('DEBUG: Sending hidden context to Groq:', text);
-
-        // Add as system or user message but NOT to logs
         const contextMsg = { role: 'system' as const, content: `[HIDDEN CONTEXT]: ${text}` };
-
-        // We push to history so AI remembers it, but we DO NOT add to 'logs' state
         conversationHistoryRef.current.push(contextMsg);
 
         try {
@@ -606,31 +523,27 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCONTEXT:\n' + contextRef.current },
                 ...conversationHistoryRef.current
             ];
-
             await sendToGroq(messages);
-
-        } catch (error: any) {
-            console.error("Error sending hidden context:", error);
-            // Non-blocking error for context
+        } catch (e) {
+            console.error('DEBUG: sendHiddenContext error:', e);
         }
     };
 
     const startListening = async () => {
-        if (isListeningRef.current || isAiSpeakingRef.current) return;
-
-        // Check if we're still connected before starting
-        if (statusRef.current !== LiveStatus.CONNECTED) {
-            console.log('DEBUG: Not connected, skipping startListening');
+        // Strict guard: If coding or already speaking/listening, abort immediately
+        if (isSilentModeRef.current) {
+            console.log('[useGroqVoice] isSilentMode is true. Skipping startListening — candidate is coding.');
             return;
         }
+        if (isListeningRef.current || isAiSpeakingRef.current) return;
+        if (statusRef.current !== LiveStatus.CONNECTED) return;
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            streamRef.current = stream; // Store for cleanup
+            streamRef.current = stream;
 
-            // Audio Context for VAD (Voice Activity Detection)
             const audioContext = new AudioContext();
-            audioContextRef.current = audioContext; // Store for cleanup
+            audioContextRef.current = audioContext;
 
             const source = audioContext.createMediaStreamSource(stream);
             const analyser = audioContext.createAnalyser();
@@ -647,71 +560,62 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             audioChunksRef.current = [];
             isListeningRef.current = true;
 
-            // VAD Variables
             let lastSpeechTime = Date.now();
             let speechStarted = false;
             let silenceTimer: any = null;
             const startTime = Date.now();
 
-            // VAD Sensitivity Settings (volume range: 0-255)
-            // Normal speech typically registers 40-100+, quiet speech 20-40
-            const SPEECH_THRESHOLD = 20; // Higher threshold filters background noise while catching clear speech
-            const SILENCE_AFTER_SPEECH = 1500; // 1.5s silence to detect sentence end (was 2.5s - too long)
-            const INITIAL_WAIT_TIMEOUT = 8000; // 8s wait for user to start speaking
+            const SPEECH_THRESHOLD = 20;
+            const SILENCE_AFTER_SPEECH = 1500;
+            const INITIAL_WAIT_TIMEOUT = 8000;
 
             const detectSilence = () => {
-                if (!isListeningRef.current) return;
+                if (!isListeningRef.current || isSilentModeRef.current) return;
 
                 analyser.getByteFrequencyData(dataArray);
 
-                // Calculate average volume
                 let sum = 0;
                 for (let i = 0; i < bufferLength; i++) {
                     sum += dataArray[i];
                 }
                 const average = sum / bufferLength;
 
-                // Update volume for visualizer (normalized 0-1)
-                // average is usually 0-100 for speech, max 255. 
-                // We divide by 100 to make it responsive, capped at 1 by visualizer.
                 setVolume(average / 100);
 
                 if (average > SPEECH_THRESHOLD) {
-                    lastSpeechTime = Date.now();
                     if (!speechStarted) {
                         console.log('DEBUG: Speech detected! Vol:', average);
                         speechStarted = true;
-                        setIsUserSpeaking(true); // Visual feedback
+                        setIsUserSpeaking(true);
                     }
-                }
-
-                // Logic:
-                // 1. If speech started: Wait for 2.5s of silence to finish sentence
-                // 2. If NO speech yet: Wait for 10s total before resetting/checking
-
-                const now = Date.now();
-
-                if (speechStarted) {
-                    if (now - lastSpeechTime > SILENCE_AFTER_SPEECH) {
+                    lastSpeechTime = Date.now();
+                } else if (speechStarted) {
+                    const elapsedSilence = Date.now() - lastSpeechTime;
+                    if (elapsedSilence > SILENCE_AFTER_SPEECH) {
                         console.log('DEBUG: End of sentence detected, stopping...');
                         if (mediaRecorder.state === 'recording') {
                             mediaRecorder.stop();
                         }
-                    } else {
-                        silenceTimer = requestAnimationFrame(detectSilence);
+                        return;
                     }
                 } else {
-                    // Still waiting for first word
-                    if (now - startTime > INITIAL_WAIT_TIMEOUT) {
+                    const totalWait = Date.now() - startTime;
+                    if (totalWait > INITIAL_WAIT_TIMEOUT) {
                         console.log('DEBUG: No speech detected (timeout), restarting listener...');
                         if (mediaRecorder.state === 'recording') {
                             mediaRecorder.stop();
                         }
-                        // Note: handleUserMessage logic in onstop handles empty audio by ignoring or restarting
-                    } else {
-                        silenceTimer = requestAnimationFrame(detectSilence);
+                        return;
                     }
                 }
+
+                silenceTimer = requestAnimationFrame(detectSilence);
+            };
+
+            mediaRecorder.onstart = () => {
+                console.log('DEBUG: Recording started (Waiting for speech...)');
+                audioChunksRef.current = [];
+                detectSilence();
             };
 
             mediaRecorder.ondataavailable = (event) => {
@@ -720,41 +624,27 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 }
             };
 
-            mediaRecorder.onstart = () => {
-                console.log('DEBUG: Recording started (Waiting for speech...)');
-                // Don't set isUserSpeaking(true) yet - wait for actual voice
-                setIsUserSpeaking(false);
-                setVolume(0); // Optional: show mic activity only when speaking? or keep showing visualizer
-                // Actually visualizer usually needs 'volume' state. 
-                // Let's rely on visualizer updating volume in a real app, but here we just pass volume prop.
-                // For now, let's allow volume updates for visualizer:
-
-                // Start a volume update loop for visualizer independent of VAD if needed,
-                // but current VAD loop calculates average anyway.
-                // Let's hook volume setting into detectSilence for smoother UI
-                detectSilence();
-            };
-
             mediaRecorder.onstop = async () => {
                 console.log('DEBUG: Recording stopped');
                 setIsUserSpeaking(false);
                 setVolume(0);
                 isListeningRef.current = false;
 
-                // Cleanup VAD
                 cancelAnimationFrame(silenceTimer);
                 if (audioContext && audioContext.state !== 'closed') {
                     audioContext.close().catch(e => console.warn('AudioContext close error:', e));
                 }
                 stream.getTracks().forEach(track => track.stop());
 
-                // Calculate total size
+                // If candidate unlocked the editor while recording was ending, DO NOT PROCESS!
+                if (isSilentModeRef.current) {
+                    console.log('[useGroqVoice] isSilentMode became TRUE during recording. Discarding audio.');
+                    return;
+                }
+
                 const totalSize = audioChunksRef.current.reduce((acc, chunk) => acc + chunk.size, 0);
                 console.log('DEBUG: Audio captured size:', totalSize, 'SpeechStarted:', speechStarted);
 
-                // RELAXED CONDITION:
-                // Transcribe if speech was detected OR if we captured a significant amount of audio (>10KB)
-                // This acts as a failsafe if the VAD threshold was slightly missed but user spoke a lot.
                 const hasSignificantAudio = totalSize > 10000;
 
                 if ((speechStarted || hasSignificantAudio) && audioChunksRef.current.length > 0) {
@@ -764,15 +654,13 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                     if (transcription && transcription.trim().length > 0) {
                         await handleUserMessage(transcription);
                     } else {
-                        // Transcription empty? Resume listening
-                        if (statusRef.current === LiveStatus.CONNECTED) {
+                        if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED) {
                             setTimeout(() => startListening(), 500);
                         }
                     }
                 } else {
-                    // No speech detected (timed out waiting)
-                    console.log('DEBUG: No sufficient speech captured, resuming listening...');
-                    if (statusRef.current === LiveStatus.CONNECTED) {
+                    console.log('DEBUG: No sufficient speech captured, restarting listening...');
+                    if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED) {
                         startListening();
                     }
                 }
@@ -781,7 +669,6 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             mediaRecorderRef.current = mediaRecorder;
             mediaRecorder.start();
 
-            // Hard safety limit (e.g. 60s max recording)
             setTimeout(() => {
                 if (mediaRecorder.state === 'recording') {
                     mediaRecorder.stop();
@@ -795,10 +682,32 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         }
     };
 
-    // Assign startListening to ref so it can be called from speakResponse
     useEffect(() => {
         startListeningRef.current = startListening;
     });
+
+    // Cleanup on unmount to prevent orphaned Vite HMR listeners
+    useEffect(() => {
+        return () => {
+            console.log('[useGroqVoice] Unmount cleanup triggered.');
+            statusRef.current = LiveStatus.DISCONNECTED;
+            isListeningRef.current = false;
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                try { mediaRecorderRef.current.stop(); } catch (e) {}
+            }
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(t => t.stop());
+                streamRef.current = null;
+            }
+            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+                try { audioContextRef.current.close(); } catch (e) {}
+                audioContextRef.current = null;
+            }
+            try {
+                window.speechSynthesis.cancel();
+            } catch (e) {}
+        };
+    }, []);
 
     const connect = useCallback(async (context?: GroqVoiceConnectOptions) => {
         if (status === LiveStatus.CONNECTED) return;
@@ -823,13 +732,12 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         conversationHistoryRef.current = [];
 
         try {
-            // Test microphone access
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             stream.getTracks().forEach(track => track.stop());
 
             setStatus(LiveStatus.CONNECTED);
 
-            // If an explicit initialGreeting was provided (e.g. Round 3 Coding Assessment or Round 2), use it directly!
+            // Custom initial greeting (e.g. Round 3 Coding Assessment)
             if (initialGreetingText) {
                 console.log('DEBUG: Using custom initial greeting:', initialGreetingText);
                 conversationHistoryRef.current.push({ role: 'assistant', content: initialGreetingText });
@@ -843,92 +751,23 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 return;
             }
 
-            // Otherwise, generate personalized greeting using Groq (English strictly enforced)
-            try {
-                console.log('DEBUG: Generating personalized greeting in English...');
-                const session = await supabase.auth.getSession();
-                const token = session.data.session?.access_token;
-                if (!token) throw new Error("Not authenticated");
+            // Fallback greeting
+            const fallbackGreeting = "Welcome! I'm ready to begin your technical interview.";
+            conversationHistoryRef.current.push({ role: 'assistant', content: fallbackGreeting });
+            setLogs([{
+                id: 'init',
+                role: 'assistant',
+                text: fallbackGreeting,
+                timestamp: new Date()
+            }]);
+            speakResponse(fallbackGreeting);
 
-                const makeGreetingReq = async (model: string, msgs: any[], max: number) => {
-                    const res = await fetch(`${SUPABASE_URL}/functions/v1/groq-proxy`, {
-                        method: "POST",
-                        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-                        body: JSON.stringify({ messages: msgs, model, temperature: 0.8, max_tokens: max })
-                    });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return await res.json();
-                };
-
-                let greetingCompletion;
-                const isCoding = contextRef.current.includes('Round 3') || contextRef.current.includes('Coding Assessment');
-                const isProj = contextRef.current.includes('Round 2') || contextRef.current.includes('Project Deep Dive');
-
-                const greetingPrompt = isCoding
-                    ? 'Generate a professional 1-2 sentence greeting in English welcoming the candidate to Round 3 Coding Assessment and asking them to explain their initial algorithmic approach to the coding challenge on screen.'
-                    : isProj
-                    ? 'Generate a professional 1-2 sentence greeting in English welcoming the candidate to Round 2 Project Deep Dive and asking them to introduce their featured project.'
-                    : 'Generate a warm, professional, 1-2 sentence English greeting welcoming the candidate to the interview and inviting them to introduce themselves.';
-
-                const defaultFallback = isCoding
-                    ? "Hello and welcome to Round 3 — Coding Assessment! Look at the coding challenge on your screen, and let's discuss your initial approach."
-                    : isProj
-                    ? "Hello and welcome to Round 2 — Project Deep Dive! Walk me through the architecture of your primary project."
-                    : "Hello! Welcome to the interview. Please introduce yourself.";
-
-                try {
-                    greetingCompletion = await makeGreetingReq('llama-3.3-70b-versatile', [
-                        { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCRITICAL: Respond ONLY in English.\n\nCONTEXT:\n' + contextRef.current },
-                        { role: 'user', content: greetingPrompt }
-                    ], 100);
-                } catch (error: any) {
-                    if (error?.message?.includes('429')) {
-                        console.log('DEBUG: Rate limit reached during greeting, switching to fallback...');
-                        greetingCompletion = await makeGreetingReq('llama-3.1-8b-instant', [
-                            { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCRITICAL: Respond ONLY in English.\n\nCONTEXT:\n' + contextRef.current },
-                            { role: 'user', content: greetingPrompt }
-                        ], 60);
-                    } else {
-                        throw error;
-                    }
-                }
-
-                const greeting = greetingCompletion?.choices?.[0]?.message?.content || defaultFallback;
-                console.log('DEBUG: Generated greeting:', greeting);
-
-                conversationHistoryRef.current.push({ role: 'assistant', content: greeting });
-                setLogs([{
-                    id: 'init',
-                    role: 'assistant',
-                    text: greeting,
-                    timestamp: new Date()
-                }]);
-
-                speakResponse(greeting);
-            } catch (error) {
-                console.error('DEBUG: Failed to generate greeting:', error);
-                const isCoding = contextRef.current.includes('Round 3') || contextRef.current.includes('Coding Assessment');
-                const isProj = contextRef.current.includes('Round 2') || contextRef.current.includes('Project Deep Dive');
-                const fallbackGreeting = isCoding
-                    ? "Hello and welcome to Round 3 — Coding Assessment! Look at the coding challenge on your screen, and let's discuss your initial approach."
-                    : isProj
-                    ? "Hello and welcome to Round 2 — Project Deep Dive! Walk me through the architecture of your primary project."
-                    : "Hello! Welcome to the interview. Please introduce yourself.";
-                conversationHistoryRef.current.push({ role: 'assistant', content: fallbackGreeting });
-                setLogs([{
-                    id: 'init',
-                    role: 'assistant',
-                    text: fallbackGreeting,
-                    timestamp: new Date()
-                }]);
-                speakResponse(fallbackGreeting);
-            }
         } catch (e) {
             console.error("DEBUG: Connection failed", e);
             setErrorDetails("Failed to access microphone. Please allow microphone access.");
             setStatus(LiveStatus.ERROR);
         }
-    }, [status]);
+    }, [status, setIsSilentMode]);
 
     const disconnect = useCallback(() => {
         console.log('DEBUG: Disconnect called');
@@ -936,51 +775,34 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         statusRef.current = LiveStatus.DISCONNECTED;
         isListeningRef.current = false;
 
-        // Stop browser speech synthesis immediately
         try {
             window.speechSynthesis.cancel();
-        } catch (e) {
-            console.log('DEBUG: speechSynthesis cancel note:', e);
-        }
+        } catch (e) {}
 
-        // Stop media recorder
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
             try {
                 mediaRecorderRef.current.stop();
-            } catch (e) {
-                console.log('DEBUG: MediaRecorder already stopped');
-            }
+            } catch (e) {}
         }
         mediaRecorderRef.current = null;
 
-        // Stop microphone stream
         if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => {
-                track.stop();
-                console.log('DEBUG: Stopped track:', track.kind);
-            });
+            streamRef.current.getTracks().forEach(track => track.stop());
             streamRef.current = null;
         }
 
-        // Close audio context
         if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
             try {
                 audioContextRef.current.close();
-            } catch (e) {
-                console.log('DEBUG: AudioContext already closed');
-            }
+            } catch (e) {}
             audioContextRef.current = null;
         }
 
-        // Stop audio playback
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.src = '';
             audioRef.current = null;
         }
-
-        // Stop browser speech synthesis
-        window.speechSynthesis.cancel();
 
         setIsUserSpeaking(false);
         setIsAiSpeaking(false);

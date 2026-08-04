@@ -71,6 +71,17 @@ export const fetchCompanyRoleProgress = async (
   companyId: string,
   roleId: string
 ): Promise<CompanyRoleProgress | null> => {
+  const localKey = `${STORAGE_KEY_PREFIX}${typeId}_${companyId}_${roleId}`;
+  
+  if (!userId || userId === 'guest_user') {
+    try {
+      const stored = localStorage.getItem(localKey);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }
+
   try {
     const { data, error } = await supabase
       .from('elite_prep_progress')
@@ -82,17 +93,30 @@ export const fetchCompanyRoleProgress = async (
       .maybeSingle();
 
     if (error) {
-      console.error("[eliteInterviewStorage] Error fetching progress:", error);
-      return null;
+      console.warn("[eliteInterviewStorage] DB fetch error, checking local storage:", error.message);
+      const stored = localStorage.getItem(localKey);
+      return stored ? JSON.parse(stored) : null;
     }
 
     if (data && data.progress_data) {
-      return data.progress_data as unknown as CompanyRoleProgress;
+      const prog = data.progress_data as unknown as CompanyRoleProgress;
+      try {
+        localStorage.setItem(localKey, JSON.stringify(prog));
+      } catch {}
+      return prog;
     }
-    return null;
+
+    // Check local fallback
+    const stored = localStorage.getItem(localKey);
+    return stored ? JSON.parse(stored) : null;
   } catch (e) {
-    console.error("[eliteInterviewStorage] DB fetch exception:", e);
-    return null;
+    console.warn("[eliteInterviewStorage] DB fetch exception, fallback to localStorage:", e);
+    try {
+      const stored = localStorage.getItem(localKey);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
   }
 };
 
@@ -100,6 +124,13 @@ export const upsertCompanyRoleProgress = async (
   userId: string,
   progress: CompanyRoleProgress
 ): Promise<void> => {
+  const localKey = `${STORAGE_KEY_PREFIX}${progress.typeId}_${progress.companyId}_${progress.roleId}`;
+  try {
+    localStorage.setItem(localKey, JSON.stringify(progress));
+  } catch {}
+
+  if (!userId || userId === 'guest_user') return;
+
   try {
     const { error } = await supabase
       .from('elite_prep_progress')
@@ -115,10 +146,10 @@ export const upsertCompanyRoleProgress = async (
       );
 
     if (error) {
-      console.error("[eliteInterviewStorage] Error upserting progress:", error);
+      console.warn("[eliteInterviewStorage] DB upsert warning:", error.message);
     }
   } catch (e) {
-    console.error("[eliteInterviewStorage] DB upsert exception:", e);
+    console.warn("[eliteInterviewStorage] DB upsert exception:", e);
   }
 };
 
@@ -405,6 +436,107 @@ export const computeFinalRecommendation = (
     improvements: Array.from(new Set(allImprovements)).slice(0, 5),
     recommendedResources
   };
+};
+
+// --- DEV TOOL TESTING UTILITIES ---
+export const DEV_UNLOCK_ALL_KEY = 'voke_dev_unlock_all_rounds';
+
+export const isDevUnlockAllActive = (): boolean => {
+  try {
+    return localStorage.getItem(DEV_UNLOCK_ALL_KEY) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+export const setDevUnlockAllActive = (active: boolean): void => {
+  try {
+    if (active) {
+      localStorage.setItem(DEV_UNLOCK_ALL_KEY, 'true');
+    } else {
+      localStorage.removeItem(DEV_UNLOCK_ALL_KEY);
+    }
+    window.dispatchEvent(new Event('voke-dev-unlock-change'));
+  } catch (e) {
+    console.warn('[eliteInterviewStorage] Error setting dev unlock:', e);
+  }
+};
+
+export const devPassAllRoundsAsync = async (
+  userId: string,
+  typeId: string,
+  companyId: string,
+  roleId: string,
+  roundsDef?: { roundId: string; roundNumber: number; title: string }[]
+): Promise<CompanyRoleProgress> => {
+  const current = await fetchCompanyRoleProgress(userId, typeId, companyId, roleId);
+  const baseRounds = current?.rounds || (roundsDef || []).map((r) => ({
+    roundId: r.roundId,
+    roundNumber: r.roundNumber,
+    title: r.title,
+    status: 'unlocked' as RoundStatus,
+    attempts: 1
+  }));
+
+  const passedRounds: RoundProgress[] = baseRounds.map((r, i) => ({
+    ...r,
+    status: 'passed' as RoundStatus,
+    score: [88, 92, 85, 90][i] || 88,
+    feedback: `Dev benchmark verification passed for Round ${r.roundNumber}`,
+    feedbackDetails: {
+      communicationScore: 90,
+      confidenceScore: 88,
+      technicalScore: 92,
+      resumeAuthenticityScore: 95,
+      strengths: ['Clear algorithmic articulation', 'Deep system intuition', 'Effective problem decomposition'],
+      improvements: ['Consider asynchronous boundary safety in high-load scenarios'],
+      summary: 'Candidate demonstrated exemplary mastery meeting FAANG high-bar criteria.'
+    },
+    attempts: Math.max(1, r.attempts || 1),
+    completedAt: new Date().toISOString()
+  }));
+
+  const updatedProg: CompanyRoleProgress = {
+    typeId,
+    companyId,
+    roleId,
+    currentRoundNumber: 4,
+    rounds: passedRounds,
+    lastUpdated: new Date().toISOString()
+  };
+
+  await upsertCompanyRoleProgress(userId, updatedProg);
+  window.dispatchEvent(new Event('voke-dev-unlock-change'));
+  return updatedProg;
+};
+
+export const devResetPipelineProgressAsync = async (
+  userId: string,
+  typeId: string,
+  companyId: string,
+  roleId: string,
+  roundsDef: { roundId: string; roundNumber: number; title: string }[]
+): Promise<CompanyRoleProgress> => {
+  const resetRounds: RoundProgress[] = roundsDef.map((r, idx) => ({
+    roundId: r.roundId,
+    roundNumber: r.roundNumber,
+    title: r.title,
+    status: idx === 0 ? 'unlocked' : 'locked',
+    attempts: 0
+  }));
+
+  const resetProg: CompanyRoleProgress = {
+    typeId,
+    companyId,
+    roleId,
+    currentRoundNumber: 1,
+    rounds: resetRounds,
+    lastUpdated: new Date().toISOString()
+  };
+
+  await upsertCompanyRoleProgress(userId, resetProg);
+  window.dispatchEvent(new Event('voke-dev-unlock-change'));
+  return resetProg;
 };
 
 // Deprecated fallback methods for backwards compatibility

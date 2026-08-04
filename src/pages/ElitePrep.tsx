@@ -8,7 +8,8 @@ import {
   saveSelectedType, getSelectedType,
   saveSelectedRole, getSelectedRole,
   saveSelectedCompany, getSelectedCompany,
-  initializeCompanyRoleProgressAsync, getCompanyRoleProgress, CompanyRoleProgress
+  initializeCompanyRoleProgressAsync, getCompanyRoleProgress, CompanyRoleProgress,
+  isDevUnlockAllActive, fetchCompanyRoleProgress
 } from '@/utils/eliteInterviewStorage';
 import { EliteNotebookLMMindMap } from '@/components/elite/EliteNotebookLMMindMap';
 import { EliteVoiceRoom } from '@/components/elite/EliteVoiceRoom';
@@ -18,6 +19,7 @@ import { useInterviewCredits } from '@/hooks/useInterviewCredits';
 import { loadUserProfileContext, ProfileContext } from '@/utils/profileContext';
 import { Crown, AlertTriangle, Sparkles, Wrench, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 type ViewMode = 'notebook_mindmap' | 'in_interview';
 
@@ -50,30 +52,70 @@ const ElitePrep: React.FC = () => {
 
   const [userId, setUserId] = useState<string | null>(null);
 
+  const setupRoundsHub = async (typeItem: InterviewTypeItem, company: CompanyItem, role: RoleItem, uidOverride?: string | null) => {
+    const generatedRounds = getInterviewRounds(typeItem.id, company.id, role.id);
+    setRounds(generatedRounds);
+    const activeUid = uidOverride ?? userId ?? 'guest_user';
+    const prog = await initializeCompanyRoleProgressAsync(activeUid, typeItem.id, company.id, role.id, generatedRounds);
+    setProgress(prog);
+  };
+
   useEffect(() => {
     const initProfileAndUser = async () => {
+      let activeUid = 'guest_user';
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) setUserId(user.id);
+        if (user) {
+          activeUid = user.id;
+          setUserId(user.id);
+        } else {
+          setUserId('guest_user');
+        }
 
         const ctx = await loadUserProfileContext();
         setProfileContext(ctx);
       } catch (err) {
-        console.error('[ElitePrep] Profile load error:', err);
+        console.warn('[ElitePrep] Profile load fallback:', err);
+        setUserId('guest_user');
       } finally {
         setLoadingProfile(false);
       }
+
+      // Restore saved or default selections on mount
+      try {
+        const savedTypeId = getSelectedType();
+        const savedCompId = getSelectedCompany();
+        const savedRoleId = getSelectedRole();
+
+        const typeObj = INTERVIEW_TYPES.find(t => t.id === savedTypeId) || INTERVIEW_TYPES[0];
+        const compObj = TOP_COMPANIES.find(c => c.id === savedCompId) || null;
+        const roleObj = ELITE_ROLES.find(r => r.id === savedRoleId) || null;
+
+        if (typeObj) setSelectedType(typeObj);
+        if (compObj) setSelectedCompany(compObj);
+        if (roleObj) setSelectedRole(roleObj);
+
+        if (typeObj && compObj && roleObj) {
+          await setupRoundsHub(typeObj, compObj, roleObj, activeUid);
+        }
+      } catch (e) {
+        console.warn('[ElitePrep] Selection restore warning:', e);
+      }
+      // Listen for Dev Tool progress/unlock changes
+      const handleDevChange = async () => {
+        if (selectedType && selectedCompany && selectedRole) {
+          const updated = await fetchCompanyRoleProgress(activeUid, selectedType.id, selectedCompany.id, selectedRole.id);
+          if (updated) setProgress(updated);
+        }
+      };
+      window.addEventListener('voke-dev-unlock-change', handleDevChange);
+
+      return () => {
+        window.removeEventListener('voke-dev-unlock-change', handleDevChange);
+      };
     };
     initProfileAndUser();
-  }, []);
-
-  const setupRoundsHub = async (typeItem: InterviewTypeItem, company: CompanyItem, role: RoleItem) => {
-    if (!userId) return;
-    const generatedRounds = getInterviewRounds(typeItem.id, company.id, role.id);
-    setRounds(generatedRounds);
-    const prog = await initializeCompanyRoleProgressAsync(userId, typeItem.id, company.id, role.id, generatedRounds);
-    setProgress(prog);
-  };
+  }, [selectedType?.id, selectedCompany?.id, selectedRole?.id]);
 
   // Clicking Step 1 Track: Toggle off or switch track (collapsing downstream choices)
   const handleSelectType = (typeItem: InterviewTypeItem) => {
@@ -133,7 +175,8 @@ const ElitePrep: React.FC = () => {
   };
 
   const handleStartRound = async (round: InterviewRoundDef) => {
-    if (selectedType && selectedCompany && selectedRole) {
+    const isDevUnlocked = isDevUnlockAllActive();
+    if (!isDevUnlocked && selectedType && selectedCompany && selectedRole) {
       const targetRoundState = progress?.rounds.find(r => r.roundNumber === round.roundNumber);
       if (round.roundNumber > 1 && targetRoundState?.status === 'locked') {
         toast.error(`🔒 Round ${round.roundNumber} is locked! You must pass Round ${round.roundNumber - 1} first.`);
@@ -148,11 +191,10 @@ const ElitePrep: React.FC = () => {
   };
 
   const handleCompleteRound = async (verdict: 'PASSED' | 'FAILED') => {
-    if (selectedType && selectedCompany && selectedRole && userId) {
-      // The updateRoundResultAsync should have been called by the interview component.
-      // We just need to refresh local state.
+    if (selectedType && selectedCompany && selectedRole) {
+      const activeUid = userId || 'guest_user';
       const updatedProg = await initializeCompanyRoleProgressAsync(
-        userId, selectedType.id, selectedCompany.id, selectedRole.id, rounds
+        activeUid, selectedType.id, selectedCompany.id, selectedRole.id, rounds
       );
       if (updatedProg) setProgress(updatedProg);
     }
@@ -228,7 +270,7 @@ const ElitePrep: React.FC = () => {
           />
         )}
 
-        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 1 && userId && (
+        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && (activeRound.roundNumber === 1 || activeRound.roundNumber === 4) && (
           <EliteVoiceRoom
             interviewType={selectedType}
             company={selectedCompany}
@@ -237,13 +279,13 @@ const ElitePrep: React.FC = () => {
             candidateProfileContext={profileContext?.context}
             githubRepos={profileContext?.githubRepos}
             isLoadingRepos={loadingProfile}
-            userId={userId}
+            userId={userId || 'guest_user'}
             onCompleteRound={handleCompleteRound}
             onExit={() => setViewMode('notebook_mindmap')}
           />
         )}
 
-        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 2 && userId && (
+        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 2 && (
           <EliteProjectDeepDive
             interviewType={selectedType}
             company={selectedCompany}
@@ -252,20 +294,20 @@ const ElitePrep: React.FC = () => {
             candidateProfileContext={profileContext?.context}
             githubRepos={profileContext?.githubRepos}
             isLoadingRepos={loadingProfile}
-            userId={userId}
+            userId={userId || 'guest_user'}
             onCompleteRound={handleCompleteRound}
             onExit={() => setViewMode('notebook_mindmap')}
           />
         )}
 
-        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 3 && userId && (
+        {viewMode === 'in_interview' && selectedType && selectedCompany && selectedRole && activeRound && activeRound.roundNumber === 3 && (
           <EliteCodingAssessment
             interviewType={selectedType}
             company={selectedCompany}
             role={selectedRole}
             round={activeRound}
             candidateProfileContext={profileContext?.context}
-            userId={userId}
+            userId={userId || 'guest_user'}
             onCompleteRound={handleCompleteRound}
             onExit={() => setViewMode('notebook_mindmap')}
           />
