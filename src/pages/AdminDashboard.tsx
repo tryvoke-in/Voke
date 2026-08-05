@@ -29,6 +29,7 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { TractionChartWidget } from "@/components/admin/TractionChartWidget";
 
 const formatDate = (dateString: string) => {
   if (!dateString) return "N/A";
@@ -676,38 +677,14 @@ const AdminDashboard = () => {
 
                 {/* Charts Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <Card className="lg:col-span-2 bg-white/5 border-white/10 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle>User Growth & Activity</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={chartData}>
-                            <defs>
-                              <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                              </linearGradient>
-                              <linearGradient id="colorWaitlist" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
-                            <XAxis dataKey="name" stroke="#6b7280" axisLine={false} tickLine={false} />
-                            <YAxis stroke="#6b7280" axisLine={false} tickLine={false} />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                              itemStyle={{ color: '#e5e7eb' }}
-                            />
-                            <Area type="monotone" dataKey="users" name="Total Users" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
-                            <Area type="monotone" dataKey="waitlist" name="Waitlist Signups" stroke="#06b6d4" strokeWidth={2} fillOpacity={1} fill="url(#colorWaitlist)" />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div className="lg:col-span-2">
+                    <TractionChartWidget 
+                      users={users} 
+                      waitlist={waitlist} 
+                      totalSessions={totalSessions} 
+                      activities={activities} 
+                    />
+                  </div>
 
                   <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
                     <CardHeader>
