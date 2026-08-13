@@ -4,7 +4,7 @@ import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/d
 import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { LiveStatus } from '@/types/voice';
 import { updateRoundResultAsync, RoundFeedbackDetails } from '@/utils/eliteInterviewStorage';
-import { executeCode, ExecutionResult } from '@/utils/codeExecutor';
+import { executeCode, ExecutionResult, validateCodeWithAI } from '@/utils/codeExecutor';
 import Editor from '@monaco-editor/react';
 import {
   Mic,
@@ -88,264 +88,16 @@ interface SystemDesignQuestion {
 }
 
 // Role-specific realistic interview questions
+import { NEWTON_SECTION_A_PROBLEMS } from '@/data/eliteNewtonQuestions';
+import { NEWTON_DEBUG_PROBLEMS } from '@/data/eliteNewtonDebugQuestions';
+import { SYSTEM_DESIGN_QUESTIONS } from '@/data/eliteSystemDesignQuestions';
+
 const SECTION_A_PROBLEMS: Record<string, ProblemDefinition[]> = {
-  default: [
-    {
-      id: 'p1_two_sum_sorted',
-      title: '1. Two Sum II — Pair with Target Sum',
-      difficulty: 'Easy',
-      topic: 'Two Pointers & Arrays',
-      description: `Given a 1-indexed array of integers \`numbers\` that is already **sorted in non-decreasing order**, find two numbers such that they add up to a specific \`target\` number.
-
-Return the indices of the two numbers, **index1** and **index2**, as an integer array \`[index1, index2]\` where \`1 <= index1 < index2 <= numbers.length\`.
-
-You must solve the problem in **$O(N)$ time** and **$O(1)$ extra space**.`,
-      examples: [
-        {
-          input: 'numbers = [2, 7, 11, 15], target = 9',
-          output: '[1, 2]',
-          explanation: 'The sum of 2 and 7 is 9. Therefore, index1 = 1, index2 = 2.'
-        },
-        {
-          input: 'numbers = [2, 3, 4], target = 6',
-          output: '[1, 3]',
-          explanation: 'The sum of 2 and 4 is 6. Therefore index1 = 1, index2 = 3.'
-        }
-      ],
-      constraints: [
-        '2 <= numbers.length <= 3 * 10^4',
-        '-1000 <= numbers[i] <= 1000',
-        'numbers is sorted in non-decreasing order.',
-        'Exactly one valid solution exists.'
-      ],
-      starterCode: {
-        typescript: `function twoSum(numbers: number[], target: number): number[] {
-  let left = 0;
-  let right = numbers.length - 1;
-  
-  while (left < right) {
-    const currentSum = numbers[left] + numbers[right];
-    if (currentSum === target) {
-      return [left + 1, right + 1];
-    } else if (currentSum < target) {
-      left++;
-    } else {
-      right--;
-    }
-  }
-  
-  return [];
-}`,
-        javascript: `function twoSum(numbers, target) {
-  let left = 0;
-  let right = numbers.length - 1;
-  
-  while (left < right) {
-    const currentSum = numbers[left] + numbers[right];
-    if (currentSum === target) {
-      return [left + 1, right + 1];
-    } else if (currentSum < target) {
-      left++;
-    } else {
-      right--;
-    }
-  }
-  
-  return [];
-}`,
-        python: `def twoSum(numbers: list[int], target: int) -> list[int]:
-    left, right = 0, len(numbers) - 1
-    while left < right:
-        s = numbers[left] + numbers[right]
-        if s == target:
-            return [left + 1, right + 1]
-        elif s < target:
-            left += 1
-        else:
-            right -= 1
-    return []`
-      },
-      testCases: [
-        { input: '[2, 7, 11, 15], 9', expected: '[1, 2]' },
-        { input: '[2, 3, 4], 6', expected: '[1, 3]' },
-        { input: '[-1, 0], -1', expected: '[1, 2]' }
-      ]
-    },
-    {
-      id: 'p2_sliding_window_max',
-      title: '2. Longest Substring Without Repeating Characters',
-      difficulty: 'Medium',
-      topic: 'Sliding Window & Hash Maps',
-      description: `Given a string \`s\`, find the length of the **longest substring** without repeating characters.
-
-Optimize for **$O(N)$ time** using a dynamic sliding window with index tracking.`,
-      examples: [
-        {
-          input: 's = "abcabcbb"',
-          output: '3',
-          explanation: 'The answer is "abc", with the length of 3.'
-        },
-        {
-          input: 's = "bbbbb"',
-          output: '1',
-          explanation: 'The answer is "b", with the length of 1.'
-        },
-        {
-          input: 's = "pwwkew"',
-          output: '3',
-          explanation: 'The answer is "wke", with the length of 3.'
-        }
-      ],
-      constraints: [
-        '0 <= s.length <= 5 * 10^4',
-        's consists of English letters, digits, symbols and spaces.'
-      ],
-      starterCode: {
-        typescript: `function lengthOfLongestSubstring(s: string): number {
-  const charMap = new Map<string, number>();
-  let maxLen = 0;
-  let left = 0;
-
-  for (let right = 0; right < s.length; right++) {
-    const char = s[right];
-    if (charMap.has(char) && charMap.get(char)! >= left) {
-      left = charMap.get(char)! + 1;
-    }
-    charMap.set(char, right);
-    maxLen = Math.max(maxLen, right - left + 1);
-  }
-
-  return maxLen;
-}`,
-        javascript: `function lengthOfLongestSubstring(s) {
-  const charMap = new Map();
-  let maxLen = 0;
-  let left = 0;
-
-  for (let right = 0; right < s.length; right++) {
-    const char = s[right];
-    if (charMap.has(char) && charMap.get(char) >= left) {
-      left = charMap.get(char) + 1;
-    }
-    charMap.set(char, right);
-    maxLen = Math.max(maxLen, right - left + 1);
-  }
-
-  return maxLen;
-}`,
-        python: `def lengthOfLongestSubstring(s: str) -> int:
-    char_map = {}
-    max_len = left = 0
-    for right, char in enumerate(s):
-        if char in char_map and char_map[char] >= left:
-            left = char_map[char] + 1
-        char_map[char] = right
-        max_len = max(max_len, right - left + 1)
-    return max_len`
-      },
-      testCases: [
-        { input: '"abcabcbb"', expected: '3' },
-        { input: '"bbbbb"', expected: '1' },
-        { input: '"pwwkew"', expected: '3' }
-      ]
-    }
-  ]
+  default: NEWTON_SECTION_A_PROBLEMS as ProblemDefinition[]
 };
 
 const SECTION_B_DEBUGGING: Record<string, DebuggingProblemDefinition[]> = {
-  default: [
-    {
-      id: 'debug_closure_rate_limiter',
-      title: 'Bug 1: Async Cache & Debounce Race Condition',
-      topic: 'State & Concurrency Bug',
-      scenario: 'A candidate implemented an in-memory caching function for API requests, but users report stale data and intermittent duplicate API triggers under fast clicks.',
-      buggyCode: `// BUGGY CODE: Identify why cached responses leak and race conditions occur
-function createAsyncFetcher(fetchFn, ttlMs = 5000) {
-  let cache = {};
-  let inFlight = {};
-
-  return async function(key) {
-    const now = Date.now();
-    
-    // Check cache with TTL
-    if (cache[key] && (now - cache[key].timestamp < ttlMs)) {
-      return cache[key].data;
-    }
-
-    // Deduplicate in-flight promises
-    if (inFlight[key]) {
-      return inFlight[key];
-    }
-
-    inFlight[key] = (async () => {
-      try {
-        const res = await fetchFn(key);
-        cache[key] = { data: res, timestamp: Date.now() };
-        return res;
-      } finally {
-        delete inFlight[key];
-      }
-    })();
-
-    return inFlight[key];
-  };
-}`,
-      expectedBehavior: '1. Handle TTL expiry properly. 2. Deduplicate simultaneous in-flight promises so multiple concurrent calls share 1 network request.',
-      hints: [
-        'Notice how `now` is captured before the async fetch finishes.',
-        'What happens when 5 requests for the same key arrive at millisecond 0?',
-        'Look into storing the pending Promise in `inFlight` map.'
-      ],
-      testCases: [
-        { input: 'async (k) => "result_" + k, 5000', expected: 'function' }
-      ]
-    },
-    {
-      id: 'debug_binary_search_overflow',
-      title: 'Bug 2: Binary Search Infinite Loop & Index Calculation',
-      topic: 'Algorithm Boundary Bug',
-      scenario: 'Binary search implementation times out with infinite loop on duplicate elements and causes integer overflow on large arrays.',
-      buggyCode: `// BUGGY CODE: Locate the boundary and index calculation bugs
-function searchRotatedArray(nums, target) {
-  let low = 0;
-  let high = nums.length - 1; // High boundary fix
-
-  while (low <= high) {
-    let mid = Math.floor(low + (high - low) / 2);
-
-    if (nums[mid] === target) return mid;
-
-    // Check if left half is sorted
-    if (nums[low] <= nums[mid]) {
-      if (target >= nums[low] && target < nums[mid]) {
-        high = mid - 1;
-      } else {
-        low = mid + 1;
-      }
-    } else {
-      if (target > nums[mid] && target <= nums[high]) {
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-  }
-
-  return -1;
-}`,
-      expectedBehavior: 'High boundary should be `nums.length - 1`, index adjustment must decrement `high = mid - 1` and increment `low = mid + 1`.',
-      hints: [
-        'Trace what happens when array is `[3, 1]` and target is `1`.',
-        'Verify `high` index initialization.'
-      ],
-      testCases: [
-        { input: '[4, 5, 6, 7, 0, 1, 2], 0', expected: '4' },
-        { input: '[4, 5, 6, 7, 0, 1, 2], 3', expected: '-1' },
-        { input: '[1], 0', expected: '-1' },
-        { input: '[3, 1], 1', expected: '1' }
-      ]
-    }
-  ]
+  default: NEWTON_DEBUG_PROBLEMS as unknown as DebuggingProblemDefinition[]
 };
 
 const DEFAULT_SYSTEM_DESIGN_STARTER = `// Language: JavaScript
@@ -404,75 +156,7 @@ async function slidingWindowRateLimiter(key, limit, windowSize) {
   await redis.quit();
 })();`;
 
-const SECTION_C_SYSTEM_DESIGN: Record<string, SystemDesignQuestion[]> = {
-  frontend: [
-    {
-      id: 'sd_fe_infinite_scroll',
-      title: 'Practical System Design: Infinite Scroll & Virtualized List',
-      category: 'Frontend & UI Architecture',
-      prompt: 'Design a performant infinite scrolling feed (like LinkedIn or Twitter) for 100,000 items on mobile and desktop without crashing browser memory (DOM node recycling, intersection observer, prefetching, and window virtualization).',
-      keyDiscussionPoints: [
-        'DOM Node Virtualization (windowing technique)',
-        'IntersectionObserver vs Scroll Event throttling',
-        'Prefetching buffer and backpressure handling',
-        'Memory management & image cleanup',
-        'Scroll position retention on navigation'
-      ]
-    },
-    {
-      id: 'sd_fe_url_shortener_client',
-      title: 'State & Caching Architecture: Real-Time Collaborative Canvas',
-      category: 'State Management & Sync',
-      prompt: 'Design the client-side state architecture for a multi-user collaborative workspace (like Miro/Excalidraw). How do you handle optimistic updates, conflict resolution, and WebSocket event batching?',
-      keyDiscussionPoints: [
-        'Optimistic local updates vs Server confirmation',
-        'Operational Transformation (OT) vs CRDT intuition',
-        'WebSocket connection resilience & heartbeat',
-        'Canvas rendering pipeline (WebGL / Canvas API)'
-      ]
-    }
-  ],
-  backend: [
-    {
-      id: 'sd_be_rate_limiter',
-      title: 'Practical System Design: Distributed Rate Limiter with Sliding Window',
-      category: 'Backend & Distributed Systems',
-      prompt: 'Design a distributed rate limiter protecting public API endpoints (e.g. 100 requests / minute per user IP). How would you implement this with Redis, handling race conditions and high concurrency?',
-      keyDiscussionPoints: [
-        'Token Bucket vs Sliding Window Log vs Sliding Window Counter',
-        'Redis Lua scripts for atomic execution',
-        'Handling multi-region Redis sync and fallback degradation',
-        'Response headers (X-RateLimit-Limit, Retry-After)'
-      ]
-    },
-    {
-      id: 'sd_be_notification_pipeline',
-      title: 'Practical System Design: Event-Driven Notification Engine',
-      category: 'Messaging & Queues',
-      prompt: 'Design an event-driven notification service delivering millions of push, email, and SMS alerts daily with priority queues, idempotency, and user preference filtering.',
-      keyDiscussionPoints: [
-        'Message broker selection (Kafka vs RabbitMQ vs SQS)',
-        'Idempotency keys to prevent duplicate emails',
-        'Rate limiting outbound provider calls (Twilio / SendGrid)',
-        'Dead-letter queues (DLQ) for failed delivery retry'
-      ]
-    }
-  ],
-  fullstack: [
-    {
-      id: 'sd_fs_realtime_chat',
-      title: 'Practical System Design: Scalable 1-on-1 and Group Chat',
-      category: 'Full Stack Architecture',
-      prompt: 'Design an end-to-end real-time chat application with instant message delivery, read receipts, offline sync, and media attachment upload.',
-      keyDiscussionPoints: [
-        'WebSocket gateway connection management',
-        'Database schema for messages, channels, and unread counters',
-        'Presigned S3 URLs for direct media uploads',
-        'Client-side SQLite / IndexedDB sync for offline support'
-      ]
-    }
-  ]
-};
+const SECTION_C_SYSTEM_DESIGN: Record<string, SystemDesignQuestion[]> = SYSTEM_DESIGN_QUESTIONS as unknown as Record<string, SystemDesignQuestion[]>;
 
 export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   interviewType,
@@ -489,7 +173,9 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
 
   // Section State
   const [currentSection, setCurrentSection] = useState<CodingSection>('A_CODING');
-  const [selectedProblemIndex, setSelectedProblemIndex] = useState(0);
+  const [selectedProblemIndex, setSelectedProblemIndex] = useState(() => {
+    return Math.floor(Math.random() * SECTION_A_PROBLEMS.default.length);
+  });
   const [selectedLanguage, setSelectedLanguage] = useState<'typescript' | 'javascript' | 'python'>('typescript');
 
   // Phase-Gate State
@@ -558,7 +244,13 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   const currentProblem = problems[selectedProblemIndex] || problems[0];
 
   const debugProblems = useMemo(() => SECTION_B_DEBUGGING.default, []);
-  const currentDebugProblem = debugProblems[0];
+  const currentDebugProblem = useMemo(() => {
+    if (!debugProblems || debugProblems.length === 0) {
+      return { id: 'fallback', title: 'Loading...', topic: 'Loading...', scenario: 'Please wait...', buggyCode: '', expectedBehavior: '', hints: [] } as any;
+    }
+    const randomIndex = Math.floor(Math.random() * debugProblems.length);
+    return debugProblems[randomIndex];
+  }, [debugProblems]);
 
   const roleCategory = useMemo(() => {
     const title = role.title.toLowerCase();
@@ -568,8 +260,16 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   }, [role.title]);
 
   const systemDesignQuestions = useMemo(() => {
-    return SECTION_C_SYSTEM_DESIGN[roleCategory] || SECTION_C_SYSTEM_DESIGN.fullstack;
+    return SECTION_C_SYSTEM_DESIGN[roleCategory] || SECTION_C_SYSTEM_DESIGN.fullstack || [];
   }, [roleCategory]);
+
+  const currentSystemDesignQuestion = useMemo(() => {
+    if (!systemDesignQuestions || systemDesignQuestions.length === 0) {
+      return { id: 'fallback', title: 'Loading...', category: 'Loading...', prompt: 'Please wait...', keyDiscussionPoints: [] } as any;
+    }
+    const randomIndex = Math.floor(Math.random() * systemDesignQuestions.length);
+    return systemDesignQuestions[randomIndex];
+  }, [systemDesignQuestions]);
 
   const [code, setCode] = useState<string>(currentProblem.starterCode[selectedLanguage] || '');
   const [debugCode, setDebugCode] = useState<string>(currentDebugProblem.buggyCode);
@@ -693,7 +393,7 @@ PROBLEM ON SCREEN (Section A - Problem 1): ${problems[0].title} (${problems[0].t
 Description summary: ${problems[0].description?.substring(0, 200)}...
 
 Section B: ${currentDebugProblem.title}
-Section C: ${systemDesignQuestions[0]?.title}`;
+Section C: ${currentSystemDesignQuestion?.title}`;
 
     try {
       setIsSilentMode(false);
@@ -768,8 +468,9 @@ Section C: ${systemDesignQuestions[0]?.title}`;
       }
     } else if (newSection === 'C_SYSTEM_DESIGN') {
       setIsSilentMode(false);
+      setScratchPadMode('draw');
       if (status === LiveStatus.CONNECTED) {
-        await sendHiddenContext(`Candidate moved to Section C: System Design. Introduce the question: "${systemDesignQuestions[0]?.prompt}". Ask them to walk through their architecture, trade-offs, and Big-O complexity. Only coding/system design questions — no resume questions.`);
+        await sendHiddenContext(`Candidate moved to Section C: System Design. Introduce the question: "${currentSystemDesignQuestion?.prompt}". Ask them to walk through their architecture, trade-offs, and Big-O complexity. Only coding/system design questions — no resume questions.`);
       }
     }
   };
@@ -818,7 +519,42 @@ Section C: ${systemDesignQuestions[0]?.title}`;
           ? currentDebugProblem.testCases
           : undefined;
 
-      const res = await executeCode(activeCode, selectedLanguage, undefined, undefined, undefined, activeTestCases);
+      let res: ExecutionResult;
+
+      if (currentSection === 'B_DEBUGGING' && !activeTestCases) {
+        // Evaluate the fixed code using our low-token AI Static Validator
+        res = await validateCodeWithAI(
+          activeCode,
+          `The candidate was asked to fix a bug with this scenario: ${currentDebugProblem.scenario}\n\nThe expected behavior is: ${currentDebugProblem.expectedBehavior}\n\nDid they fix it correctly?`,
+          selectedLanguage
+        );
+        
+        // Push the AI's reason to the logs so the user sees it in the console
+        if (res.error) {
+          res.logs.push(`❌ ${res.error}`);
+        } else if (res.passed) {
+          res.logs.push(`✅ Fix looks correct!`);
+        } else {
+          res.logs.push(`❌ Fix is incorrect.`);
+        }
+      } else if (currentSection === 'C_SYSTEM_DESIGN') {
+        // System design cannot be executed. Use AI Static Evaluation on their pseudo-code/notes.
+        res = await validateCodeWithAI(
+          activeCode,
+          `The candidate designed an architecture for: "${currentSystemDesignQuestion?.prompt}".\nKey discussion points to look for: ${currentSystemDesignQuestion?.keyDiscussionPoints.join(', ')}.\nDoes their design pseudo-code or notes look acceptable and cover the core requirements?`,
+          'text'
+        );
+        
+        if (res.passed) {
+          res.logs.push(`✅ System Design Architecture looks acceptable!`);
+        } else {
+          res.logs.push(`❌ System Design is missing key components or has critical flaws.`);
+        }
+        if (res.error) res.logs.push(res.error);
+      } else {
+        res = await executeCode(activeCode, selectedLanguage, undefined, undefined, undefined, activeTestCases);
+      }
+
       setExecutionResult(res);
 
       if (res.passed) {

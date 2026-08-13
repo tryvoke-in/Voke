@@ -350,6 +350,51 @@ export const executeCode = async (
 
     // Build async evaluation harness
     const harness = `
+      // LeetCode Environment Helpers
+      class TreeNode {
+        constructor(val, left = null, right = null) {
+          this.val = val;
+          this.left = left;
+          this.right = right;
+        }
+      }
+      class ListNode {
+        constructor(val, next = null) {
+          this.val = val;
+          this.next = next;
+        }
+      }
+      function buildTree(arr) {
+        if (!arr || arr.length === 0 || arr[0] === null) return null;
+        const root = new TreeNode(arr[0]);
+        const queue = [root];
+        let i = 1;
+        while (i < arr.length) {
+          const curr = queue.shift();
+          if (arr[i] !== null && arr[i] !== undefined) {
+            curr.left = new TreeNode(arr[i]);
+            queue.push(curr.left);
+          }
+          i++;
+          if (i < arr.length && arr[i] !== null && arr[i] !== undefined) {
+            curr.right = new TreeNode(arr[i]);
+            queue.push(curr.right);
+          }
+          i++;
+        }
+        return root;
+      }
+      function buildList(arr) {
+        if (!arr || arr.length === 0) return null;
+        const head = new ListNode(arr[0]);
+        let curr = head;
+        for (let i = 1; i < arr.length; i++) {
+          curr.next = new ListNode(arr[i]);
+          curr = curr.next;
+        }
+        return head;
+      }
+
       let __mainFn = null;
       ${executableCode}
       if (typeof ${mainFnName || 'null'} === 'function') {
@@ -412,5 +457,74 @@ export const executeCode = async (
     const errMsg = err?.message ?? 'Runtime error';
     captureLog(`\n❌ Execution Error: ${errMsg}`);
     return { passed: false, logs, results: [], error: errMsg };
+  }
+};
+
+// ─── AI Static Code Validator (Low Token "Jugaad") ───────────────────────────
+export const validateCodeWithAI = async (
+  userCode: string,
+  problemDescription: string,
+  language: string
+): Promise<ExecutionResult> => {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+  if (!apiKey) {
+    return { passed: false, logs: ["API Key missing for AI Validator"], results: [] };
+  }
+
+  const prompt = `You are a strict, expert coding interviewer evaluating a candidate's code.
+Does the candidate's code correctly solve the problem described below?
+Pay close attention to edge cases and Time/Space complexity.
+
+Return ONLY a valid JSON object in this exact format, nothing else:
+{
+  "passed": true or false,
+  "feedback": "A very short, 1-sentence reason why it passed or failed."
+}
+
+Problem Description:
+${problemDescription.substring(0, 1500)}
+
+Candidate's Code (${language}):
+${userCode.substring(0, 2000)}
+`;
+
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1
+      })
+    });
+
+    if (!response.ok) {
+      return { passed: false, logs: ["AI Validation API Error"], results: [] };
+    }
+
+    const result = await response.json();
+    let content = result.choices[0].message.content.trim();
+    if (content.startsWith("\`\`\`json")) {
+      content = content.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "");
+    }
+    
+    const parsed = JSON.parse(content);
+    return {
+      passed: parsed.passed === true,
+      logs: [parsed.feedback || (parsed.passed ? "AI Verified: Correct" : "AI Verified: Incorrect")],
+      results: [{
+        caseId: 1,
+        input: "Static AI Analysis",
+        expected: "Correct Logic",
+        actual: parsed.feedback || "Evaluated by AI",
+        passed: parsed.passed === true
+      }]
+    };
+  } catch (err: any) {
+    return { passed: false, logs: ["Failed to validate with AI: " + err.message], results: [] };
   }
 };

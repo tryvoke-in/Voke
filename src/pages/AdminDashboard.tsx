@@ -927,7 +927,7 @@ const AdminDashboard = () => {
                 </Card>
 
                 {/* Popular Breakdown Cards */}
-                <div className="w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Top Pages */}
                   <Card className="bg-white/5 border-white/10 shadow-xl">
                     <CardHeader>
@@ -964,6 +964,60 @@ const AdminDashboard = () => {
                                 <div 
                                   className="bg-violet-600 h-full rounded-full transition-all duration-500" 
                                   style={{ width: `${(page.count / maxCount) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* User Locations Analysis */}
+                  <Card className="bg-white/5 border-white/10 shadow-xl">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-bold">User Demographics (Locations)</CardTitle>
+                      <p className="text-xs text-gray-400">Total users grouped by country and city</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                        {(() => {
+                          const locationCounts: Record<string, number> = {};
+                          const uniqueUsersTracked = new Set<string>();
+
+                          activities.forEach(a => {
+                            const identifier = a.user_email || a.user_id || a.session_id;
+                            if (identifier && !uniqueUsersTracked.has(identifier)) {
+                               const city = a.action_details?.ip_city;
+                               const country = a.action_details?.ip_country;
+                               if (city && country) {
+                                  const locKey = `${city}, ${country}`;
+                                  locationCounts[locKey] = (locationCounts[locKey] || 0) + 1;
+                                  uniqueUsersTracked.add(identifier);
+                               }
+                            }
+                          });
+
+                          const sorted = Object.entries(locationCounts)
+                            .map(([loc, count]) => ({ loc, count }))
+                            .sort((a, b) => b.count - a.count);
+                          
+                          const maxCount = sorted[0]?.count || 1;
+
+                          if (sorted.length === 0) {
+                            return <p className="text-sm text-gray-500 py-4 text-center">No location data recorded yet</p>;
+                          }
+
+                          return sorted.map((item, index) => (
+                            <div key={index} className="space-y-1.5">
+                              <div className="flex justify-between text-sm">
+                                <span className="font-medium text-gray-300 truncate max-w-[80%]">{item.loc}</span>
+                                <span className="font-bold text-emerald-400">{item.count} user{item.count > 1 ? 's' : ''}</span>
+                              </div>
+                              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                <div 
+                                  className="bg-emerald-600 h-full rounded-full transition-all duration-500" 
+                                  style={{ width: `${(item.count / maxCount) * 100}%` }}
                                 />
                               </div>
                             </div>

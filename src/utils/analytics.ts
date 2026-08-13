@@ -13,6 +13,28 @@ const getSessionId = (): string => {
   return memorySessionId;
 };
 
+const getUserLocation = async () => {
+  try {
+    const cached = localStorage.getItem('voke_user_location');
+    if (cached) return JSON.parse(cached);
+    
+    // Using ipapi.co for free IP geolocation (city, country_name)
+    const res = await fetch('https://ipapi.co/json/');
+    if (!res.ok) return null;
+    const data = await res.json();
+    
+    if (data && data.city && data.country_name) {
+      const loc = { city: data.city, country: data.country_name };
+      localStorage.setItem('voke_user_location', JSON.stringify(loc));
+      return loc;
+    }
+    return null;
+  } catch (e) {
+    console.warn('Could not fetch user location:', e);
+    return null;
+  }
+};
+
 /**
  * Tracks a user activity event in the database.
  * 
@@ -31,6 +53,12 @@ export const trackEvent = async (
     const userEmail = session?.user?.email || null;
     const sessionId = getSessionId();
     const userAgent = navigator.userAgent;
+    
+    const location = await getUserLocation();
+    const finalActionDetails = {
+      ...actionDetails,
+      ...(location ? { ip_city: location.city, ip_country: location.country } : {})
+    };
 
     const { error } = await supabase.functions.invoke("track-analytics", {
       body: {
@@ -39,7 +67,7 @@ export const trackEvent = async (
         session_id: sessionId,
         event_type: eventType,
         page_path: pagePath,
-        action_details: actionDetails,
+        action_details: finalActionDetails,
         user_agent: userAgent,
       }
     });
