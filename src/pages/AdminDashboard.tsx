@@ -730,6 +730,7 @@ const AdminDashboard = () => {
                         <TableRow className="border-white/10 hover:bg-white/5">
                           <TableHead className="text-gray-400">User</TableHead>
                           <TableHead className="text-gray-400">Status</TableHead>
+                          <TableHead className="text-gray-400">Location</TableHead>
                           <TableHead className="text-gray-400">Role</TableHead>
                           <TableHead className="text-gray-400">Joined</TableHead>
                           <TableHead className="text-right text-gray-400">Action</TableHead>
@@ -770,6 +771,12 @@ const AdminDashboard = () => {
                                 <CheckCircle2 className="w-3 h-3 mr-1" />
                                 Active
                               </Badge>
+                            </TableCell>
+                            <TableCell className="text-gray-400">
+                              {(() => {
+                                const userActivity = activities.find(a => (a.user_id === user.id || a.user_email === user.email) && a.action_details?.ip_city);
+                                return userActivity ? `${userActivity.action_details.ip_city}, ${userActivity.action_details.ip_country}` : "Unknown";
+                              })()}
                             </TableCell>
                             <TableCell className="text-gray-400">User</TableCell>
                             <TableCell className="text-gray-400">{formatDate(user.created_at)}</TableCell>
@@ -1045,6 +1052,7 @@ const AdminDashboard = () => {
                             <TableHead className="text-gray-400">User / Visitor</TableHead>
                             <TableHead className="text-gray-400">Total Visits (Sessions)</TableHead>
                             <TableHead className="text-gray-400">Total Page Views</TableHead>
+                            <TableHead className="text-gray-400">Location</TableHead>
                             <TableHead className="text-gray-400">Total Time Spent</TableHead>
                             <TableHead className="text-gray-400">Last Active</TableHead>
                           </TableRow>
@@ -1052,7 +1060,7 @@ const AdminDashboard = () => {
                         <TableBody>
                           {(() => {
                             const breakdown = (() => {
-                              const userStats: Record<string, { email: string; userId: string | null; sessions: Set<string>; pageViews: number; totalDuration: number; lastActive: string }> = {};
+                              const userStats: Record<string, { email: string; userId: string | null; sessions: Set<string>; pageViews: number; totalDuration: number; lastActive: string; location: string | null }> = {};
 
                               activities.forEach(activity => {
                                 const identifier = activity.user_email || "Guest (Anonymous)";
@@ -1063,12 +1071,18 @@ const AdminDashboard = () => {
                                     sessions: new Set<string>(),
                                     pageViews: 0,
                                     totalDuration: 0,
-                                    lastActive: activity.created_at
+                                    lastActive: activity.created_at,
+                                    location: null
                                   };
                                 }
                                 if (activity.user_id && !userStats[identifier].userId) {
                                   userStats[identifier].userId = activity.user_id;
                                 }
+                                
+                                if (!userStats[identifier].location && activity.action_details?.ip_city && activity.action_details?.ip_country) {
+                                  userStats[identifier].location = `${activity.action_details.ip_city}, ${activity.action_details.ip_country}`;
+                                }
+
                                 userStats[identifier].sessions.add(activity.session_id);
                                 userStats[identifier].pageViews += 1;
                                 
@@ -1091,7 +1105,8 @@ const AdminDashboard = () => {
                                   visitCount: stat.sessions.size,
                                   pageViews: stat.pageViews,
                                   totalDuration: stat.totalDuration,
-                                  lastActive: stat.lastActive
+                                  lastActive: stat.lastActive,
+                                  location: stat.location
                                 }))
                                 .sort((a, b) => b.visitCount - a.visitCount);
                             })();
@@ -1129,6 +1144,9 @@ const AdminDashboard = () => {
                                 </TableCell>
                                 <TableCell className="text-gray-300 text-sm">
                                   {userBreakdown.pageViews} hits
+                                </TableCell>
+                                <TableCell className="text-gray-300 text-sm">
+                                  {userBreakdown.location || 'Unknown'}
                                 </TableCell>
                                 <TableCell className="text-gray-300 font-mono text-sm">
                                   {formatDuration(userBreakdown.totalDuration)}
@@ -1345,6 +1363,7 @@ const AdminDashboard = () => {
                             <TableHead className="text-gray-300 cursor-pointer hover:text-white" onClick={() => requestSort('created_at')}>
                               Joined Date {sortConfig?.key === 'created_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                             </TableHead>
+                            <TableHead className="text-gray-300">Location</TableHead>
                             <TableHead className="text-gray-300">Status</TableHead>
                             <TableHead className="text-right text-gray-300">Actions</TableHead>
                           </TableRow>
@@ -1375,6 +1394,12 @@ const AdminDashboard = () => {
                                 <TableCell className="text-gray-400">{user.email || "N/A"}</TableCell>
                                 <TableCell className="text-gray-400">
                                   {formatDate(user.created_at)}
+                                </TableCell>
+                                <TableCell className="text-gray-400">
+                                  {(() => {
+                                    const userActivity = activities.find(a => (a.user_id === user.id || a.user_email === user.email) && a.action_details?.ip_city);
+                                    return userActivity ? `${userActivity.action_details.ip_city}, ${userActivity.action_details.ip_country}` : "Unknown";
+                                  })()}
                                 </TableCell>
                                 <TableCell>
                                   <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-0">
