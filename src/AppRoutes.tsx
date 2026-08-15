@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Lazy load non-critical marketing & heavy dynamic pages for optimal Core Web Vitals (LCP, INP, CLS)
 const Auth = lazy(() => import("./pages/Auth"));
@@ -58,45 +59,55 @@ export const AppRoutes: React.FC = () => {
         <Route path="/" element={<Index />} />
         <Route path="/waitlist" element={<Waitlist />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/users/:userId" element={<AdminUserDetails />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/community" element={<Community />} />
-        <Route path="/interview/new" element={<InterviewNew />} />
-        <Route path="/interview/results/:id" element={<InterviewResults />} />
-        <Route path="/interview/:id" element={<InterviewSession />} />
-        <Route path="/video-interview" element={<Navigate to="/voice-assistant" replace />} />
-        <Route path="/video-interview/results/:id" element={<VideoInterviewResults />} />
-        <Route path="/timed-interview/results/:id" element={<TimedVideoInterviewResults />} />
-        <Route path="/voice-interview/results/:id" element={<VoiceInterviewResults />} />
-        <Route path="/multi-question-results/:id" element={<MultiQuestionResults />} />
-        <Route path="/voice-assistant" element={<VoiceAssistant />} />
-        <Route path="/video-practice/history" element={<VideoPracticeHistory />} />
-        <Route path="/progress-analytics" element={<ProgressAnalytics />} />
-        <Route path="/adaptive-interview" element={<AdaptiveInterview />} />
-        <Route path="/peer-interviews" element={<PeerInterviews />} />
-        <Route path="/peer-interviews/create" element={<CreatePeerSession />} />
-        <Route path="/peer-interviews/room/:sessionId" element={<PeerSessionRoom />} />
-        <Route path="/peer-interviews/rate/:sessionId" element={<RatePeerSession />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/help" element={<Help />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/about" element={<About />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/daily-challenge" element={<DailyChallengeLanding />} />
-        <Route path="/daily-challenge/solve" element={<DailyChallenge />} />
-        <Route path="/job-recommendations" element={<JobRecommendations />} />
-        <Route path="/question-practice" element={<QuestionPractice />} />
-        <Route path="/dsa-sheet" element={<DSASheet />} />
         <Route path="/companies" element={<Companies />} />
         <Route path="/companies/:slug" element={<CompanyDetail />} />
-        <Route path="/playground" element={<Playground />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/elite-prep" element={<ElitePrep />} />
-        <Route path="/career-plan/:planId" element={<CareerPlanView />} />
-        <Route path="/resume-builder" element={<ResumeBuilder />} />
+        
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/users/:userId" element={<ProtectedRoute><AdminUserDetails /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+        
+        <Route path="/interview/new" element={<ProtectedRoute><InterviewNew /></ProtectedRoute>} />
+        <Route path="/interview/results/:id" element={<ProtectedRoute><InterviewResults /></ProtectedRoute>} />
+        <Route path="/interview/:id" element={<ProtectedRoute><InterviewSession /></ProtectedRoute>} />
+        
+        <Route path="/video-interview" element={<ProtectedRoute><Navigate to="/voice-assistant" replace /></ProtectedRoute>} />
+        <Route path="/video-interview/results/:id" element={<ProtectedRoute><VideoInterviewResults /></ProtectedRoute>} />
+        <Route path="/timed-interview/results/:id" element={<ProtectedRoute><TimedVideoInterviewResults /></ProtectedRoute>} />
+        <Route path="/voice-interview/results/:id" element={<ProtectedRoute><VoiceInterviewResults /></ProtectedRoute>} />
+        <Route path="/multi-question-results/:id" element={<ProtectedRoute><MultiQuestionResults /></ProtectedRoute>} />
+        <Route path="/voice-assistant" element={<ProtectedRoute><VoiceAssistant /></ProtectedRoute>} />
+        
+        <Route path="/video-practice/history" element={<ProtectedRoute><VideoPracticeHistory /></ProtectedRoute>} />
+        <Route path="/progress-analytics" element={<ProtectedRoute><ProgressAnalytics /></ProtectedRoute>} />
+        <Route path="/adaptive-interview" element={<ProtectedRoute><AdaptiveInterview /></ProtectedRoute>} />
+        
+        <Route path="/peer-interviews" element={<ProtectedRoute><PeerInterviews /></ProtectedRoute>} />
+        <Route path="/peer-interviews/create" element={<ProtectedRoute><CreatePeerSession /></ProtectedRoute>} />
+        <Route path="/peer-interviews/room/:sessionId" element={<ProtectedRoute><PeerSessionRoom /></ProtectedRoute>} />
+        <Route path="/peer-interviews/rate/:sessionId" element={<ProtectedRoute><RatePeerSession /></ProtectedRoute>} />
+        
+        <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+        
+        <Route path="/daily-challenge" element={<ProtectedRoute><DailyChallengeLanding /></ProtectedRoute>} />
+        <Route path="/daily-challenge/solve" element={<ProtectedRoute><DailyChallenge /></ProtectedRoute>} />
+        <Route path="/job-recommendations" element={<ProtectedRoute><JobRecommendations /></ProtectedRoute>} />
+        
+        <Route path="/question-practice" element={<ProtectedRoute><QuestionPractice /></ProtectedRoute>} />
+        <Route path="/dsa-sheet" element={<ProtectedRoute><DSASheet /></ProtectedRoute>} />
+        <Route path="/playground" element={<ProtectedRoute><Playground /></ProtectedRoute>} />
+        <Route path="/elite-prep" element={<ProtectedRoute><ElitePrep /></ProtectedRoute>} />
+        <Route path="/career-plan/:planId" element={<ProtectedRoute><CareerPlanView /></ProtectedRoute>} />
+        <Route path="/resume-builder" element={<ProtectedRoute><ResumeBuilder /></ProtectedRoute>} />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
