@@ -507,8 +507,38 @@ def buildList(arr):
       for (let i = 0; i < testCases.length; i++) {
         const tc = testCases[i];
         try {
-          // Safely parse input arguments
-          const args = new Function(`return [${tc.input}];`)();
+          // Safely parse input arguments - handle multiple input formats:
+          // 1. JavaScript expression format: [[1,2],[3,4]], 2
+          // 2. Newline-separated stdin format: "2\n2\n1 2\n3 4"
+          let args: any[];
+          const inputStr = tc.input.trim();
+
+          try {
+            // First try: parse as JS expression array
+            args = new Function(`return [${inputStr}];`)();
+          } catch (_parseErr) {
+            // Second try: stdin newline-separated format
+            const lines = inputStr.split('\n').map((l: string) => l.trim()).filter(Boolean);
+            if (lines.length === 1) {
+              try { args = [JSON.parse(lines[0])]; } catch { args = [lines[0]]; }
+            } else {
+              // Try first two lines as rows/cols, rest as matrix data
+              const rows = parseInt(lines[0]);
+              const cols = parseInt(lines[1]);
+              if (!isNaN(rows) && !isNaN(cols) && lines.length >= 2 + rows) {
+                const matrix = lines.slice(2, 2 + rows).map((l: string) => l.split(/\s+/).map(Number));
+                args = [matrix];
+              } else {
+                // Try each line as a space-separated row of numbers
+                const parsed = lines.map((l: string) => {
+                  const nums = l.split(/\s+/).map(Number);
+                  return nums.every(n => !isNaN(n)) ? (nums.length > 1 ? nums : nums[0]) : l;
+                });
+                args = parsed.length === 1 ? [parsed[0]] : [parsed];
+              }
+            }
+          }
+
           const actualVal = await Promise.resolve(userFn(...args));
           const actualStr = typeof actualVal === 'object' && actualVal !== null ? JSON.stringify(actualVal) : String(actualVal);
           const isPassed = normalizeAndCompare(actualVal, tc.expected);

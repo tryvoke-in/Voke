@@ -64,7 +64,7 @@ export const EliteHRRound: React.FC<EliteHRRoundProps> = ({
     isFallbackKey: boolean;
   }>({
     provider: "Google Gemini REST API",
-    model: "gemini-3.1-flash-lite",
+    model: "gemini-2.0-flash-lite",
     keyLabel: "Primary GOOGLE_API_KEY",
     isFallbackKey: false
   });

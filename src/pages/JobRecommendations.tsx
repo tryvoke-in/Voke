@@ -98,9 +98,9 @@ function CompanyLogo({ company, size = "md" }: { company: string; size?: "sm" | 
   const domain = getCompanyDomain(name);
   const [imgIndex, setImgIndex] = useState(0);
 
+  // Use only reliably-working logo APIs (clearbit.com is dead - DNS won't resolve)
   const sources = [
-    `https://logo.clearbit.com/${domain}`,
-    `https://unavatar.io/${domain}?fallback=false`,
+    `https://img.logo.dev/${domain}?token=pk_X-1ZO13GSgeOoUrIuJ6BeA&size=128&format=png`,
     `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
   ];
 

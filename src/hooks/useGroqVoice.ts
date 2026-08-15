@@ -174,7 +174,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
    (4) Can this solution be further optimized?
 5. ABSOLUTE PROHIBITION: NEVER ask resume, college, education, degree, school, project, or background questions. EVER. Keep responses concise (1-2 sentences max).`;
 
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${geminiApiKey}`, {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${geminiApiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
