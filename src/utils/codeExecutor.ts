@@ -86,10 +86,10 @@ const loadPyodideMain = async () => {
   return pyodideLoadingPromise;
 };
 
-// ─── JDoodle Executor (Java, C, C++ via Supabase Edge Function) ──────────────
-const JDOODLE_LANGUAGES = ['java', 'c', 'cpp'];
+// ─── Edge Function Compiler (Java, C, C++, Python via OnlineCompiler.io) ──────────────
+const EDGE_COMPILER_LANGUAGES = ['java', 'c', 'cpp', 'python'];
 
-const executeViaJDoodle = async (
+const executeViaEdgeCompiler = async (
   language: string,
   code: string,
   stdin: string,
@@ -167,19 +167,64 @@ export const executeCode = async (
     onLog?.(msg);
   };
 
-  // ── Java / C / C++ → JDoodle ──
-  if (JDOODLE_LANGUAGES.includes(language)) {
-    return executeViaJDoodle(language, userCode, stdin ?? '', captureLog);
+  // ── Edge Function Compilation (Java, C, C++, or Python without testCases) ──
+  if (EDGE_COMPILER_LANGUAGES.includes(language)) {
+    // If it's python but has testCases, we let the Pyodide block handle it below
+    if (!(language === 'python' && testCases && testCases.length > 0)) {
+      return executeViaEdgeCompiler(language, userCode, stdin ?? '', captureLog);
+    }
   }
 
-  // ── Python Execution ──
-  if (language === 'python') {
-    captureLog("⚡ Running Python...\n");
+  // ── Python Execution via Pyodide (if test cases exist) ──
+  // If testCases exist, we use Pyodide so we can properly evaluate inputs
+  if (language === 'python' && testCases && testCases.length > 0) {
+    captureLog("⚡ Running Python (In-Browser Evaluator)...\n");
     try {
       const py = await loadPyodideMain();
       py.setStdout({ batched: (msg: string) => captureLog(msg) });
       py.setStderr({ batched: (msg: string) => captureLog(`[stderr] ${msg}`) });
 
+      const pythonHelpers = `
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+def buildTree(arr):
+    if not arr or arr[0] is None:
+        return None
+    root = TreeNode(arr[0])
+    queue = [root]
+    i = 1
+    while i < len(arr):
+        curr = queue.pop(0)
+        if arr[i] is not None:
+            curr.left = TreeNode(arr[i])
+            queue.append(curr.left)
+        i += 1
+        if i < len(arr) and arr[i] is not None:
+            curr.right = TreeNode(arr[i])
+            queue.append(curr.right)
+        i += 1
+    return root
+
+def buildList(arr):
+    if not arr:
+        return None
+    head = ListNode(arr[0])
+    curr = head
+    for i in range(1, len(arr)):
+        curr.next = ListNode(arr[i])
+        curr = curr.next
+    return head
+`;
+      await py.runPythonAsync(pythonHelpers);
       await py.runPythonAsync(userCode);
 
       const results: { caseId: number; input: string; expected: string; actual: string; passed: boolean }[] = [];
@@ -403,9 +448,52 @@ export const executeCode = async (
       return __mainFn;
     `;
 
-    // Provide global fallback for Redis if needed
+    // Provide global fallback for Redis and LeetCode Data Structures
     if (typeof globalThis !== 'undefined') {
       (globalThis as any).Redis = MockRedis;
+      
+      (globalThis as any).TreeNode = class TreeNode {
+        val: any; left: any; right: any;
+        constructor(val: any, left = null, right = null) {
+          this.val = val; this.left = left; this.right = right;
+        }
+      };
+      (globalThis as any).ListNode = class ListNode {
+        val: any; next: any;
+        constructor(val: any, next = null) {
+          this.val = val; this.next = next;
+        }
+      };
+      (globalThis as any).buildTree = function(arr: any[]) {
+        if (!arr || arr.length === 0 || arr[0] === null) return null;
+        const root = new (globalThis as any).TreeNode(arr[0]);
+        const queue = [root];
+        let i = 1;
+        while (i < arr.length) {
+          const curr = queue.shift();
+          if (arr[i] !== null && arr[i] !== undefined) {
+            curr.left = new (globalThis as any).TreeNode(arr[i]);
+            queue.push(curr.left);
+          }
+          i++;
+          if (i < arr.length && arr[i] !== null && arr[i] !== undefined) {
+            curr.right = new (globalThis as any).TreeNode(arr[i]);
+            queue.push(curr.right);
+          }
+          i++;
+        }
+        return root;
+      };
+      (globalThis as any).buildList = function(arr: any[]) {
+        if (!arr || arr.length === 0) return null;
+        const head = new (globalThis as any).ListNode(arr[0]);
+        let curr = head;
+        for (let i = 1; i < arr.length; i++) {
+          curr.next = new (globalThis as any).ListNode(arr[i]);
+          curr = curr.next;
+        }
+        return head;
+      };
     }
 
     // Asynchronous Function Constructor

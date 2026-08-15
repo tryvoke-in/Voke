@@ -173,10 +173,8 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
 
   // Section State
   const [currentSection, setCurrentSection] = useState<CodingSection>('A_CODING');
-  const [selectedProblemIndex, setSelectedProblemIndex] = useState(() => {
-    return Math.floor(Math.random() * SECTION_A_PROBLEMS.default.length);
-  });
-  const [selectedLanguage, setSelectedLanguage] = useState<'typescript' | 'javascript' | 'python'>('typescript');
+  const [selectedProblemIndex, setSelectedProblemIndex] = useState(0);
+  const [selectedLanguage, setSelectedLanguage] = useState<'typescript' | 'javascript' | 'python' | 'java' | 'c' | 'cpp'>('typescript');
 
   // Phase-Gate State
   const [phase, setPhase] = useState<AssessmentPhase>('approach_explain');
@@ -240,7 +238,15 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   const [duration, setDuration] = useState(0);
 
   // Code & Execution State
-  const problems = useMemo(() => SECTION_A_PROBLEMS.default, []);
+  const problems = useMemo(() => {
+    const all = SECTION_A_PROBLEMS.default;
+    const easyQ1 = all.filter(p => p.difficulty === 'Easy' && (p.topic.toLowerCase().includes('array') || p.topic.toLowerCase().includes('string') || p.topic.toLowerCase().includes('hash')));
+    const mediumQ2 = all.filter(p => p.difficulty === 'Medium');
+    
+    const q1 = easyQ1.length > 0 ? easyQ1[Math.floor(Math.random() * easyQ1.length)] : all[0];
+    const q2 = mediumQ2.length > 0 ? mediumQ2[Math.floor(Math.random() * mediumQ2.length)] : all[1];
+    return [q1, q2];
+  }, []);
   const currentProblem = problems[selectedProblemIndex] || problems[0];
 
   const debugProblems = useMemo(() => SECTION_B_DEBUGGING.default, []);

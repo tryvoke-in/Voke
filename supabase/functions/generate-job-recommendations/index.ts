@@ -87,7 +87,7 @@ serve(async (req) => {
         console.log("Fetching user profile & resume analysis...");
         const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, resume_url, github_url, target_role')
+            .select('full_name, resume_url, github_url, target_role, location')
             .eq('id', userId)
             .maybeSingle()
 
