@@ -242,8 +242,8 @@ const Dashboard = () => {
 
       // 6. Fetch Community Pulse Posts
       const { data: postsData } = await supabase
-        .from("posts" as any)
-        .select("id, title, likes_count, comments_count, created_at")
+        .from("community_feed" as any)
+        .select("id, title, like_count, comment_count, created_at")
         .order("created_at", { ascending: false })
         .limit(3);
 
@@ -940,9 +940,9 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 {(communityPulsePosts.length > 0 ? communityPulsePosts : [
-                  { id: "", title: "Google L4 Interview Experience", likes_count: 42, views: "2.4k" },
-                  { id: "", title: "System Design: TinyURL", likes_count: 28, views: "1.8k" },
-                  { id: "", title: "Salary Negotiation Tips", likes_count: 56, views: "3.1k" },
+                  { id: "", title: "Google L4 Interview Experience", like_count: 42, views: "2.4k" },
+                  { id: "", title: "System Design: TinyURL", like_count: 28, views: "1.8k" },
+                  { id: "", title: "Salary Negotiation Tips", like_count: 56, views: "3.1k" },
                 ]).map((item, i) => (
                   <div 
                     key={item.id || i} 
@@ -951,7 +951,7 @@ const Dashboard = () => {
                   >
                     <p className="text-sm font-medium group-hover:text-blue-500 transition-colors line-clamp-1 flex-1 pr-2">{item.title}</p>
                     <span className="text-xs text-muted-foreground shrink-0 font-medium">
-                      {item.likes_count !== undefined ? `${item.likes_count} likes` : item.views}
+                      {item.like_count !== undefined ? `${item.like_count} likes` : item.views}
                     </span>
                   </div>
                 ))}
