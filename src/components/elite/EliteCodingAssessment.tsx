@@ -277,7 +277,62 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
     return systemDesignQuestions[randomIndex];
   }, [systemDesignQuestions]);
 
-  const [code, setCode] = useState<string>(currentProblem.starterCode[selectedLanguage] || '');
+  // Helper: get starter code for a language, generating a boilerplate if not defined
+  const getStarterCode = (problem: ProblemDefinition, lang: string): string => {
+    if (problem.starterCode[lang]) return problem.starterCode[lang];
+    // Generate boilerplate based on JS starter code function signature
+    const jsSrc = problem.starterCode['javascript'] || problem.starterCode['typescript'] || '';
+    const fnMatch = jsSrc.match(/(?:function|async function)\s+(\w+)\s*\(([^)]*)\)/);
+    const fnName = fnMatch ? fnMatch[1] : 'solve';
+    const params = fnMatch ? fnMatch[2].split(',').map(p => p.trim().split(':')[0].trim()).filter(Boolean) : [];
+    const paramStr = params.join(', ');
+    if (lang === 'java') {
+      return `import java.util.*;
+
+public class Solution {
+    public static void main(String[] args) {
+        // Test your solution here
+    }
+
+    public static Object ${fnName}(${params.map(p => `Object ${p}`).join(', ')}) {
+        // Write your solution here
+        return null;
+    }
+}`;
+    }
+    if (lang === 'c') {
+      return `#include <stdio.h>
+#include <stdlib.h>
+
+void ${fnName}(${params.length ? params.map(p => `int ${p}`).join(', ') : 'void'}) {
+    // Write your solution here
+}
+
+int main() {
+    // Test your solution here
+    return 0;
+}`;
+    }
+    if (lang === 'cpp') {
+      return `#include <bits/stdc++.h>
+using namespace std;
+
+auto ${fnName}(${params.map(p => `auto ${p}`).join(', ')}) {
+    // Write your solution here
+    return -1;
+}
+
+int main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    // Test your solution here
+    return 0;
+}`;
+    }
+    return problem.starterCode['javascript'] || '';
+  };
+
+  const [code, setCode] = useState<string>(getStarterCode(currentProblem, selectedLanguage));
   const [debugCode, setDebugCode] = useState<string>(currentDebugProblem.buggyCode);
   const [systemDesignCode, setSystemDesignCode] = useState<string>(DEFAULT_SYSTEM_DESIGN_STARTER);
   const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
@@ -296,7 +351,7 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   // Code editor sync on language or problem change
   useEffect(() => {
     if (currentSection === 'A_CODING') {
-      setCode(currentProblem.starterCode[selectedLanguage] || '');
+      setCode(getStarterCode(currentProblem, selectedLanguage));
       setExecutionResult(null);
     }
   }, [selectedProblemIndex, selectedLanguage, currentSection, currentProblem]);
@@ -452,7 +507,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
     setPhase('approach_explain');
     setIsEditorUnlocked(false);
     setApproachVerified(false);
-    setCode(problems[1]?.starterCode[selectedLanguage] || problems[1]?.starterCode['javascript'] || '');
+    setCode(problems[1] ? getStarterCode(problems[1] as ProblemDefinition, selectedLanguage) : '');
     setScratchPadText('');
     setExecutionResult(null);
     setIsSilentMode(false);
@@ -942,7 +997,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                       <button
                         onClick={() => {
                           setSelectedProblemIndex(0);
-                          setCode(problems[0]?.starterCode[selectedLanguage] || '');
+                          setCode(problems[0] ? getStarterCode(problems[0] as ProblemDefinition, selectedLanguage) : '');
                         }}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           selectedProblemIndex === 0 ? 'bg-violet-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'
@@ -1188,6 +1243,9 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                 <option value="typescript">TypeScript</option>
                 <option value="javascript">JavaScript</option>
                 <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="cpp">C++</option>
+                <option value="c">C</option>
               </select>
             </div>
 
