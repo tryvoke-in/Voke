@@ -220,7 +220,7 @@ export default function JobRecommendations() {
       const items = (recs as any) || [];
       setRecommendations(items);
 
-      if (items.length === 0) {
+      if (items.length < 100) {
         generateRecommendations(user.id);
       }
     } catch (e) {

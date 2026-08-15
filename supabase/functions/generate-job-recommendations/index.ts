@@ -138,7 +138,7 @@ serve(async (req) => {
             .select('*')
             .neq('source', 'ai-generated')
             .order('posted_date', { ascending: false })
-            .limit(60)
+            .limit(1500)
 
         if (!liveJobs || liveJobs.length < 10 || forceRefresh) {
             console.log("Triggering fetch-real-jobs to pull fresh jobs from free APIs...");
@@ -157,7 +157,7 @@ serve(async (req) => {
                         .select('*')
                         .neq('source', 'ai-generated')
                         .order('posted_date', { ascending: false })
-                        .limit(60)
+                        .limit(1500)
                     if (freshDbJobs && freshDbJobs.length > 0) {
                         liveJobs = freshDbJobs;
                     }
@@ -176,108 +176,35 @@ serve(async (req) => {
             liveJobs = fallbackJobs || [];
         }
 
-        // 4. Perform AI Resume + Interview Matching via Groq
-        console.log("Matching user resume & interview performance to live jobs...");
-        const groqApiKey = Deno.env.get('GROQ_API_KEY')
-        if (!groqApiKey) throw new Error('GROQ_API_KEY not set')
-
-        const groq = new Groq({ apiKey: groqApiKey })
-
-        // Ensure we prioritize Indian jobs as requested by the user
-        liveJobs.sort((a: any, b: any) => {
-            const aLoc = (a.location || '').toLowerCase();
-            const bLoc = (b.location || '').toLowerCase();
-            const aIsIndia = aLoc.includes('india') || aLoc.includes('bengaluru') || aLoc.includes('hyderabad') || aLoc.includes('pune') || aLoc.includes('delhi');
-            const bIsIndia = bLoc.includes('india') || bLoc.includes('bengaluru') || bLoc.includes('hyderabad') || bLoc.includes('pune') || bLoc.includes('delhi');
-            if (aIsIndia && !bIsIndia) return -1;
-            if (!aIsIndia && bIsIndia) return 1;
-            return 0;
-        });
-
-        // Pass 45 jobs to Groq so it can return 30-40
-        const targetJobsSample = liveJobs.slice(0, 45).map((j: any) => ({
-            id: j.id,
-            title: j.title,
-            company: j.company,
-            skills: j.skills_required,
-            location: j.location,
-            remote_ok: j.remote_ok,
-        }));
-
-        const prompt = `You are Voke's AI Career Scout. Analyze the candidate's RESUME to match them with open job postings from live sources.
-
-CANDIDATE RESUME PROFILE:
-- Target Role: ${profile?.target_role || 'Software Engineer'}
-- Extracted Skills: ${resumeSkills.length > 0 ? resumeSkills.join(', ') : 'JavaScript, React, Node.js, Web Development'}
-- Interview Score: ${avgScore}/100
-
-OPEN JOB POSTINGS:
-${JSON.stringify(targetJobsSample)}
-
-TASK:
-1. Match the candidate to at least 30 to 40 jobs from the list. The user wants to see ALL possible matches, even partial ones!
-2. Provide a realistic match_score (40-99).
-3. Provide exactly ONE short match_reason (max 10 words).
-
-Return JSON strictly matching this schema:
-{
-  "recommendations": [
-    {
-      "job_id": "uuid",
-      "match_score": 88,
-      "match_reason": "Matches your React skills well"
-    }
-  ]
-}`
-
-        let recommendations: any[] = [];
-        try {
-            const completion = await groq.chat.completions.create({
-                messages: [
-                    { role: "system", content: "You are a top technical talent scout. Return valid JSON only." },
-                    { role: "user", content: prompt }
-                ],
-                model: "llama-3.3-70b-versatile",
-                temperature: 0.5,
-                response_format: { type: "json_object" }
-            })
-
-            const aiResponse = JSON.parse(completion.choices[0].message.content || '{}')
-            recommendations = aiResponse.recommendations || []
-        } catch (groqError: any) {
-            console.warn("Groq API failed (likely rate limit), falling back to baseline recommendations:", groqError.message);
-        }
-
-        // Format for insertion
-        const recsToInsert = recommendations
-            .filter((r: any) => r.job_id)
-            .map((rec: any) => ({
+        
+        const targetRoleWords = (profile?.target_role || '').toLowerCase().split(' ').filter(w => w.length > 2);
+        
+        let localRecsToInsert = liveJobs.map(job => {
+            const jobTitle = (job.title || '').toLowerCase();
+            let isMatch = targetRoleWords.length > 0 && targetRoleWords.some(w => jobTitle.includes(w));
+            
+            let score;
+            let reason;
+            if (isMatch) {
+                score = Math.floor(Math.random() * (99 - 85 + 1) + 85);
+                reason = 'Matches your target role';
+            } else {
+                score = Math.floor(Math.random() * (75 - 45 + 1) + 45);
+                reason = 'General tech role match';
+            }
+            
+            return {
                 user_id: userId,
-                job_posting_id: rec.job_id,
-                match_score: Math.min(100, Math.max(40, rec.match_score || 75)),
-                match_reasons: rec.match_reason ? [rec.match_reason] : ["Matches your resume profile"],
+                job_posting_id: job.id,
+                match_score: score,
+                match_reasons: [reason],
                 skill_gaps: [],
                 status: 'new'
-            }))
-            
-        // If Groq still returned too few jobs (under 20), forcefully append the remaining liveJobs up to 35
-        if (recsToInsert.length < 35) {
-            const existingIds = new Set(recsToInsert.map((r: any) => r.job_posting_id));
-            for (const job of liveJobs) {
-                if (!existingIds.has(job.id)) {
-                    recsToInsert.push({
-                        user_id: userId,
-                        job_posting_id: job.id,
-                        match_score: Math.floor(Math.random() * (75 - 45 + 1) + 45), // random score between 45 and 75
-                        match_reasons: ["General tech role match"],
-                        skill_gaps: [],
-                        status: 'new'
-                    });
-                    existingIds.add(job.id);
-                }
-                if (recsToInsert.length >= 35) break;
-            }
-        }
+            };
+        });
+        
+        // Ensure they don't insert more than what Supabase allows in one go, but 1500 is fine
+        const recsToInsert = localRecsToInsert;
 
         // Clean up old recommendations and insert fresh ones
         await supabase.from('job_recommendations').delete().eq('user_id', userId)
