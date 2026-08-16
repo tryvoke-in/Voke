@@ -69,7 +69,7 @@ const Profile = () => {
   });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [skillGaps, setSkillGaps] = useState<any[]>([]);
-  const [showMandatoryModal, setShowMandatoryModal] = useState(false);
+
 
   useEffect(() => {
     // Safety watchdog: force-disable loading screen after 1.5 seconds if auth or query hangs
@@ -197,11 +197,7 @@ const Profile = () => {
         setCodingStats(loadedProfile.coding_stats);
       }
 
-      if (!loadedProfile.github_url || !loadedProfile.resume_url) {
-        setShowMandatoryModal(true);
-      } else {
-        setShowMandatoryModal(false);
-      }
+
 
       // If the row was missing in the database, attempt to create it on the fly so it persists
       if (!profileData) {
@@ -793,6 +789,42 @@ const Profile = () => {
 
             {/* Main Content Area */}
             <div className="lg:col-span-8">
+              {((!formData.github_url && !profile?.github_url) || !profile?.resume_url) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-violet-500/10 to-fuchsia-500/10 border border-amber-500/20 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                      <Sparkles className="w-5 h-5 animate-pulse" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        Complete Profile Integrations
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          Recommended
+                        </span>
+                      </h4>
+                      <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
+                        Connect your {(!formData.github_url && !profile?.github_url) ? 'GitHub account' : ''}{((!formData.github_url && !profile?.github_url) && !profile?.resume_url) ? ' & ' : ''}{!profile?.resume_url ? 'Resume' : ''} in the{' '}
+                        <button type="button" onClick={() => setActiveTab("settings")} className="text-violet-400 font-semibold underline hover:text-violet-300">Settings</button>{' '}
+                        &{' '}
+                        <button type="button" onClick={() => setActiveTab("resume")} className="text-violet-400 font-semibold underline hover:text-violet-300">Resume</button>{' '}
+                        tabs to enable AI-tailored mock interviews.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setActiveTab("settings")}
+                    className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl text-xs shrink-0 h-9 px-4 shadow-md shadow-violet-500/20"
+                  >
+                    Go to Settings <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </motion.div>
+              )}
+
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="bg-card/50 border border-border/50 p-1 rounded-xl w-full flex overflow-x-auto">
                   {[
@@ -1193,135 +1225,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Mandatory Modal */}
-        <Dialog open={showMandatoryModal} onOpenChange={setShowMandatoryModal}>
-          <DialogContent className="sm:max-w-[500px] bg-background border-border text-foreground">
-            <DialogHeader>
-              <DialogTitle>Complete Your Profile</DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                To continue using Voke, please provide the following mandatory information.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
-              <div className="space-y-2">
-                <Label className="text-right">GitHub Account <span className="text-red-500">*</span></Label>
-                {formData.github_url || profile?.github_url ? (
-                  <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-bold">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      GitHub Account Connected (@{(formData.github_url || profile?.github_url || '').replace(/\/$/, '').split('/').pop()})
-                    </div>
-                  </div>
-                ) : (
-                  <Button
-                    type="button"
-                    onClick={async () => {
-                      const { error } = await supabase.auth.signInWithOAuth({
-                        provider: 'github',
-                        options: {
-                          scopes: 'read:user repo read:org',
-                          redirectTo: `${window.location.origin}/profile`
-                        }
-                      });
-                      if (error) toast.error(error.message);
-                    }}
-                    className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold flex items-center justify-center gap-2 h-11 rounded-xl"
-                  >
-                    <Github className="w-4 h-4" /> ⚡ Connect GitHub Account
-                  </Button>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="modal_leetcode_id" className="text-right">LeetCode Username</Label>
-                <Input
-                  id="modal_leetcode_id"
-                  value={formData.leetcode_id}
-                  onChange={(e) => setFormData({ ...formData, leetcode_id: e.target.value })}
-                  placeholder="e.g. neal_wu"
-                  className="bg-background/50 border-input"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="modal_codeforces_id" className="text-right">Codeforces Handle</Label>
-                <Input
-                  id="modal_codeforces_id"
-                  value={formData.codeforces_id}
-                  onChange={(e) => setFormData({ ...formData, codeforces_id: e.target.value })}
-                  placeholder="e.g. tourist"
-                  className="bg-background/50 border-input"
-                />
-              </div>
 
-              <div className="space-y-2">
-                <Label className="text-right">Resume <span className="text-red-500">*</span></Label>
-                {!profile?.resume_url ? (
-                  <div className="border-2 border-dashed border-border rounded-xl p-4 text-center bg-secondary/10 relative">
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) setResumeFile(file);
-                      }}
-                    />
-                    <div className="space-y-1">
-                      <Upload className="h-6 w-6 mx-auto text-muted-foreground" />
-                      <p className="text-sm font-medium text-foreground">
-                        {resumeFile ? resumeFile.name : "Click to upload resume"}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 p-2 bg-green-500/10 text-green-500 rounded-md">
-                    <FileText className="h-4 w-4" />
-                    <span className="text-sm font-medium">Resume Uploaded</span>
-                  </div>
-                )}
-                {resumeFile && !profile?.resume_url && (
-                  <Button
-                    onClick={handleResumeUpload}
-                    disabled={saving}
-                    size="sm"
-                    className="w-full mt-2 bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    {saving ? "Uploading..." : "Upload Resume Now"}
-                  </Button>
-                )}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                onClick={async () => {
-                  if (!formData.github_url || !formData.leetcode_id || !formData.codeforces_id) {
-                    toast.error("Please fill all text fields");
-                    return;
-                  }
-                  if (!profile?.resume_url && !resumeFile) {
-                    toast.error("Please upload a resume");
-                    return;
-                  }
-                  
-                  // If a resume file was selected but not uploaded yet, upload it first
-                  if (resumeFile && !profile?.resume_url) {
-                    await handleResumeUpload();
-                  }
-
-                  await handleSave();
-                  
-                  // Optimistically close modal if we have all fields locally
-                  if (formData.github_url && (profile?.resume_url || resumeFile)) {
-                    setShowMandatoryModal(false);
-                  }
-                }}
-                disabled={saving}
-                className="bg-violet-600 hover:bg-violet-500 text-white"
-              >
-                {saving ? "Saving..." : "Save & Continue"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
       </div>
     </div>

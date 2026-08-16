@@ -658,6 +658,7 @@ const Dashboard = () => {
 
           {/* Left Column - Main Feed */}
           <div className="lg:col-span-8 space-y-8">
+            <CodingProfilesDialog profile={profile} onUpdate={() => loadData(true)} />
 
             {/* Hero Section */}
             <motion.div
@@ -975,9 +976,7 @@ const Dashboard = () => {
         onOpenChange={setShowFeedbackModal}
         onSuccess={refreshCredits}
         grantFeedbackCredits={grantFeedbackCredits}
-      />
-      <CodingProfilesDialog profile={profile} onUpdate={() => loadData(true)} />
-      <SearchDialog
+
         open={searchOpen}
         onOpenChange={setSearchOpen}
       />
