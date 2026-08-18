@@ -1,53 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, ArrowRight, Sparkles } from 'lucide-react';
+import { Sparkles, ChevronRight, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CodingProfilesDialogProps {
   profile: any;
-  onUpdate: () => void;
+  onUpdate?: () => void;
 }
 
 export const CodingProfilesDialog: React.FC<CodingProfilesDialogProps> = ({ profile }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const [dismissed, setDismissed] = useState(false);
 
-  useEffect(() => {
-    if (profile && (!profile.github_url || !profile.resume_url)) {
-      setIsOpen(true);
-    }
-  }, [profile]);
+  if (!profile || dismissed) return null;
+
+  const missingGithub = !profile.github_url;
+  const missingResume = !profile.resume_url;
+
+  if (!missingGithub && !missingResume) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="bg-zinc-950 border-white/10 text-white sm:max-w-md overflow-hidden rounded-3xl p-6 md:p-8">
-        <DialogHeader className="flex flex-col items-center">
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-2">
-            <AlertTriangle className="w-6 h-6 text-amber-500" />
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, height: 0 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/10 via-violet-500/10 to-fuchsia-500/10 border border-amber-500/20 p-4 mb-6 backdrop-blur-xl shadow-lg"
+      >
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+              <Sparkles className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                Complete Profile Integrations
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  RECOMMENDED
+                </span>
+              </h4>
+              <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
+                Connect your {missingGithub ? 'GitHub account' : ''}{missingGithub && missingResume ? ' & ' : ''}{missingResume ? 'Resume' : ''} in Profile Settings to enable AI-tailored mock interviews.
+              </p>
+            </div>
           </div>
-          <DialogTitle className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-            Action Required
-          </DialogTitle>
-          <DialogDescription className="text-zinc-400 text-center mt-3 text-sm leading-relaxed">
-            Please complete your profile to unlock the full potential of Voke. 
-            Without linking your GitHub profile and uploading your resume, the AI cannot properly tailor your mock interviews to your actual skill level.
-          </DialogDescription>
-        </DialogHeader>
 
-        <DialogFooter className="mt-6 sm:justify-center">
-          <Button 
-            onClick={() => {
-              setIsOpen(false);
-              navigate('/profile', { state: { tab: 'settings' } });
-            }} 
-            className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl h-11 shadow-lg shadow-violet-500/20 flex items-center justify-center gap-1.5 transition-all duration-300"
-          >
-            Go to Settings
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+            <Button
+              size="sm"
+              onClick={() => navigate('/profile', { state: { tab: 'settings' } })}
+              className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl text-xs h-9 px-4 shadow-md shadow-violet-500/20 flex items-center gap-1 transition-all"
+            >
+              Go to Settings
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+            <button
+              onClick={() => setDismissed(true)}
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+              title="Dismiss reminder"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
