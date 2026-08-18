@@ -212,7 +212,7 @@ export default function Community() {
       // 1. Fetch ALL registered profiles from Supabase profiles table
       const { data: profs } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, headline, target_role, role, location, dream_company, email, created_at')
+        .select('id, full_name, avatar_url, target_role, role, dream_company, email, created_at')
         .order('created_at', { ascending: false });
 
       let list: Array<{ id: string; name: string; role: string; avatar: string; subtitle: string }> = [];
@@ -229,8 +229,8 @@ export default function Community() {
           }
           if (!name) name = 'Candidate Member';
 
-          const role = p.headline || p.target_role || p.role || 'SDE Candidate';
-          const subtitle = p.dream_company ? `Targeting ${p.dream_company}` : (p.location || 'Software Engineer');
+          const role = (p as any).headline || p.target_role || p.role || 'SDE Candidate';
+          const subtitle = p.dream_company ? `Targeting ${p.dream_company}` : 'Software Engineer';
           const avatar = p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
 
           seenIds.add(p.id);
@@ -445,11 +445,11 @@ export default function Community() {
         if (realRooms && realRooms.length > 0) {
           setMockRooms(realRooms.map(r => ({
             id: r.id,
-            title: r.topic || `${r.interview_type || 'General'} Mock`,
+            title: r.topic || `${r.difficulty_level || 'General'} Mock`,
             current: r.guest_user_id ? 2 : 1,
             max: 2,
             avatars: [],
-            type: r.interview_type || 'Practice'
+            type: r.difficulty_level || 'Practice'
           })));
         } else {
           setMockRooms([]);
@@ -532,7 +532,7 @@ export default function Community() {
           try {
             const { data: profiles } = await supabase
               .from('profiles')
-              .select('id, full_name, avatar_url, headline, target_role, role, email')
+              .select('id, full_name, avatar_url, target_role, role, email')
               .in('id', userIds);
 
             if (profiles) {

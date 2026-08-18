@@ -13,6 +13,7 @@ import {
     TrendingUp, Award, Layers, AlertCircle, Code2
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { motion } from "framer-motion";
 
 const PERIODS = ["Thirty Days", "Three Months", "Six Months", "More Than Six Months"];
 

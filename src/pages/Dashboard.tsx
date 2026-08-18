@@ -976,7 +976,8 @@ const Dashboard = () => {
         onOpenChange={setShowFeedbackModal}
         onSuccess={refreshCredits}
         grantFeedbackCredits={grantFeedbackCredits}
-
+      />
+      <SearchDialog
         open={searchOpen}
         onOpenChange={setSearchOpen}
       />
