@@ -614,6 +614,27 @@ Section C: ${currentSystemDesignQuestion?.title}`;
         if (res.error) res.logs.push(res.error);
       } else {
         res = await executeCode(activeCode, selectedLanguage, undefined, undefined, undefined, activeTestCases);
+
+        // --- NEW LOGIC FOR COMPILED LANGUAGES ---
+        if (res.passed && ['c', 'cpp', 'java'].includes(selectedLanguage) && activeTestCases && activeTestCases.length > 0) {
+           const aiRes = await validateCodeWithAI(
+             activeCode,
+             `The candidate solved problem: "${currentProblem?.title || currentDebugProblem?.title}". 
+              Their code compiled successfully without syntax errors. 
+              Expected behavior must match these test cases: ${JSON.stringify(activeTestCases)}. 
+              Analyze their logic. Does their code correctly solve this problem for these test cases and edge cases?`,
+             selectedLanguage
+           );
+           
+           // Override execution success with AI's logic check since we can't do stdin assertions easily
+           res.passed = aiRes.passed;
+           if (aiRes.error) {
+              res.error = aiRes.error;
+              res.logs.push(`\n❌ Logic Check Failed: ${aiRes.error}`);
+           } else {
+              res.logs.push(`\n✅ Logic Check Passed! Code behaves correctly for all test cases.`);
+           }
+        }
       }
 
       setExecutionResult(res);

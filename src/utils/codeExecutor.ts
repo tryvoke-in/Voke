@@ -19,29 +19,20 @@ export type ExecutionResult = {
 };
 
 // ─── Strip TypeScript annotations for in-browser JavaScript evaluation ───────────
-export function stripTypeScript(code: string): string {
+let tsModule: any = null;
+export async function stripTypeScript(code: string): Promise<string> {
   try {
-    let clean = code
-      // Remove type-only imports/exports
-      .replace(/import\s+type\s+[^;]+;/g, '')
-      .replace(/export\s+type\s+[^;]+;/g, '')
-      // Remove interface/type definitions
-      .replace(/(?:interface|type)\s+[A-Za-z0-9_]+\s*(?:=\s*)?\{[\s\S]*?\};?/g, '')
-      // Remove variable type annotations: let x: number = 0; const arr: number[] = [];
-      .replace(/(\b(?:let|const|var)\s+[A-Za-z0-9_$]+)\s*:\s*[A-Za-z0-9_$<>[\]|&\s]+(?=\s*=|\s*;|\s*,)/g, '$1')
-      // Remove function return type annotations: function foo(): number[] { -> function foo() {
-      .replace(/\)\s*:\s*[A-Za-z0-9_$<>[\]|&\s]+(?=\s*\{)/g, ')')
-      // Remove parameter type annotations: (a: number, b: string) -> (a, b)
-      .replace(/([A-Za-z0-9_$]+)\s*:\s*[A-Za-z0-9_$<>[\]|&\s]+(?=[,)])/g, '$1')
-      // Remove generic calls like Map<string, number>() -> Map()
-      .replace(/<[A-Za-z0-9_$,\s]+>(?=\()/g, '')
-      // Remove 'as Type' assertions
-      .replace(/\s+as\s+[A-Za-z0-9_$<>[\]|&]+/g, '')
-      // Remove non-null assertion operator: charMap.get(char)!
-      .replace(/([A-Za-z0-9_$)\]])!/g, '$1');
-    return clean;
+    if (!tsModule) {
+      tsModule = await import('https://esm.sh/typescript@5.3.3');
+    }
+    return tsModule.transpile(code, { 
+      target: tsModule.ScriptTarget.ES2022,
+      removeComments: false 
+    });
   } catch (e) {
-    return code;
+    console.error("TypeScript transpile failed, falling back to regex", e);
+    // Ultimate fallback if CDN fails
+    return code.replace(/:\s*[^=;,)]+/g, '');
   }
 }
 
@@ -381,7 +372,7 @@ def buildList(arr):
   };
 
   try {
-    let executableCode = language === 'typescript' ? stripTypeScript(userCode) : userCode;
+    let executableCode = language === 'typescript' ? await stripTypeScript(userCode) : userCode;
 
     // Convert ES module import statements into require statements
     executableCode = executableCode
