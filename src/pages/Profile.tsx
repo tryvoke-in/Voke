@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Brain, LogOut, Upload, FileText, TrendingUp, Target, Award, Calendar,
   User, Briefcase, Activity, Sparkles, MessageSquare, BarChart3,
-  Github, Code, Terminal, Zap, Shield, Crown, ChevronRight, Settings, Camera, Check
+  Github, Code, Terminal, Zap, Shield, Crown, ChevronRight, Settings, Camera, Check,
+  Loader2, Mic, ArrowRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -220,7 +221,7 @@ const Profile = () => {
     try {
       const [textRes, videoRes, peerRes] = await Promise.all([
         supabase.from("interview_sessions").select("overall_score, status, completed_at").eq("user_id", userId),
-        supabase.from("video_interview_sessions").select("overall_score, status, completed_at").eq("user_id", userId),
+        supabase.from("video_interview_sessions").select("overall_score, status, analyzed_at").eq("user_id", userId),
         supabase.from("peer_interview_sessions").select("*").or(`host_user_id.eq.${userId},guest_user_id.eq.${userId}`)
       ]);
 
@@ -232,7 +233,7 @@ const Profile = () => {
       
       const completedSessions = 
         text.filter(s => s.status === 'completed' || s.completed_at || (s.overall_score !== null && s.overall_score > 0)).length +
-        video.filter(s => s.status === 'completed' || s.completed_at || (s.overall_score !== null && s.overall_score > 0)).length +
+        video.filter(s => s.status === 'completed' || s.analyzed_at || (s.overall_score !== null && s.overall_score > 0)).length +
         peer.length;
 
       let totalScore = 0;
@@ -558,16 +559,7 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="relative">
-          <div className="absolute inset-0 bg-violet-500/20 blur-xl rounded-full animate-pulse"></div>
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          >
-            <Zap className="h-12 w-12 text-violet-500 relative z-10" />
-          </motion.div>
-          <div className="mt-4 text-muted-foreground font-mono text-sm">LOADING PROFILE_DATA...</div>
-        </div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -793,34 +785,35 @@ const Profile = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-violet-500/10 to-fuchsia-500/10 border border-amber-500/20 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg"
+                  className="mb-6 p-4 rounded-xl bg-card/60 border border-border/80 backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                      <Sparkles className="w-5 h-5 animate-pulse" />
+                    <div className="w-9 h-9 rounded-lg bg-secondary/80 border border-border/70 flex items-center justify-center text-muted-foreground shrink-0 mt-0.5">
+                      <FileText className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                         Complete Profile Integrations
-                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        <span className="text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border/60">
                           Recommended
                         </span>
                       </h4>
-                      <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                         Connect your {(!formData.github_url && !profile?.github_url) ? 'GitHub account' : ''}{((!formData.github_url && !profile?.github_url) && !profile?.resume_url) ? ' & ' : ''}{!profile?.resume_url ? 'Resume' : ''} in the{' '}
-                        <button type="button" onClick={() => setActiveTab("settings")} className="text-violet-400 font-semibold underline hover:text-violet-300">Settings</button>{' '}
+                        <button type="button" onClick={() => setActiveTab("settings")} className="text-primary font-medium underline hover:text-primary/80">Settings</button>{' '}
                         &{' '}
-                        <button type="button" onClick={() => setActiveTab("resume")} className="text-violet-400 font-semibold underline hover:text-violet-300">Resume</button>{' '}
-                        tabs to enable AI-tailored mock interviews.
+                        <button type="button" onClick={() => setActiveTab("resume")} className="text-primary font-medium underline hover:text-primary/80">Resume</button>{' '}
+                        tabs to enable tailored mock interviews.
                       </p>
                     </div>
                   </div>
                   <Button
                     size="sm"
+                    variant="outline"
                     onClick={() => setActiveTab("settings")}
-                    className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl text-xs shrink-0 h-9 px-4 shadow-md shadow-violet-500/20"
+                    className="rounded-lg text-xs shrink-0 h-8 px-3 gap-1 border-border/80"
                   >
-                    Go to Settings <ChevronRight className="w-4 h-4 ml-1" />
+                    Go to Settings <ChevronRight className="w-3.5 h-3.5" />
                   </Button>
                 </motion.div>
               )}
@@ -850,23 +843,30 @@ const Profile = () => {
                   <TabsContent value="overview" className="space-y-6 outline-none">
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid gap-6">
 
-                      {/* AI Coach Banner */}
-                      <Card className="bg-gradient-to-r from-violet-900/20 to-fuchsia-900/20 border-violet-500/20 overflow-hidden relative">
-                        <div className="absolute right-0 top-0 w-64 h-64 bg-violet-500/10 blur-[100px] rounded-full" />
-                        <CardContent className="p-8 relative z-10 flex items-center justify-between">
-                          <div className="space-y-4 max-w-lg">
-                            <div className="flex items-center gap-2 text-violet-400 font-medium text-sm">
-                              <Sparkles className="w-4 h-4" />
-                              <span>AI Interview Coach</span>
+                      {/* Mock Interview Banner */}
+                      <Card className="border border-border/80 bg-card/60 backdrop-blur-sm rounded-2xl overflow-hidden relative shadow-sm">
+                        <CardContent className="p-6 sm:p-8 relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                          <div className="space-y-4 max-w-xl">
+                            
+                            
+                            <div className="space-y-1.5">
+                              <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+                                Ready for your next mock interview?
+                              </h3>
+                              <p className="text-sm text-muted-foreground leading-relaxed">
+                                Practice real-world technical and behavioral questions with live evaluation and actionable performance feedback.
+                              </p>
                             </div>
-                            <h3 className="text-3xl font-bold text-foreground leading-tight">Ready for your next mock interview?</h3>
-                            <p className="text-muted-foreground">Your AI coach is ready to analyze your performance and provide real-time feedback.</p>
-                            <Button onClick={() => navigate('/interview/new')} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                              Start Session <ChevronRight className="w-4 h-4 ml-1" />
-                            </Button>
-                          </div>
-                          <div className="hidden md:block text-9xl select-none opacity-20 transform rotate-12">
-                            🎙️
+
+                            <div className="flex flex-wrap items-center gap-3 pt-1">
+                              <Button 
+                                onClick={() => navigate('/interview/new')} 
+                                className="h-10 px-5 rounded-xl font-medium text-sm gap-2 shadow-sm transition-all"
+                              >
+                                Start Session
+                                <ArrowRight className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -1061,7 +1061,7 @@ const Profile = () => {
                         <CardContent className="p-6">
                           {loadingRepos ? (
                             <div className="py-8 text-center text-xs text-muted-foreground font-mono flex items-center justify-center gap-2">
-                              <Zap className="w-4 h-4 text-violet-400 animate-spin" />
+                              <Loader2 className="w-4 h-4 text-primary animate-spin" />
                               Fetching public repositories from GitHub...
                             </div>
                           ) : userRepos.length > 0 ? (
