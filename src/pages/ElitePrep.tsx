@@ -239,7 +239,7 @@ const ElitePrep: React.FC = () => {
   const finalVerdict = calculateFinalRecommendation();
 
   return (
-    <div className="min-h-screen bg-[#080B11] text-white flex flex-col font-sans select-none overflow-hidden relative">
+    <div className="min-h-screen bg-[#080B11] text-white flex flex-col font-sans overflow-hidden relative">
       {/* EARLY ACCESS & FEATURES UNDER DEVELOPMENT POPUP MODAL */}
       {showBetaNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">

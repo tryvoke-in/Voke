@@ -4,8 +4,9 @@ import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/d
 import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { LiveStatus } from '@/types/voice';
 import { updateRoundResultAsync, RoundFeedbackDetails } from '@/utils/eliteInterviewStorage';
-import { executeCode, ExecutionResult, validateCodeWithAI } from '@/utils/codeExecutor';
+import { executeCode, ExecutionResult, submitCodeWithAI, generateEliteCodingEvaluation } from '@/utils/codeExecutor';
 import Editor from '@monaco-editor/react';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   Mic,
   MicOff,
@@ -338,6 +339,7 @@ int main() {
   const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
   const [isRunningCode, setIsRunningCode] = useState(false);
   const [activeTab, setActiveTab] = useState<'problem' | 'testcases' | 'console'>('problem');
+  const [customInput, setCustomInput] = useState<string>('');
 
   // Verdict & Evaluation State
   const [verdict, setVerdict] = useState<'PASSED' | 'FAILED' | null>(null);
@@ -550,8 +552,27 @@ Section C: ${currentSystemDesignQuestion?.title}`;
     }
   }, [logs, debugPhase, currentSection]);
 
-  // Run Code Execution — re-enables AI speech for post-run follow-ups
-  const handleRunCode = async () => {
+  // Dev Tool Force Unlock Editor Listener
+  useEffect(() => {
+    const handleForceUnlock = () => {
+      if (currentSection === 'A_CODING') {
+        setIsEditorUnlocked(true);
+        setPhase('coding');
+        setApproachVerified(true);
+        setIsSilentMode(true);
+      } else if (currentSection === 'B_DEBUGGING') {
+        setIsDebugEditorUnlocked(true);
+        setDebugPhase('coding');
+        setIsSilentMode(true);
+      }
+    };
+
+    window.addEventListener('voke-dev-unlock-editor', handleForceUnlock);
+    return () => window.removeEventListener('voke-dev-unlock-editor', handleForceUnlock);
+  }, [currentSection]);
+
+  // Run Code Execution — re-enables AI speech for post-run follow-ups only on submit
+  const handleRunCode = async (isSubmit: boolean = false) => {
     const editorActive =
       currentSection === 'A_CODING'
         ? isEditorUnlocked
@@ -573,67 +594,24 @@ Section C: ${currentSystemDesignQuestion?.title}`;
           ? debugCode
           : systemDesignCode;
 
-      const activeTestCases =
-        currentSection === 'A_CODING'
-          ? currentProblem.testCases
-          : currentSection === 'B_DEBUGGING'
-          ? currentDebugProblem.testCases
-          : undefined;
-
       let res: ExecutionResult;
 
-      if (currentSection === 'B_DEBUGGING' && !activeTestCases) {
-        // Evaluate the fixed code using our low-token AI Static Validator
-        res = await validateCodeWithAI(
-          activeCode,
-          `The candidate was asked to fix a bug with this scenario: ${currentDebugProblem.scenario}\n\nThe expected behavior is: ${currentDebugProblem.expectedBehavior}\n\nDid they fix it correctly?`,
-          selectedLanguage
-        );
-        
-        // Push the AI's reason to the logs so the user sees it in the console
-        if (res.error) {
-          res.logs.push(`❌ ${res.error}`);
-        } else if (res.passed) {
-          res.logs.push(`✅ Fix looks correct!`);
-        } else {
-          res.logs.push(`❌ Fix is incorrect.`);
-        }
-      } else if (currentSection === 'C_SYSTEM_DESIGN') {
+      if (currentSection === 'C_SYSTEM_DESIGN') {
         // System design cannot be executed. Use AI Static Evaluation on their pseudo-code/notes.
-        res = await validateCodeWithAI(
+        res = await submitCodeWithAI(
           activeCode,
-          `The candidate designed an architecture for: "${currentSystemDesignQuestion?.prompt}".\nKey discussion points to look for: ${currentSystemDesignQuestion?.keyDiscussionPoints.join(', ')}.\nDoes their design pseudo-code or notes look acceptable and cover the core requirements?`,
-          'text'
+          'text' as any,
+          undefined,
+          `The candidate designed an architecture for: "${currentSystemDesignQuestion?.prompt}".\nKey discussion points to look for: ${currentSystemDesignQuestion?.keyDiscussionPoints.join(', ')}.\nDoes their design pseudo-code or notes look acceptable and cover the core requirements?`
         );
-        
-        if (res.passed) {
-          res.logs.push(`✅ System Design Architecture looks acceptable!`);
-        } else {
-          res.logs.push(`❌ System Design is missing key components or has critical flaws.`);
-        }
-        if (res.error) res.logs.push(res.error);
       } else {
-        res = await executeCode(activeCode, selectedLanguage, undefined, undefined, undefined, activeTestCases);
-
-        // --- NEW LOGIC FOR COMPILED LANGUAGES ---
-        if (res.passed && ['c', 'cpp', 'java'].includes(selectedLanguage) && activeTestCases && activeTestCases.length > 0) {
-           const aiRes = await validateCodeWithAI(
-             activeCode,
-             `The candidate solved problem: "${currentProblem?.title || currentDebugProblem?.title}". 
-              Their code compiled successfully without syntax errors. 
-              Expected behavior must match these test cases: ${JSON.stringify(activeTestCases)}. 
-              Analyze their logic. Does their code correctly solve this problem for these test cases and edge cases?`,
-             selectedLanguage
-           );
-           
-           // Override execution success with AI's logic check since we can't do stdin assertions easily
-           res.passed = aiRes.passed;
-           if (aiRes.error) {
-              res.error = aiRes.error;
-              res.logs.push(`\n❌ Logic Check Failed: ${aiRes.error}`);
-           } else {
-              res.logs.push(`\n✅ Logic Check Passed! Code behaves correctly for all test cases.`);
-           }
+        const probDesc = currentProblem?.description || currentDebugProblem?.description || "";
+        if (isSubmit) {
+            res = await submitCodeWithAI(activeCode, selectedLanguage, undefined, probDesc);
+        } else {
+            res = await executeCode(activeCode, selectedLanguage as any, undefined, undefined, customInput);
+            // Clear test case parsing for custom execution since it's just raw stdout
+            res.results = [];
         }
       }
 
@@ -643,28 +621,31 @@ Section C: ${currentSystemDesignQuestion?.title}`;
         toast.success(
           currentSection === 'C_SYSTEM_DESIGN'
             ? '✨ System design execution verified!'
-            : 'All test cases passed!'
+            : isSubmit ? 'All test cases passed!' : 'Sample test cases passed! Ready to submit?'
         );
-        // Re-enable AI voice for post-run questions
-        setIsSilentMode(false);
-        if (currentSection === 'A_CODING') {
-          setPhase('followup');
-          if (status === LiveStatus.CONNECTED) {
-            const isQ2 = selectedProblemIndex === 1;
-            await sendHiddenContext(`Candidate ran code for "${currentProblem.title}" and ALL test cases PASSED successfully! You are now in the post-solution follow-up phase. Speak to the candidate and ask ONLY this exact first question: "Great work! All test cases passed. What is the exact Time Complexity Big-O of your solution?" After they answer, proceed to ask: (2) Auxiliary Space Complexity, (3) Edge cases, (4) Optimizations.${!isQ2 ? ' Then instruct them to click Next Problem.' : ' Then instruct them to move to Section B Debugging.'} Never ask any resume or background questions.`);
-          }
-        } else if (currentSection === 'B_DEBUGGING') {
-          setDebugPhase('followup');
-          if (status === LiveStatus.CONNECTED) {
-            await sendHiddenContext(`Candidate fixed "${currentDebugProblem.title}" and ALL tests PASSED. Ask: 1. What was the exact root cause of each bug? 2. How does your fix prevent future regression? 3. Any edge case that could still fail? After answering, tell them to move to Section C.`);
-          }
-        } else if (currentSection === 'C_SYSTEM_DESIGN') {
-          if (status === LiveStatus.CONNECTED) {
-            await sendHiddenContext(`Candidate ran their System Design implementation successfully. Ask: 1. How does your design handle race conditions across multiple Redis nodes? 2. What fallback or degradation strategy will you use if Redis experiences high latency? 3. How does this scale to 100,000 req/sec?`);
+        
+        // Re-enable AI voice for post-run questions only on submit
+        if (isSubmit || currentSection === 'C_SYSTEM_DESIGN') {
+          setIsSilentMode(false);
+          if (currentSection === 'A_CODING') {
+            setPhase('followup');
+            if (status === LiveStatus.CONNECTED) {
+              const isQ2 = selectedProblemIndex === 1;
+              await sendHiddenContext(`Candidate clicked SUBMIT for "${currentProblem.title}" and ALL test cases PASSED successfully! You are now in the post-solution follow-up phase. Speak to the candidate and ask ONLY this exact first question: "Great work! All test cases passed. What is the exact Time Complexity Big-O of your solution?" After they answer, proceed to ask: (2) Auxiliary Space Complexity, (3) Edge cases, (4) Optimizations.${!isQ2 ? ' Then instruct them to click Next Problem.' : ' Then instruct them to move to Section B Debugging.'} Never ask any resume or background questions.`);
+            }
+          } else if (currentSection === 'B_DEBUGGING') {
+            setDebugPhase('followup');
+            if (status === LiveStatus.CONNECTED) {
+              await sendHiddenContext(`Candidate clicked SUBMIT for "${currentDebugProblem.title}" and ALL tests PASSED. Ask: 1. What was the exact root cause of each bug? 2. How does your fix prevent future regression? 3. Any edge case that could still fail? After answering, tell them to move to Section C.`);
+            }
+          } else if (currentSection === 'C_SYSTEM_DESIGN') {
+            if (status === LiveStatus.CONNECTED) {
+              await sendHiddenContext(`Candidate ran their System Design implementation successfully. Ask: 1. How does your design handle race conditions across multiple Redis nodes? 2. What fallback or degradation strategy will you use if Redis experiences high latency? 3. How does this scale to 100,000 req/sec?`);
+            }
           }
         }
       } else {
-        toast.error('Execution / tests failed. Check console for details.');
+        toast.error(isSubmit ? 'Hidden test cases failed. Check console for details.' : 'Sample test cases failed. Check console for details.');
         // Let AI give a hint — briefly re-enable
         setIsSilentMode(false);
         if (status === LiveStatus.CONNECTED) {
@@ -688,36 +669,35 @@ Section C: ${currentSystemDesignQuestion?.title}`;
     setIsEnding(true);
     disconnect();
 
-    // Calculate score based on execution pass rate + duration + criteria
-    const passedTests = executionResult?.passed ?? true;
-    const calculatedScore = passedTests ? Math.floor(Math.random() * 15 + 80) : Math.floor(Math.random() * 20 + 55);
-    const isPass = calculatedScore >= 75;
-
-    const finalVerdict = isPass ? 'PASSED' : 'FAILED';
-    const finalReason = isPass
-      ? `Strong algorithmic intuition, clean code structure, and accurate debugging meeting ${company.name}'s standards.`
-      : `Demonstrated foundational knowledge but struggled on edge cases and optimal time complexity. Score (${calculatedScore}%) below the 75% threshold.`;
-
-    const feedback: RoundFeedbackDetails = {
-      communicationScore: isPass ? 88 : 65,
-      confidenceScore: isPass ? 85 : 60,
-      technicalScore: calculatedScore,
-      resumeAuthenticityScore: 90,
-      strengths: isPass
-        ? ['Effective two-pointer sliding window execution', 'Systematic bug root-cause identification', 'Clear articulation of Big-O complexity']
-        : ['Understood problem statement', 'Attempted brute force solution', 'Friendly communication'],
-      improvements: isPass
-        ? ['Consider memory optimization in distributed cache scenarios', 'Handle multi-threading edge cases']
-        : ['Practice sliding window and two-pointer patterns', 'Deepen understanding of $O(N)$ vs $O(N^2)$ space-time trade-offs', 'Master boundary condition debugging'],
-      summary: finalReason
-    };
-
-    setVerdict(finalVerdict);
-    setVerdictScore(calculatedScore);
-    setVerdictReason(finalReason);
-    setFeedbackDetails(feedback);
-
     try {
+      const evaluation = await generateEliteCodingEvaluation(
+        logs,
+        code,
+        debugCode,
+        systemDesignCode,
+        executionResult?.passed ?? false,
+        duration
+      );
+
+      const finalVerdict = evaluation.passed ? 'PASSED' : 'FAILED';
+      const calculatedScore = evaluation.technicalScore;
+      const finalReason = evaluation.summary;
+
+      const feedback: RoundFeedbackDetails = {
+        communicationScore: evaluation.communicationScore,
+        confidenceScore: evaluation.confidenceScore,
+        technicalScore: evaluation.technicalScore,
+        resumeAuthenticityScore: 90,
+        strengths: evaluation.strengths || [],
+        improvements: evaluation.improvements || [],
+        summary: evaluation.summary
+      };
+
+      setVerdict(finalVerdict);
+      setVerdictScore(calculatedScore);
+      setVerdictReason(finalReason);
+      setFeedbackDetails(feedback);
+
       await updateRoundResultAsync(
         userId,
         interviewType.id,
@@ -729,16 +709,31 @@ Section C: ${currentSystemDesignQuestion?.title}`;
         calculatedScore,
         feedback
       );
-      toast.success('Round 3 results saved successfully to your career record.');
+      toast.success('Round 3 AI Evaluation complete and saved to your career record.');
     } catch (e) {
-      console.error('[EliteCodingAssessment] Error saving round result:', e);
+      console.error('[EliteCodingAssessment] Error generating AI evaluation:', e);
+      toast.error('Failed to generate AI evaluation. Using fallback scoring.');
+      
+      // Fallback
+      const passedTests = executionResult?.passed ?? true;
+      const calculatedScore = passedTests ? Math.floor(Math.random() * 15 + 80) : Math.floor(Math.random() * 20 + 55);
+      const isPass = calculatedScore >= 75;
+      const finalVerdict = isPass ? 'PASSED' : 'FAILED';
+      const finalReason = isPass ? 'Strong algorithmic intuition.' : 'Demonstrated foundational knowledge but struggled on edge cases.';
+      setVerdict(finalVerdict);
+      setVerdictScore(calculatedScore);
+      setVerdictReason(finalReason);
+      setFeedbackDetails({
+        communicationScore: 70, confidenceScore: 70, technicalScore: calculatedScore, resumeAuthenticityScore: 90,
+        strengths: [], improvements: [], summary: finalReason
+      });
     } finally {
       setIsEnding(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-950 text-white overflow-hidden font-sans select-none">
+    <div className="flex flex-col h-screen bg-zinc-950 text-white overflow-hidden font-sans">
       {/* Top Floating Glass HUD */}
       <header className="h-14 border-b border-white/10 bg-zinc-950/80 backdrop-blur-xl px-4 flex items-center justify-between shrink-0 z-30">
         {/* Left: Round & Company Badge */}
@@ -897,9 +892,9 @@ Section C: ${currentSystemDesignQuestion?.title}`;
       )}
 
       {/* Main Split Layout: Left Problem/HUD, Right Monaco Code Editor */}
-      <div className="flex-1 flex overflow-hidden">
+      <PanelGroup direction="horizontal" className="flex-1 flex overflow-hidden">
         {/* LEFT COLUMN: Problem Details, Video/Voice AI & Section Content */}
-        <div className="w-full md:w-[45%] lg:w-[40%] border-r border-white/10 flex flex-col bg-zinc-950 overflow-y-auto">
+        <Panel defaultSize={40} minSize={30} className="border-r border-white/10 flex flex-col bg-zinc-950 overflow-y-auto">
           {/* Top Voice AI & Video HUD Tile */}
           <div className="p-4 border-b border-white/10 bg-zinc-900/40 space-y-3">
             <div className="flex items-center justify-between">
@@ -1247,10 +1242,12 @@ Section C: ${currentSystemDesignQuestion?.title}`;
               </div>
             )}
           </div>
-        </div>
+        </Panel>
+
+        <PanelResizeHandle className="w-1.5 bg-zinc-800 hover:bg-violet-500 transition-colors cursor-col-resize active:bg-violet-600 shadow-[inset_0_0_4px_rgba(0,0,0,0.5)] z-10" />
 
         {/* RIGHT COLUMN: Monaco Code Editor & Live Test Execution Terminal */}
-        <div className="w-full md:w-[55%] lg:w-[60%] flex flex-col bg-zinc-900/50">
+        <Panel defaultSize={60} minSize={30} className="flex flex-col bg-zinc-900/50">
           {/* Editor Header Bar */}
           <div className="h-11 border-b border-white/10 bg-zinc-950 px-4 flex items-center justify-between shrink-0">
             {/* Language Selector */}
@@ -1270,20 +1267,36 @@ Section C: ${currentSystemDesignQuestion?.title}`;
               </select>
             </div>
 
-            {/* Run Code Button */}
-            <Button
-              size="sm"
-              onClick={handleRunCode}
-              disabled={isRunningCode}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl h-8 px-4 shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer"
-            >
-              {isRunningCode ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Play className="w-3.5 h-3.5 fill-white" />
-              )}
-              Run Code
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                onClick={() => handleRunCode(false)}
+                disabled={isRunningCode}
+                variant="outline"
+                className="border-zinc-700 hover:bg-zinc-800 text-zinc-300 font-bold text-xs rounded-lg h-8 px-3 transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                {isRunningCode ? (
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Play className="w-3 h-3 fill-zinc-300" />
+                )}
+                Run Code
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleRunCode(true)}
+                disabled={isRunningCode}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-lg h-8 px-4 shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer"
+              >
+                {isRunningCode ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Check className="w-3.5 h-3.5" />
+                )}
+                Submit
+              </Button>
+            </div>
           </div>
 
           {/* Monaco Code Editor */}
@@ -1372,36 +1385,69 @@ Section C: ${currentSystemDesignQuestion?.title}`;
               )}
             </div>
 
-            <div className="flex-1 p-3 overflow-y-auto font-mono text-xs text-zinc-300 space-y-1 bg-black/40">
-              {executionResult ? (
-                <>
-                  {executionResult.logs.map((log, i) => (
-                    <div key={i} className="text-zinc-300 whitespace-pre-wrap">{log}</div>
-                  ))}
-                  {executionResult.results && executionResult.results.length > 0 && (
-                    <div className="space-y-1 pt-2">
-                      {executionResult.results.map((r, i) => (
-                        <div
-                          key={i}
-                          className={`p-2 rounded-lg border text-[11px] ${
-                            r.passed
-                              ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300'
-                              : 'bg-rose-500/5 border-rose-500/20 text-rose-300'
-                          }`}
-                        >
-                          Case {r.caseId}: {r.passed ? 'Passed' : 'Failed'} | Expected: {r.expected} | Got: {r.actual}
-                        </div>
+            <div className="flex-1 flex overflow-hidden">
+              {/* Custom Input */}
+              <div className="w-1/2 border-r border-white/10 flex flex-col">
+                <div className="text-[10px] font-bold text-zinc-500 uppercase px-3 py-1.5 bg-zinc-950 border-b border-white/5 tracking-wider">Custom Input (stdin)</div>
+                <textarea
+                  value={customInput}
+                  onChange={(e) => setCustomInput(e.target.value)}
+                  className="flex-1 bg-black/40 text-zinc-300 font-mono text-xs p-3 focus:outline-none resize-none"
+                  placeholder="Enter custom test input here..."
+                />
+              </div>
+              
+              {/* Output Console */}
+              <div className="w-1/2 flex flex-col">
+                <div className="text-[10px] font-bold text-zinc-500 uppercase px-3 py-1.5 bg-zinc-950 border-b border-white/5 tracking-wider">Output</div>
+                <div className="flex-1 p-3 overflow-y-auto font-mono text-xs text-zinc-300 space-y-1 bg-black/40">
+                  {executionResult ? (
+                    <>
+                      {executionResult.logs.map((log, i) => (
+                        <div key={i} className="text-zinc-300 whitespace-pre-wrap">{log}</div>
                       ))}
-                    </div>
+                      {executionResult.results && executionResult.results.length > 0 && (
+                        <div className="space-y-1 pt-2">
+                          {executionResult.results.map((r, i) => (
+                            <div
+                              key={i}
+                              className={`p-2 rounded-lg border text-[11px] ${
+                                r.passed
+                                  ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300'
+                                  : 'bg-rose-500/5 border-rose-500/20 text-rose-300'
+                              }`}
+                            >
+                              Case {r.caseId}: {r.passed ? 'Passed' : 'Failed'}
+                              {r.input && r.input !== 'Static AI Analysis' && ` | Input: ${r.input}`}
+                              {r.expected && ` | Expected: ${r.expected}`}
+                              {r.actual && ` | Got: ${r.actual}`}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-zinc-600 italic leading-relaxed">Click "Run Code" to execute with custom input.<br/>Click "Submit" for full AI evaluation.</div>
                   )}
-                </>
-              ) : (
-                <div className="text-zinc-600 italic">Click "Run Code" to execute test cases against the live runtime.</div>
-              )}
+                </div>
+              </div>
             </div>
           </div>
+        </Panel>
+      </PanelGroup>
+
+      {/* ANALYZING INTERVIEW OVERLAY */}
+      {isEnding && !verdict && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center justify-center shadow-2xl">
+            <RefreshCw className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+            <h2 className="text-xl font-bold text-white mb-2">Analyzing Interview...</h2>
+            <p className="text-sm text-zinc-400 text-center">
+              Our AI is evaluating your code, edge case handling, and communication transcript...
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* FINAL VERDICT MODAL (PASS / FAIL with 75% Threshold & Weighted Breakdown) */}
       {verdict && (

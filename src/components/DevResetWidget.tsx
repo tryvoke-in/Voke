@@ -267,6 +267,20 @@ export const DevResetWidget = () => {
                       Reset Pipeline
                     </Button>
                   </div>
+                  
+                  {/* Instant Unlock Editor Shortcut */}
+                  <Button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('voke-dev-unlock-editor'));
+                      toast.success("Editor unlocked! You can now start coding.");
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-center h-7.5 px-2 bg-zinc-900 border-amber-500/20 hover:bg-amber-950/40 hover:text-amber-300 rounded-lg text-[10px] font-bold"
+                  >
+                    <Unlock className="w-3 h-3 mr-1.5 text-amber-400" />
+                    Force Unlock Editor (Skip AI)
+                  </Button>
 
                   {/* Navigation shortcut */}
                   <Button

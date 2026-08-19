@@ -3050,98 +3050,30 @@ export const NEWTON_SECTION_A_PROBLEMS: any[] = [
     "examples": [],
     "constraints": [],
     "starterCode": {
-      "typescript": "function solve(root: any, X: any): any {\n  // Your logic here\n  return -1;\n}",
-      "javascript": "function solve(root, X) {\n  // Your logic here\n  return -1;\n}",
-      "python": "def solve(root, X):\n    # Your logic here\n    return -1"
+      "typescript": "function solve(s: string, ch: string, rep: string): string {\n  // Your logic here\n  return '';\n}",
+      "javascript": "function solve(s, ch, rep) {\n  // Your logic here\n  return '';\n}",
+      "python": "def solve(s, ch, rep):\n    # Your logic here\n    return ''"
     },
     "testCases": [
       {
-        "input": "buildTree([1, 2, 3]), 'a'",
+        "input": "'aabbaca', 'a', 'x'",
         "expected": "xxbbxcx"
       },
       {
-        "input": "buildTree([1, 2, 3]), 'a', 'x'",
-        "expected": "xxbbxcx"
+        "input": "'hello', 'l', 'y'",
+        "expected": "heyyo"
       },
       {
-        "input": "buildTree([1, 2, 3]), 'b'",
-        "expected": "xxbbxcx"
+        "input": "'abc', 'd', 'x'",
+        "expected": "abc"
       },
       {
-        "input": "buildTree([1, 2, 3]), 'c'",
-        "expected": "xxbbxcx"
+        "input": "'aaaaa', 'a', 'b'",
+        "expected": "bbbbb"
       },
       {
-        "input": "buildTree([1, 2, 3]), 'a', 'y'",
-        "expected": "xyybxycy"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'b', 'y'",
-        "expected": "xyybxycy"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'c', 'y'",
-        "expected": "xyybxycy"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'a', 'z'",
-        "expected": "zzzbxzcz"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'b', 'z'",
-        "expected": "zzzbxzcz"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'c', 'z'",
-        "expected": "zzzbxzcz"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'a', 'a'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'b', 'b'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'c', 'c'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'a', 'a', 'x'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'b', 'b', 'x'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'c', 'c', 'x'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'a', 'a', 'a'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'b', 'b', 'b'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'c', 'c', 'c'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'a', 'a', 'a', 'x'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'b', 'b', 'b', 'x'",
-        "expected": "xxbbxcx"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'c', 'c', 'c', 'x'",
-        "expected": "xxbbxcx"
+        "input": "'', 'a', 'b'",
+        "expected": ""
       }
     ]
   },
@@ -3154,109 +3086,29 @@ export const NEWTON_SECTION_A_PROBLEMS: any[] = [
     "examples": [],
     "constraints": [],
     "starterCode": {
-      "typescript": "function solve(root: any, X: any): any {\n  // Your logic here\n  return -1;\n}",
-      "javascript": "function solve(root, X) {\n  // Your logic here\n  return -1;\n}",
-      "python": "def solve(root, X):\n    # Your logic here\n    return -1"
+      "typescript": "function solve(s: string): number {\n  // Your logic here\n  return 0;\n}",
+      "javascript": "function solve(s) {\n  // Your logic here\n  return 0;\n}",
+      "python": "def solve(s):\n    # Your logic here\n    return 0"
     },
     "testCases": [
       {
-        "input": "buildTree([1]), 'a'",
+        "input": "'newtonschool'",
+        "expected": "4"
+      },
+      {
+        "input": "'python'",
+        "expected": "1"
+      },
+      {
+        "input": "'aeiou'",
+        "expected": "5"
+      },
+      {
+        "input": "'bcdfg'",
         "expected": "0"
       },
       {
-        "input": "buildTree([1, 2]), 'a'",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]), 'a'",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]), 'a'",
+        "input": "'a'",
         "expected": "1"
       }
     ]
@@ -3498,102 +3350,30 @@ export const NEWTON_SECTION_A_PROBLEMS: any[] = [
     "examples": [],
     "constraints": [],
     "starterCode": {
-      "typescript": "function solve(root: any, X: any): any {\n  // Your logic here\n  return -1;\n}",
-      "javascript": "function solve(root, X) {\n  // Your logic here\n  return -1;\n}",
-      "python": "def solve(root, X):\n    # Your logic here\n    return -1"
+      "typescript": "function solve(mat: number[][], n: number, m: number): number[] {\n  // Your logic here\n  return [0, 0];\n}",
+      "javascript": "function solve(mat, n, m) {\n  // Your logic here\n  return [0, 0];\n}",
+      "python": "def solve(mat, n, m):\n    # Your logic here\n    return [0, 0]"
     },
     "testCases": [
       {
-        "input": "buildTree([1, 2, 3]), 0",
-        "expected": "0"
+        "input": "[[1, 2], [3, 4], [5, 6]], 3, 2",
+        "expected": "[21, 6]"
       },
       {
-        "input": "buildTree([1, 2, 3]), 1",
-        "expected": "2"
+        "input": "[[9, 9, 9, 9], [9, 9, 9, 9], [9, 9, 9, 9]], 3, 4",
+        "expected": "[108, 9]"
       },
       {
-        "input": "buildTree([1, 2, 3]), 2",
-        "expected": "3"
+        "input": "[[1]], 1, 1",
+        "expected": "[1, 1]"
       },
       {
-        "input": "buildTree([1, 2, 3]), 3",
-        "expected": "0"
+        "input": "[[10, 20, 30]], 1, 3",
+        "expected": "[60, 30]"
       },
       {
-        "input": "buildTree([1, 2, 3]), 4",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), -1",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 5",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, 3]), 0",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, null, null, 3]), 0",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, null, null, 3]), 1",
-        "expected": "2"
-      },
-      {
-        "input": "buildTree([1, 2, null, null, 3]), 2",
-        "expected": "3"
-      },
-      {
-        "input": "buildTree([1, 2, null, null, 3]), 3",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, null, null, 3]), 4",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, null, null, 3]), -1",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, null, null, 3]), 5",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5]), 0",
-        "expected": "15"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5]), 1",
-        "expected": "5"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5]), 2",
-        "expected": "4"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5]), 3",
-        "expected": "3"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5]), 4",
-        "expected": "2"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5]), 5",
-        "expected": "1"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5]), 6",
-        "expected": "0"
-      },
-      {
-        "input": "buildTree([1, 2, 3, 4, 5]), -1",
-        "expected": "0"
+        "input": "[[-1, -2], [-3, -4]], 2, 2",
+        "expected": "[-10, -1]"
       }
     ]
   },

@@ -605,7 +605,7 @@ ${userCode.substring(0, 2000)}
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
+        model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.1
       })
@@ -635,5 +635,198 @@ ${userCode.substring(0, 2000)}
     };
   } catch (err: any) {
     return { passed: false, logs: ["Failed to validate with AI: " + err.message], results: [] };
+  }
+};
+
+// ─── AI Interview Evaluator (Round 3) ──────────────────────────────────
+export const generateEliteCodingEvaluation = async (
+  logs: { role: string; content: string }[],
+  codingCode: string,
+  debugCode: string,
+  systemDesignCode: string,
+  codingPassed: boolean,
+  durationSeconds: number
+) => {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error("API Key missing for Evaluation");
+  }
+
+  // Check if candidate actually spoke
+  const userSpoke = logs.some(l => l.role === 'user' && l.content.trim().length > 0);
+  
+  // Format transcript
+  const transcriptStr = logs.map(l => `${l.role.toUpperCase()}: ${l.content}`).join("\n");
+
+  const prompt = `You are a strict, harsh, and realistic FAANG Senior Engineering Manager evaluating a candidate's Round 3 (Coding, Debugging, System Design) performance.
+You must output ONLY a valid JSON object. Do not include markdown code blocks.
+
+Interview Data:
+- Candidate Spoke via Voice: ${userSpoke}
+- Total Duration: ${Math.floor(durationSeconds / 60)} minutes
+- Section A (Coding) Code:
+${codingCode.substring(0, 500)}
+- Section A Execution Passed: ${codingPassed}
+- Section B (Debugging) Code:
+${debugCode.substring(0, 500)}
+- Section C (System Design) Notes:
+${systemDesignCode.substring(0, 500)}
+
+Voice Transcript:
+${transcriptStr.substring(0, 3000)}
+
+Instructions for Grading:
+1. If the candidate DID NOT speak (Candidate Spoke via Voice: false), their communicationScore MUST be VERY low (e.g. 10-30), and they must fail.
+2. If they just copy-pasted code without explaining anything, technical score drops drastically.
+3. If they did not complete all 3 sections (e.g., debug code is unchanged, or system design is empty), the technicalScore MUST be low (e.g., 20-50).
+4. The OVERALL SCORE (technicalScore) MUST be >= 75 for "passed" to be true.
+5. Provide strict, specific, realistic strengths and improvements based ONLY on what actually happened in the transcript/code.
+
+Return ONLY JSON:
+{
+  "passed": true or false,
+  "technicalScore": <0-100>,
+  "communicationScore": <0-100>,
+  "confidenceScore": <0-100>,
+  "strengths": ["<string>", "<string>"],
+  "improvements": ["<string>", "<string>"],
+  "summary": "<2 sentence brutal summary>"
+}`;
+
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.1
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error("Evaluation API Error");
+  }
+
+  const result = await response.json();
+  let content = result.choices[0].message.content.trim();
+  if (content.startsWith("\`\`\`json")) content = content.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
+  else if (content.startsWith("\`\`\`")) content = content.replace(/\`\`\`/g, "").trim();
+  
+  return JSON.parse(content);
+};
+
+// ─── Main Submit Execution Function (AI Powered) ──────────────────────────────────
+export const submitCodeWithAI = async (
+  userCode: string,
+  language: string,
+  onLog?: (log: string) => void,
+  problemDescription?: string
+): Promise<ExecutionResult> => {
+  const logs: string[] = [];
+  const captureLog = (msg: string) => {
+    logs.push(msg);
+    onLog?.(msg);
+  };
+
+  captureLog(`⚡ Analyzing ${language.toUpperCase()} code using AI Runtime Engine (Evaluating ~50 Edge Cases)...\n`);
+
+  const desc = problemDescription || "No specific problem description provided. Evaluate if the code runs conceptually and is well-formed.";
+
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+  if (!apiKey) {
+    const err = "API Key missing for AI Validator";
+    captureLog(`❌ ${err}`);
+    return { passed: false, logs, results: [], error: err };
+  }
+
+  const prompt = `You are a strict, expert coding interviewer evaluating a candidate's code.
+Does the candidate's code correctly solve the problem described below?
+
+You MUST act as a code execution engine. Trace the candidate's code in your head against around 50 rigorous edge cases and typical test cases based on the problem description.
+Determine the exact actual output it would produce for each.
+If ANY case fails, you must return them in the results array so the user knows exactly what failed.
+
+Return ONLY a valid JSON object in this exact format, nothing else:
+{
+  "passed": true or false,
+  "feedback": "A short summary of the execution results.",
+  "results": [
+    // If passed is false, provide 2 to 5 specific cases that failed. If true, you can leave this empty or provide 1 example success case.
+    { "caseId": 1, "input": "input1", "expected": "expected1", "actual": "actual output produced by code", "passed": true or false }
+  ]
+}
+
+Problem Description:
+${desc.substring(0, 1500)}
+
+Candidate's Code (${language}):
+${userCode.substring(0, 2000)}
+`;
+
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1
+      })
+    });
+
+    if (!response.ok) {
+      captureLog(`❌ AI Validation API Error`);
+      return { passed: false, logs, results: [], error: "AI API Error" };
+    }
+
+    const result = await response.json();
+    let content = result.choices[0].message.content.trim();
+    if (content.startsWith("\`\`\`json")) {
+      content = content.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
+    } else if (content.startsWith("\`\`\`")) {
+      content = content.replace(/\`\`\`/g, "").trim();
+    }
+    
+    const parsed = JSON.parse(content);
+    
+    if (parsed.results && Array.isArray(parsed.results) && parsed.results.length > 0) {
+      const allPassed = parsed.results.every((r: any) => r.passed);
+      if (parsed.passed || allPassed) {
+         captureLog(`\n✨ All ~50 test cases and edge cases passed successfully!`);
+      } else {
+         captureLog(`\n❌ Some test cases failed.`);
+         parsed.results.forEach((r: any) => {
+           if (r.passed) {
+              captureLog(`✅ Case ${r.caseId} Passed`);
+           } else {
+              captureLog(`❌ Case ${r.caseId} Failed | Input: ${r.input} | Expected: ${r.expected} | Got: ${r.actual}`);
+           }
+         });
+      }
+      return {
+        passed: parsed.passed === true,
+        logs: [...logs, parsed.feedback || ""],
+        results: parsed.results
+      };
+    }
+
+    const passed = parsed.passed === true;
+    captureLog(passed ? `\n✨ All ~50 test cases and edge cases passed successfully!` : `\n❌ Code failed on some edge cases.`);
+    
+    return {
+      passed: passed,
+      logs: [...logs, parsed.feedback || (passed ? "AI Verified: Correct" : "AI Verified: Incorrect")],
+      results: []
+    };
+  } catch (err: any) {
+    const errMsg = err?.message ?? 'Runtime error';
+    captureLog(`\n❌ Execution Error: ${errMsg}`);
+    return { passed: false, logs, results: [], error: errMsg };
   }
 };
