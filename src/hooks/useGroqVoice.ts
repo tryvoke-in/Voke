@@ -133,6 +133,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
         const sysPrompt = fullMessages.find((m: any) => m.role === 'system')?.content || contextRef.current || '';
         const isCodingRound = /round\s*3|coding|live\s*coding|assessment|two\s*sum|longest\s*substring|algorithm|debugging|system\s*design|approach\s*phase/i.test(sysPrompt);
+        const isHRRound = /round\s*4|hr\s*manager|behavioral/i.test(sysPrompt);
 
         // FOR CODING ASSESSMENT (ROUND 3): Directly invoke Gemini API or Groq with strict Coding Prompt
         // DO NOT call the screening edge function for coding rounds to prevent any turn-based screening questions
@@ -200,7 +201,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         }
 
         // PRIMARY ENGINE FOR OTHER ROUNDS (OR FALLBACK): interview-chat Edge Function
-        if (!aiText && !isCodingRound) {
+        if (!aiText && !isCodingRound && !isHRRound) {
             try {
                 console.log('DEBUG: Primary - Generating question with interview-chat Edge Function...');
                 const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('interview-chat', {
@@ -227,24 +228,36 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             }
         }
 
-        // TERTIARY FALLBACK: Groq Llama 3.3 70B via groq-proxy Edge Function
+        // TERTIARY FALLBACK & HR ROUND ENGINE: Direct Groq API
         if (!aiText) {
             try {
-                console.log('DEBUG: Fallback - Generating question with Groq Llama 3.3 70B...');
-                const { data: groqData, error: groqErr } = await supabase.functions.invoke('groq-proxy', {
-                    body: {
-                        messages: fullMessages,
-                        model: 'llama-3.3-70b-versatile',
-                        temperature: 0.5,
-                        max_tokens: 200,
+                console.log('DEBUG: Generating question with Direct Groq API (Llama 3.3 70B)...');
+                const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
+                if (groqApiKey) {
+                    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${groqApiKey}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            model: "llama-3.3-70b-versatile",
+                            messages: fullMessages,
+                            temperature: 0.5,
+                            max_tokens: 200,
+                        })
+                    });
+                    if (res.ok) {
+                        const groqData = await res.json();
+                        if (groqData?.choices?.[0]?.message?.content) {
+                            aiText = groqData.choices[0].message.content.trim();
+                            setApiLabel('(groq 3.3 direct)');
+                            console.log('✓ Success with Direct Groq API:', aiText);
+                        }
                     }
-                });
-                if (!groqErr && groqData?.choices?.[0]?.message?.content) {
-                    aiText = groqData.choices[0].message.content.trim();
-                    console.log('✓ Success with Groq Llama 3.3 70B:', aiText);
                 }
             } catch (groqErr) {
-                console.error("Groq fallback exception:", groqErr);
+                console.error("Groq direct exception:", groqErr);
             }
         }
 
