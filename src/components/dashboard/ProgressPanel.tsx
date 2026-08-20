@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { Card } from "@/components/ui/card";
-import { FileText, Clock, TrendingUp, ArrowRight, Zap, Target, AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
+import { FileText, Clock, TrendingUp, ArrowRight, Zap, Target, AlertCircle, CheckCircle2, Sparkles, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "motion/react";
 
 interface ProgressPanelProps {
   allSessions?: any[];
@@ -48,6 +50,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
   const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // 1. Process and normalize session scores across Text, Video, Peer & Practice sessions
   const scoredSessions = allSessions
@@ -243,49 +246,39 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
   const ctaDetails = getCTAButtonDetails();
 
   return (
-    <Card className="border-border/50 bg-card text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-lg text-foreground/90">Your Progress Since Day 1</h3>
-        {scoredSessions.length > 0 ? (
-          <div className="bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-            <span className={diffColorClass}>{diffSign}{Math.abs(ptsDifference)} pts</span>
-          </div>
-        ) : (
-          <div className="bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-semibold text-amber-500 flex items-center gap-1">
-            <Sparkles className="w-3 h-3" /> New Candidate
-          </div>
-        )}
-      </div>
-
+    <Card className="border-border/50 bg-card text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden p-6 space-y-5">
       {/* Overall Score Progression */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Overall Score</span>
-          {scoredSessions.length >= 2 && (
-            <span className="text-[11px] text-muted-foreground font-medium">
-              Day 1 Baseline: {startingScore}%
-            </span>
-          )}
-          {scoredSessions.length === 1 && (
-            <span className="text-[11px] text-violet-400 font-medium">1st Session Baseline</span>
-          )}
         </div>
         <div className="flex items-center gap-3">
           <span className="text-2xl font-bold text-foreground/95 min-w-[52px]">{currentScore}%</span>
           <div className="flex-1 h-2.5 bg-muted/60 rounded-full relative overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-violet-600 via-purple-500 to-indigo-500 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-green-600 via-green-500 to-green-500 rounded-full transition-all duration-500"
               style={{ width: `${Math.max(2, currentScore)}%` }}
             />
           </div>
-          <span className="text-2xl font-bold text-foreground/95">100%</span>
         </div>
       </div>
 
       {/* Line Chart */}
       <div className="space-y-2">
-        <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Recent Interviews Trend</div>
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Recent Interviews Trend</div>
+          <button
+            type="button"
+            onClick={() => setIsExpanded(prev => !prev)}
+            className="text-xs text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 transition-colors px-2 py-0.5 rounded-lg hover:bg-muted/60 cursor-pointer"
+            title={isExpanded ? "Hide breakdown details" : "Expand breakdown details"}
+          >
+            <span>{isExpanded ? "Less" : "Details"}</span>
+            <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="w-3.5 h-3.5" />
+            </motion.div>
+          </button>
+        </div>
         {chartData.length === 0 ? (
           <div className="h-[180px] w-full flex flex-col items-center justify-center border border-dashed border-border/60 rounded-2xl bg-muted/10 p-4 mt-2 text-center">
             <TrendingUp className="h-8 w-8 text-violet-500/70 mb-2 animate-bounce" />
@@ -328,7 +321,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
                 <Line 
                   type="monotone" 
                   dataKey="score" 
-                  stroke="#8b5cf6" 
+                  stroke="#2ee696ff" 
                   strokeWidth={3}
                   dot={{ r: 4, fill: '#ffffff', stroke: '#8b5cf6', strokeWidth: 2 }}
                   activeDot={{ r: 6, fill: '#8b5cf6', stroke: '#ffffff', strokeWidth: 2 }}
@@ -339,73 +332,73 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         )}
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Total Sessions Count */}
-        <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex items-center gap-3 hover:border-violet-500/30 transition-all duration-300">
-          <div className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 text-violet-400">
-            <FileText className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xl font-bold text-foreground">{totalInterviews}</div>
-            <div className="text-[11px] text-muted-foreground">sessions completed</div>
-          </div>
-        </div>
+      {/* Collapsible Stats & Insights (Hidden by default, expands smoothly above the CTA button) */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.28, ease: "easeInOut" }}
+            className="overflow-hidden space-y-4"
+          >
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-4 pt-1">
+              {/* Total Sessions Count */}
+              <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex items-center gap-3 hover:border-violet-500/30 transition-all duration-300">
+                <div className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 text-violet-400">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-foreground">{totalInterviews}</div>
+                  <div className="text-[11px] text-muted-foreground">Interviews</div>
+                </div>
+              </div>
 
-        {/* Practiced Time */}
-        <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex items-center gap-3 hover:border-violet-500/30 transition-all duration-300">
-          <div className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 text-violet-400">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xl font-bold text-foreground">{practiceTimeText}</div>
-            <div className="text-[11px] text-muted-foreground">total practice time</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Dynamic Insights Row */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Biggest Improvement */}
-        <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex flex-col justify-between hover:border-emerald-500/30 transition-all duration-300 min-h-[100px]">
-          <div className="text-emerald-500 text-xs font-semibold flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Biggest improvement</span>
-          </div>
-          <div className="mt-2">
-            <div className="text-sm font-medium text-foreground/90 line-clamp-1">{biggestImprovementLabel}</div>
-            <div className="text-emerald-400 text-sm font-bold mt-0.5 flex items-center gap-1">
-              <span>{biggestImprovementVal}</span>
+              {/* Practiced Time */}
+              <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex items-center gap-3 hover:border-violet-500/30 transition-all duration-300">
+                <div className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 text-violet-400">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-foreground">{practiceTimeText}</div>
+                  <div className="text-[11px] text-muted-foreground">Time Practiced</div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Needs Attention */}
-        <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex flex-col justify-between hover:border-orange-500/30 transition-all duration-300 min-h-[100px]">
-          <div className="text-orange-500 text-xs font-semibold flex items-center gap-1">
-            <AlertCircle className="w-3.5 h-3.5" />
-            <span>Needs attention</span>
-          </div>
-          <div className="mt-2 space-y-1">
-            <div className="text-sm font-medium text-foreground/90 truncate">{needsAttentionLabel}</div>
-            <div className="text-muted-foreground text-xs flex items-center gap-1.5">
-              <span>Score:</span>
-              <span className="text-foreground font-semibold">{needsAttentionVal}%</span>
-            </div>
-            <div className="w-full h-1 bg-muted rounded-full mt-1 overflow-hidden">
-              <div 
-                className="h-full bg-orange-500 rounded-full transition-all duration-500" 
-                style={{ width: `${Math.max(5, needsAttentionVal)}%` }} 
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+            {/* Dynamic Insights Row */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Biggest Improvement */}
+              <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex flex-col hover:border-emerald-500/30 transition-all duration-300 min-h-[100px]">
+                <div className="text-emerald-500 text-xs font-semibold flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span>Biggest improvement</span>
+                </div>
+                <div className="mt-2">
+                  <div className="text-sm font-medium text-foreground/90 line-clamp-1">{biggestImprovementLabel}</div>
+                </div>
+              </div>
 
-      {/* Dynamic Practice CTA Button */}
+              {/* Needs Attention */}
+              <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex flex-col hover:border-orange-500/30 transition-all duration-300 min-h-[100px]">
+                <div className="text-orange-500 text-xs font-semibold flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>Needs attention</span>
+                </div>
+                <div className="mt-2 space-y-1">
+                  <div className="text-sm font-medium text-foreground/90 truncate">{needsAttentionLabel}</div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Dynamic Practice CTA Button (Directly below the graph by default) */}
       <button
         onClick={() => navigate(ctaDetails.route)}
-        className="w-full py-3 px-4 rounded-xl border border-violet-500/40 text-violet-500 dark:text-violet-400 font-semibold text-sm hover:bg-violet-500/10 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-sm"
+        className="w-full py-3 px-4 rounded-xl border border-blue-500/40 text-blue-500 dark:text-blue-400 font-semibold text-sm hover:bg-blue-500/10 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-sm"
       >
         <span>{ctaDetails.label}</span>
         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

@@ -39,50 +39,48 @@ export const DSAPreparationBanner = () => {
   return (
     <Card
       onClick={() => navigate("/dsa-sheet")}
-      className="mb-6 cursor-pointer border hover:border-emerald-500/40 transition-colors"
+      className="cursor-pointer border border-border/60 hover:border-blue-500/40 transition-all shadow-md hover:shadow-lg rounded-2xl overflow-hidden"
     >
       <CardContent className="p-4 sm:p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
-              <Code2 className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm sm:text-base text-foreground">
-                  Data Structures & Algorithms
-                </h3>
-                <span className="text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                  75 Days
-                </span>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 border border-blue-500/20">
+                <Code2 className="w-5 h-5" />
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                5 questions daily • {solvedCount} of {TOTAL_QUESTIONS} completed
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-sm sm:text-base text-foreground">
+                    DSA Preparation
+                  </h3>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {solvedCount} of {TOTAL_QUESTIONS} completed
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-            <div className="flex sm:flex-col items-baseline sm:items-end gap-2 sm:gap-0 text-xs">
-              <span className="font-medium text-foreground">Day {currentDay} of {TOTAL_DAYS}</span>
-              <span className="text-muted-foreground">{progressPercentage}% done</span>
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <div className="flex items-baseline gap-1.5 text-xs">
+              <span className="text-muted-foreground">({progressPercentage}% done)</span>
             </div>
             <Button
               size="sm"
-              className="h-8 px-3.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white gap-1.5 rounded-lg"
+              className="h-7 px-3 text-xs bg-blue-600 hover:bg-blue-500 text-white gap-1 rounded-lg shadow-xs"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate("/dsa-sheet");
               }}
             >
               <span>Practice</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3 h-3" />
             </Button>
           </div>
         </div>
 
-        {/* Minimal Progress Bar */}
-        <div className="mt-3.5">
+        {/* Progress Bar */}
+        <div className="mt-3">
           <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-emerald-500 rounded-full transition-all duration-500"

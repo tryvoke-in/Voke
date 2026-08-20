@@ -23,7 +23,7 @@ export const ReferralButton = ({ iconOnly = false }: ReferralButtonProps) => {
         className={
           iconOnly
             ? "flex items-center justify-center w-10 h-10 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-300 cursor-pointer shrink-0"
-            : "flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-md shadow-violet-500/10 hover:shadow-violet-500/25 transition-all duration-300 whitespace-nowrap text-xs font-semibold cursor-pointer shrink-0"
+            : "flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-700 text-white shadow-md shadow-violet-500/10 hover:shadow-violet-500/25 transition-all duration-300 whitespace-nowrap text-xs font-semibold cursor-pointer shrink-0"
         }
       >
         <Gift className={iconOnly ? "w-5 h-5 text-gray-700 dark:text-gray-300" : "w-4 h-4 animate-pulse"} />

@@ -17,9 +17,10 @@ import {
   Layers,
   Award,
   Zap,
-  RefreshCw
+  RefreshCw,
+  X
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   isDevUnlockAllActive,
@@ -32,6 +33,7 @@ import {
 } from "@/utils/eliteInterviewStorage";
 import { getInterviewRounds } from "@/data/eliteInterviewData";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const AUTHORIZED_EMAILS = [
   "anurag50434411@gmail.com",
@@ -161,113 +163,86 @@ export const DevResetWidget = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-full mb-2 left-0 w-80 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-2xl p-4 shadow-2xl text-white overflow-hidden"
+            className="absolute bottom-full mb-2 left-0 w-80 bg-card border border-border/60 rounded-2xl p-4 shadow-xl text-foreground overflow-hidden"
           >
-            {/* Ambient Background Glow */}
-            <div className="absolute -top-12 -left-12 w-28 h-28 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-12 -right-12 w-28 h-28 bg-violet-600/20 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="relative z-10">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-2 mb-2.5">
-                <div className="flex items-center gap-1.5">
-                  <FlaskConical className="w-4 h-4 text-amber-400 animate-pulse" />
-                  <span className="font-extrabold text-xs tracking-wider text-zinc-100 uppercase">Dev Testing Suite</span>
-                </div>
-                <span className="text-[9px] bg-amber-500/10 text-amber-300 border border-amber-500/20 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-widest">
-                  Admin Active
-                </span>
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border/50 pb-2.5 mb-3">
+              <div className="flex items-center gap-1.5">
+                <FlaskConical className="w-4 h-4 text-blue-500" />
+                <span className="font-bold text-xs tracking-wider text-foreground uppercase">Dev Testing</span>
               </div>
+              <span className="text-[10px] bg-blue-500/10 text-blue-500 border border-blue-500/20 px-2 py-0.5 rounded-full font-semibold">
+                Admin
+              </span>
+            </div>
 
-              {/* Navigation Tabs */}
-              <div className="grid grid-cols-2 gap-1 bg-zinc-900/90 p-1 rounded-xl mb-3 border border-zinc-800/80">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('elite')}
-                  className={`text-[11px] font-bold py-1 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                    activeTab === 'elite'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  <Award className="w-3 h-3 text-amber-400" />
-                  <span>Elite Prep</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('credits')}
-                  className={`text-[11px] font-bold py-1 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                    activeTab === 'credits'
-                      ? 'bg-violet-500/20 text-violet-300 border border-violet-500/40 shadow'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  <Sparkles className="w-3 h-3 text-violet-400" />
-                  <span>Credits & Gates</span>
-                </button>
-              </div>
+            {/* Navigation Tabs */}
+            <div className="grid grid-cols-2 gap-1 bg-muted/50 p-1 rounded-xl mb-3 border border-border/40">
+              <button
+                type="button"
+                onClick={() => setActiveTab('elite')}
+                className={cn(
+                  "text-[11px] font-semibold py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+                  activeTab === 'elite'
+                    ? "bg-background text-foreground shadow-2xs font-bold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Award className="w-3.5 h-3.5 text-blue-500" />
+                <span>Elite Prep</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('credits')}
+                className={cn(
+                  "text-[11px] font-semibold py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+                  activeTab === 'credits'
+                    ? "bg-background text-foreground shadow-2xs font-bold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <span>Credits & Gates</span>
+              </button>
+            </div>
 
-              {/* TAB 1: ELITE PREP CONTROLS */}
-              {activeTab === 'elite' && (
-                <div className="space-y-2">
-                  {/* Master Unlock Switch */}
-                  <div className="p-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800/60 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        {isUnlockedAll ? (
-                          <Unlock className="w-3.5 h-3.5 text-amber-400" />
-                        ) : (
-                          <Lock className="w-3.5 h-3.5 text-zinc-400" />
-                        )}
-                        <span className="text-xs font-bold text-zinc-200">Unlock All 4 Rounds</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleToggleUnlockAll}
-                        className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
-                          isUnlockedAll
-                            ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/20'
-                            : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
-                        }`}
-                      >
-                        {isUnlockedAll ? 'ENABLED' : 'DISABLED'}
-                      </button>
+            {/* TAB 1: ELITE PREP CONTROLS */}
+            {activeTab === 'elite' && (
+              <div className="space-y-2.5">
+                {/* Master Unlock Switch */}
+                <div className="p-3 rounded-xl bg-muted/30 border border-border/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      {isUnlockedAll ? (
+                        <Unlock className="w-3.5 h-3.5 text-blue-500" />
+                      ) : (
+                        <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                      <span className="text-xs font-semibold text-foreground">Unlock All 4 Rounds</span>
                     </div>
-                    <p className="text-[10px] text-zinc-400 leading-snug">
-                      {isUnlockedAll
-                        ? 'All 4 rounds are unlocked. You can directly click & test any round in the mind map.'
-                        : 'Standard progression: Round 2-4 require passing earlier rounds.'}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={handleToggleUnlockAll}
+                      className={cn(
+                        "text-[10px] font-bold px-2.5 py-0.5 rounded-full border transition-all cursor-pointer",
+                        isUnlockedAll
+                          ? "bg-blue-600 text-white border-blue-500 shadow-2xs"
+                          : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                      )}
+                    >
+                      {isUnlockedAll ? 'ENABLED' : 'DISABLED'}
+                    </button>
                   </div>
 
-                  {/* Fast Action Buttons */}
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <Button
-                      onClick={handlePassAllRounds}
-                      disabled={isProcessing}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start h-7.5 px-2 bg-zinc-900 border-zinc-800 hover:bg-emerald-950/40 hover:text-emerald-300 hover:border-emerald-500/40 rounded-lg text-[10px] font-semibold"
-                    >
-                      <Check className="w-3 h-3 mr-1 text-emerald-400" />
-                      Pass All 4 (90%)
-                    </Button>
+                  <p className="text-[11px] text-muted-foreground leading-snug">
+                    {isUnlockedAll
+                      ? 'All 4 rounds unlocked. You can directly click & test any round in the mind map.'
+                      : 'Standard progression: Round 2-4 require passing earlier rounds.'}
+                  </p>
 
-                    <Button
-                      onClick={handleResetProgress}
-                      disabled={isProcessing}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start h-7.5 px-2 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg text-[10px] font-semibold"
-                    >
-                      <RefreshCw className={`w-3 h-3 mr-1 text-amber-400 ${isProcessing ? 'animate-spin' : ''}`} />
-                      Reset Pipeline
-                    </Button>
-                  </div>
-                  
                   {/* Instant Unlock Editor Shortcut */}
                   <Button
                     onClick={() => {
@@ -281,104 +256,128 @@ export const DevResetWidget = () => {
                     <Unlock className="w-3 h-3 mr-1.5 text-amber-400" />
                     Force Unlock Editor (Skip AI)
                   </Button>
+                </div>
 
-                  {/* Navigation shortcut */}
+                {/* Fast Action Buttons */}
+                <div className="grid grid-cols-2 gap-2">
                   <Button
-                    onClick={() => navigate('/elite-prep')}
+                    onClick={handlePassAllRounds}
+                    disabled={isProcessing}
                     variant="outline"
                     size="sm"
-                    className="w-full justify-start h-7.5 px-2.5 bg-gradient-to-r from-amber-500/10 to-violet-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20 rounded-lg text-[11px] font-bold"
+                    className="w-full justify-start h-8 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
                   >
-                    <Layers className="w-3 h-3 mr-1.5 text-amber-400" />
-                    Open Elite Prep Mind Map
+                    <Check className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                    Pass All 4 (90%)
+                  </Button>
+
+                  <Button
+                    onClick={handleResetProgress}
+                    disabled={isProcessing}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-8 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
+                  >
+                    <RefreshCw className={cn("w-3.5 h-3.5 mr-1 text-blue-500", isProcessing && "animate-spin")} />
+                    Reset Pipeline
                   </Button>
                 </div>
-              )}
 
-              {/* TAB 2: CREDITS & GATES */}
-              {activeTab === 'credits' && (
-                <div className="space-y-2">
-                  {/* Status Section */}
-                  <div className="space-y-1 bg-zinc-900/60 rounded-xl p-2 border border-zinc-800/50">
-                    <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-zinc-400">Elite Credits:</span>
-                      <span className="font-mono font-bold text-white bg-zinc-800 px-1 py-0.2 rounded border border-zinc-700">
-                        {isPremium ? "Unlimited" : creditsElite}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-zinc-400">Voice Credits:</span>
-                      <span className="font-mono font-bold text-white bg-zinc-800 px-1 py-0.2 rounded border border-zinc-700">
-                        {isPremium ? "Unlimited" : creditsVoice}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-zinc-400">Subscription:</span>
-                      <span className={`font-semibold ${isPremium ? 'text-amber-400' : 'text-zinc-400'}`}>
-                        {isPremium ? "Premium (Unlimited)" : "Free Tier"}
-                      </span>
-                    </div>
+                {/* Navigation shortcut */}
+                <Button
+                  onClick={() => navigate('/elite-prep')}
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start h-8 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
+                >
+                  <Layers className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
+                  Open Elite Prep Mind Map
+                </Button>
+              </div>
+            )}
+
+            {/* TAB 2: CREDITS & GATES */}
+            {activeTab === 'credits' && (
+              <div className="space-y-2">
+                {/* Status Section */}
+                <div className="space-y-1.5 bg-muted/30 rounded-xl p-2.5 border border-border/50">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Elite Credits:</span>
+                    <span className="font-mono font-bold text-foreground bg-muted px-1.5 py-0.5 rounded border border-border/40 text-[11px]">
+                      {isPremium ? "Unlimited" : creditsElite}
+                    </span>
                   </div>
-
-                  {/* Action Buttons */}
-                  <div className="space-y-1">
-                    <Button
-                      onClick={() => resetCredits()}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start h-7 px-2 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg text-[10px] font-semibold"
-                    >
-                      <RotateCcw className="w-3 h-3 mr-1.5 text-violet-400" />
-                      Reset to Start (1 Credit)
-                    </Button>
-
-                    <Button
-                      onClick={() => setCreditsForTesting(0, false, false)}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start h-7 px-2 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg text-[10px] font-semibold"
-                    >
-                      <Lock className="w-3 h-3 mr-1.5 text-amber-400" />
-                      Set 0 Credits (Feedback Gate)
-                    </Button>
-
-                    <Button
-                      onClick={() => setCreditsForTesting(0, true, false)}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start h-7 px-2 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg text-[10px] font-semibold"
-                    >
-                      <CreditCard className="w-3 h-3 mr-1.5 text-rose-400" />
-                      Set 0 Credits + FB (Pricing Gate)
-                    </Button>
-
-                    <Button
-                      onClick={() => setCreditsForTesting(999, false, true)}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start h-7 px-2 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg text-[10px] font-semibold"
-                    >
-                      <Sparkles className="w-3 h-3 mr-1.5 text-emerald-400 fill-emerald-500/20" />
-                      Make Premium (Unlimited)
-                    </Button>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Voice Credits:</span>
+                    <span className="font-mono font-bold text-foreground bg-muted px-1.5 py-0.5 rounded border border-border/40 text-[11px]">
+                      {isPremium ? "Unlimited" : creditsVoice}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Subscription:</span>
+                    <span className={cn("font-semibold text-[11px]", isPremium ? 'text-blue-500' : 'text-muted-foreground')}>
+                      {isPremium ? "Premium (Unlimited)" : "Free Tier"}
+                    </span>
                   </div>
                 </div>
-              )}
-            </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-1">
+                  <Button
+                    onClick={() => resetCredits()}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-7.5 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1.5 text-muted-foreground" />
+                    Reset to Start (1 Credit)
+                  </Button>
+
+                  <Button
+                    onClick={() => setCreditsForTesting(0, false, false)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-7.5 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
+                  >
+                    <Lock className="w-3 h-3 mr-1.5 text-muted-foreground" />
+                    Set 0 Credits (Feedback Gate)
+                  </Button>
+
+                  <Button
+                    onClick={() => setCreditsForTesting(0, true, false)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-7.5 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
+                  >
+                    <CreditCard className="w-3 h-3 mr-1.5 text-muted-foreground" />
+                    Set 0 Credits + FB (Pricing Gate)
+                  </Button>
+
+                  <Button
+                    onClick={() => setCreditsForTesting(999, false, true)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-7.5 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
+                  >
+                    Make Premium (Unlimited)
+                  </Button>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900/95 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-full shadow-2xl border border-amber-500/40 backdrop-blur-md transition-all text-xs font-semibold cursor-pointer group"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-card/90 hover:bg-card text-muted-foreground hover:text-foreground rounded-full shadow-lg border border-border/60 backdrop-blur-md transition-all text-xs font-medium cursor-pointer group"
       >
-        <FlaskConical className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform" />
+        <FlaskConical className="w-3.5 h-3.5 text-blue-500 group-hover:rotate-12 transition-transform" />
         <span>Dev Tool</span>
         {isUnlockedAll && (
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="All Rounds Unlocked" />
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" title="All Rounds Unlocked" />
         )}
-        {isOpen ? <ChevronDown className="w-3 h-3 text-zinc-400" /> : <ChevronUp className="w-3 h-3 text-zinc-400" />}
+        {isOpen ? <ChevronDown className="w-3 h-3 text-muted-foreground" /> : <ChevronUp className="w-3 h-3 text-muted-foreground" />}
       </button>
     </div>
   );
