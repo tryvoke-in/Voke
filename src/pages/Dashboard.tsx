@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   FileText, LogOut, TrendingUp, Upload, Play, Target, Users, Mic, Settings,
   Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search,
-  Globe, Briefcase, FileQuestion, ChevronRight, Sparkles, Lock, LayoutDashboard
+  Globe, Briefcase, FileQuestion, ChevronRight, ChevronDown, ChevronUp, Sparkles, Lock, LayoutDashboard
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ProgressPanel } from "@/components/dashboard/ProgressPanel";
@@ -18,10 +18,13 @@ import { DSAPreparationBanner } from "@/components/dashboard/DSAPreparationBanne
 import { ReferralButton } from "@/components/dashboard/ReferralButton";
 import { UpgradeButton } from "@/components/UpgradeButton";
 import { Sidebar } from "@/components/Sidebar";
+import { DailyQuestionWidget } from "@/components/dashboard/DailyQuestionWidget";
+import { WeeklyGoals } from "@/components/dashboard/WeeklyGoals";
+import { InterviewCalendarWidget } from "@/components/dashboard/InterviewCalendarWidget";
 
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Popover,
   PopoverContent,
@@ -70,6 +73,7 @@ const Dashboard = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [isTourOpen, setIsTourOpen] = useState(false);
+  const [showMoreActions, setShowMoreActions] = useState(false);
 
   useEffect(() => {
     // Safety fallback to release loading screen after 1.5 seconds if query or auth hangs
@@ -524,9 +528,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-card/80 backdrop-blur-xl border-b border-border sticky top-0 z-50 shadow-sm w-full">
+      <header className="bg-card/90 backdrop-blur-xl border-b border-border sticky top-0 z-50 shadow-xs w-full">
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-0.5 cursor-pointer" onClick={() => navigate("/dashboard")}>
             <img
@@ -563,18 +567,34 @@ const Dashboard = () => {
             <div className="md:hidden">
               <ReferralButton iconOnly />
             </div>
+            <div
+                      onClick={() => {
+                        if (!isPremium && totalCredits === 0 && !hasGivenFeedback) {
+                          setShowFeedbackModal(true);
+                        } else if (!isPremium && totalCredits === 0 && hasGivenFeedback) {
+                          navigate("/pricing");
+                        }
+                      }}
+                      className={`bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10 select-none ${(!isPremium && totalCredits === 0) ? 'cursor-pointer hover:bg-white/30 border-amber-500/30' : ''
+                        }`}
+                    >
+                      <span className="text-sm">★</span>
+                      <span className="font-bold text-sm">
+                        {isPremium ? "Unlimited Credits" : `${totalCredits} ${totalCredits === 1 ? 'Credit' : 'Credits'}`}
+                      </span>
+                    </div>
             <UpgradeButton />
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/peer-interviews")}
-              className="text-muted-foreground hover:text-violet-600 hover:bg-violet-500/10 dark:hover:text-violet-400 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center"
+              className="text-muted-foreground hover:text-violet-600 hover:bg-blue-500/10 dark:hover:text-blue-400 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center"
               title="Peer Match"
             >
               <Users className="w-5 h-5" />
             </Button>
 
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/profile")}
@@ -582,7 +602,7 @@ const Dashboard = () => {
               title="Settings"
             >
               <Settings className="w-5 h-5" />
-            </Button>
+            </Button> */}
 
             <ThemeToggle />
 
@@ -590,9 +610,9 @@ const Dashboard = () => {
             <div className="flex items-center gap-3 pl-2">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium leading-none">{profile?.full_name || "User"}</p>
-                <p className="text-xs text-muted-foreground">
+                {/* <p className="text-xs text-muted-foreground">
                   Level {Math.floor(parseInt(realStats[0].value) / 5) + 1} Scholar
-                </p>
+                </p> */}
               </div>
 
               {/* Profile Strength Ring */}
@@ -632,7 +652,7 @@ const Dashboard = () => {
               })()}
             </div>
 
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               onClick={handleLogout}
@@ -640,7 +660,7 @@ const Dashboard = () => {
               title="Logout"
             >
               <LogOut className="w-5 h-5" />
-            </Button>
+            </Button> */}
           </nav>
         </div>
       </header>
@@ -664,10 +684,9 @@ const Dashboard = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white p-8 shadow-xl"
+              className="relative overflow-hidden rounded-3xl bg-blue-600 text-white p-8 shadow-xl"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-fuchsia-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
               <div className="relative z-10">
                 {/* Top row: Title + Pills */}
@@ -675,15 +694,15 @@ const Dashboard = () => {
                   <div className="flex-1 min-w-0">
                     <h2 className="text-xl sm:text-3xl font-bold mb-1 leading-tight">Ready to ace your next interview?</h2>
                     <p className="text-white/80 text-xs sm:text-sm">
-                      "Success is where preparation and opportunity meet." You're on a {realStats[3].value} streak!
+                      "Success is where preparation and opportunity meet."
                     </p>
                   </div>
                   <div className="flex flex-row sm:flex-col gap-2 shrink-0">
-                    <div className="bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10">
+                    <div className="bg-white/20 backdrop-blur-md px-4 py-3 rounded-full flex items-center gap-1.5 border border-white/10">
                       <Flame className="w-4 h-4 text-orange-300 fill-orange-300" />
-                      <span className="font-bold text-sm">{realStats[3].value} Streak</span>
+                      <span className="font-bold text-sm">{realStats[3].value}</span>
                     </div>
-                    <div
+                    {/* <div
                       onClick={() => {
                         if (!isPremium && totalCredits === 0 && !hasGivenFeedback) {
                           setShowFeedbackModal(true);
@@ -698,7 +717,7 @@ const Dashboard = () => {
                       <span className="font-bold text-sm">
                         {isPremium ? "Unlimited Credits" : `${totalCredits} ${totalCredits === 1 ? 'Credit' : 'Credits'}`}
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
@@ -757,12 +776,35 @@ const Dashboard = () => {
               </motion.div>
             )}
 
-            {/* Quick Actions Grid */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-yellow-500" />
-                Quick Actions
-              </h3>
+            {/* Quick Actions Header & Grid */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                    <Zap className="w-5 h-5 text-yellow-500" />
+                    Actions
+                  </h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                    {showMoreActions ? "8 Tools" : "4 Core"}
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowMoreActions(prev => !prev)}
+                  className="text-xs font-semibold h-8 px-3 rounded-xl border-border/60 hover:bg-muted/80 flex items-center gap-1.5 transition-all text-muted-foreground hover:text-foreground shadow-xs"
+                >
+                  <span>{showMoreActions ? "Show Less" : "More Actions"}</span>
+                  <motion.div
+                    animate={{ rotate: showMoreActions ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </motion.div>
+                </Button>
+              </div>
+
+              {/* Top 4 Core Actions (Always Visible) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <Card id="tour-job-matches" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-amber-500" onClick={() => navigate("/job-recommendations")}>
                   <CardContent className="p-4 flex flex-col items-center text-center pt-6">
@@ -770,10 +812,8 @@ const Dashboard = () => {
                       <Briefcase className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                     </div>
                     <h4 className="font-semibold text-sm">Job Matches</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Find Your Role</p>
                   </CardContent>
                 </Card>
-
 
                 <Card id="tour-text-interview" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-violet-500" onClick={() => navigate("/interview/new")}>
                   <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 z-10">
@@ -783,8 +823,7 @@ const Dashboard = () => {
                     <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <MessageSquare className="w-6 h-6 text-violet-600 dark:text-violet-400" />
                     </div>
-                    <h4 className="font-semibold text-sm">Text Interview</h4>
-                    <p className="text-xs text-muted-foreground mt-1">AI Chat Practice</p>
+                    <h4 className="font-semibold text-sm">Theory Interview</h4>
                   </CardContent>
                 </Card>
 
@@ -806,20 +845,6 @@ const Dashboard = () => {
                       <Mic className="w-6 h-6 text-pink-600 dark:text-pink-400" />
                     </div>
                     <h4 className="font-semibold text-sm">Pro Interview</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Voice & Video AI</p>
-                  </CardContent>
-                </Card>
-
-                <Card id="tour-resume-builder" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/resume-builder")}>
-                  <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 z-10">
-                    Free
-                  </span>
-                  <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                    <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      <FileText className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                    </div>
-                    <h4 className="font-semibold text-sm">Resume Builder</h4>
-                    <p className="text-xs text-muted-foreground mt-1">AI-Powered ATS Resume</p>
                   </CardContent>
                 </Card>
 
@@ -831,53 +856,76 @@ const Dashboard = () => {
                     <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <h4 className="font-semibold text-sm">Elite Prep</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Premium Interview Prep</p>
-                  </CardContent>
-                </Card>
-
-
-                <Card id="tour-playground" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-indigo-500" onClick={() => navigate("/playground")}>
-                  <CardContent className="p-4 flex-col items-center text-center pt-6 flex">
-                    <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      <Code className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                    </div>
-                    <h4 className="font-semibold text-sm">Playground</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Code Sandbox</p>
-                  </CardContent>
-                </Card>
-
-                <Card id="tour-question-practice" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-orange-500" onClick={() => navigate("/question-practice")}>
-                  <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                    <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      <FileQuestion className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <h4 className="font-semibold text-sm">Question Practice</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Daily Challenges</p>
-                  </CardContent>
-                </Card>
-
-                <Card id="tour-community" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-sky-500" onClick={() => navigate("/community")}>
-                  <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 z-10">
-                    Feed
-                  </span>
-                  <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                    <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      <Users className="w-6 h-6 text-sky-600 dark:text-sky-400" />
-                    </div>
-                    <h4 className="font-semibold text-sm">Community</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Connect & Discuss</p>
+                    <h4 className="font-semibold text-sm">Elite</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Multiple Round Interviews</p>
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Bottom 4 Actions (Smooth Expand/Collapse) */}
+              <AnimatePresence>
+                {showMoreActions && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                      <Card id="tour-resume-builder" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/resume-builder")}>
+                        <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 z-10">
+                          Free
+                        </span>
+                        <CardContent className="p-4 flex flex-col items-center text-center pt-6">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <FileText className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                          </div>
+                          <h4 className="font-semibold text-sm">Resume Builder</h4>
+                          <p className="text-xs text-muted-foreground mt-1">AI-Powered ATS Resume</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card id="tour-playground" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-indigo-500" onClick={() => navigate("/playground")}>
+                        <CardContent className="p-4 flex flex-col items-center text-center pt-6">
+                          <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <Code className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                          </div>
+                          <h4 className="font-semibold text-sm">Playground</h4>
+                          <p className="text-xs text-muted-foreground mt-1">Code Sandbox</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card id="tour-question-practice" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-orange-500" onClick={() => navigate("/question-practice")}>
+                        <CardContent className="p-4 flex flex-col items-center text-center pt-6">
+                          <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <FileQuestion className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                          </div>
+                          <h4 className="font-semibold text-sm">Question Practice</h4>
+                          <p className="text-xs text-muted-foreground mt-1">Daily Challenges</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card id="tour-community" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-sky-500" onClick={() => navigate("/community")}>
+                        <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 z-10">
+                          Feed
+                        </span>
+                        <CardContent className="p-4 flex flex-col items-center text-center pt-6">
+                          <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <Users className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+                          </div>
+                          <h4 className="font-semibold text-sm">Community</h4>
+                          <p className="text-xs text-muted-foreground mt-1">Connect & Discuss</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* DSA Preparation Banner */}
-            <DSAPreparationBanner />
-
-            {/* Road to Offer (Timeline) */}
-            <RoadToOffer profile={profile} onUpdate={() => loadData(true)} />
-
+            {/* Detailed Daily Question Widget */}
+            <DailyQuestionWidget />
 
           </div>
 
@@ -887,83 +935,18 @@ const Dashboard = () => {
             {/* Progress Panel Widget */}
             <ProgressPanel allSessions={allSessions} />
 
+            {/* DSA Preparation Widget */}
+            <DSAPreparationBanner />
 
-
-            {/* Daily Challenge */}
-            <Card className="border-border/50 overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-orange-400 to-red-500"></div>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  {(() => {
-                    const dailyQ = getDailyQuestion();
-                    return (
-                      <>
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Target className="w-4 h-4 text-orange-500" />
-                          Daily Challenge
-                        </CardTitle>
-                        <span className={`text-xs font-medium px-2 py-1 rounded-md ${dailyQ.difficulty === 'Easy' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30' :
-                            dailyQ.difficulty === 'Medium' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' :
-                              'bg-red-100 text-red-600 dark:bg-red-900/30'
-                          }`}>
-                          {dailyQ.difficulty}
-                        </span>
-                      </>
-                    );
-                  })()}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {(() => {
-                  const dailyQ = getDailyQuestion();
-                  return (
-                    <>
-                      <h4 className="font-semibold mb-2 line-clamp-1">{dailyQ.title}</h4>
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                        {dailyQ.tags.join(" • ")}
-                      </p>
-                      <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white" onClick={() => navigate("/daily-challenge")}>
-                        Solve Now <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </>
-                  );
-                })()}
-              </CardContent>
-            </Card>
-
-            {/* Community Trending */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-blue-500" />
-                  Community Pulse
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {(communityPulsePosts.length > 0 ? communityPulsePosts : [
-                  { id: "", title: "Google L4 Interview Experience", like_count: 42, views: "2.4k" },
-                  { id: "", title: "System Design: TinyURL", like_count: 28, views: "1.8k" },
-                  { id: "", title: "Salary Negotiation Tips", like_count: 56, views: "3.1k" },
-                ]).map((item, i) => (
-                  <div 
-                    key={item.id || i} 
-                    onClick={() => navigate(item.id ? `/community#post-${item.id}` : "/community")}
-                    className="flex items-center justify-between border-b border-border/40 last:border-0 pb-2.5 last:pb-0 hover:bg-muted/30 p-2 rounded-lg transition-colors cursor-pointer group"
-                  >
-                    <p className="text-sm font-medium group-hover:text-blue-500 transition-colors line-clamp-1 flex-1 pr-2">{item.title}</p>
-                    <span className="text-xs text-muted-foreground shrink-0 font-medium">
-                      {item.like_count !== undefined ? `${item.like_count} likes` : item.views}
-                    </span>
-                  </div>
-                ))}
-                <Button variant="ghost" size="sm" className="w-full text-blue-500 font-semibold hover:bg-blue-500/10 mt-1" onClick={() => navigate("/community")}>
-                  Visit Community
-                </Button>
-              </CardContent>
-            </Card>
-
+            {/* Road to Offer Widget */}
+            <RoadToOffer profile={profile} onUpdate={() => loadData(true)} />
 
           </div>
+        </div>
+
+        {/* Full-Fledged Career & Interview Calendar Widget */}
+        <div className="mt-8">
+          <InterviewCalendarWidget />
         </div>
       </main>
 

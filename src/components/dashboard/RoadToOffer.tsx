@@ -167,23 +167,18 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
 
   if (isEditing) {
     return (
-      <Card className="mb-6 border bg-card text-card-foreground">
-        <CardHeader className="pb-3 border-b border-border/50">
+      <Card className="border border-border/60 bg-card text-card-foreground shadow-md rounded-2xl overflow-hidden">
+        <CardHeader className="p-4 pb-3 border-b border-border/50">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" />
-                Set Your Interview Target
-              </CardTitle>
-              <CardDescription className="text-xs mt-1">
-                Customize your dream company and target date to tailor your roadmap.
-              </CardDescription>
-            </div>
+            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+              <Target className="w-4 h-4 text-blue-500" />
+              Set Interview Target
+            </CardTitle>
             {profile?.target_interview_date && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs h-8"
+                className="text-xs h-7 px-2"
                 onClick={() => setIsEditing(false)}
               >
                 Cancel
@@ -191,51 +186,50 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
             )}
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 pt-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-muted-foreground" /> Dream Company
-              </label>
-              <Input
-                placeholder="e.g. Google, Amazon, Microsoft"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                className="h-10 text-sm"
-              />
-            </div>
-
-            <div className="space-y-1.5 flex flex-col">
-              <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground" /> Target Date
-              </label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal h-10 text-sm",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                </PopoverContent>
-              </Popover>
-            </div>
+        <CardContent className="p-4 space-y-3">
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-foreground flex items-center gap-1">
+              <Building2 className="w-3 h-3 text-muted-foreground" /> Dream Company
+            </label>
+            <Input
+              placeholder="e.g. Amazon, Google"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              className="h-8 text-xs"
+            />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-foreground flex items-center gap-1">
+              <CalendarIcon className="w-3 h-3 text-muted-foreground" /> Target Date
+            </label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal h-8 text-xs",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex justify-end pt-1">
             <Button
-              className="h-9 px-5 text-xs font-medium"
+              size="sm"
+              className="h-7 px-3 text-xs bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg"
               onClick={handleSave}
               disabled={loading || !date}
             >
-              {loading && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
-              Save Target Goal
+              {loading && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+              Save Target
             </Button>
           </div>
         </CardContent>
@@ -244,40 +238,39 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
   }
 
   return (
-    <Card className="mb-6 border bg-card text-card-foreground hover:border-border transition-colors">
-      <CardContent className="p-6 space-y-6">
+    <Card className="border border-border/60 bg-card text-card-foreground hover:border-border transition-all shadow-md hover:shadow-lg rounded-2xl overflow-hidden">
+      <CardContent className="p-4 sm:p-5 space-y-3.5">
         {/* Top Header Row */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                Target Milestone
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-0.5 min-w-0">
+            {/* <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                Milestone
               </span>
-              <span className={cn("text-[11px] font-medium px-2 py-0.5 rounded border", intensityData.badgeColor)}>
+              <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-md border", intensityData.badgeColor)}>
                 {intensityData.intensity}
               </span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            </div> */}
+            <h3 className="text-base font-bold tracking-tight text-foreground truncate mt-1">
               Road to {company || "Dream Offer"}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Goal set for {date ? format(date, "MMMM do, yyyy") : "Upcoming Interview"}
+            </h3>
+            <p className="text-[11px] text-muted-foreground">
+              {date ? format(date, "MMM do, yyyy") : "Target date pending"}
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-3 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+              className="h-7 px-2 text-[11px] gap-1 text-muted-foreground  rounded-lg"
               onClick={() => setIsEditing(true)}
             >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit</span>
+              <Edit3 className="w-3 h-3" />
             </Button>
 
             {company && (
-              <div className="w-11 h-11 rounded-xl bg-background border border-border/80 p-2 flex items-center justify-center shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-background border border-border/80 p-1.5 flex items-center justify-center shadow-2xs">
                 <img
                   src={getCompanyLogoUrl(company)}
                   crossOrigin="anonymous"
@@ -294,64 +287,47 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
           </div>
         </div>
 
-        {/* Big Countdown & Pace Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2 border-y border-border/60">
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground">
+        {/* Compact Countdown & Actionable Prep Guide Button in same row */}
+        <div className="flex items-center justify-between gap-2 py-1.5 border-y border-border/50">
+          <div className="flex items-baseline gap-1.5 shrink-0">
+            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               {daysRemaining}
             </span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Days Left
             </span>
           </div>
 
-          <div className="flex flex-col justify-center sm:items-end">
-            <span className="text-xs font-medium text-foreground">
-              Recommended Pace
-            </span>
-            <span className="text-xs text-muted-foreground mt-0.5">
-              {intensityData.text}
-            </span>
-          </div>
-        </div>
-
-        {/* Actionable Current Mission Row */}
-        <div
-          onClick={() => {
-            if (company) {
-              const slug = company.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-              navigate(`/companies/${slug}`);
-            } else {
-              navigate("/companies");
-            }
-          }}
-          className="group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/80 border border-border/50 transition-all cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <Briefcase className="w-4 h-4" />
+          <div
+            onClick={() => {
+              if (company) {
+                const slug = company.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                navigate(`/companies/${slug}`);
+              } else {
+                navigate("/companies");
+              }
+            }}
+            className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-muted/40 hover:bg-muted/80 border border-border/50 transition-all cursor-pointer text-xs font-medium text-foreground hover:text-blue-500 max-w-[60%] truncate"
+          >
+            <div className="w-5 h-5 rounded-md bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+              <Briefcase className="w-3 h-3" />
             </div>
-            <div>
-              <h4 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors flex items-center gap-1">
-                Explore {company || "Company"} Prep Guide
-              </h4>
-              <p className="text-[11px] text-muted-foreground">
-                Company-specific interview questions, hiring bar & insights
-              </p>
-            </div>
+            <span className="truncate">
+              {company ? `${company} Prep Guide` : "Prep Guide"}
+            </span>
+            <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all shrink-0 ml-0.5" />
           </div>
-          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
         </div>
 
         {/* Progress Bar */}
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-[10px] uppercase font-semibold tracking-wider text-muted-foreground">
-            <span>Prep Start</span>
-            <span>Interview Day ({date ? format(date, "MMM yyyy") : ""})</span>
+        <div className="space-y-1">
+          <div className="flex justify-between text-[10px] uppercase font-medium tracking-wider text-muted-foreground">
+            <span>Start</span>
+            <span>{date ? format(date, "MMM yyyy") : "Goal"}</span>
           </div>
           <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-primary rounded-full transition-all duration-700"
+              className="h-full bg-blue-600 rounded-full transition-all duration-500"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>

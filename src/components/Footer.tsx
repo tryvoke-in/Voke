@@ -1,186 +1,202 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Github, Twitter, Linkedin, Mail, ArrowRight, Layers, Zap, Hexagon, Instagram, Shield, BookOpen } from "lucide-react";
+import { 
+  Github, Twitter, Linkedin, Instagram, ArrowRight, 
+  Layers, Zap, Shield, Sparkles, Code2, CheckCircle2, 
+  Globe, Mail, ChevronRight, Heart
+} from "lucide-react";
 import { motion, Variants } from "framer-motion";
 
 export const Footer = () => {
-    const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getFullYear();
 
-    const containerVariants: Variants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.2
-            }
-        }
-    };
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.1
+      }
+    }
+  };
 
-    const itemVariants: Variants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: { type: "spring", stiffness: 300, damping: 24 }
-        }
-    };
+  const itemVariants: Variants = {
+    hidden: { y: 15, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 25 }
+    }
+  };
 
-    return (
-        <footer aria-label="Footer Navigation" className="relative bg-background border-t border-border/10 overflow-hidden font-sans">
-            {/* Glowing top border separator line */}
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
+  return (
+    <footer aria-label="Footer Navigation" className="relative bg-background border-t border-border/50 overflow-hidden font-sans mt-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-14 relative z-10">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12"
+        >
+          {/* Brand Card Column (5 cols) */}
+          <motion.div variants={itemVariants} className="lg:col-span-4 flex flex-col justify-between space-y-6">
+            <div className="p-7 rounded-3xl bg-card/60 dark:bg-card/40 backdrop-blur-xl hover:border-blue-500/30 transition-all duration-500">
+              <Link to="/" className="flex items-center gap-3 mb-4 group/logo w-fit">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600/10 p-2 flex items-center justify-center group-hover/logo:scale-105 transition-transform duration-300">
+                  <img 
+                    src="/images/voke_logo.png" 
+                    alt="Voke Logo" 
+                    width={36}
+                    height={36}
+                    loading="lazy"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <span className="text-2xl font-bold tracking-tight text-foreground group-hover/logo:text-blue-500 transition-colors">
+                  Voke
+                </span>
+              </Link>
 
-            {/* Cyber Grid & Glowing Ambient Background */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] dark:opacity-[0.05]" />
-                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-violet-600/15 blur-[130px] animate-pulse" style={{ animationDuration: "12s" }} />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-fuchsia-600/15 blur-[130px] animate-pulse" style={{ animationDuration: "16s" }} />
+              <p className="text-sm text-muted-foreground leading-relaxed mb-6 font-normal">
+                Mastering technical interviews made <span className="text-foreground font-semibold">intelligent</span>. AI-driven mock interviews, DSA tracking, and tailored career roadmaps.
+              </p>
+
+              {/* Status Indicator */}
+              {/* <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/40 border border-border/50 text-[11px] text-muted-foreground w-fit mb-6">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-medium text-foreground">All AI Systems Operational</span>
+              </div> */}
+
+              {/* Social Media Icons */}
+              <div className="flex items-center gap-2.5">
+                {[
+                  { icon: Twitter, href: "https://twitter.com", label: "Twitter", hoverColor: "hover:bg-sky-500/10 hover:text-sky-500 hover:border-sky-500/30" },
+                  { icon: Github, href: "https://github.com", label: "GitHub", hoverColor: "hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30" },
+                  { icon: Linkedin, href: "https://www.linkedin.com/company/vokeaii/", label: "LinkedIn", hoverColor: "hover:bg-blue-600/10 hover:text-blue-500 hover:border-blue-500/30" },
+                  { icon: Instagram, href: "https://www.instagram.com/tryvoke.in", label: "Instagram", hoverColor: "hover:bg-pink-500/10 hover:text-pink-500 hover:border-pink-500/30" }
+                ].map((social, idx) => (
+                  <a
+                    key={idx}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className={`w-9 h-9 rounded-xl bg-background/80 border border-border/60 flex items-center justify-center text-muted-foreground transition-all duration-200 hover:scale-105 shadow-2xs ${social.hoverColor}`}
+                  >
+                    <social.icon className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
             </div>
+          </motion.div>
 
-            <div className="container mx-auto px-4 py-16 relative z-10">
-                <motion.div
-                    variants={containerVariants}
-                    animate="visible"
-                    className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-0"
-                >
-                    {/* Brand Section */}
-                    <motion.div variants={itemVariants} className="lg:col-span-4 flex flex-col h-full">
-                        <div className="bg-card/30 backdrop-blur-xl border border-border/50 rounded-3xl p-8 h-full relative overflow-hidden group hover:border-violet-500/30 transition-colors duration-500">
-                             <div className="absolute top-0 right-0 p-4 opacity-50">
-                                <Hexagon className="w-24 h-24 text-primary/5 stroke-1" />
-                             </div>
-                             
-                            <Link to="/" className="flex items-center gap-3 mb-6 relative z-10 w-fit">
-                                <div className="relative group/logo">
-                                    <div className="absolute inset-0 bg-violet-500/20 blur-xl rounded-full opacity-0 group-hover/logo:opacity-100 transition-opacity" />
-                                    <img 
-                                        src="/images/voke_logo.png" 
-                                        alt="Voke AI Tech Interview Preparation Logo" 
-                                        width={48}
-                                        height={48}
-                                        loading="lazy"
-                                        decoding="async"
-                                        className="w-12 h-12 object-contain relative z-10"
-                                    />
-                                </div>
-                                <span className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">
-                                    Voke
-                                </span>
-                            </Link>
+          {/* Nav Links (8 cols) */}
+          <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-8 pt-2">
+            {/* Practice Tools */}
+            <motion.div variants={itemVariants} className="space-y-4">
+              <h4 className="font-bold text-foreground text-xs uppercase tracking-wider flex items-center gap-2">
+                <div className="w-5 h-5 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">
+                  <Layers className="w-3 h-3" />
+                </div>
+                Practice Tools
+              </h4>
+              <ul className="space-y-2.5">
+                {[
+                  { label: "Pro Voice & Video AI", to: "/voice-assistant" },
+                  { label: "Theory Interview", to: "/interview/new" },
+                  { label: "75-Day DSA Master Sheet", to: "/dsa-sheet" },
+                  { label: "Company Question Sets", to: "/companies" },
+                  { label: "Elite Multi-Round Prep", to: "/elite-prep" },
+                  { label: "AI ATS Resume Builder", to: "/resume-builder" }
+                ].map((link, idx) => (
+                  <li key={idx}>
+                    <Link
+                      to={link.to}
+                      className="text-xs sm:text-sm text-muted-foreground hover:text-blue-500 transition-colors flex items-center gap-1.5 group font-normal"
+                    >
+                      <ChevronRight className="w-3 h-3 text-muted-foreground/40 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
+                      <span>{link.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
 
-                            <p className="text-muted-foreground leading-relaxed max-w-sm mb-8 text-sm font-light">
-                                Mastering technical interviews made <span className="text-foreground font-medium">intelligent</span>. AI-driven practice, real-time feedback, and personalized roadmaps.
-                            </p>
+            {/* Resources */}
+            <motion.div variants={itemVariants} className="space-y-4">
+              <h4 className="font-bold text-foreground text-xs uppercase tracking-wider flex items-center gap-2">
+                <div className="w-5 h-5 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center border border-sky-500/20">
+                  <Zap className="w-3 h-3" />
+                </div>
+                Resources
+              </h4>
+              <ul className="space-y-2.5">
+                {[
+                  { label: "Daily Interview Challenge", to: "/daily-challenge" },
+                  { label: "Tech Candidate Forum", to: "/community" },
+                  { label: "Interview Leaderboard", to: "/leaderboard" },
+                  { label: "Job Recommendations", to: "/job-recommendations" },
+                  { label: "Engineering Blog", to: "/blog" },
+                  { label: "Pricing & Plans", to: "/pricing" }
+                ].map((link, idx) => (
+                  <li key={idx}>
+                    <Link
+                      to={link.to}
+                      className="text-xs sm:text-sm text-muted-foreground hover:text-blue-500 transition-colors flex items-center gap-1.5 group font-normal"
+                    >
+                      <ChevronRight className="w-3 h-3 text-muted-foreground/40 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
+                      <span>{link.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
 
-                             <div className="flex flex-col gap-4 mt-auto">
-                                 <div className="flex items-center gap-4">
-                                     {[
-                                         { icon: Twitter, href: "https://twitter.com", label: "Voke on Twitter", color: "hover:bg-sky-500/10 hover:text-sky-400" },
-                                         { icon: Github, href: "https://github.com", label: "Voke on GitHub", color: "hover:bg-zinc-500/10 hover:text-foreground" },
-                                         { icon: Linkedin, href: "https://www.linkedin.com/company/vokeaii/", label: "Voke on LinkedIn", color: "hover:bg-blue-600/10 hover:text-blue-500" },
-                                         { icon: Instagram, href: "https://www.instagram.com/tryvoke.in", label: "Voke on Instagram", color: "hover:bg-pink-600/10 hover:text-pink-500" }
-                                     ].map((social, index) => (
-                                         <a
-                                             key={index}
-                                             href={social.href}
-                                             target="_blank"
-                                             rel="noopener noreferrer"
-                                             aria-label={social.label}
-                                             className={`w-10 h-10 rounded-2xl bg-secondary/50 border border-border/50 flex items-center justify-center text-muted-foreground transition-all duration-300 hover:scale-110 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${social.color}`}
-                                         >
-                                             <social.icon className="w-4 h-4" aria-hidden="true" />
-                                             <span className="sr-only">{social.label}</span>
-                                         </a>
-                                     ))}
-                                 </div>
-                                 <p className="text-xs text-muted-foreground/60 font-mono mt-1">
-                                     © {currentYear} Voke Inc. All rights reserved.
-                                 </p>
-                             </div>
-                        </div>
-                    </motion.div>
+            {/* Company & Support */}
+            <motion.div variants={itemVariants} className="space-y-4">
+              <h4 className="font-bold text-foreground text-xs uppercase tracking-wider flex items-center gap-2">
+                <div className="w-5 h-5 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">
+                  <Shield className="w-3 h-3" />
+                </div>
+                Company & Legal
+              </h4>
+              <ul className="space-y-2.5">
+                {[
+                  { label: "About Voke Methodology", to: "/about" },
+                  { label: "Help Center & FAQs", to: "/help" },
+                  { label: "Contact & Feedback", to: "/contact" },
+                  { label: "Privacy Policy", to: "/privacy" },
+                  { label: "Terms of Service", to: "/terms" }
+                ].map((link, idx) => (
+                  <li key={idx}>
+                    <Link
+                      to={link.to}
+                      className="text-xs sm:text-sm text-muted-foreground hover:text-blue-500 transition-colors flex items-center gap-1.5 group font-normal"
+                    >
+                      <ChevronRight className="w-3 h-3 text-muted-foreground/40 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
+                      <span>{link.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
+        </motion.div>
 
-                    {/* Navigation Columns */}
-                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-8 py-2 px-2">
-                        <motion.div variants={itemVariants} className="flex flex-col">
-                            <h3 className="font-bold text-foreground mb-6 flex items-center gap-2 text-xs tracking-wider uppercase opacity-90">
-                                <Layers className="w-4 h-4 text-violet-500" /> Practice Tools
-                            </h3>
-                            <ul className="space-y-3">
-                                {[
-                                    { label: "AI Mock Interview", to: "/voice-assistant" },
-                                    { label: "Technical Practice Bank", to: "/question-practice" },
-                                    { label: "DSA Master Sheet", to: "/dsa-sheet" },
-                                    { label: "Company Question Sets", to: "/companies" },
-                                    { label: "Elite Prep Program", to: "/elite-prep" }
-                                ].map((link, index) => (
-                                    <li key={index} className="list-none">
-                                        <Link
-                                            to={link.to}
-                                            className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group text-sm"
-                                        >
-                                            <span className="w-1 h-1 rounded-full bg-border group-hover:bg-primary transition-colors" />
-                                            {link.label}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </motion.div>
+        {/* Bottom Bar Separator & Copyright */}
+        <div className="mt-12 pt-6 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+          <p className="font-mono text-[11px]">
+            © {currentYear} Voke Inc. All rights reserved.
+          </p>
 
-                        <motion.div variants={itemVariants} className="flex flex-col">
-                            <h3 className="font-bold text-foreground mb-6 flex items-center gap-2 text-xs tracking-wider uppercase opacity-90">
-                                <Zap className="w-4 h-4 text-fuchsia-500" /> Resources
-                            </h3>
-                            <ul className="space-y-3">
-                                {[
-                                    { label: "Tech Candidate Forum", to: "/community" },
-                                    { label: "Daily Interview Challenge", to: "/daily-challenge" },
-                                    { label: "Interview Leaderboard", to: "/leaderboard" },
-                                    { label: "Engineering Blog", to: "/blog" },
-                                    { label: "Pricing & Subscriptions", to: "/pricing" }
-                                ].map((link, index) => (
-                                    <li key={index} className="list-none">
-                                        <Link
-                                            to={link.to}
-                                            className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group text-sm"
-                                        >
-                                            <span className="w-1 h-1 rounded-full bg-border group-hover:bg-primary transition-colors" />
-                                            {link.label}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </motion.div>
-
-                        <motion.div variants={itemVariants} className="flex flex-col">
-                            <h3 className="font-bold text-foreground mb-6 flex items-center gap-2 text-xs tracking-wider uppercase opacity-90">
-                                <Shield className="w-4 h-4 text-emerald-500" /> Company & Legal
-                            </h3>
-                            <ul className="space-y-3">
-                                {[
-                                    { label: "About Voke & Methodology", to: "/about" },
-                                    { label: "Help Center & FAQs", to: "/help" },
-                                    { label: "Contact & Support", to: "/contact" },
-                                    { label: "Privacy Policy", to: "/privacy" },
-                                    { label: "Terms of Service", to: "/terms" }
-                                ].map((link, index) => (
-                                    <li key={index} className="list-none">
-                                        <Link
-                                            to={link.to}
-                                            className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group text-sm"
-                                        >
-                                            <span className="w-1 h-1 rounded-full bg-border group-hover:bg-primary transition-colors" />
-                                            {link.label}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </motion.div>
-                    </div>
-                </motion.div>
-            </div>
-        </footer>
-    );
+          <div className="flex items-center gap-6 text-[11px]">
+            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link to="/contact" className="hover:text-foreground transition-colors">Support</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 };
