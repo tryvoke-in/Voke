@@ -132,8 +132,9 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         let aiText = "";
 
         const sysPrompt = fullMessages.find((m: any) => m.role === 'system')?.content || contextRef.current || '';
-        const isCodingRound = /round\s*3|coding|live\s*coding|assessment|two\s*sum|longest\s*substring|algorithm|debugging|system\s*design|approach\s*phase/i.test(sysPrompt);
-        const isHRRound = /round\s*4|hr\s*manager|behavioral/i.test(sysPrompt);
+        // STRICT regex: Must explicitly specify it is Round 3 or Live Coding Assessment to prevent matching resume keywords
+        const isCodingRound = /ROUND\s*3:\s*LIVE\s*CODING\s*ASSESSMENT|CURRENT\s*ROUND:\s*Round\s*3/i.test(sysPrompt);
+        const isHRRound = /CURRENT\s*ROUND:\s*Round\s*4|ROUND\s*4:\s*ENGINEERING\s*MANAGER/i.test(sysPrompt);
 
         // FOR CODING ASSESSMENT (ROUND 3): Directly invoke Gemini API or Groq with strict Coding Prompt
         // DO NOT call the screening edge function for coding rounds to prevent any turn-based screening questions

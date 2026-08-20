@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
 import { useGroqVoice } from '@/hooks/useGroqVoice';
+import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { LiveStatus } from '@/types/voice';
 import { updateRoundResultAsync, RoundFeedbackDetails } from '@/utils/eliteInterviewStorage';
 import { executeCode, ExecutionResult, submitCodeWithAI, generateEliteCodingEvaluation } from '@/utils/codeExecutor';
@@ -171,6 +172,7 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
 }) => {
   const navigate = useNavigate();
   const { status, connect, disconnect, isUserSpeaking, isAiSpeaking, volume, logs, sendHiddenContext, isSilentMode, setIsSilentMode } = useGroqVoice();
+  const { violationCount, AntiCheatOverlay } = useAntiCheat();
 
   // Section State
   const [currentSection, setCurrentSection] = useState<CodingSection>('A_CODING');
@@ -892,7 +894,10 @@ Section C: ${currentSystemDesignQuestion?.title}`;
       )}
 
       {/* Main Split Layout: Left Problem/HUD, Right Monaco Code Editor */}
-      <PanelGroup direction="horizontal" className="flex-1 flex overflow-hidden">
+      {/* PROCTORING OVERLAY */}
+      <AntiCheatOverlay />
+
+      <PanelGroup direction="horizontal" className="flex-1 w-full relative overflow-hidden">
         {/* LEFT COLUMN: Problem Details, Video/Voice AI & Section Content */}
         <Panel defaultSize={40} minSize={30} className="border-r border-white/10 flex flex-col bg-zinc-950 overflow-y-auto">
           {/* Top Voice AI & Video HUD Tile */}
@@ -1312,6 +1317,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                   ? debugCode
                   : systemDesignCode
               }
+              options={{ contextmenu: false }}
               onChange={(value) => {
                 if (currentSection === 'A_CODING') {
                   if (!isEditorUnlocked) return;

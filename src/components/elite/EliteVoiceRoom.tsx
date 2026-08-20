@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useGroqVoice } from '@/hooks/useGroqVoice';
+import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { LiveStatus } from '@/types/voice';
 import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
@@ -52,6 +53,7 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
     logs,
     apiLabel
   } = useGroqVoice();
+  const { violationCount, AntiCheatOverlay } = useAntiCheat();
 
   // Video & Audio state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -164,7 +166,7 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
             ? 'video/webm'
             : 'video/mp4';
 
-        const recorder = new MediaRecorder(mediaStream, { mimeType });
+        const recorder = new MediaRecorder(mediaStream, { mimeType, videoBitsPerSecond: 250000 });
         videoChunksRef.current = [];
         recorder.ondataavailable = (e) => {
           if (e.data && e.data.size > 0) {
@@ -626,72 +628,66 @@ ${isRound1 ? round1CategoryFlow : ''}
         content: l.text
       }));
 
-      // STEP 1: Upload full recorded video blob to Supabase Storage 'video-interviews' & convert to Base64
-      let videoBase64: string | null = null;
-      try {
-        const videoBlob = getRecordedVideoBlob();
-        if (videoBlob) {
-          videoBase64 = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              const res = reader.result as string;
-              resolve(res || '');
-            };
-            reader.readAsDataURL(videoBlob);
-          });
-        }
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (videoBlob && user) {
-          const roundSessionId = `elite-${round.roundNumber}-${Date.now()}`;
-          const videoPath = `${user.id}/elite_${roundSessionId}.webm`;
-          console.log(`[Elite Interview] Uploading full round video (${(videoBlob.size / 1024 / 1024).toFixed(2)} MB) to Supabase Storage path: ${videoPath}`);
-          
-          const { error: uploadErr } = await supabase.storage
-            .from('video-interviews')
-            .upload(videoPath, videoBlob, {
-              contentType: videoBlob.type,
-              upsert: true
-            });
-
-          if (!uploadErr) {
-            const { data: { publicUrl } } = supabase.storage
+      // STEP 1 (background, non-blocking): Upload video & run video analysis in parallel with text evaluation
+      // Video upload runs asynchronously - we do NOT await it before showing evaluation results
+      const videoUploadPromise = (async () => {
+        try {
+          const videoBlob = getRecordedVideoBlob();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (videoBlob && user) {
+            const roundSessionId = `elite-${round.roundNumber}-${Date.now()}`;
+            const videoPath = `${user.id}/elite_${roundSessionId}.webm`;
+            console.log(`[Elite Interview] Background uploading video (${(videoBlob.size / 1024 / 1024).toFixed(2)} MB)...`);
+            const { error: uploadErr } = await supabase.storage
               .from('video-interviews')
-              .getPublicUrl(videoPath);
-            uploadedVideoUrl = publicUrl;
-            console.log("[Elite Interview] Video uploaded successfully:", uploadedVideoUrl);
-          } else {
-            console.warn("[Elite Interview] Supabase video storage upload note:", uploadErr.message);
+              .upload(videoPath, videoBlob, { contentType: videoBlob.type, upsert: true });
+            if (!uploadErr) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('video-interviews').getPublicUrl(videoPath);
+              uploadedVideoUrl = publicUrl;
+              console.log("[Elite Interview] Background video upload complete:", uploadedVideoUrl);
+            } else {
+              console.warn("[Elite Interview] Video upload note:", uploadErr.message);
+            }
           }
+        } catch (vidErr) {
+          console.warn("[Elite Interview] Video upload fallback:", vidErr);
         }
-      } catch (vidErr) {
-        console.warn("[Elite Interview] Video capture/upload fallback:", vidErr);
-      }
+      })();
 
-      // STEP 2: Call Gemini 2.5 Flash for Multimodal Video & Body Language Analysis via Storage Video URL
-      console.log("[Elite Interview Step 2] Calling Gemini 2.5 Flash Multimodal Video Analysis...");
-      const { data: videoAnalysisRes } = await supabase.functions.invoke('analyze-video-interview', {
-        body: {
-          sessionId: `elite-${round.roundNumber}-${Date.now()}`,
-          videoUrl: uploadedVideoUrl,
-          question: round.title,
-          transcript,
-          userContext: candidateProfileContext,
-          role: role.title
-        }
-      });
-      videoAnalysisData = videoAnalysisRes?.analysis || videoAnalysisRes;
+      // STEP 2 (immediate, parallel): Run AI text evaluation RIGHT AWAY — no waiting for video upload
+      console.log("[Elite Interview] Starting AI evaluation immediately (parallel to video upload)...");
 
-      // STEP 3: Call Gemini 3.1 Flash Lite for Final Evaluation Report
-      console.log("[Elite Interview Step 3] Calling Gemini 3.1 Flash Lite Final Report Evaluation...");
-      const { data: evalReport } = await supabase.functions.invoke('evaluate-interview', {
-        body: {
-          messages,
-          interview_type: `Elite Interview - ${company.name} - ${role.title} (${round.title})`
-        }
-      });
+      // Video analysis & text evaluation run in parallel
+      const [evalReport] = await Promise.all([
+        // Text-based evaluation (fast, ~2-3s)
+        supabase.functions.invoke('evaluate-interview', {
+          body: {
+            messages,
+            interview_type: `Elite Interview - ${company.name} - ${role.title} (${round.title})`
+          }
+        }).then(r => r.data),
+
+        // Video analysis (uses existing URL if upload finished, else null)
+        supabase.functions.invoke('analyze-video-interview', {
+          body: {
+            sessionId: `elite-${round.roundNumber}-${Date.now()}`,
+            videoUrl: uploadedVideoUrl,
+            question: round.title,
+            transcript,
+            userContext: candidateProfileContext,
+            role: role.title
+          }
+        }).then(r => {
+          videoAnalysisData = r.data?.analysis || r.data;
+          return videoAnalysisData;
+        }).catch(() => null)
+      ]);
 
       evalReportData = evalReport;
+
+      // Let video upload finish in background (don't block UI on it)
+      videoUploadPromise.catch(() => {});
 
       if (evalReport && evalReport.score !== undefined) {
         console.log("[Elite Interview] Step 2 & 3 AI Evaluation complete:", evalReport);
@@ -823,8 +819,9 @@ ${isRound1 ? round1CategoryFlow : ''}
 
   return (
     <div className="h-screen w-screen bg-[#050508] text-white flex flex-col overflow-hidden font-sans relative select-none">
+      <AntiCheatOverlay />
 
-      {/* PERFECT BALANCED VOKE THEME REPOSITORY SETUP MODAL */}
+      {/* SETUP MODAL (GitHub / Resume) */}
       {isPreInterviewSetupOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 select-text">
           <div className="bg-[#0a0b12]/95 border border-white/10 backdrop-blur-2xl rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col p-6 shadow-2xl relative overflow-hidden space-y-5">

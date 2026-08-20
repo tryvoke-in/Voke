@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useGroqVoice } from '@/hooks/useGroqVoice';
+import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { LiveStatus } from '@/types/voice';
 import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
@@ -89,6 +90,7 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
     volume,
     logs
   } = useGroqVoice();
+  const { violationCount, AntiCheatOverlay } = useAntiCheat();
 
   // Video & Audio state — camera is shown for realism, but no video analysis
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -245,7 +247,7 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
           : MediaRecorder.isTypeSupported('video/webm')
             ? 'video/webm'
             : 'video/mp4';
-        const recorder = new MediaRecorder(mediaStream, { mimeType });
+        const recorder = new MediaRecorder(mediaStream, { mimeType, videoBitsPerSecond: 250000 });
         videoChunksRef.current = [];
         recorder.ondataavailable = (e) => {
           if (e.data && e.data.size > 0) videoChunksRef.current.push(e.data);
@@ -986,6 +988,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
 
   return (
     <div className="h-screen w-screen bg-[#050508] text-white flex flex-col overflow-hidden font-sans relative select-none">
+      <AntiCheatOverlay />
 
       {/* PRE-INTERVIEW MODAL — Single Project Selection */}
       {isPreInterviewSetupOpen && (

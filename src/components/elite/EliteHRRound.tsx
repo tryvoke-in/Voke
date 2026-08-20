@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useGroqVoice } from '@/hooks/useGroqVoice';
+import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { LiveStatus } from '@/types/voice';
 import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
@@ -48,6 +49,7 @@ export const EliteHRRound: React.FC<EliteHRRoundProps> = ({
     logs,
     apiLabel
   } = useGroqVoice();
+  const { violationCount, AntiCheatOverlay } = useAntiCheat();
 
   // Video & Audio state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -115,7 +117,7 @@ export const EliteHRRound: React.FC<EliteHRRoundProps> = ({
             ? 'video/webm'
             : 'video/mp4';
 
-        const recorder = new MediaRecorder(mediaStream, { mimeType });
+        const recorder = new MediaRecorder(mediaStream, { mimeType, videoBitsPerSecond: 250000 });
         videoChunksRef.current = [];
         recorder.ondataavailable = (e) => {
           if (e.data && e.data.size > 0) {
@@ -666,6 +668,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
 
   return (
     <div className="h-screen w-screen bg-[#050508] text-white flex flex-col overflow-hidden font-sans relative select-none">
+      <AntiCheatOverlay />
 
       {/* PERFECT BALANCED VOKE THEME REPOSITORY SETUP MODAL */}
       {isPreInterviewSetupOpen && (

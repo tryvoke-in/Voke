@@ -48,6 +48,9 @@ export const DevResetWidget = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isUnlockedAll, setIsUnlockedAll] = useState<boolean>(() => isDevUnlockAllActive());
+  const [isProctoringDisabled, setIsProctoringDisabled] = useState<boolean>(
+    () => typeof window !== 'undefined' && localStorage.getItem('voke_dev_proctoring_disabled') === 'true'
+  );
   const [isProcessing, setIsProcessing] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -240,6 +243,38 @@ export const DevResetWidget = () => {
                       {isUnlockedAll
                         ? 'All 4 rounds are unlocked. You can directly click & test any round in the mind map.'
                         : 'Standard progression: Round 2-4 require passing earlier rounds.'}
+                    </p>
+                  </div>
+
+                  {/* Disable Proctoring Switch */}
+                  <div className="p-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800/60 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <ShieldCheck className={`w-3.5 h-3.5 ${isProctoringDisabled ? 'text-rose-400' : 'text-emerald-400'}`} />
+                        <span className="text-xs font-bold text-zinc-200">Anti-Cheat System</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newVal = !isProctoringDisabled;
+                          setIsProctoringDisabled(newVal);
+                          if (newVal) localStorage.setItem('voke_dev_proctoring_disabled', 'true');
+                          else localStorage.removeItem('voke_dev_proctoring_disabled');
+                          window.dispatchEvent(new Event('voke-dev-proctoring-change'));
+                        }}
+                        className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                          !isProctoringDisabled
+                            ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20'
+                            : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
+                        }`}
+                      >
+                        {!isProctoringDisabled ? 'ACTIVE' : 'DISABLED'}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-zinc-400 leading-snug">
+                      {isProctoringDisabled
+                        ? 'Anti-cheat is DISABLED. You can copy/paste and switch tabs freely.'
+                        : 'Anti-cheat is ACTIVE. Copy/paste and tab switching are blocked.'}
                     </p>
                   </div>
 
