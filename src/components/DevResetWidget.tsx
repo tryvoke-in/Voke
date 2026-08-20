@@ -214,128 +214,103 @@ export const DevResetWidget = () => {
 
             {/* TAB 1: ELITE PREP CONTROLS */}
             {activeTab === 'elite' && (
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 {/* Master Unlock Switch */}
-                <div className="p-3 rounded-xl bg-muted/30 border border-border/50 space-y-2">
+                <div className="p-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800/60 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       {isUnlockedAll ? (
-                        <Unlock className="w-3.5 h-3.5 text-blue-500" />
+                        <Unlock className="w-3.5 h-3.5 text-amber-400" />
                       ) : (
-                        <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                        <Lock className="w-3.5 h-3.5 text-zinc-400" />
                       )}
-                      <span className="text-xs font-semibold text-foreground">Unlock All 4 Rounds</span>
+                      <span className="text-xs font-bold text-zinc-200">Unlock All 4 Rounds</span>
                     </div>
                     <button
                       type="button"
                       onClick={handleToggleUnlockAll}
-                      className={cn(
-                        "text-[10px] font-bold px-2.5 py-0.5 rounded-full border transition-all cursor-pointer",
+                      className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
                         isUnlockedAll
-                          ? "bg-blue-600 text-white border-blue-500 shadow-2xs"
-                          : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
-                      )}
+                          ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/20'
+                          : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
+                      }`}
                     >
                       {isUnlockedAll ? 'ENABLED' : 'DISABLED'}
                     </button>
                   </div>
-
-
-                  {/* Disable Proctoring Switch */}
-                  <div className="p-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800/60 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <ShieldCheck className={`w-3.5 h-3.5 ${isProctoringDisabled ? 'text-rose-400' : 'text-emerald-400'}`} />
-                        <span className="text-xs font-bold text-zinc-200">Anti-Cheat System</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newVal = !isProctoringDisabled;
-                          setIsProctoringDisabled(newVal);
-                          if (newVal) localStorage.setItem('voke_dev_proctoring_disabled', 'true');
-                          else localStorage.removeItem('voke_dev_proctoring_disabled');
-                          window.dispatchEvent(new Event('voke-dev-proctoring-change'));
-                        }}
-                        className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
-                          !isProctoringDisabled
-                            ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20'
-                            : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
-                        }`}
-                      >
-                        {!isProctoringDisabled ? 'ACTIVE' : 'DISABLED'}
-                      </button>
-                    </div>
-                    <p className="text-[10px] text-zinc-400 leading-snug">
-                      {isProctoringDisabled
-                        ? 'Anti-cheat is DISABLED. You can copy/paste and switch tabs freely.'
-                        : 'Anti-cheat is ACTIVE. Copy/paste and tab switching are blocked.'}
-                    </p>
-                  </div>
-
-                  {/* Force Unlock Editor Shortcut */}
-                  <Button
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent('voke-dev-unlock-editor'));
-                      toast.success("Editor unlocked! You can now start coding.");
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-center h-7.5 px-2 bg-zinc-900 border-amber-500/20 hover:bg-amber-950/40 hover:text-amber-300 rounded-lg text-[10px] font-bold"
-                  >
-                    <Unlock className="w-3 h-3 mr-1.5 text-amber-400" />
-                    Force Unlock Editor (Skip AI)
-                  </Button>
-
-                  {/* Fast Action Buttons */}
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <Button
-                      onClick={handlePassAllRounds}
-                      disabled={isProcessing}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start h-7.5 px-2 bg-zinc-900 border-zinc-800 hover:bg-emerald-950/40 hover:text-emerald-300 hover:border-emerald-500/40 rounded-lg text-[10px] font-semibold"
-                    >
-                      <Check className="w-3 h-3 mr-1 text-emerald-400" />
-                      Pass All 4 (90%)
-                    </Button>
-
-                  {/* Instant Unlock Editor Shortcut */}
-                  <Button
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent('voke-dev-unlock-editor'));
-                      toast.success("Editor unlocked! You can now start coding.");
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-center h-7.5 px-2 bg-zinc-900 border-amber-500/20 hover:bg-amber-950/40 hover:text-amber-300 rounded-lg text-[10px] font-bold"
-                  >
-                    <Unlock className="w-3 h-3 mr-1.5 text-amber-400" />
-                    Force Unlock Editor (Skip AI)
-                  </Button>
+                  <p className="text-[10px] text-zinc-400 leading-snug">
+                    {isUnlockedAll
+                      ? 'All 4 rounds unlocked. Directly click & test any round.'
+                      : 'Standard: Round 2-4 require passing earlier rounds.'}
+                  </p>
                 </div>
 
+                {/* Anti-Cheat Toggle */}
+                <div className="p-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className={`w-3.5 h-3.5 ${isProctoringDisabled ? 'text-rose-400' : 'text-emerald-400'}`} />
+                      <span className="text-xs font-bold text-zinc-200">Anti-Cheat System</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newVal = !isProctoringDisabled;
+                        setIsProctoringDisabled(newVal);
+                        if (newVal) localStorage.setItem('voke_dev_proctoring_disabled', 'true');
+                        else localStorage.removeItem('voke_dev_proctoring_disabled');
+                        window.dispatchEvent(new Event('voke-dev-proctoring-change'));
+                      }}
+                      className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                        !isProctoringDisabled
+                          ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20'
+                          : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
+                      }`}
+                    >
+                      {!isProctoringDisabled ? 'ACTIVE' : 'DISABLED'}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 leading-snug">
+                    {isProctoringDisabled
+                      ? 'Anti-cheat DISABLED. Copy/paste & tab switching allowed.'
+                      : 'Anti-cheat ACTIVE. Copy/paste & tab switching blocked.'}
+                  </p>
+                </div>
+
+                {/* Force Unlock Editor */}
+                <Button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('voke-dev-unlock-editor'));
+                    toast.success("Editor unlocked! You can now start coding.");
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-center h-7 px-2 bg-zinc-900 border-amber-500/20 hover:bg-amber-950/40 hover:text-amber-300 rounded-lg text-[10px] font-bold"
+                >
+                  <Unlock className="w-3 h-3 mr-1.5 text-amber-400" />
+                  Force Unlock Editor (Skip AI)
+                </Button>
+
                 {/* Fast Action Buttons */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   <Button
                     onClick={handlePassAllRounds}
                     disabled={isProcessing}
                     variant="outline"
                     size="sm"
-                    className="w-full justify-start h-8 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
+                    className="w-full justify-start h-7 px-2 bg-zinc-900 border-zinc-800 hover:bg-emerald-950/40 hover:text-emerald-300 rounded-lg text-[10px] font-semibold"
                   >
-                    <Check className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                    <Check className="w-3 h-3 mr-1 text-emerald-400" />
                     Pass All 4 (90%)
                   </Button>
-
                   <Button
                     onClick={handleResetProgress}
                     disabled={isProcessing}
                     variant="outline"
                     size="sm"
-                    className="w-full justify-start h-8 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
+                    className="w-full justify-start h-7 px-2 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg text-[10px] font-semibold"
                   >
-                    <RefreshCw className={cn("w-3.5 h-3.5 mr-1 text-blue-500", isProcessing && "animate-spin")} />
+                    <RefreshCw className={`w-3 h-3 mr-1 text-amber-400 ${isProcessing ? 'animate-spin' : ''}`} />
                     Reset Pipeline
                   </Button>
                 </div>
@@ -345,9 +320,9 @@ export const DevResetWidget = () => {
                   onClick={() => navigate('/elite-prep')}
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start h-8 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
+                  className="w-full justify-start h-7 px-2.5 bg-gradient-to-r from-amber-500/10 to-violet-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20 rounded-lg text-[11px] font-bold"
                 >
-                  <Layers className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
+                  <Layers className="w-3 h-3 mr-1.5 text-amber-400" />
                   Open Elite Prep Mind Map
                 </Button>
               </div>
