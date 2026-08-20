@@ -405,7 +405,7 @@ export const DevResetWidget = () => {
         className="flex items-center gap-1.5 px-3 py-1.5 bg-card/90 hover:bg-card text-muted-foreground hover:text-foreground rounded-full shadow-lg border border-border/60 backdrop-blur-md transition-all text-xs font-medium cursor-pointer group"
       >
         <FlaskConical className="w-3.5 h-3.5 text-blue-500 group-hover:rotate-12 transition-transform" />
-        <span>Dev Tool</span>
+        <span>Dev Toolvvv</span>
         {isUnlockedAll && (
           <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" title="All Rounds Unlocked" />
         )}
