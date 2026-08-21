@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Target, Flame, Clock, Sparkles, ArrowRight, ExternalLink, 
-  Code2, CheckCircle2, Trophy, Building2, Tag, HelpCircle, 
+import {
+  Target, Flame, Clock, Sparkles, ArrowRight, ExternalLink,
+  Code2, CheckCircle2, Trophy, Building2, Tag, HelpCircle,
   ChevronDown, ChevronUp, Copy, Check, Zap, Play
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -202,20 +202,20 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
       {/* Subtle top accent bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-400" />
 
-      <CardContent className="p-5 sm:p-6">
+      <CardContent className="p-4 sm:p-5">
         {/* Top Header Row */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-border/40">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 border-b border-border/40">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-sm shrink-0">
               <Target className="w-5 h-5 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-bold text-base sm:text-lg text-foreground tracking-tight">
+                <h3 className="font-bold text-base text-foreground tracking-tight">
                   Daily Challenge
                 </h3>
                 {isSolved && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                     <CheckCircle2 className="w-3 h-3" /> Solved
                   </span>
                 )}
@@ -224,16 +224,16 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
           </div>
 
           {/* Badges Right (Streak & Countdown) */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {/* Streak Chip */}
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-semibold shadow-xs">
-              <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-semibold shadow-xs">
+              <Flame className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
               <span>{streak} Day{streak === 1 ? "" : "s"}</span>
             </div>
 
             {/* Countdown Timer */}
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-muted/60 border border-border/60 text-muted-foreground text-xs font-mono font-medium">
-              <Clock className="w-3.5 h-3.5 text-amber-500" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border/60 text-muted-foreground text-xs font-mono font-medium">
+              <Clock className="w-3 h-3 text-amber-500" />
               <span>
                 {String(timeLeft.hours).padStart(2, "0")}:
                 {String(timeLeft.minutes).padStart(2, "0")}:
@@ -244,27 +244,29 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
         </div>
 
         {/* Main Problem Content Body */}
-        <div className="py-4 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h4 
-                className="text-xl sm:text-2xl font-bold text-foreground hover:text-orange-500 transition-colors cursor-pointer" 
+        <div className="py-3.5 space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="space-y-1.5 min-w-0 flex-1">
+              <h4
+                className="text-base sm:text-lg font-bold text-foreground hover:text-orange-500 transition-colors cursor-pointer leading-snug line-clamp-2"
                 onClick={() => navigate("/daily-challenge/solve")}
               >
                 {dailyQuestion.title}
               </h4>
-              <Badge className={`${currentDiff.badge} text-xs font-semibold px-2.5 py-0.5 border shadow-2xs`}>
-                {dailyQuestion.difficulty}
-              </Badge>
-              <Badge variant="outline" className="text-xs font-medium text-muted-foreground bg-muted/40">
-                {dailyQuestion.platform}
-              </Badge>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className={`${currentDiff.badge} text-xs font-semibold px-2 py-0.5 border shadow-2xs`}>
+                  {dailyQuestion.difficulty}
+                </Badge>
+                <Badge variant="outline" className="text-xs font-medium text-muted-foreground bg-muted/40">
+                  {dailyQuestion.platform}
+                </Badge>
+              </div>
             </div>
 
             {/* Copy button */}
             <button
               onClick={handleCopyTitle}
-              className="self-start sm:self-auto text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 px-2 py-1 rounded-md hover:bg-muted/60 transition-colors"
+              className="self-start text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 px-2 py-1 rounded-md hover:bg-muted/60 transition-colors shrink-0"
               title="Copy problem name and link"
             >
               {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -277,7 +279,7 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
             {dailyQuestion.tags.map((tag) => (
               <span
                 key={tag}
-                className="text-xs font-medium px-2.5 py-0.5 rounded-lg bg-secondary/60 text-secondary-foreground border border-border/40 hover:bg-secondary transition-colors"
+                className="text-[11px] font-medium px-2 py-0.5 rounded-lg bg-secondary/60 text-secondary-foreground border border-border/40 hover:bg-secondary transition-colors"
               >
                 {tag}
               </span>
@@ -286,80 +288,30 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
 
           {/* Companies Asking This */}
           {dailyQuestion.companies && dailyQuestion.companies.length > 0 && (
-            <div className="flex items-center flex-wrap gap-1.5 pt-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mr-1">
-                <Building2 className="w-3.5 h-3.5 text-amber-500" /> Asked by:
+            <div className="flex items-center flex-wrap gap-1.5 pt-0.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mr-1">
+                <Building2 className="w-3 h-3 text-amber-500" /> Asked by:
               </span>
-              {dailyQuestion.companies.slice(0, 5).map((comp) => (
+              {dailyQuestion.companies.slice(0, 4).map((comp) => (
                 <span
                   key={comp}
-                  className="text-xs font-medium px-2 py-0.5 rounded-md bg-muted/60 hover:bg-muted text-foreground border border-border/50 transition-colors"
+                  className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-muted/60 hover:bg-muted text-foreground border border-border/50 transition-colors"
                 >
                   {comp}
                 </span>
               ))}
-              {dailyQuestion.companies.length > 5 && (
-                <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-muted/40 text-muted-foreground border border-border/30">
-                  +{dailyQuestion.companies.length - 5} more
+              {dailyQuestion.companies.length > 4 && (
+                <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-muted/40 text-muted-foreground border border-border/30">
+                  +{dailyQuestion.companies.length - 4}
                 </span>
               )}
             </div>
           )}
-
-          {/* Hint Drawer / Accordion */}
-          {/* <div className="pt-1">
-            <button
-              onClick={handleFetchQuickHint}
-              className="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1.5 transition-colors group"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-500 group-hover:rotate-12 transition-transform" />
-              <span>{showHint ? "Hide AI Conceptual Hint" : "Need a Hint? Ask AI Coach"}</span>
-              {showHint ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-
-            <AnimatePresence>
-              {showHint && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden mt-2"
-                >
-                  <div className="p-3.5 rounded-xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/20 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    {loadingHint ? (
-                      <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
-                        <Sparkles className="w-4 h-4 animate-spin" />
-                        <span>Generating tailored algorithmic hint...</span>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        <p className="font-medium text-foreground flex items-center gap-1.5">
-                          <Zap className="w-3.5 h-3.5 text-amber-500" /> Key Strategy Tip:
-                        </p>
-                        <p className="text-xs sm:text-sm text-foreground/80">{hintText}</p>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div> */}
         </div>
 
         {/* Action Buttons Footer */}
-        <div className="pt-3 border-t border-border/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="pt-3 border-t border-border/40 flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            {/* <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/daily-challenge")}
-              className="text-xs font-semibold rounded-xl border-border/60 hover:bg-muted/80 text-foreground"
-            >
-              <Trophy className="w-3.5 h-3.5 mr-1.5 text-amber-500" />
-              Challenge Hub & Leaderboard
-            </Button> */}
-
             {dailyQuestion.url && (
               <Button
                 variant="ghost"
@@ -377,7 +329,7 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
           <Button
             size="sm"
             onClick={() => navigate("/daily-challenge/solve")}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm px-5 py-2 rounded-xl shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-500/25 transition-all group"
+            className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-500/25 transition-all group shrink-0 ml-auto"
           >
             <Play className="w-3.5 h-3.5 mr-1.5 fill-white" />
             <span>Solve Challenge</span>

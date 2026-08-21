@@ -229,22 +229,6 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
     needsAttentionVal = 0;
   }
 
-  // 6. Dynamic CTA route and label based on Needs Attention
-  const getCTAButtonDetails = () => {
-    if (needsAttentionLabel.includes("Communication") || needsAttentionLabel.includes("Presentation")) {
-      return { label: `Improve ${needsAttentionLabel}`, route: "/voice-assistant" };
-    }
-    if (needsAttentionLabel.includes("Technical")) {
-      return { label: "Practice Technical Questions", route: "/question-practice" };
-    }
-    if (needsAttentionLabel.includes("Problem") || needsAttentionLabel.includes("Solving")) {
-      return { label: "Solve Daily Challenge", route: "/daily-challenge" };
-    }
-    return { label: "Start Practice Interview", route: "/interview/new" };
-  };
-
-  const ctaDetails = getCTAButtonDetails();
-
   return (
     <Card className="border-border/50 bg-card text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden p-6 space-y-5">
       {/* Overall Score Progression */}
@@ -267,17 +251,6 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Recent Interviews Trend</div>
-          <button
-            type="button"
-            onClick={() => setIsExpanded(prev => !prev)}
-            className="text-xs text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 transition-colors px-2 py-0.5 rounded-lg hover:bg-muted/60 cursor-pointer"
-            title={isExpanded ? "Hide breakdown details" : "Expand breakdown details"}
-          >
-            <span>{isExpanded ? "Less" : "Details"}</span>
-            <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </motion.div>
-          </button>
         </div>
         {chartData.length === 0 ? (
           <div className="h-[180px] w-full flex flex-col items-center justify-center border border-dashed border-border/60 rounded-2xl bg-muted/10 p-4 mt-2 text-center">
@@ -323,8 +296,8 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
                   dataKey="score" 
                   stroke="#2ee696ff" 
                   strokeWidth={3}
-                  dot={{ r: 4, fill: '#ffffff', stroke: '#8b5cf6', strokeWidth: 2 }}
-                  activeDot={{ r: 6, fill: '#8b5cf6', stroke: '#ffffff', strokeWidth: 2 }}
+                  dot={{ r: 4, fill: '#000', stroke: '#2ee696ff', strokeWidth: 2 }}
+                  activeDot={{ r: 6, fill: '#000', stroke: '#2ee696ff', strokeWidth: 2 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -332,7 +305,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         )}
       </div>
 
-      {/* Collapsible Stats & Insights (Hidden by default, expands smoothly above the CTA button) */}
+      {/* Collapsible Stats & Insights (Expands smoothly above the Details button) */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -395,13 +368,16 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         )}
       </AnimatePresence>
 
-      {/* Dynamic Practice CTA Button (Directly below the graph by default) */}
+      {/* Details Button (Placed at the bottom) */}
       <button
-        onClick={() => navigate(ctaDetails.route)}
+        type="button"
+        onClick={() => setIsExpanded(prev => !prev)}
         className="w-full py-3 px-4 rounded-xl border border-blue-500/40 text-blue-500 dark:text-blue-400 font-semibold text-sm hover:bg-blue-500/10 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-sm"
       >
-        <span>{ctaDetails.label}</span>
-        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        <span>{isExpanded ? "Hide Details" : "View Details"}</span>
+        <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown className="w-4 h-4" />
+        </motion.div>
       </button>
     </Card>
   );

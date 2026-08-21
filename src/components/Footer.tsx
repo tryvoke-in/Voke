@@ -4,43 +4,16 @@ import {
   Layers, Zap, Shield, Sparkles, Code2, CheckCircle2, 
   Globe, Mail, ChevronRight, Heart
 } from "lucide-react";
-import { motion, Variants } from "framer-motion";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
 
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants: Variants = {
-    hidden: { y: 15, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 25 }
-    }
-  };
-
   return (
     <footer aria-label="Footer Navigation" className="relative bg-background border-t border-border/50 overflow-hidden font-sans mt-12">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-14 relative z-10">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12"
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
           {/* Brand Card Column (5 cols) */}
-          <motion.div variants={itemVariants} className="lg:col-span-4 flex flex-col justify-between space-y-6">
+          <div className="lg:col-span-4 flex flex-col justify-between space-y-6">
             <div className="p-7 rounded-3xl bg-card/60 dark:bg-card/40 backdrop-blur-xl hover:border-blue-500/30 transition-all duration-500">
               <Link to="/" className="flex items-center gap-3 mb-4 group/logo w-fit">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600/10 p-2 flex items-center justify-center group-hover/logo:scale-105 transition-transform duration-300">
@@ -61,12 +34,6 @@ export const Footer = () => {
               <p className="text-sm text-muted-foreground leading-relaxed mb-6 font-normal">
                 Mastering technical interviews made <span className="text-foreground font-semibold">intelligent</span>. AI-driven mock interviews, DSA tracking, and tailored career roadmaps.
               </p>
-
-              {/* Status Indicator */}
-              {/* <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/40 border border-border/50 text-[11px] text-muted-foreground w-fit mb-6">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-medium text-foreground">All AI Systems Operational</span>
-              </div> */}
 
               {/* Social Media Icons */}
               <div className="flex items-center gap-2.5">
@@ -89,12 +56,12 @@ export const Footer = () => {
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Nav Links (8 cols) */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-8 pt-2">
             {/* Practice Tools */}
-            <motion.div variants={itemVariants} className="space-y-4">
+            <div className="space-y-4">
               <h4 className="font-bold text-foreground text-xs uppercase tracking-wider flex items-center gap-2">
                 <div className="w-5 h-5 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">
                   <Layers className="w-3 h-3" />
@@ -121,10 +88,10 @@ export const Footer = () => {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
 
             {/* Resources */}
-            <motion.div variants={itemVariants} className="space-y-4">
+            <div className="space-y-4">
               <h4 className="font-bold text-foreground text-xs uppercase tracking-wider flex items-center gap-2">
                 <div className="w-5 h-5 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center border border-sky-500/20">
                   <Zap className="w-3 h-3" />
@@ -151,10 +118,10 @@ export const Footer = () => {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
 
             {/* Company & Support */}
-            <motion.div variants={itemVariants} className="space-y-4">
+            <div className="space-y-4">
               <h4 className="font-bold text-foreground text-xs uppercase tracking-wider flex items-center gap-2">
                 <div className="w-5 h-5 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">
                   <Shield className="w-3 h-3" />
@@ -180,9 +147,9 @@ export const Footer = () => {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Bottom Bar Separator & Copyright */}
         <div className="mt-12 pt-6 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">

@@ -238,8 +238,8 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
   }
 
   return (
-    <Card className="border border-border/60 bg-card text-card-foreground hover:border-border transition-all shadow-md hover:shadow-lg rounded-2xl overflow-hidden">
-      <CardContent className="p-4 sm:p-5 space-y-3.5">
+    <Card className="border border-border/60 bg-card text-card-foreground hover:border-border transition-all shadow-md hover:shadow-lg rounded-2xl overflow-hidden h-full flex flex-col justify-between">
+      <CardContent className="p-4 sm:p-5 space-y-3.5 flex flex-col justify-between flex-1">
         {/* Top Header Row */}
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-0.5 min-w-0">
