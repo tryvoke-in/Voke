@@ -45,7 +45,7 @@ const AUTHORIZED_EMAILS = [
 
 export const DevResetWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'elite' | 'credits'>('elite');
+  const [activeTab, setActiveTab] = useState<'elite' | 'credits' | 'mascot'>('elite');
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -184,31 +184,44 @@ export const DevResetWidget = () => {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="grid grid-cols-2 gap-1 bg-muted/50 p-1 rounded-xl mb-3 border border-border/40">
+            <div className="grid grid-cols-3 gap-1 bg-muted/50 p-1 rounded-xl mb-3 border border-border/40">
               <button
                 type="button"
                 onClick={() => setActiveTab('elite')}
                 className={cn(
-                  "text-[11px] font-semibold py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+                  "text-[10px] font-semibold py-1.5 px-1 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer",
                   activeTab === 'elite'
                     ? "bg-background text-foreground shadow-2xs font-bold"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Award className="w-3.5 h-3.5 text-blue-500" />
-                <span>Elite Prep</span>
+                <Award className="w-3 h-3 text-blue-500" />
+                <span>Elite</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('credits')}
                 className={cn(
-                  "text-[11px] font-semibold py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+                  "text-[10px] font-semibold py-1.5 px-1 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer",
                   activeTab === 'credits'
                     ? "bg-background text-foreground shadow-2xs font-bold"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <span>Credits & Gates</span>
+                <span>Credits</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('mascot')}
+                className={cn(
+                  "text-[10px] font-semibold py-1.5 px-1 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer",
+                  activeTab === 'mascot'
+                    ? "bg-background text-foreground shadow-2xs font-bold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>Mascot</span>
               </button>
             </div>
 
@@ -392,6 +405,59 @@ export const DevResetWidget = () => {
                     className="w-full justify-start h-7.5 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium"
                   >
                     Make Premium (Unlimited)
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: MASCOT SCORE SIMULATOR */}
+            {activeTab === 'mascot' && (
+              <div className="space-y-2">
+                <div className="p-2.5 rounded-xl bg-muted/30 border border-border/50 space-y-1">
+                  <span className="text-[11px] font-bold text-foreground block">Mascot Reaction Testing</span>
+                  <span className="text-[10px] text-muted-foreground block">
+                    Test Voki's celebration vs sad/concerned coach reactions in real time.
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <Button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('voki:test-score', { detail: { change: 15 } }));
+                      toast.success("🎉 Simulated Score Increase (+15%)!");
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-8 px-2.5 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20 text-amber-400 rounded-xl text-[11px] font-bold cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
+                    Simulate Score Increase (+15%)
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('voki:test-score', { detail: { change: -15 } }));
+                      toast.error("🥺 Simulated Score Decrease (-15%)!");
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-8 px-2.5 bg-sky-500/10 border-sky-500/30 hover:bg-sky-500/20 text-sky-400 rounded-xl text-[11px] font-bold cursor-pointer"
+                  >
+                    <Zap className="w-3.5 h-3.5 mr-1.5 text-sky-400" />
+                    Simulate Score Decrease (-15%)
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('voki:test-score', { detail: { change: null } }));
+                      toast.info("⚡ Reset Mascot to Default State");
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-7.5 px-2.5 bg-muted/40 border-border/50 hover:bg-muted text-foreground rounded-xl text-[11px] font-medium cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1.5 text-muted-foreground" />
+                    Reset Score State
                   </Button>
                 </div>
               </div>

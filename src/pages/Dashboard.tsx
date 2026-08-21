@@ -552,6 +552,11 @@ const Dashboard = () => {
     ? scoredSessions[scoredSessions.length - 1].score 
     : 10;
 
+  const startingScore = scoredSessions.length > 0 ? scoredSessions[0].score : 0;
+  const scoreDifference = scoredSessions.length >= 2 
+    ? currentOverallScore - startingScore 
+    : 0;
+
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden">
       {/* Subtle Ambient Background Effects */}
@@ -806,6 +811,7 @@ const Dashboard = () => {
                       <CompactAICoach 
                         userStreak={userStreak} 
                         score={currentOverallScore} 
+                        scoreChange={scoreDifference}
                         totalInterviews={allSessions?.length || 0}
                         hasGivenInterview={(allSessions?.length || 0) > 0}
                         userName={profile?.full_name?.split(' ')[0] || "Anurag"}
