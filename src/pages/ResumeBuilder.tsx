@@ -205,8 +205,9 @@ const ResumeBuilder = () => {
 
     const models = [
       body.model || "llama-3.3-70b-versatile",
-      "llama-3.3-70b-versatile",
-      "llama-3.3-70b-versatile",
+      "gemma2-9b-it",
+      "mixtral-8x7b-32768",
+      "llama-3.2-3b-preview"
     ];
 
     let lastError = null;

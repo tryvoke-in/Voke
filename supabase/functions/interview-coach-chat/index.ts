@@ -84,7 +84,7 @@ ${userContext ? `\n**USER CONTEXT:**\n${userContext}\n` : ""}
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "mixtral-8x7b-32768",
           messages: formattedMessages,
           temperature: 0.4,
           max_tokens: 300,
