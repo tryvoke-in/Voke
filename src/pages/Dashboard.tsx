@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   FileText, LogOut, TrendingUp, Upload, Play, Target, Users, Mic, Settings,
   Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search,
-  Globe, Briefcase, FileQuestion, ChevronRight, ChevronDown, ChevronUp, Sparkles, Lock, LayoutDashboard
+  Globe, Briefcase, FileQuestion, ChevronRight, ChevronDown, ChevronUp, Sparkles, Lock, LayoutDashboard,
+  Bot, Video, Compass, Crown, Terminal, Brain
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ProgressPanel } from "@/components/dashboard/ProgressPanel";
@@ -21,6 +22,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { DailyQuestionWidget } from "@/components/dashboard/DailyQuestionWidget";
 import { WeeklyGoals } from "@/components/dashboard/WeeklyGoals";
 import { InterviewCalendarWidget } from "@/components/dashboard/InterviewCalendarWidget";
+import { CompactAICoach } from "@/components/dashboard/CompactAICoach";
 
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -542,8 +544,22 @@ const Dashboard = () => {
     );
   }
 
+  const scoredSessions = (allSessions || [])
+    .filter((s: any) => typeof s.score === "number" && !isNaN(s.score))
+    .sort((a: any, b: any) => new Date(a.date || a.created_at).getTime() - new Date(b.date || b.created_at).getTime());
+
+  const currentOverallScore = scoredSessions.length > 0 
+    ? scoredSessions[scoredSessions.length - 1].score 
+    : 10;
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden">
+      {/* Subtle Ambient Background Effects */}
+      <div className="fixed inset-0 bg-[radial-gradient(rgba(0,0,0,0.04)_1px,transparent_1px)] dark:bg-[radial-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none z-0" />
+      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-violet-600/5 dark:bg-violet-500/7 rounded-full blur-[140px] pointer-events-none z-0" />
+      <div className="fixed top-1/3 right-10 w-[450px] h-[450px] bg-amber-500/4 dark:bg-amber-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
+      <div className="fixed bottom-20 left-10 w-[500px] h-[500px] bg-emerald-500/4 dark:bg-emerald-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
+
       {/* Header */}
       <header className="bg-card/60 backdrop-blur-md border-b border-border sticky top-0 z-50 shadow-xs w-full">
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
@@ -673,7 +689,7 @@ const Dashboard = () => {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Main Content */}
           <main className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
               {/* Left Column - Main Feed */}
               <div className="lg:col-span-8 space-y-8">
@@ -688,7 +704,7 @@ const Dashboard = () => {
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
                   <div className="relative z-10">
-                    {/* Top row: Title + Pills */}
+                    {/* Top row: Title + Streak */}
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                       <div className="flex-1 min-w-0">
                         <h2 className="text-xl sm:text-3xl font-bold mb-1 leading-tight">Ready to ace your next interview?</h2>
@@ -774,7 +790,7 @@ const Dashboard = () => {
 
                 {/* Quick Actions Header & Grid */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
                         <Zap className="w-5 h-5 text-yellow-500" />
@@ -784,76 +800,72 @@ const Dashboard = () => {
                         {showMoreActions ? "8 Tools" : "4 Core"}
                       </span>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowMoreActions(prev => !prev)}
-                      className="text-xs font-semibold h-8 px-3 rounded-xl border-border/60 hover:bg-muted/80 flex items-center gap-1.5 transition-all text-muted-foreground hover:text-foreground shadow-xs"
-                    >
-                      <span>{showMoreActions ? "Show Less" : "More Actions"}</span>
-                      <motion.div
-                        animate={{ rotate: showMoreActions ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
+
+                    {/* Compact Mascot Dock & More Actions Toggle */}
+                    <div className="flex items-center gap-3">
+                      <CompactAICoach 
+                        userStreak={userStreak} 
+                        score={currentOverallScore} 
+                        totalInterviews={allSessions?.length || 0}
+                        hasGivenInterview={(allSessions?.length || 0) > 0}
+                        userName={profile?.full_name?.split(' ')[0] || "Anurag"}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowMoreActions(prev => !prev)}
+                        className="text-xs font-semibold h-8 px-3 rounded-xl border-border/60 hover:bg-muted/80 flex items-center gap-1.5 transition-all text-muted-foreground hover:text-foreground shadow-xs shrink-0"
                       >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </motion.div>
-                    </Button>
+                        <span>{showMoreActions ? "Show Less" : "More Actions"}</span>
+                        <motion.div
+                          animate={{ rotate: showMoreActions ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </motion.div>
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Top 4 Core Actions (Always Visible) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card id="tour-job-matches" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-amber-500" onClick={() => navigate("/job-recommendations")}>
-                      <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                        <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                          <Briefcase className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-                        </div>
-                        <h4 className="font-semibold text-sm">Job Matches</h4>
-                      </CardContent>
-                    </Card>
-
-                    <Card id="tour-text-interview" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-violet-500" onClick={() => navigate("/interview/new")}>
-                      <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 z-10">
-                        Unlimited
-                      </span>
+                    <Card id="tour-text-interview" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-violet-500" onClick={() => navigate("/interview/new")}>
                       <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                         <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                          <MessageSquare className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                          <Bot className="w-6 h-6 text-violet-600 dark:text-violet-400" />
                         </div>
-                        <h4 className="font-semibold text-sm">Theory Interview</h4>
+                        <h4 className="font-semibold text-sm">Text Interview</h4>
+                        <p className="text-xs text-muted-foreground mt-1">AI Chat Practice</p>
                       </CardContent>
                     </Card>
 
-                    <Card id="tour-voice-agent" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/voice-assistant")}>
-                      <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 ${isPremium
-                        ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                        : (creditsVoice + creditsVideo) > 0
-                          ? 'bg-violet-500/10 text-violet-400 border border-violet-500/25'
-                          : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                        }`}>
-                        {isPremium
-                          ? 'Unlimited'
-                          : (creditsVoice + creditsVideo) > 0
-                            ? `${creditsVoice + creditsVideo} ${(creditsVoice + creditsVideo) === 1 ? 'Credit' : 'Credits'}`
-                            : !hasGivenFeedback ? 'Unlock (+2)' : 'Locked'}
-                      </span>
+                    <Card id="tour-pro-interview" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/voice-assistant")}>
                       <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                         <div className="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                          <Mic className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+                          <Video className="w-6 h-6 text-pink-600 dark:text-pink-400" />
                         </div>
                         <h4 className="font-semibold text-sm">Pro Interview</h4>
+                        <p className="text-xs text-muted-foreground mt-1">Voice & Video AI</p>
                       </CardContent>
                     </Card>
 
-                    <Card id="tour-elite-prep" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-blue-500 overflow-hidden" onClick={() => navigate("/elite-prep")}>
-                      <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm z-10 bg-amber-500/10 text-amber-400 border-amber-500/25">
-                        Unlimited
-                      </span>
+                    <Card id="tour-job-matches" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-blue-500" onClick={() => navigate("/job-recommendations")}>
                       <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                         <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                          <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                          <Compass className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <h4 className="font-semibold text-sm">Elite</h4>
-                        <p className="text-xs text-muted-foreground mt-1">Multiple Round Interviews</p>
+                        <h4 className="font-semibold text-sm">Job Matches</h4>
+                        <p className="text-xs text-muted-foreground mt-1">Find Your Role</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card id="tour-elite-prep" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-amber-500 overflow-hidden" onClick={() => navigate("/elite-prep")}>
+                      <CardContent className="p-4 flex flex-col items-center text-center pt-6">
+                        <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                          <Crown className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <h4 className="font-semibold text-sm">Elite Prep</h4>
+                        <p className="text-xs text-muted-foreground mt-1">Premium Interview Prep</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -869,10 +881,7 @@ const Dashboard = () => {
                         className="overflow-hidden"
                       >
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                          <Card id="tour-resume-builder" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/resume-builder")}>
-                            <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 z-10">
-                              Free
-                            </span>
+                          <Card id="tour-resume-builder" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/resume-builder")}>
                             <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                               <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                 <FileText className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
@@ -885,7 +894,7 @@ const Dashboard = () => {
                           <Card id="tour-playground" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-indigo-500" onClick={() => navigate("/playground")}>
                             <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                               <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <Code className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                                <Terminal className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                               </div>
                               <h4 className="font-semibold text-sm">Playground</h4>
                               <p className="text-xs text-muted-foreground mt-1">Code Sandbox</p>
@@ -895,20 +904,17 @@ const Dashboard = () => {
                           <Card id="tour-question-practice" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-orange-500" onClick={() => navigate("/question-practice")}>
                             <CardContent className="p-4 flex flex-col items-center text-center pt-6">
                               <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <FileQuestion className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                                <Brain className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                               </div>
                               <h4 className="font-semibold text-sm">Question Practice</h4>
                               <p className="text-xs text-muted-foreground mt-1">Daily Challenges</p>
                             </CardContent>
                           </Card>
 
-                          <Card id="tour-community" className="relative hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-sky-500" onClick={() => navigate("/community")}>
-                            <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 z-10">
-                              Feed
-                            </span>
+                          <Card id="tour-community" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/community")}>
                             <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                              <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <Users className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+                              <div className="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <Users className="w-6 h-6 text-pink-600 dark:text-pink-400" />
                               </div>
                               <h4 className="font-semibold text-sm">Community</h4>
                               <p className="text-xs text-muted-foreground mt-1">Connect & Discuss</p>
@@ -920,23 +926,25 @@ const Dashboard = () => {
                   </AnimatePresence>
                 </div>
 
-                {/* DSA Preparation & Road to Offer Widgets */}
+                {/* 2 Core Track Cards in Left Column: Data Structures & Algorithms & Road to Google */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <DSAPreparationBanner />
                   <RoadToOffer profile={profile} onUpdate={() => loadData(true)} />
                 </div>
-
               </div>
 
               {/* Right Column - Sidebar Widgets */}
-              <div className="lg:col-span-4 space-y-6">
-
+              <div className="lg:col-span-4 space-y-8">
                 {/* Progress Panel Widget */}
                 <ProgressPanel allSessions={allSessions} />
 
-                {/* Detailed Daily Question Widget */}
-                <DailyQuestionWidget />
-
+                {/* Daily Practice Card (Lives directly beneath ProgressPanel, moves down smoothly when View Details expands without creating empty gaps below feature cards!) */}
+                <motion.div
+                  layout
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                >
+                  <DailyQuestionWidget userStreak={userStreak} />
+                </motion.div>
               </div>
             </div>
 

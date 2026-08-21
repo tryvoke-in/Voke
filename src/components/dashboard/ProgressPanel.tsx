@@ -56,8 +56,8 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
   const scoredSessions = allSessions
     .map(s => {
       const date = s.date || s.created_at || s.scheduled_at || new Date().toISOString();
-      let overallScore = typeof s.score === 'number' && s.score > 0 
-        ? s.score 
+      let overallScore = typeof s.score === 'number' && s.score > 0
+        ? s.score
         : (typeof s.overall_score === 'number' && s.overall_score > 0 ? s.overall_score : null);
 
       const confidence = typeof s.confidence_score === 'number' ? s.confidence_score : null;
@@ -113,7 +113,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
       const d = new Date(s.date);
       fullDate = d.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
       const shortDate = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      
+
       const sameDateCount = arr.filter(item => {
         try {
           return new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) === shortDate;
@@ -230,17 +230,24 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
   }
 
   return (
-    <Card className="border-border/50 bg-card text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden p-6 space-y-5">
+    <Card className={`border-border/50 bg-card text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl p-5 flex flex-col justify-between space-y-3.5 ${
+      !isExpanded ? "min-h-[382px]" : ""
+    }`}>
       {/* Overall Score Progression */}
-      <div className="space-y-2">
+      <div id="tour-overall-score" className="space-y-2 pt-0.5">
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Overall Score</span>
+          {ptsDifference !== 0 && (
+            <span className={`text-xs font-bold ${ptsDifference > 0 ? "text-emerald-400" : "text-amber-400"}`}>
+              {ptsDifference > 0 ? `+${ptsDifference}%` : `${ptsDifference}%`}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-2xl font-bold text-foreground/95 min-w-[52px]">{currentScore}%</span>
+          <span className="text-2xl sm:text-3xl font-extrabold text-foreground/95 min-w-[56px]">{currentScore}%</span>
           <div className="flex-1 h-2.5 bg-muted/60 rounded-full relative overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-green-600 via-green-500 to-green-500 rounded-full transition-all duration-500"
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
               style={{ width: `${Math.max(2, currentScore)}%` }}
             />
           </div>
@@ -248,12 +255,12 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
       </div>
 
       {/* Line Chart */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Recent Interviews Trend</div>
         </div>
         {chartData.length === 0 ? (
-          <div className="h-[180px] w-full flex flex-col items-center justify-center border border-dashed border-border/60 rounded-2xl bg-muted/10 p-4 mt-2 text-center">
+          <div className="h-[160px] w-full flex flex-col items-center justify-center border border-dashed border-border/60 rounded-2xl bg-muted/10 p-4 mt-1 text-center">
             <TrendingUp className="h-8 w-8 text-violet-500/70 mb-2 animate-bounce" />
             <span className="text-xs text-foreground font-semibold">No interview chart data yet</span>
             <span className="text-[11px] text-muted-foreground max-w-[200px] mt-1">
@@ -267,21 +274,21 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
             </button>
           </div>
         ) : (
-          <div className="h-[180px] w-full mt-2 -ml-4">
+          <div className="h-[160px] w-full mt-1 -ml-4">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 10, right: 15, left: 0, bottom: 5 }}>
+              <LineChart data={chartData} margin={{ top: 8, right: 15, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.3)" vertical={false} opacity={0.3} />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="currentColor" 
+                <XAxis
+                  dataKey="name"
+                  stroke="currentColor"
                   className="text-muted-foreground"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   dy={10}
                 />
-                <YAxis 
-                  stroke="currentColor" 
+                <YAxis
+                  stroke="currentColor"
                   className="text-muted-foreground"
                   fontSize={10}
                   tickLine={false}
@@ -291,10 +298,10 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
                   tickFormatter={(v) => `${v}%`}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Line 
-                  type="monotone" 
-                  dataKey="score" 
-                  stroke="#2ee696ff" 
+                <Line
+                  type="monotone"
+                  dataKey="score"
+                  stroke="#2ee696ff"
                   strokeWidth={3}
                   dot={{ r: 4, fill: '#000', stroke: '#2ee696ff', strokeWidth: 2 }}
                   activeDot={{ r: 6, fill: '#000', stroke: '#2ee696ff', strokeWidth: 2 }}
@@ -370,6 +377,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
 
       {/* Details Button (Placed at the bottom) */}
       <button
+        id="tour-view-details-btn"
         type="button"
         onClick={() => setIsExpanded(prev => !prev)}
         className="w-full py-3 px-4 rounded-xl border border-blue-500/40 text-blue-500 dark:text-blue-400 font-semibold text-sm hover:bg-blue-500/10 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-sm"

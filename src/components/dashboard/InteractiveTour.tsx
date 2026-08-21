@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   Mic, FileText, Users, Sparkles, ChevronRight, 
   ChevronLeft, CheckCircle, ArrowRight, Compass, X,
-  MessageSquare, Play, Zap
+  MessageSquare, Play, Zap, Bot, Video, Crown
 } from "lucide-react";
 
 interface TourStep {
@@ -42,40 +42,32 @@ const TOUR_STEPS: TourStep[] = [
     title: "Text Interview",
     description: "Practice mock interviews in a chat-like format. Our AI dynamically changes and adapts its follow-up questions to assess your depth of knowledge.",
     position: "bottom",
-    icon: MessageSquare,
+    icon: Bot,
     color: "text-violet-500"
   },
   {
     targetId: "tour-voice-agent",
-    title: "AI Voice Agent",
+    title: "Pro Interview",
     description: "Practice real-time speech interviews verbally. Speak naturally and get immediate grading on communication skills, delivery tone, and clarity.",
     position: "bottom",
-    icon: Mic,
+    icon: Video,
     color: "text-pink-500"
-  },
-  {
-    targetId: "tour-video-practice",
-    title: "Video Practice",
-    description: "Fine-tune your behavioral interviewing in front of a camera. The AI processes your expressions, posture, and vocal delivery details.",
-    position: "bottom",
-    icon: Play,
-    color: "text-fuchsia-500"
-  },
-  {
-    targetId: "tour-elite-prep",
-    title: "Elite Prep",
-    description: "Unlock advanced structures, standard system design preparation, and elite mock resources to target premium positions.",
-    position: "bottom",
-    icon: Zap,
-    color: "text-blue-500"
   },
   {
     targetId: "tour-job-matches",
     title: "Personalized Job Matches",
     description: "Voke tracks your interview performance metrics to match you automatically with real-world job roles matching your capabilities.",
     position: "bottom",
-    icon: Users,
-    color: "text-amber-600"
+    icon: Compass,
+    color: "text-blue-500"
+  },
+  {
+    targetId: "tour-elite-prep",
+    title: "Elite Prep",
+    description: "Unlock advanced structures, standard system design preparation, and elite mock resources to target premium positions.",
+    position: "bottom",
+    icon: Crown,
+    color: "text-amber-500"
   },
   {
     targetId: "tour-profile",

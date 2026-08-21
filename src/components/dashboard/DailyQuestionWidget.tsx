@@ -198,145 +198,83 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
   const currentDiff = difficultyConfig[dailyQuestion.difficulty as keyof typeof difficultyConfig] || difficultyConfig.Medium;
 
   return (
-    <Card className="relative overflow-hidden border border-border/60 bg-gradient-to-br from-card via-card to-muted/20 shadow-md hover:shadow-xl transition-all duration-300 rounded-2xl group">
-      {/* Subtle top accent bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-400" />
+    <motion.div
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="h-full"
+    >
+      <Card id="tour-daily-practice" className="relative border border-border/60 bg-gradient-to-b from-card via-card to-card/90 text-card-foreground hover:border-orange-500/40 hover:shadow-[0_8px_30px_rgba(249,115,22,0.08)] transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group">
+        {/* Subtle glowing accent line on top */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-rose-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-      <CardContent className="p-4 sm:p-5">
-        {/* Top Header Row */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 border-b border-border/40">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-sm shrink-0">
-              <Target className="w-5 h-5 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-bold text-base text-foreground tracking-tight">
-                  Daily Challenge
-                </h3>
-                {isSolved && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                    <CheckCircle2 className="w-3 h-3" /> Solved
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Badges Right (Streak & Countdown) */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {/* Streak Chip */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-semibold shadow-xs">
-              <Flame className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
-              <span>{streak} Day{streak === 1 ? "" : "s"}</span>
-            </div>
-
-            {/* Countdown Timer */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border/60 text-muted-foreground text-xs font-mono font-medium">
-              <Clock className="w-3 h-3 text-amber-500" />
-              <span>
-                {String(timeLeft.hours).padStart(2, "0")}:
-                {String(timeLeft.minutes).padStart(2, "0")}:
-                {String(timeLeft.seconds).padStart(2, "0")}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Problem Content Body */}
-        <div className="py-3.5 space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="space-y-1.5 min-w-0 flex-1">
-              <h4
-                className="text-base sm:text-lg font-bold text-foreground hover:text-orange-500 transition-colors cursor-pointer leading-snug line-clamp-2"
-                onClick={() => navigate("/daily-challenge/solve")}
+        <CardContent className="p-5 flex flex-col justify-between flex-1 space-y-4">
+          {/* Header Row */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <motion.div
+                whileHover={{ rotate: 15, scale: 1.1 }}
+                className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shrink-0 group-hover:bg-orange-500/20 group-hover:text-orange-400 transition-colors"
               >
-                {dailyQuestion.title}
-              </h4>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge className={`${currentDiff.badge} text-xs font-semibold px-2 py-0.5 border shadow-2xs`}>
-                  {dailyQuestion.difficulty}
-                </Badge>
-                <Badge variant="outline" className="text-xs font-medium text-muted-foreground bg-muted/40">
-                  {dailyQuestion.platform}
-                </Badge>
-              </div>
+                <Target className="w-4 h-4" />
+              </motion.div>
+              <h3 className="text-sm sm:text-base font-bold tracking-tight text-foreground truncate">
+                Daily Practice
+              </h3>
             </div>
 
-            {/* Copy button */}
-            <button
-              onClick={handleCopyTitle}
-              className="self-start text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 px-2 py-1 rounded-md hover:bg-muted/60 transition-colors shrink-0"
-              title="Copy problem name and link"
+            <Badge className={`${currentDiff.badge} text-[10px] font-bold px-2 py-0.5 border shadow-2xs rounded-full`}>
+              {dailyQuestion.difficulty}
+            </Badge>
+          </div>
+
+          {/* Problem Title & Category Subtitle */}
+          <div className="space-y-1">
+            <h4
+              className="text-xs sm:text-sm font-bold text-foreground hover:text-orange-400 transition-colors cursor-pointer line-clamp-1 group-hover:text-orange-400"
+              onClick={() => navigate("/daily-challenge/solve")}
             >
-              {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{isCopied ? "Copied" : "Share"}</span>
-            </button>
+              {dailyQuestion.title}
+            </h4>
+            <p className="text-xs text-muted-foreground truncate">
+              {dailyQuestion.tags && dailyQuestion.tags.length > 0
+                ? dailyQuestion.tags.slice(0, 3).join(" · ")
+                : "Array · Dynamic Programming"}
+            </p>
           </div>
 
-          {/* Tags Row */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {dailyQuestion.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-[11px] font-medium px-2 py-0.5 rounded-lg bg-secondary/60 text-secondary-foreground border border-border/40 hover:bg-secondary transition-colors"
-              >
-                {tag}
+          {/* Type & Reward Info Cards */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-muted/30 hover:bg-muted/50 border border-border/60 rounded-xl p-2.5 text-center flex flex-col items-center justify-center transition-all cursor-default"
+            >
+              <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Type</span>
+              <span className="text-xs font-bold text-foreground mt-0.5">Coding</span>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-muted/30 hover:bg-muted/50 border border-border/60 rounded-xl p-2.5 text-center flex flex-col items-center justify-center transition-all cursor-default"
+            >
+              <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Reward</span>
+              <span className="text-xs font-extrabold text-amber-400 mt-0.5 flex items-center gap-1">
+                <Zap className="w-3 h-3 fill-amber-400 text-amber-400" />
+                {currentDiff.xp}
               </span>
-            ))}
+            </motion.div>
           </div>
 
-          {/* Companies Asking This */}
-          {dailyQuestion.companies && dailyQuestion.companies.length > 0 && (
-            <div className="flex items-center flex-wrap gap-1.5 pt-0.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mr-1">
-                <Building2 className="w-3 h-3 text-amber-500" /> Asked by:
-              </span>
-              {dailyQuestion.companies.slice(0, 4).map((comp) => (
-                <span
-                  key={comp}
-                  className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-muted/60 hover:bg-muted text-foreground border border-border/50 transition-colors"
-                >
-                  {comp}
-                </span>
-              ))}
-              {dailyQuestion.companies.length > 4 && (
-                <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-muted/40 text-muted-foreground border border-border/30">
-                  +{dailyQuestion.companies.length - 4}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons Footer */}
-        <div className="pt-3 border-t border-border/40 flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            {dailyQuestion.url && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open(dailyQuestion.url, "_blank")}
-                className="text-xs text-muted-foreground hover:text-foreground font-medium rounded-xl h-8 px-2.5"
-                title={`Open on ${dailyQuestion.platform}`}
-              >
-                <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                {dailyQuestion.platform}
-              </Button>
-            )}
+          {/* Action Button */}
+          <div className="pt-2">
+            <Button
+              onClick={() => navigate("/daily-challenge/solve")}
+              className="w-full relative overflow-hidden bg-gradient-to-r from-orange-500 via-rose-500 to-orange-500 hover:from-orange-600 hover:to-rose-600 text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-orange-950/20 hover:shadow-lg hover:shadow-orange-500/30 transition-all duration-300 group/btn"
+            >
+              <span>Solve Today's Practice</span>
+              <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />
+            </Button>
           </div>
-
-          <Button
-            size="sm"
-            onClick={() => navigate("/daily-challenge/solve")}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-500/25 transition-all group shrink-0 ml-auto"
-          >
-            <Play className="w-3.5 h-3.5 mr-1.5 fill-white" />
-            <span>Solve Challenge</span>
-            <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };

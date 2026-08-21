@@ -238,101 +238,136 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
   }
 
   return (
-    <Card className="border border-border/60 bg-card text-card-foreground hover:border-border transition-all shadow-md hover:shadow-lg rounded-2xl overflow-hidden h-full flex flex-col justify-between">
-      <CardContent className="p-4 sm:p-5 space-y-3.5 flex flex-col justify-between flex-1">
-        {/* Top Header Row */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="space-y-0.5 min-w-0">
-            {/* <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
-                Milestone
-              </span>
-              <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-md border", intensityData.badgeColor)}>
-                {intensityData.intensity}
-              </span>
-            </div> */}
-            <h3 className="text-base font-bold tracking-tight text-foreground truncate mt-1">
-              Road to {company || "Dream Offer"}
-            </h3>
-            <p className="text-[11px] text-muted-foreground">
-              {date ? format(date, "MMM do, yyyy") : "Target date pending"}
-            </p>
-          </div>
+    <motion.div
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="h-full"
+    >
+      <Card className="relative border border-border/60 bg-gradient-to-b from-card via-card to-card/90 text-card-foreground hover:border-orange-500/40 hover:shadow-[0_8px_30px_rgba(249,115,22,0.08)] transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group">
+        {/* Subtle glowing accent line on top */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-[11px] gap-1 text-muted-foreground  rounded-lg"
-              onClick={() => setIsEditing(true)}
-            >
-              <Edit3 className="w-3 h-3" />
-            </Button>
-
-            {company && (
-              <div className="w-9 h-9 rounded-xl bg-background border border-border/80 p-1.5 flex items-center justify-center shadow-2xs">
+        <CardContent className="p-5 flex flex-col justify-between flex-1 space-y-4">
+          {/* Header Row */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <motion.div
+                whileHover={{ rotate: 5, scale: 1.1 }}
+                className="w-8 h-8 rounded-xl bg-background border border-border/80 p-1 flex items-center justify-center shadow-2xs shrink-0 group-hover:border-orange-500/30 transition-colors"
+              >
                 <img
-                  src={getCompanyLogoUrl(company)}
+                  src={getCompanyLogoUrl(company || "google")}
                   crossOrigin="anonymous"
                   onError={(e) => {
                     const target = e.currentTarget;
                     if (target.src.includes("ui-avatars.com")) return;
-                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company)}&background=random&color=fff&size=64`;
+                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company || "Google")}&background=random&color=fff&size=64`;
                   }}
-                  alt={`${company} logo`}
+                  alt={`${company || "Google"} logo`}
                   className="w-full h-full object-contain"
                 />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Compact Countdown & Actionable Prep Guide Button in same row */}
-        <div className="flex items-center justify-between gap-2 py-1.5 border-y border-border/50">
-          <div className="flex items-baseline gap-1.5 shrink-0">
-            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              {daysRemaining}
-            </span>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Days Left
-            </span>
-          </div>
-
-          <div
-            onClick={() => {
-              if (company) {
-                const slug = company.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-                navigate(`/companies/${slug}`);
-              } else {
-                navigate("/companies");
-              }
-            }}
-            className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-muted/40 hover:bg-muted/80 border border-border/50 transition-all cursor-pointer text-xs font-medium text-foreground hover:text-blue-500 max-w-[60%] truncate"
-          >
-            <div className="w-5 h-5 rounded-md bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
-              <Briefcase className="w-3 h-3" />
+              </motion.div>
+              <h3 className="text-sm sm:text-base font-bold tracking-tight text-foreground truncate">
+                Road to {company || "Google"}
+              </h3>
             </div>
-            <span className="truncate">
-              {company ? `${company} Prep Guide` : "Prep Guide"}
-            </span>
-            <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all shrink-0 ml-0.5" />
-          </div>
-        </div>
 
-        {/* Progress Bar */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-[10px] uppercase font-medium tracking-wider text-muted-foreground">
-            <span>Start</span>
-            <span>{date ? format(date, "MMM yyyy") : "Goal"}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5 rounded-lg border-border/60 hover:bg-muted/80 transition-colors"
+              onClick={() => setIsEditing(true)}
+            >
+              <Edit3 className="w-3 h-3" />
+              <span>Edit</span>
+            </Button>
           </div>
-          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-600 rounded-full transition-all duration-500"
-              style={{ width: `${progressPercentage}%` }}
-            />
+
+          {/* Days Left & Target Date */}
+          <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
+                {daysRemaining || 7}
+              </span>
+              <span className="text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
+                Days Left
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="text-xs font-bold text-foreground block">
+                {date ? format(date, "MMM do, yyyy") : "Aug 28th, 2026"}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-medium block">
+                Target Interview
+              </span>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+
+          {/* Milestone Progress */}
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-foreground">
+                Milestone Progress
+              </span>
+              <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                Stage 1 of 3
+              </span>
+            </div>
+
+            {/* 3 Milestone Stage Chips */}
+            <div className="grid grid-cols-3 gap-2">
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                className="bg-muted/30 hover:bg-muted/50 border border-emerald-500/30 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
+              >
+                <span className="text-xs font-bold text-foreground">DSA Prep</span>
+                <span className="text-[9px] font-semibold text-emerald-400 mt-0.5 flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Active
+                </span>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                className="bg-muted/30 hover:bg-muted/50 border border-orange-500/30 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
+              >
+                <span className="text-xs font-bold text-foreground">AI Mocks</span>
+                <span className="text-[9px] font-semibold text-orange-400 mt-0.5">Target</span>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                className="bg-muted/30 hover:bg-muted/50 border border-border/60 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
+              >
+                <span className="text-xs font-bold text-foreground truncate max-w-[70px]">
+                  {company || "Google"}
+                </span>
+                <span className="text-[9px] font-semibold text-muted-foreground mt-0.5">Upcoming</span>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <div className="pt-2">
+            <Button
+              onClick={() => {
+                if (company) {
+                  const slug = company.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                  navigate(`/companies/${slug}`);
+                } else {
+                  navigate("/companies");
+                }
+              }}
+              className="w-full relative overflow-hidden bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-orange-950/20 hover:shadow-lg hover:shadow-orange-500/30 transition-all duration-300 group/btn"
+            >
+              <span>Explore {company || "Google"} Prep Guide</span>
+              <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
