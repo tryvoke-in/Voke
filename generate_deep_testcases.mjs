@@ -32,7 +32,7 @@ ${problemText.substring(0, 1000)}`;
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant", // using 8b for speed and higher limits
+          model: "llama3-8b-8192", // using 8b for speed and higher limits
           messages: [{ role: "user", content: prompt }],
           temperature: 0.2
         })
