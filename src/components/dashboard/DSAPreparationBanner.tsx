@@ -45,18 +45,15 @@ export const DSAPreparationBanner = () => {
       className="h-full"
     >
       <Card
-        className="relative border border-border/60 bg-gradient-to-b from-card via-card to-card/90 text-card-foreground hover:border-emerald-500/40 hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)] transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group"
+        className="relative border-0 bg-card text-card-foreground transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group"
       >
-        {/* Subtle glowing accent line on top */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
         <CardContent className="p-5 flex flex-col justify-between flex-1 space-y-4">
           {/* Header Row */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <motion.div
                 whileHover={{ rotate: 5, scale: 1.1 }}
-                className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0 group-hover:bg-emerald-500/20 group-hover:text-emerald-300 transition-colors"
+                className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0 group-hover:bg-emerald-500/20 group-hover:text-emerald-300 transition-colors"
               >
                 <Code2 className="w-4 h-4" />
               </motion.div>
@@ -93,7 +90,7 @@ export const DSAPreparationBanner = () => {
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max(progressPercentage, 5)}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                className="h-full bg-emerald-500 rounded-full"
               />
             </div>
           </div>
@@ -120,7 +117,7 @@ export const DSAPreparationBanner = () => {
                     animate={{ scaleX: 1 }}
                     transition={{ delay: index * 0.08, duration: 0.3 }}
                     className={`h-1.5 rounded-full transition-all duration-300 ${isFilled
-                        ? "bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.3)]"
+                        ? "bg-emerald-500"
                         : "bg-muted/80"
                       }`}
                   />
@@ -133,7 +130,7 @@ export const DSAPreparationBanner = () => {
           <div className="pt-2">
             <Button
               onClick={() => navigate("/dsa-sheet")}
-              className="w-full relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-emerald-900/20 hover:shadow-lg hover:shadow-emerald-600/30 transition-all duration-300 group/btn"
+              className="w-full relative overflow-hidden bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all duration-300 group/btn"
             >
               <span>Continue DSA Practice</span>
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />

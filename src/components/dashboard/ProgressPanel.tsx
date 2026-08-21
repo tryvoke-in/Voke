@@ -230,9 +230,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
   }
 
   return (
-    <Card className={`border-border/50 bg-card text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl p-5 flex flex-col justify-between space-y-3.5 ${
-      !isExpanded ? "min-h-[382px]" : ""
-    }`}>
+    <Card className="border-border/50 bg-card text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl p-5 flex flex-col justify-between space-y-3.5">
       {/* Overall Score Progression */}
       <div id="tour-overall-score" className="space-y-2 pt-0.5">
         <div className="flex items-center justify-between">
@@ -312,7 +310,32 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         )}
       </div>
 
-      {/* Collapsible Stats & Insights (Expands smoothly above the Details button) */}
+      {/* Top 2 Stats Grid (Always visible) */}
+      <div className="grid grid-cols-2 gap-4 pt-1">
+        {/* Total Sessions Count */}
+        <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex items-center gap-3 hover:border-violet-500/30 transition-all duration-300">
+          <div className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 text-violet-400">
+            <FileText className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xl font-bold text-foreground">{totalInterviews}</div>
+            <div className="text-[11px] text-muted-foreground">Interviews</div>
+          </div>
+        </div>
+
+        {/* Practiced Time */}
+        <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex items-center gap-3 hover:border-violet-500/30 transition-all duration-300">
+          <div className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 text-violet-400">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xl font-bold text-foreground">{practiceTimeText}</div>
+            <div className="text-[11px] text-muted-foreground">Time Practiced</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Collapsible Bottom 2 Insights (Expands smoothly above the Details button) */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -320,35 +343,10 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.28, ease: "easeInOut" }}
-            className="overflow-hidden space-y-4"
+            className="overflow-hidden"
           >
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-4 pt-1">
-              {/* Total Sessions Count */}
-              <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex items-center gap-3 hover:border-violet-500/30 transition-all duration-300">
-                <div className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 text-violet-400">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-foreground">{totalInterviews}</div>
-                  <div className="text-[11px] text-muted-foreground">Interviews</div>
-                </div>
-              </div>
-
-              {/* Practiced Time */}
-              <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex items-center gap-3 hover:border-violet-500/30 transition-all duration-300">
-                <div className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 text-violet-400">
-                  <Clock className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-foreground">{practiceTimeText}</div>
-                  <div className="text-[11px] text-muted-foreground">Time Practiced</div>
-                </div>
-              </div>
-            </div>
-
             {/* Dynamic Insights Row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 pt-1">
               {/* Biggest Improvement */}
               <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex flex-col hover:border-emerald-500/30 transition-all duration-300 min-h-[100px]">
                 <div className="text-emerald-500 text-xs font-semibold flex items-center gap-1">

@@ -167,8 +167,8 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
 
   if (isEditing) {
     return (
-      <Card className="border border-border/60 bg-card text-card-foreground shadow-md rounded-2xl overflow-hidden">
-        <CardHeader className="p-4 pb-3 border-b border-border/50">
+      <Card className="border-0 bg-card text-card-foreground shadow-sm rounded-2xl overflow-hidden">
+        <CardHeader className="p-4 pb-3 border-b border-border/40">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
               <Target className="w-4 h-4 text-blue-500" />
@@ -243,17 +243,14 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
       transition={{ duration: 0.25, ease: "easeOut" }}
       className="h-full"
     >
-      <Card className="relative border border-border/60 bg-gradient-to-b from-card via-card to-card/90 text-card-foreground hover:border-orange-500/40 hover:shadow-[0_8px_30px_rgba(249,115,22,0.08)] transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group">
-        {/* Subtle glowing accent line on top */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
+      <Card className="relative border-0 bg-card text-card-foreground transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group">
         <CardContent className="p-5 flex flex-col justify-between flex-1 space-y-4">
           {/* Header Row */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <motion.div
                 whileHover={{ rotate: 5, scale: 1.1 }}
-                className="w-8 h-8 rounded-xl bg-background border border-border/80 p-1 flex items-center justify-center shadow-2xs shrink-0 group-hover:border-orange-500/30 transition-colors"
+                className="w-8 h-8 rounded-xl bg-muted/40 p-1 flex items-center justify-center shrink-0 transition-colors"
               >
                 <img
                   src={getCompanyLogoUrl(company || "google")}
@@ -275,7 +272,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
             <Button
               variant="outline"
               size="sm"
-              className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5 rounded-lg border-border/60 hover:bg-muted/80 transition-colors"
+              className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5 rounded-lg border-border/40 hover:bg-muted/80 transition-colors"
               onClick={() => setIsEditing(true)}
             >
               <Edit3 className="w-3 h-3" />
@@ -309,7 +306,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
               <span className="font-semibold text-foreground">
                 Milestone Progress
               </span>
-              <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
@@ -322,7 +319,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
             <div className="grid grid-cols-3 gap-2">
               <motion.div
                 whileHover={{ scale: 1.03 }}
-                className="bg-muted/30 hover:bg-muted/50 border border-emerald-500/30 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
+                className="bg-muted/30 hover:bg-muted/50 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
               >
                 <span className="text-xs font-bold text-foreground">DSA Prep</span>
                 <span className="text-[9px] font-semibold text-emerald-400 mt-0.5 flex items-center gap-1">
@@ -332,14 +329,14 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.03 }}
-                className="bg-muted/30 hover:bg-muted/50 border border-orange-500/30 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
+                className="bg-muted/30 hover:bg-muted/50 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
               >
                 <span className="text-xs font-bold text-foreground">AI Mocks</span>
                 <span className="text-[9px] font-semibold text-orange-400 mt-0.5">Target</span>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.03 }}
-                className="bg-muted/30 hover:bg-muted/50 border border-border/60 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
+                className="bg-muted/30 hover:bg-muted/50 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
               >
                 <span className="text-xs font-bold text-foreground truncate max-w-[70px]">
                   {company || "Google"}
@@ -360,7 +357,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
                   navigate("/companies");
                 }
               }}
-              className="w-full relative overflow-hidden bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-orange-950/20 hover:shadow-lg hover:shadow-orange-500/30 transition-all duration-300 group/btn"
+              className="w-full relative overflow-hidden bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all duration-300 group/btn"
             >
               <span>Explore {company || "Google"} Prep Guide</span>
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />
