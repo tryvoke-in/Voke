@@ -70,7 +70,7 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
           {/* Problem Title & Category Subtitle */}
           <div className="space-y-1">
             <h4
-              className="text-xs sm:text-sm font-bold text-foreground hover:text-orange-400 transition-colors cursor-pointer line-clamp-1 group-hover:text-orange-400"
+              className="text-xs sm:text-sm font-bold text-foreground transition-colors cursor-pointer line-clamp-1"
               onClick={() => navigate("/daily-challenge/solve")}
             >
               {dailyQuestion.title}

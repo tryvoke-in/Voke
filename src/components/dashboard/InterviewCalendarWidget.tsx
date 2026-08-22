@@ -365,7 +365,7 @@ export const InterviewCalendarWidget: React.FC = () => {
                       key={evt.id}
                       onClick={() => handleOpenEditDialog(evt)}
                       className={cn(
-                        "p-3.5 rounded-xl bg-gray-800 hover:bg-gray-900 transition-all cursor-pointer flex flex-col justify-between group relative space-y-3",
+                        "p-3.5 rounded-xl bg-background/80 hover:bg-background border border-border/70 hover:border-border hover:shadow-sm transition-all cursor-pointer flex flex-col justify-between group relative space-y-3",
                         conf.borderClass
                       )}
                     >
@@ -408,7 +408,7 @@ export const InterviewCalendarWidget: React.FC = () => {
 
                       {/* Notes preview if any */}
                       {evt.notes && (
-                        <p className="text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-[2px] rounded-md border border-border/40 line-clamp-1">
+                        <p className="text-[10px] text-muted-foreground bg-muted/60 px-2 py-1 rounded-md border border-border/50 line-clamp-1">
                           {evt.notes}
                         </p>
                       )}

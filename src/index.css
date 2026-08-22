@@ -56,48 +56,48 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 224 28% 6%;
+    --background: 224 30% 5%;
     --foreground: 0 0% 98%;
 
-    --card: 224 22% 9.5%;
+    --card: 224 20% 11.5%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 224 22% 9.5%;
+    --popover: 224 20% 11.5%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 224 18% 14%;
+    --secondary: 224 18% 16%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 224 18% 13%;
-    --muted-foreground: 220 10% 65%;
+    --muted: 224 18% 16%;
+    --muted-foreground: 220 12% 68%;
 
-    --accent: 224 18% 14%;
+    --accent: 224 18% 17%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 224 16% 15%;
-    --input: 224 16% 15%;
+    --border: 224 16% 20%;
+    --input: 224 16% 20%;
     --ring: 217 91% 60%;
 
     /* Dark mode custom tokens */
     --gradient-hero: none;
     --gradient-card: none;
-    --shadow-soft: 0 4px 20px -2px hsl(0, 0%, 0%, 0.3);
-    --shadow-medium: 0 10px 40px -5px hsl(0, 0%, 0%, 0.4);
-    --shadow-strong: 0 20px 60px -10px hsl(0, 0%, 0%, 0.5);
+    --shadow-soft: 0 4px 20px -2px hsl(0, 0%, 0%, 0.45);
+    --shadow-medium: 0 10px 40px -5px hsl(0, 0%, 0%, 0.6);
+    --shadow-strong: 0 20px 60px -10px hsl(0, 0%, 0%, 0.75);
 
-    --sidebar-background: 224 22% 9.5%;
+    --sidebar-background: 224 24% 8%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 18% 14%;
+    --sidebar-accent: 224 18% 16%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 224 16% 15%;
+    --sidebar-border: 224 16% 20%;
     --sidebar-ring: 217 91% 60%;
   }
 }
