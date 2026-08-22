@@ -164,77 +164,16 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             ? `\n\nSTRICT NO-REPEAT RULE (DO NOT REPEAT PREVIOUS QUESTIONS):\nYou have already asked the candidate the following questions in this session:\n${previousAssistantQuestions.map((q, idx) => `${idx + 1}. "${q}"`).join('\n')}\nYOU MUST NEVER REPEAT, REPHRASE, OR ASK SIMILAR QUESTIONS TO ANY OF THE ABOVE. Ask a new, focused question that deepens the technical discussion based on their latest answer.`
             : '';
 
-        // ================= ENGINE 1: DEDICATED PRO INTERVIEW GEMINI API KEY =================
-        const proInterviewGeminiKey = import.meta.env.VITE_PRO_INTERVIEW_GEMINI_KEY || import.meta.env.VITE_GEMINI_API_KEY;
-        if (!aiText && proInterviewGeminiKey) {
-            const geminiModels = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash'];
-            for (const model of geminiModels) {
-                try {
-                    console.log(`[Pro Interview] Generating question with Dedicated Gemini (${model}, Turn ${turnCount + 1})...`);
-
-                    let customDirective = antiRepetitionRule;
-                    if (isCodingRound) {
-                        customDirective += `\n\nCRITICAL ROUND 3 TECHNICAL CODING MANDATE:
-1. START QUESTION: Ask ONLY for the candidate's algorithmic approach to solve the problem on screen.
-2. STRICT APPROACH VERIFICATION (MINIMUM 75% DEPTH & ACCURACY REQUIRED):
-   - Candidate MUST explain the actual step-by-step logic (e.g. how data structures/pointers are initialized, loop conditions, how values are checked/stored, and how the answer is constructed).
-   - When the candidate provides a clear, in-depth algorithmic explanation, say EXACTLY:
-   "[APPROACH_VERIFIED] Excellent explanation! The code editor is now unlocked — go ahead and code your solution."
-3. CODING PHASE: When candidate is actively coding, be 100% SILENT. Do NOT ask any questions.
-4. POST-RUN PHASE: When candidate runs code and all tests pass, ask: (1) Time Complexity Big-O, (2) Space Complexity, (3) Edge cases, (4) Optimizations.
-5. ABSOLUTE PROHIBITION: NEVER ask resume, college, education, degree, school, project, or background questions. Keep responses concise (1-2 sentences max).`;
-                    } else {
-                        customDirective += `\n\nSTRICT CRISP QUESTION MANDATE:
-1. STRICT LENGTH: Maximum 1 to 2 short sentences (under 30 words total).
-2. NO FLUFF OR PREAMBLE: Do not give lengthy introductions or repeat what the candidate said.
-3. ONE DIRECT QUESTION: Ask exactly ONE sharp, focused technical question ending with a question mark.`;
-                    }
-
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${proInterviewGeminiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: contents.slice(-8),
-                            systemInstruction: { parts: [{ text: sysPrompt + customDirective }] },
-                            generationConfig: { temperature: 0.6, maxOutputTokens: 350 }
-                        })
-                    });
-
-                    if (res.ok) {
-                        const json = await res.json();
-                        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-                        if (text && text.trim().length > 0) {
-                            const trimmed = text.trim();
-                            // Verify not a duplicate
-                            const isDuplicate = previousAssistantQuestions.some(prevQ =>
-                                prevQ.toLowerCase() === trimmed.toLowerCase() ||
-                                (prevQ.length > 20 && trimmed.toLowerCase().includes(prevQ.toLowerCase().slice(0, 30)))
-                            );
-
-                            if (!isDuplicate || previousAssistantQuestions.length === 0) {
-                                aiText = trimmed;
-                                setApiLabel(`(gemini ${model.replace('gemini-', '')} pro)`);
-                                console.log(`✓ Dedicated Gemini (${model}) generated fresh response:`, aiText);
-                                break;
-                            }
-                        }
-                    } else {
-                        console.warn(`Dedicated Gemini (${model}) HTTP error:`, res.status);
-                    }
-                } catch (geminiErr) {
-                    console.warn(`Dedicated Gemini (${model}) exception:`, geminiErr);
-                }
-            }
-        }
-
-        // ================= ENGINE 2: SUPABASE EDGE FUNCTION (interview-chat) =================
+        // ================= ENGINE 1: SECURE SUPABASE EDGE FUNCTION (interview-chat) =================
+        // Server-side with PRO_INTERVIEW_GEMINI_KEY / GOOGLE_API_KEY - 100% private & instant
         if (!aiText && !isCodingRound) {
             try {
-                console.log(`[useGroqVoice] Calling interview-chat Edge Function (Turn ${turnCount + 1})...`);
+                console.log(`[Pro Interview] Calling secure interview-chat Edge Function (Turn ${turnCount + 1})...`);
                 const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('interview-chat', {
                     body: { 
                         messages: fullMessages,
-                        interviewType: isHRRound ? 'behavioral' : 'pro_interview'
+                        interviewType: isHRRound ? 'behavioral' : 'pro_interview',
+                        systemPrompt: sysPrompt
                     }
                 });
 
@@ -246,12 +185,58 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
                 if (!edgeErr && responseText && typeof responseText === 'string' && responseText.trim().length > 0) {
                     aiText = responseText.trim();
-                    console.log('DEBUG: Edge Function response:', aiText, 'API:', detectedLabel || '(edge function)');
+                    console.log('✓ Edge Function generated question:', aiText, 'API:', detectedLabel || '(edge function)');
                 } else if (edgeErr) {
-                    console.warn('interview-chat Edge Function note:', edgeErr);
+                    console.warn('[useGroqVoice] Edge Function error, falling back:', edgeErr);
                 }
             } catch (edgeEx) {
-                console.warn('interview-chat Edge Function exception:', edgeEx);
+                console.warn('[useGroqVoice] Edge Function exception, falling back:', edgeEx);
+            }
+        }
+
+        // ================= ENGINE 2: DIRECT GEMINI DEV FALLBACK (Only if local key is valid) =================
+        const proInterviewGeminiKey = import.meta.env.VITE_PRO_INTERVIEW_GEMINI_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+        if (!aiText && proInterviewGeminiKey && proInterviewGeminiKey.startsWith('AQ.')) {
+            const geminiModels = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-flash-lite-latest'];
+            for (const model of geminiModels) {
+                try {
+                    console.log(`[Pro Interview] Local fallback with Dedicated Gemini (${model}, Turn ${turnCount + 1})...`);
+
+                    let customDirective = antiRepetitionRule;
+                    if (isCodingRound) {
+                        customDirective += `\n\nCRITICAL ROUND 3 TECHNICAL CODING MANDATE:
+1. START QUESTION: Ask ONLY for algorithmic approach.
+2. VERIFY APPROACH: Say "[APPROACH_VERIFIED]" when clear.
+3. SILENT CODING: Silent while coding.`;
+                    } else {
+                        customDirective += `\n\nSTRICT CRISP QUESTION MANDATE:
+1. STRICT LENGTH: Maximum 1 to 2 short sentences (under 35 words total).
+2. ONE DIRECT QUESTION: Ask exactly ONE sharp, focused technical question.`;
+                    }
+
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${proInterviewGeminiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: contents.slice(-8),
+                            systemInstruction: { parts: [{ text: sysPrompt + customDirective }] },
+                            generationConfig: { temperature: 0.65, maxOutputTokens: 800 }
+                        })
+                    });
+
+                    if (res.ok) {
+                        const json = await res.json();
+                        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (text && text.trim().length > 0) {
+                            aiText = text.trim();
+                            setApiLabel(`(gemini ${model.replace('gemini-', '')})`);
+                            console.log(`✓ Gemini (${model}) generated:`, aiText);
+                            break;
+                        }
+                    }
+                } catch (geminiErr) {
+                    console.warn(`Gemini (${model}) exception:`, geminiErr);
+                }
             }
         }
 
