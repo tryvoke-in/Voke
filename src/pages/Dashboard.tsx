@@ -684,7 +684,7 @@ const Dashboard = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative overflow-hidden rounded-3xl bg-blue-800 dark:bg-gray-800 text-white p-8 shadow-xl"
+                  className="relative overflow-hidden rounded-3xl bg-blue-500 dark:bg-cyan-800 text-white p-8 shadow-xl"
                 >
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
