@@ -14,6 +14,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import ReactMarkdown from 'react-markdown';
 import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 import { InterviewGate } from "@/components/InterviewGate";
+import { loadUserProfileContext } from "@/utils/profileContext";
 
 const VoiceAssistant: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +27,8 @@ const VoiceAssistant: React.FC = () => {
     volume,
     logs,
     errorDetails,
-    sendHiddenContext
+    sendHiddenContext,
+    submitCurrentSpeech
   } = useGroqVoice();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -255,6 +257,19 @@ const VoiceAssistant: React.FC = () => {
     };
   }, [status]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey && status === LiveStatus.CONNECTED && interviewMode === 'voice') {
+        const target = e.target as HTMLElement;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+        e.preventDefault();
+        submitCurrentSpeech();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [status, interviewMode, submitCurrentSpeech]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -263,7 +278,7 @@ const VoiceAssistant: React.FC = () => {
 
   const loadUserContext = async () => {
     try {
-      console.log('[VoiceAssistant] Starting loadUserContext...');
+      console.log('[VoiceAssistant] Loading full profile, resume & GitHub context...');
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
@@ -272,52 +287,15 @@ const VoiceAssistant: React.FC = () => {
         return;
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        setCandidateProfileName(profile.full_name || 'Candidate');
-
-        if (profile.github_url) {
-          try {
-            const usernameMatch = profile.github_url.match(/github\.com\/([^\/]+)/);
-            if (usernameMatch) {
-              const username = usernameMatch[1];
-              const session = await supabase.auth.getSession();
-              const token = session.data.session?.access_token;
-              
-              if (token) {
-                const reposResponse = await fetch(`${SUPABASE_URL}/functions/v1/github-proxy`, {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({ username, per_page: 3 })
-                });
-
-                if (reposResponse.ok) {
-                  const repos = await reposResponse.json();
-                  const projectSummaries = await Promise.all(
-                    repos.map(async (repo: any) => {
-                      return `Project: ${repo.name}\n- Description: ${repo.description || 'No description'}\n- Tech: ${repo.language || 'Not specified'}`;
-                    })
-                  );
-                  setGithubProjectsText(`GITHUB PROJECTS:\n${projectSummaries.join('\n\n')}`);
-                }
-              }
-            }
-          } catch (e) {
-            console.error('GitHub fetch failed', e);
-          }
+      const profileCtx = await loadUserProfileContext();
+      if (profileCtx) {
+        setCandidateProfileName(profileCtx.fullName || 'Candidate');
+        if (profileCtx.context) {
+          setGithubProjectsText(profileCtx.context);
         }
       }
     } catch (error) {
       console.error('[VoiceAssistant] Error loading context:', error);
-      toast.error('Failed to load profile context');
     } finally {
       setLoadingContext(false);
     }
@@ -335,10 +313,15 @@ const VoiceAssistant: React.FC = () => {
     context += `EXPERIENCE LEVEL: ${experienceLevel}\n`;
 
     if (githubProjectsText) {
-      context += `\n${githubProjectsText}\n`;
+      context += `\n=== CANDIDATE RESUME & GITHUB PROJECTS CONTEXT ===\n${githubProjectsText}\n================================================\n`;
     }
 
-    context += `\nINSTRUCTION: You are an expert lead interviewer at ${activeCompany}. You are conducting a realistic ${interviewType} for a candidate applying as a ${experienceLevel} ${activeRole} specializing in ${selectedDomain}. Conduct a professional, realistic interview: start with warm introductions and 2-3 tailored behavioral/screening questions for this exact role and level. When you feel ready to test their coding skills, say "[START_CODING]" and present a coding challenge suitable for a ${activeRole}.`;
+    context += `\nINSTRUCTION: You are an expert lead interviewer at ${activeCompany}. You are conducting a realistic ${interviewType} for ${candidateProfileName} applying as a ${experienceLevel} ${activeRole} specializing in ${selectedDomain}.
+CRITICAL INTERVIEW GUIDELINES:
+1. STRICTLY CRISP & CONCISE: Ask maximum 1 to 2 short sentences (under 30 words total). No long speeches, no monologue, no repeating what the candidate said.
+2. DEEP RESUME & GITHUB PROJECT VERIFICATION: Ask questions targeting the candidate's real GitHub projects BY NAME and the technologies listed in their resume (architecture, concurrency, APIs, state management, database design, bottlenecks, trade-offs).
+3. SINGLE DIRECT QUESTION: Always end with exactly ONE clear, sharp technical question.
+4. LIVE CODING: When ready to evaluate coding, say "[START_CODING]" and present an algorithmic challenge tailored for a ${activeRole}.`;
 
     setUserContext(context);
     setIsConfigured(true);
@@ -346,7 +329,13 @@ const VoiceAssistant: React.FC = () => {
     if (!hasCameraPermission) {
       await startCamera();
     }
-    connect(context);
+
+    const greeting = `Welcome ${candidateProfileName}! Thanks for joining today's technical interview for the ${activeRole} position at ${activeCompany}. To get started, please introduce yourself, tell me about your technical background, and give me a brief overview of the main projects on your resume.`;
+
+    connect({
+      systemPrompt: context,
+      initialGreeting: greeting
+    });
   };
 
   const handleEndInterview = async () => {
@@ -678,11 +667,20 @@ const VoiceAssistant: React.FC = () => {
                         <Mic className="w-8 h-8 text-primary-foreground" />
                       </button>
                     ) : (
-                      <div className="flex gap-4">
-                        <button onClick={disconnect} className="group relative flex items-center justify-center w-16 h-16 bg-muted hover:bg-muted/80 rounded-full shadow-lg transition-all duration-300">
+                      <div className="flex items-center gap-6">
+                        <button
+                          onClick={disconnect}
+                          className="group relative flex items-center justify-center w-16 h-16 bg-muted hover:bg-muted/80 rounded-full shadow-lg transition-all duration-300 hover:scale-105 active:scale-95"
+                          title="Cancel Interview"
+                        >
                           <X className="w-6 h-6 text-foreground" />
                         </button>
-                        <button onClick={handleEndInterview} className="group relative flex items-center justify-center w-20 h-20 bg-destructive hover:bg-destructive/90 rounded-full shadow-lg hover:shadow-destructive/25 transition-all duration-300">
+
+                        <button
+                          onClick={handleEndInterview}
+                          className="group relative flex items-center justify-center w-20 h-20 bg-destructive hover:bg-destructive/90 rounded-full shadow-lg hover:shadow-destructive/25 transition-all duration-300 hover:scale-105 active:scale-95"
+                          title="Finish & Get Evaluation Scorecard"
+                        >
                           <MessageSquare className="w-8 h-8 text-destructive-foreground" />
                         </button>
                       </div>

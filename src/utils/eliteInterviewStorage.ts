@@ -39,28 +39,46 @@ const SELECTED_TYPE_KEY = 'voke_elite_selected_type';
 const SELECTED_ROLE_KEY = 'voke_elite_selected_role';
 const SELECTED_COMPANY_KEY = 'voke_elite_selected_company';
 
-export const saveSelectedType = (typeId: string) => {
-  localStorage.setItem(SELECTED_TYPE_KEY, typeId);
+export const saveSelectedType = (typeId: string | null) => {
+  if (typeId) {
+    localStorage.setItem(SELECTED_TYPE_KEY, typeId);
+  } else {
+    localStorage.removeItem(SELECTED_TYPE_KEY);
+  }
 };
 
 export const getSelectedType = (): string | null => {
-  return localStorage.getItem(SELECTED_TYPE_KEY) || 'internship';
+  return localStorage.getItem(SELECTED_TYPE_KEY);
 };
 
-export const saveSelectedRole = (roleId: string) => {
-  localStorage.setItem(SELECTED_ROLE_KEY, roleId);
+export const saveSelectedRole = (roleId: string | null) => {
+  if (roleId) {
+    localStorage.setItem(SELECTED_ROLE_KEY, roleId);
+  } else {
+    localStorage.removeItem(SELECTED_ROLE_KEY);
+  }
 };
 
 export const getSelectedRole = (): string | null => {
   return localStorage.getItem(SELECTED_ROLE_KEY);
 };
 
-export const saveSelectedCompany = (companyId: string) => {
-  localStorage.setItem(SELECTED_COMPANY_KEY, companyId);
+export const saveSelectedCompany = (companyId: string | null) => {
+  if (companyId) {
+    localStorage.setItem(SELECTED_COMPANY_KEY, companyId);
+  } else {
+    localStorage.removeItem(SELECTED_COMPANY_KEY);
+  }
 };
 
 export const getSelectedCompany = (): string | null => {
   return localStorage.getItem(SELECTED_COMPANY_KEY);
+};
+
+export const clearEliteSelections = () => {
+  localStorage.removeItem(SELECTED_TYPE_KEY);
+  localStorage.removeItem(SELECTED_ROLE_KEY);
+  localStorage.removeItem(SELECTED_COMPANY_KEY);
 };
 
 // --- DATABASE PERSISTENCE METHODS ---

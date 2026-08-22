@@ -43,10 +43,11 @@ export async function callGeminiPipeline({
 }: GeminiPipelineOptions): Promise<GeminiPipelineResult> {
   const keys = getGeminiApiKeys();
   const modelsToTry = Array.from(new Set([
-    modelName,
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-flash-latest"
+    modelName || "gemini-3.1-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.5-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3.6-flash",
   ]));
 
   for (let m = 0; m < modelsToTry.length; m++) {
@@ -67,7 +68,7 @@ export async function callGeminiPipeline({
           },
           generationConfig: {
             temperature,
-            maxOutputTokens: responseSchema ? 500 : 200,
+            maxOutputTokens: responseSchema ? 800 : 800,
           },
         };
 

@@ -155,14 +155,14 @@ You are a Principal Software Engineer conducting a FAANG-tier Live Technical Ass
     }
 
     // STRICT REPETITION CHECK & RETRY FAILSAFE (only if we got content)
-    if (content && previousAssistantQuestions.some(prevQ => 
-      prevQ === content.toLowerCase() || 
+    if (content && previousAssistantQuestions.some(prevQ =>
+      prevQ === content.toLowerCase() ||
       (prevQ.length > 15 && (prevQ.includes(content.toLowerCase()) || content.toLowerCase().includes(prevQ))) ||
       (prevQ.length > 25 && prevQ.slice(0, 30) === content.toLowerCase().slice(0, 30))
     )) {
       console.warn(`[Anti-Repetition Alert] Question "${content}" was repeated! Retrying...`);
       const retryRes = await callGeminiPipeline({
-        modelName: "gemini-2.0-flash-lite",
+        modelName: "gemini-3.5-flash-lite",
         geminiContents: recentContents,
         systemPrompt: fullSystemPrompt + `\n\nCRITICAL OVERRIDE: The question "${content}" WAS ALREADY ASKED. YOU MUST ASK A COMPLETELY DIFFERENT QUESTION MATCHING THE ROUND DIRECTIVE!`,
         temperature: 0.85,
@@ -256,11 +256,11 @@ You are a Principal Software Engineer conducting a FAANG-tier Live Technical Ass
 
     const apiLabel = geminiRes?.providerInfo?.apiLabel || "(primary 3.1)";
     return new Response(
-      JSON.stringify({ 
-        question: content, 
+      JSON.stringify({
+        question: content,
         content,
         apiLabel,
-        providerInfo: geminiRes?.providerInfo 
+        providerInfo: geminiRes?.providerInfo
       }),
       {
         headers: {
@@ -272,8 +272,8 @@ You are a Principal Software Engineer conducting a FAANG-tier Live Technical Ass
   } catch (error: any) {
     console.error("Error in interview-chat function:", error?.message, error?.stack);
     return new Response(
-      JSON.stringify({ 
-        question: "Walk me through your algorithmic approach and time complexity for this problem.", 
+      JSON.stringify({
+        question: "Walk me through your algorithmic approach and time complexity for this problem.",
         content: "Walk me through your algorithmic approach and time complexity for this problem."
       }),
       {

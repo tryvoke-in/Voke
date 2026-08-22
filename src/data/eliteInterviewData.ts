@@ -205,7 +205,7 @@ export const getInterviewRounds = (typeId: string, companyId: string, roleId: st
       questionCount: 10,
       durationMins: 15,
       focusAreas: ['Self Introduction', 'Resume Walkthrough & Strongest Project', 'Skills Verification & Confidence', 'Motivation & Career Goals'],
-      description: `First round ${typeItem.title} screening at ${company.name} for ${role.title}. Objective: Validate resume authenticity, evaluate communication clarity, test understanding of listed skills, and determine role fit & learning mindset.`
+      description: `Resume walkthrough, technical background screening, and core skills validation for ${company.name}.`
     },
     {
       roundId: `${typeId}_${companyId}_${roleId}_r2`,
@@ -221,7 +221,7 @@ export const getInterviewRounds = (typeId: string, companyId: string, roleId: st
         'Edge Cases & Debugging',
         'Scalability Thinking'
       ],
-      description: `Deep technical interrogation of your chosen GitHub project at ${company.name}. The AI adapts difficulty in real-time based on your answers — Easy → Medium → Hard. Voice-only round: no coding required, verbal explanations only. Pass threshold: 75%.`
+      description: `Deep technical interrogation on your chosen GitHub projects, architecture, and tradeoffs.`
     },
     {
       roundId: `${typeId}_${companyId}_${roleId}_r3`,
@@ -237,7 +237,7 @@ export const getInterviewRounds = (typeId: string, companyId: string, roleId: st
         'Code Quality & Execution Correctness',
         'Real-time Technical Communication'
       ],
-      description: `Comprehensive coding evaluation at ${company.name} for ${role.title}. Evaluate problem-solving across Arrays/Strings/HashMaps/Two-Pointers, live debugging of buggy snippets, and practical system design questions. Monaco editor with test execution & voice AI interrogation. Pass threshold: 75%.`
+      description: `Live coding evaluation covering DSA problem-solving, bug fixing, and algorithmic design.`
     },
     {
       roundId: `${typeId}_${companyId}_${roleId}_r4`,
@@ -247,7 +247,7 @@ export const getInterviewRounds = (typeId: string, companyId: string, roleId: st
       questionCount: 8,
       durationMins: 20,
       focusAreas: [`${company.name} Core Values`, 'Project Ownership', 'Team Collaboration', 'Career Goals'],
-      description: `Final interview round at ${company.name}. Conducted by engineering managers to test leadership, ownership, and culture fit for the ${role.title} position across 8-9 questions.`
+      description: `Behavioral leadership, culture alignment, and situational problem-solving assessment.`
     }
   ];
 };

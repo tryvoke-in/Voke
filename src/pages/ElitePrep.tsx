@@ -9,7 +9,7 @@ import {
   saveSelectedRole, getSelectedRole,
   saveSelectedCompany, getSelectedCompany,
   initializeCompanyRoleProgressAsync, getCompanyRoleProgress, CompanyRoleProgress,
-  isDevUnlockAllActive, fetchCompanyRoleProgress
+  isDevUnlockAllActive, fetchCompanyRoleProgress, clearEliteSelections
 } from '@/utils/eliteInterviewStorage';
 import { EliteNotebookLMMindMap } from '@/components/elite/EliteNotebookLMMindMap';
 import { EliteVoiceRoom } from '@/components/elite/EliteVoiceRoom';
@@ -38,7 +38,7 @@ const ElitePrep: React.FC = () => {
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>('notebook_mindmap');
 
-  // Selections
+  // Selections (Start fresh with null so only Step 1 is open)
   const [selectedType, setSelectedType] = useState<InterviewTypeItem | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<CompanyItem | null>(null);
   const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
@@ -64,13 +64,12 @@ const ElitePrep: React.FC = () => {
     setProgress(prog);
   };
 
+  // Initialize Profile and User on Mount (without auto-opening downstream steps)
   useEffect(() => {
     const initProfileAndUser = async () => {
-      let activeUid = 'guest_user';
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          activeUid = user.id;
           setUserId(user.id);
         } else {
           setUserId('guest_user');
@@ -84,46 +83,30 @@ const ElitePrep: React.FC = () => {
       } finally {
         setLoadingProfile(false);
       }
-
-      // Restore saved or default selections on mount
-      try {
-        const savedTypeId = getSelectedType();
-        const savedCompId = getSelectedCompany();
-        const savedRoleId = getSelectedRole();
-
-        const typeObj = INTERVIEW_TYPES.find(t => t.id === savedTypeId) || INTERVIEW_TYPES[0];
-        const compObj = TOP_COMPANIES.find(c => c.id === savedCompId) || null;
-        const roleObj = ELITE_ROLES.find(r => r.id === savedRoleId) || null;
-
-        if (typeObj) setSelectedType(typeObj);
-        if (compObj) setSelectedCompany(compObj);
-        if (roleObj) setSelectedRole(roleObj);
-
-        if (typeObj && compObj && roleObj) {
-          await setupRoundsHub(typeObj, compObj, roleObj, activeUid);
-        }
-      } catch (e) {
-        console.warn('[ElitePrep] Selection restore warning:', e);
-      }
-      // Listen for Dev Tool progress/unlock changes
-      const handleDevChange = async () => {
-        if (selectedType && selectedCompany && selectedRole) {
-          const updated = await fetchCompanyRoleProgress(activeUid, selectedType.id, selectedCompany.id, selectedRole.id);
-          if (updated) setProgress(updated);
-        }
-      };
-      window.addEventListener('voke-dev-unlock-change', handleDevChange);
-
-      return () => {
-        window.removeEventListener('voke-dev-unlock-change', handleDevChange);
-      };
     };
     initProfileAndUser();
-  }, [selectedType?.id, selectedCompany?.id, selectedRole?.id]);
+  }, []);
+
+  // Listen for Dev Tool progress/unlock changes
+  useEffect(() => {
+    const handleDevChange = async () => {
+      if (selectedType && selectedCompany && selectedRole) {
+        const activeUid = userId || 'guest_user';
+        const updated = await fetchCompanyRoleProgress(activeUid, selectedType.id, selectedCompany.id, selectedRole.id);
+        if (updated) setProgress(updated);
+      }
+    };
+    window.addEventListener('voke-dev-unlock-change', handleDevChange);
+
+    return () => {
+      window.removeEventListener('voke-dev-unlock-change', handleDevChange);
+    };
+  }, [userId, selectedType?.id, selectedCompany?.id, selectedRole?.id]);
 
   // Clicking Step 1 Track: Toggle off or switch track (collapsing downstream choices)
   const handleSelectType = (typeItem: InterviewTypeItem) => {
     if (selectedType?.id === typeItem.id) {
+      clearEliteSelections();
       setSelectedType(null);
       setSelectedCompany(null);
       setSelectedRole(null);
@@ -133,6 +116,8 @@ const ElitePrep: React.FC = () => {
     }
     setSelectedType(typeItem);
     saveSelectedType(typeItem.id);
+    saveSelectedCompany(null);
+    saveSelectedRole(null);
     setSelectedCompany(null);
     setSelectedRole(null);
     setRounds([]);
@@ -142,6 +127,8 @@ const ElitePrep: React.FC = () => {
   // Clicking Step 2 Company: Toggle off or switch company (collapsing role/pipeline choices)
   const handleSelectCompany = (company: CompanyItem) => {
     if (selectedCompany?.id === company.id) {
+      saveSelectedCompany(null);
+      saveSelectedRole(null);
       setSelectedCompany(null);
       setSelectedRole(null);
       setRounds([]);
@@ -150,6 +137,7 @@ const ElitePrep: React.FC = () => {
     }
     setSelectedCompany(company);
     saveSelectedCompany(company.id);
+    saveSelectedRole(null);
     setSelectedRole(null);
     setRounds([]);
     setProgress(null);
@@ -158,6 +146,7 @@ const ElitePrep: React.FC = () => {
   // Clicking Step 3 Role: Toggle off (collapses pipeline) or switch role (unfolds pipeline)
   const handleSelectRole = (role: RoleItem) => {
     if (selectedRole?.id === role.id) {
+      saveSelectedRole(null);
       setSelectedRole(null);
       setRounds([]);
       setProgress(null);
@@ -171,6 +160,7 @@ const ElitePrep: React.FC = () => {
   };
 
   const handleResetSelection = () => {
+    clearEliteSelections();
     setSelectedType(null);
     setSelectedCompany(null);
     setSelectedRole(null);
