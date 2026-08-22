@@ -1,11 +1,13 @@
 // Shared Gemini API Pipeline with Automatic Rate-Limit Failover
 
 export function getGeminiApiKeys(): string[] {
+  const proKey = Deno.env.get("PRO_INTERVIEW_GEMINI_KEY") || Deno.env.get("GOOGLE_API_KEY_PRO") || "";
   const primaryKey = Deno.env.get("GOOGLE_API_KEY") || Deno.env.get("GEMINI_API_KEY") || "";
   const secondaryKey = Deno.env.get("GOOGLE_API_KEY1") || Deno.env.get("GEMINI_API_KEY_FALLBACK") || "";
 
   const keys: string[] = [];
-  if (primaryKey) keys.push(primaryKey);
+  if (proKey) keys.push(proKey);
+  if (primaryKey && !keys.includes(primaryKey)) keys.push(primaryKey);
   if (secondaryKey && !keys.includes(secondaryKey)) keys.push(secondaryKey);
 
   return keys;
