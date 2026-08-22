@@ -487,20 +487,20 @@ export const CompactAICoach: React.FC<CompactAICoachProps> = ({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.88, y: -4 }}
                 transition={{ duration: 0.22 }}
-                className={`absolute bottom-[76px] left-1/2 -translate-x-1/2 min-w-[160px] max-w-[220px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md rounded-2xl px-3.5 py-2.5 shadow-2xl border ${
+                className={`absolute bottom-[76px] left-1/2 -translate-x-1/2 min-w-[160px] max-w-[220px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-md rounded-2xl px-3.5 py-2.5 shadow-xl dark:shadow-2xl border ${
                   celebrationActive
-                    ? "border-amber-500/50 shadow-amber-500/10"
+                    ? "border-amber-400/60 dark:border-amber-500/50 shadow-amber-500/10 text-amber-950 dark:text-amber-200"
                     : sadActive
-                    ? "border-sky-500/40 shadow-sky-500/10"
-                    : "border-violet-500/30"
+                    ? "border-sky-400/60 dark:border-sky-500/40 shadow-sky-500/10 text-sky-950 dark:text-sky-200"
+                    : "border-border/80 dark:border-violet-500/30 text-slate-800 dark:text-slate-100"
                 } cursor-pointer pointer-events-auto text-center`}
                 onClick={handleMascotClick}
               >
                 {/* Bubble Tail */}
-                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-slate-900/95 dark:border-t-slate-950/95" />
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-white/95 dark:border-t-slate-950/95" />
 
                 {/* Pure Clean Message */}
-                <p className="text-[11.5px] font-medium text-foreground leading-snug">
+                <p className="text-[11.5px] font-medium leading-snug">
                   {getMessage()}
                 </p>
               </motion.div>

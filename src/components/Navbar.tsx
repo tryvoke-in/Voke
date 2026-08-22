@@ -258,18 +258,6 @@ export const Navbar = () => {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => navigate("/peer-interviews")}
-                                    aria-label="Peer Match"
-                                    className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-500/10 dark:hover:bg-violet-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center focus-visible:ring-2 focus-visible:ring-violet-500"
-                                    title="Peer Match"
-                                >
-                                    <Users className="w-5 h-5" aria-hidden="true" />
-                                    <span className="sr-only">Peer Match</span>
-                                </Button>
-
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
                                     onClick={() => navigate("/profile")}
                                     aria-label="Settings and Profile"
                                     className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-500/10 dark:hover:bg-violet-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center focus-visible:ring-2 focus-visible:ring-violet-500"

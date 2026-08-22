@@ -45,7 +45,7 @@ export const DSAPreparationBanner = () => {
       className="h-full"
     >
       <Card
-        className="relative border-0 bg-card text-card-foreground transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group"
+        className="relative border border-border/60 shadow-sm hover:shadow-md bg-card text-card-foreground transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group"
       >
         <CardContent className="p-5 flex flex-col justify-between flex-1 space-y-4">
           {/* Header Row */}

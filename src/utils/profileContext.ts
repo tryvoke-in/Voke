@@ -7,6 +7,8 @@ export interface ProfileContext {
     hasResume: boolean;
     hasGithub: boolean;
     githubRepos?: { name: string; description: string; language: string; summary: string }[];
+    targetRole?: string;
+    dreamCompany?: string;
 }
 
 /**
@@ -25,7 +27,9 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
                 projectCount: 0,
                 hasResume: false,
                 hasGithub: false,
-                githubRepos: []
+                githubRepos: [],
+                targetRole: undefined,
+                dreamCompany: undefined
             };
         }
 
@@ -79,6 +83,16 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
         });
 
         let context = `User Name: ${userProfile.full_name || 'Candidate'}\n`;
+        const targetRole = userProfile?.target_role || userProfile?.role || userProfile?.headline || undefined;
+        const dreamCompany = userProfile?.dream_company || undefined;
+
+        if (targetRole) {
+            context += `Target Role: ${targetRole}\n`;
+        }
+        if (dreamCompany) {
+            context += `Target Company: ${dreamCompany}\n`;
+        }
+
         let projectCount = 0;
         let hasGithub = false;
         let hasResume = false;
@@ -310,7 +324,9 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
             projectCount,
             hasResume,
             hasGithub,
-            githubRepos: githubReposList
+            githubRepos: githubReposList,
+            targetRole,
+            dreamCompany
         };
     } catch (error) {
         console.error('[ProfileContext] Error loading profile context:', error);

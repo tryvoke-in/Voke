@@ -604,26 +604,6 @@ const Dashboard = () => {
               <ReferralButton iconOnly />
             </div>
             <UpgradeButton />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/peer-interviews")}
-              className="text-muted-foreground hover:text-violet-600 hover:bg-blue-500/10 dark:hover:text-blue-400 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center"
-              title="Peer Match"
-            >
-              <Users className="w-5 h-5" />
-            </Button>
-
-            {/* <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/profile")}
-              className="text-muted-foreground hover:text-violet-600 hover:bg-violet-500/10 dark:hover:text-violet-400 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center"
-              title="Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </Button> */}
-
             <ThemeToggle />
 
             <div className="h-8 w-px bg-border mx-2"></div>
@@ -704,7 +684,7 @@ const Dashboard = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative overflow-hidden rounded-3xl bg-gray-800 text-white p-8 shadow-xl"
+                  className="relative overflow-hidden rounded-3xl bg-blue-800 dark:bg-gray-800 text-white p-8 shadow-xl"
                 >
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 

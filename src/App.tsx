@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./AppRoutes";
-import GlobalAIChatbot from "./components/GlobalAIChatbot";
 import { DevResetWidget } from "./components/DevResetWidget";
 import { OnlinePresenceProvider } from "./components/OnlinePresenceProvider";
 import { SessionRequestNotifier } from "./components/SessionRequestNotifier";
@@ -29,7 +28,6 @@ const App = () => (
               <AppRoutes />
             </ProfileCompletionGuard>
           </WaitlistGuard>
-          <GlobalAIChatbot />
           <DevResetWidget />
           <SessionRequestNotifier />
         </BrowserRouter>

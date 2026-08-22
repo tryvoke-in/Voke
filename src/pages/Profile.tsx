@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +13,8 @@ import {
   Brain, LogOut, Upload, FileText, TrendingUp, Target, Award, Calendar,
   User, Briefcase, Activity, Sparkles, MessageSquare, BarChart3,
   Github, Code, Terminal, Zap, Shield, Crown, ChevronRight, Settings, Camera, Check,
-  Loader2, Mic, ArrowRight
+  Loader2, Mic, ArrowRight, GraduationCap, Plus, Trash2, Globe, Mail, Phone, MapPin,
+  Linkedin, CheckCircle2, AlertCircle, Save, ExternalLink, BookOpen, Layers
 } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -23,12 +25,53 @@ import ResumeAnalyzer from "@/components/ResumeAnalyzer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { loadUserProfileContext } from "@/utils/profileContext";
 
+interface ExperienceItem {
+  id: string;
+  role: string;
+  company: string;
+  duration: string;
+  description: string;
+}
+
+interface EducationItem {
+  id: string;
+  degree: string;
+  school: string;
+  year: string;
+  coursework?: string;
+  location?: string;
+}
+
+interface ProjectItem {
+  id: string;
+  name: string;
+  description: string;
+  link: string;
+}
+
+interface ResumeDataState {
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  targetRole: string;
+  linkedin: string;
+  github: string;
+  website: string;
+  summary: string;
+  skills: string;
+  experience: ExperienceItem[];
+  education: EducationItem[];
+  projects: ProjectItem[];
+}
+
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(location.state?.tab || "overview");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingResume, setSavingResume] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [authUser, setAuthUser] = useState<any>(null);
   const [initError, setInitError] = useState<string | null>(null);
@@ -47,6 +90,256 @@ const Profile = () => {
   });
   const [userRepos, setUserRepos] = useState<{ name: string; description: string; language: string; summary: string }[]>([]);
   const [loadingRepos, setLoadingRepos] = useState(false);
+
+  const [resumeData, setResumeData] = useState<ResumeDataState>(() => {
+    try {
+      const saved = localStorage.getItem('voke_resume_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          fullName: parsed.fullName || "",
+          email: parsed.email || "",
+          phone: parsed.phone || "",
+          location: parsed.location || "",
+          targetRole: parsed.targetRole || parsed.role || "",
+          linkedin: parsed.linkedin || "",
+          github: parsed.github || "",
+          website: parsed.website || "",
+          summary: parsed.summary || "",
+          skills: parsed.skills || "",
+          experience: Array.isArray(parsed.experience) ? parsed.experience : [],
+          education: Array.isArray(parsed.education) ? parsed.education : [],
+          projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+        };
+      }
+    } catch (e) {
+      console.error("Failed to parse saved resume data", e);
+    }
+    return {
+      fullName: "",
+      email: "",
+      phone: "",
+      location: "",
+      targetRole: "",
+      linkedin: "",
+      github: "",
+      website: "",
+      summary: "",
+      skills: "",
+      experience: [
+        {
+          id: "exp-1",
+          role: "",
+          company: "",
+          duration: "",
+          description: "",
+        }
+      ],
+      education: [
+        {
+          id: "edu-1",
+          degree: "",
+          school: "",
+          year: "",
+          coursework: "",
+          location: "",
+        }
+      ],
+      projects: [
+        {
+          id: "proj-1",
+          name: "",
+          description: "",
+          link: "",
+        }
+      ],
+    };
+  });
+
+  const suggestedSkills = [
+    "JavaScript", "TypeScript", "React", "Next.js", "Node.js", "Python",
+    "Java", "C++", "Go", "PostgreSQL", "MongoDB", "Redis", "Docker",
+    "Kubernetes", "AWS", "GraphQL", "Tailwind CSS", "System Design", "Git", "REST APIs"
+  ];
+
+  const handleAddSkillTag = (skillName: string) => {
+    const rawSkills = resumeData.skills ? resumeData.skills.split(",").map(s => s.trim()).filter(Boolean) : [];
+    if (!rawSkills.some(s => s.toLowerCase() === skillName.toLowerCase())) {
+      const nextSkills = [...rawSkills, skillName].join(", ");
+      setResumeData(prev => ({ ...prev, skills: nextSkills }));
+    }
+  };
+
+  const handleRemoveSkillTag = (skillToRemove: string) => {
+    const rawSkills = resumeData.skills ? resumeData.skills.split(",").map(s => s.trim()).filter(Boolean) : [];
+    const nextSkills = rawSkills.filter(s => s.toLowerCase() !== skillToRemove.toLowerCase()).join(", ");
+    setResumeData(prev => ({ ...prev, skills: nextSkills }));
+  };
+
+  const handleAddExperience = () => {
+    setResumeData(prev => ({
+      ...prev,
+      experience: [
+        ...prev.experience,
+        {
+          id: Date.now().toString(),
+          role: "",
+          company: "",
+          duration: "",
+          description: "",
+        }
+      ]
+    }));
+  };
+
+  const handleRemoveExperience = (id: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      experience: prev.experience.filter(exp => exp.id !== id)
+    }));
+  };
+
+  const handleUpdateExperience = (id: string, field: keyof ExperienceItem, value: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      experience: prev.experience.map(exp => exp.id === id ? { ...exp, [field]: value } : exp)
+    }));
+  };
+
+  const handleAddEducation = () => {
+    setResumeData(prev => ({
+      ...prev,
+      education: [
+        ...prev.education,
+        {
+          id: Date.now().toString(),
+          degree: "",
+          school: "",
+          year: "",
+          coursework: "",
+          location: "",
+        }
+      ]
+    }));
+  };
+
+  const handleRemoveEducation = (id: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      education: prev.education.filter(edu => edu.id !== id)
+    }));
+  };
+
+  const handleUpdateEducation = (id: string, field: keyof EducationItem, value: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      education: prev.education.map(edu => edu.id === id ? { ...edu, [field]: value } : edu)
+    }));
+  };
+
+  const handleAddProject = () => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: [
+        ...prev.projects,
+        {
+          id: Date.now().toString(),
+          name: "",
+          description: "",
+          link: "",
+        }
+      ]
+    }));
+  };
+
+  const handleRemoveProject = (id: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: prev.projects.filter(proj => proj.id !== id)
+    }));
+  };
+
+  const handleUpdateProject = (id: string, field: keyof ProjectItem, value: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: prev.projects.map(proj => proj.id === id ? { ...proj, [field]: value } : proj)
+    }));
+  };
+
+  const getResumeReadiness = () => {
+    const checks = [
+      { id: "contact", label: "Contact Info", isDone: Boolean(resumeData.fullName && resumeData.email && (resumeData.phone || resumeData.location)) },
+      { id: "role", label: "Target Role", isDone: Boolean(resumeData.targetRole) },
+      { id: "summary", label: "Summary", isDone: Boolean(resumeData.summary && resumeData.summary.trim().length >= 20) },
+      { id: "skills", label: "Core Skills", isDone: Boolean(resumeData.skills && resumeData.skills.trim().length >= 3) },
+      { id: "experience", label: "Experience", isDone: resumeData.experience.some(exp => Boolean(exp.role && exp.company)) },
+      { id: "education", label: "Education", isDone: resumeData.education.some(edu => Boolean(edu.degree && edu.school)) },
+      { id: "projects", label: "Projects", isDone: resumeData.projects.some(proj => Boolean(proj.name)) },
+    ];
+
+    const completed = checks.filter(c => c.isDone).length;
+    const percentage = Math.round((completed / checks.length) * 100);
+    return { checks, completed, total: checks.length, percentage };
+  };
+
+  const handleSaveResumeData = async () => {
+    setSavingResume(true);
+    try {
+      // 1. Sync to local storage for ResumeBuilder
+      let existingMerged: any = {};
+      try {
+        const existing = localStorage.getItem('voke_resume_data');
+        if (existing) existingMerged = JSON.parse(existing);
+      } catch (e) {}
+
+      const updatedResume = {
+        ...existingMerged,
+        ...resumeData,
+        fullName: resumeData.fullName || formData.full_name,
+        email: resumeData.email || profile?.email,
+        github: resumeData.github || formData.github_url,
+        linkedin: resumeData.linkedin,
+        leetcode: formData.leetcode_id,
+        codeforces: formData.codeforces_id,
+      };
+
+      localStorage.setItem('voke_resume_data', JSON.stringify(updatedResume));
+
+      // 2. Update Supabase profiles table
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from("profiles")
+          .update({
+            full_name: resumeData.fullName || formData.full_name,
+            target_role: resumeData.targetRole,
+            linkedin_url: resumeData.linkedin,
+            github_url: resumeData.github || formData.github_url,
+          })
+          .eq("id", user.id);
+
+        setProfile((prev: any) => ({
+          ...prev,
+          full_name: resumeData.fullName || formData.full_name,
+          target_role: resumeData.targetRole,
+          linkedin_url: resumeData.linkedin,
+          github_url: resumeData.github || formData.github_url,
+        }));
+        setFormData(prev => ({
+          ...prev,
+          full_name: resumeData.fullName || prev.full_name,
+          github_url: resumeData.github || prev.github_url,
+        }));
+      }
+
+      toast.success("Resume details saved & synchronized!");
+    } catch (error: any) {
+      console.error("Error saving resume details:", error);
+      toast.error("Failed to save resume details");
+    } finally {
+      setSavingResume(false);
+    }
+  };
 
   useEffect(() => {
     if (formData.github_url || profile?.github_url) {
@@ -194,6 +487,14 @@ const Profile = () => {
         leetcode_id: loadedProfile.leetcode_id || "",
         github_url: loadedProfile.github_url || "",
       });
+      setResumeData(prev => ({
+        ...prev,
+        fullName: prev.fullName || loadedProfile.full_name || "",
+        email: prev.email || loadedProfile.email || activeUser?.email || "",
+        targetRole: prev.targetRole || loadedProfile.target_role || loadedProfile.role || "",
+        github: prev.github || loadedProfile.github_url || "",
+        linkedin: prev.linkedin || loadedProfile.linkedin_url || "",
+      }));
       if (loadedProfile.coding_stats) {
         setCodingStats(loadedProfile.coding_stats);
       }
@@ -565,14 +866,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-violet-500/30">
-      {/* Background Ambience */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[1000px] h-[600px] bg-violet-600/5 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-screen mix-blend-multiply" />
-        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-fuchsia-600/5 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-screen mix-blend-multiply" />
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
-      </div>
-
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30">
       <div className="relative">
         {/* Navigation Bar */}
         <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
@@ -612,11 +906,8 @@ const Profile = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="relative group"
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-violet-500/20 to-transparent rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <Card className="bg-card/50 backdrop-blur-xl border-border/50 overflow-hidden relative">
-                  <div className="h-32 bg-gradient-to-r from-violet-900/50 to-fuchsia-900/50 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay"></div>
-                  </div>
+                  <div className="h-32 bg-secondary/50 border-b border-border/40 relative overflow-hidden" />
                   <div className="px-6 pb-6 relative">
                     <div className="relative -mt-16 mb-4 flex justify-center lg:justify-start">
                       <div className="relative w-32 h-32 group/avatar">
@@ -624,8 +915,8 @@ const Profile = () => {
                           {profile?.avatar_url ? (
                             <img src={profile.avatar_url} crossOrigin="anonymous" alt="Avatar" className="w-full h-full object-cover rounded-2xl" />
                           ) : (
-                            <div className="w-full h-full rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center">
-                              <span className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-white to-zinc-500">
+                            <div className="w-full h-full rounded-2xl bg-secondary flex items-center justify-center">
+                              <span className="text-4xl font-bold text-foreground">
                                 {profile?.full_name?.charAt(0) || "U"}
                               </span>
                             </div>
@@ -642,21 +933,21 @@ const Profile = () => {
                     </div>
 
                     <div className="text-center lg:text-left space-y-1">
-                      <h2 className="text-2xl font-bold text-foreground">{profile?.full_name || "Anonymous User"}</h2>
-                      <p className="text-muted-foreground flex items-center justify-center lg:justify-start gap-2">
-                        <Code className="w-4 h-4 text-violet-500" />
-                        Senior Developer
+                      <h2 className="text-2xl font-bold text-foreground">{resumeData.fullName || profile?.full_name || "Anonymous User"}</h2>
+                      <p className="text-muted-foreground flex items-center justify-center lg:justify-start gap-2 text-sm">
+                        <Briefcase className="w-4 h-4 text-blue-500" />
+                        {resumeData.targetRole || profile?.target_role || "Software Engineer"}
                       </p>
                     </div>
 
-                    <div className="mt-6 flex flex-wrap gap-2 justify-center lg:justify-start">
-                      <Badge variant="outline" className="bg-violet-500/10 text-violet-500 border-violet-500/20 px-3 py-1">
+                    {/* <div className="mt-6 flex flex-wrap gap-2 justify-center lg:justify-start">
+                      <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 px-3 py-1">
                         LEVEL {Math.floor(((stats.completedSessions * 500) + (stats.peerSessions * 300)) / 2000) + 1}
                       </Badge>
-                      <Badge variant="outline" className="bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20 px-3 py-1">
+                      <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 px-3 py-1">
                         {Math.floor(((stats.completedSessions * 500) + (stats.peerSessions * 300)) / 2000) + 1 >= 5 ? 'MASTER' : 'SCHOLAR'}
                       </Badge>
-                    </div>
+                    </div> */}
 
                     <div className="mt-8 space-y-4">
                       {(() => {
@@ -668,11 +959,11 @@ const Profile = () => {
 
                         return (
                           <>
-                            <div className="flex justify-between text-sm">
+                            {/* <div className="flex justify-between text-sm">
                               <span className="text-muted-foreground">XP Progress</span>
                               <span className="text-foreground font-mono">{xp.toLocaleString()} / {nextLevelXp.toLocaleString()}</span>
                             </div>
-                            <Progress value={progress} className="h-2" />
+                            <Progress value={progress} className="h-2" /> */}
                           </>
                         );
                       })()}
@@ -699,23 +990,14 @@ const Profile = () => {
                             <span className="text-xs font-semibold text-slate-200 truncate">GitHub</span>
                           </div>
                           
-                          {(formData.github_url || profile?.github_url) ? (
-                            <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                              <span>Connected</span>
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-300 shrink-0">
-                              + Connect
-                            </span>
-                          )}
+                          
                         </button>
 
                         {/* LeetCode Card */}
                         <button 
                           className={`w-full h-11 px-3 py-2 rounded-xl border flex items-center justify-between transition-all group ${
                             profile?.leetcode_id
-                              ? 'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/15 hover:border-amber-500/50 shadow-sm'
+                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15 hover:border-emerald-500/50 shadow-sm'
                               : 'border-slate-800 bg-[#0b0f19]/70 text-slate-400 hover:text-slate-200 hover:bg-[#121827] hover:border-slate-700'
                           }`}
                           onClick={() => {
@@ -733,17 +1015,6 @@ const Profile = () => {
                             <Terminal className={`w-4 h-4 shrink-0 ${profile?.leetcode_id ? 'text-amber-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
                             <span className="text-xs font-semibold text-slate-200 truncate">LeetCode</span>
                           </div>
-
-                          {profile?.leetcode_id ? (
-                            <span className="text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                              <span>Connected</span>
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-300 shrink-0">
-                              + Connect
-                            </span>
-                          )}
                         </button>
                       </div>
                     </div>
@@ -830,7 +1101,7 @@ const Profile = () => {
                     <TabsTrigger
                       key={tab.id}
                       value={tab.id}
-                      className="flex-1 min-w-[100px] gap-2 rounded-lg data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all"
+                      className="flex-1 min-w-[100px] gap-2 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
                     >
                       <tab.icon className="w-4 h-4" />
                       {tab.label}
@@ -841,69 +1112,578 @@ const Profile = () => {
                 <AnimatePresence mode="wait">
                   {/* OVERVIEW TAB */}
                   <TabsContent value="overview" className="space-y-6 outline-none">
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid gap-6">
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
 
-                      {/* Mock Interview Banner */}
-                      <Card className="border border-border/80 bg-card/60 backdrop-blur-sm rounded-2xl overflow-hidden relative shadow-sm">
-                        <CardContent className="p-6 sm:p-8 relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                          <div className="space-y-4 max-w-xl">
-                            
-                            
+                      {/* RESUME PROFILE READINESS BANNER */}
+                      {(() => {
+                        const { checks, completed, total, percentage } = getResumeReadiness();
+                        return (
+                          <Card className="bg-card/60 backdrop-blur-sm border border-border/70 rounded-2xl overflow-hidden shadow-sm">
+                            <CardHeader className="pb-3 border-b border-border/40 bg-secondary/10">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
+                                    <FileText className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <CardTitle className="text-lg font-bold text-foreground">
+                                        Resume & Career Profile
+                                      </CardTitle>
+                                      
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => navigate('/resume-builder')}
+                                    className="h-9 text-xs rounded-xl gap-1.5 border-border/80"
+                                  >
+                                    Open in Resume Builder
+                                    <ExternalLink className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={handleSaveResumeData}
+                                    disabled={savingResume}
+                                    className="h-9 px-4 text-xs font-medium rounded-xl gap-1.5 bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
+                                  >
+                                    {savingResume ? (
+                                      <>
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        Saving...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Save className="w-3.5 h-3.5" />
+                                        Save Details
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Progress bar and section chips */}
+                              <div className="mt-4 space-y-2.5">
+                                
+                                <Progress value={percentage} className="h-2" />
+
+                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                  {/* {checks.map((check) => (
+                                    <span
+                                      key={check.id}
+                                      className={`text-[11px] font-medium px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-colors ${
+                                        check.isDone
+                                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                          : 'bg-secondary/40 text-muted-foreground border-border/50'
+                                      }`}
+                                    >
+                                      {check.isDone ? (
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                                      ) : (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 shrink-0" />
+                                      )}
+                                      {check.label}
+                                    </span>
+                                  ))} */}
+                                </div>
+                              </div>
+                            </CardHeader>
+                          </Card>
+                        );
+                      })()}
+
+                      {/* 1. PERSONAL & CONTACT DETAILS */}
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                        <CardHeader className="pb-4">
+                          <CardTitle className="text-base font-bold flex items-center gap-2">
+                            <User className="w-4 h-4 text-blue-400" />
+                            1. Personal & Contact Information
+                          </CardTitle>
+                          <CardDescription className="text-xs">
+                            Your full name, target role headline, and primary contact methods.
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                              <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
-                                Ready for your next mock interview?
-                              </h3>
-                              <p className="text-sm text-muted-foreground leading-relaxed">
-                                Practice real-world technical and behavioral questions with live evaluation and actionable performance feedback.
-                              </p>
+                              <Label className="text-xs font-medium">Full Name *</Label>
+                              <Input
+                                placeholder="e.g. Alex Morgan"
+                                value={resumeData.fullName}
+                                onChange={(e) => setResumeData({ ...resumeData, fullName: e.target.value })}
+                                className="bg-background/50 border-input h-10 text-sm"
+                              />
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-3 pt-1">
-                              <Button 
-                                onClick={() => navigate('/interview/new')} 
-                                className="h-10 px-5 rounded-xl font-medium text-sm gap-2 shadow-sm transition-all"
-                              >
-                                Start Session
-                                <ArrowRight className="w-4 h-4" />
-                              </Button>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-medium">Target Job Role / Headline *</Label>
+                              <Input
+                                placeholder="e.g. Full Stack Software Engineer"
+                                value={resumeData.targetRole}
+                                onChange={(e) => setResumeData({ ...resumeData, targetRole: e.target.value })}
+                                className="bg-background/50 border-input h-10 text-sm"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-medium">Email Address *</Label>
+                              <Input
+                                placeholder="e.g. alex.morgan@example.com"
+                                value={resumeData.email}
+                                onChange={(e) => setResumeData({ ...resumeData, email: e.target.value })}
+                                className="bg-background/50 border-input h-10 text-sm"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-medium">Phone Number</Label>
+                              <Input
+                                placeholder="e.g. +1 (555) 234-5678"
+                                value={resumeData.phone}
+                                onChange={(e) => setResumeData({ ...resumeData, phone: e.target.value })}
+                                className="bg-background/50 border-input h-10 text-sm"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-medium">Location</Label>
+                              <Input
+                                placeholder="e.g. San Francisco, CA / Remote"
+                                value={resumeData.location}
+                                onChange={(e) => setResumeData({ ...resumeData, location: e.target.value })}
+                                className="bg-background/50 border-input h-10 text-sm"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-medium">LinkedIn Profile URL</Label>
+                              <Input
+                                placeholder="e.g. https://linkedin.com/in/alexmorgan"
+                                value={resumeData.linkedin}
+                                onChange={(e) => setResumeData({ ...resumeData, linkedin: e.target.value })}
+                                className="bg-background/50 border-input h-10 text-sm"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-medium">GitHub Profile URL</Label>
+                              <Input
+                                placeholder="e.g. https://github.com/alexmorgan"
+                                value={resumeData.github}
+                                onChange={(e) => setResumeData({ ...resumeData, github: e.target.value })}
+                                className="bg-background/50 border-input h-10 text-sm"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-medium">Personal Portfolio / Website</Label>
+                              <Input
+                                placeholder="e.g. https://alexmorgan.dev"
+                                value={resumeData.website}
+                                onChange={(e) => setResumeData({ ...resumeData, website: e.target.value })}
+                                className="bg-background/50 border-input h-10 text-sm"
+                              />
                             </div>
                           </div>
                         </CardContent>
                       </Card>
 
-                      {/* Recent Activity Feed */}
-                      <Card className="bg-card/50 backdrop-blur-xl border-border/50">
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-muted-foreground" />
-                            Recent Activity
+                      {/* 2. PROFESSIONAL SUMMARY */}
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                        <CardHeader className="pb-4">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                              <BookOpen className="w-4 h-4 text-blue-400" />
+                              2. Professional Summary
+                            </CardTitle>
+                            <span className="text-xs text-muted-foreground font-mono">
+                              {resumeData.summary?.length || 0} chars
+                            </span>
+                          </div>
+                          <CardDescription className="text-xs">
+                            A brief 2–4 sentence overview highlighting your background, core strengths, and career impact.
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <Textarea
+                            placeholder="e.g. Product-focused Software Engineer with 3+ years of experience in distributed systems and React architecture. Led the development of high-scale APIs supporting 100k+ daily requests, optimizing performance by 35%."
+                            value={resumeData.summary}
+                            onChange={(e) => setResumeData({ ...resumeData, summary: e.target.value })}
+                            className="bg-background/50 border-input min-h-[90px] text-sm leading-relaxed"
+                          />
+                          <p className="text-[11px] text-muted-foreground">
+                            Tip: Include years of experience, primary technologies, and one notable accomplishment.
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      {/* 3. CORE SKILLS & TECH STACK */}
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                        <CardHeader className="pb-4">
+                          <CardTitle className="text-base font-bold flex items-center gap-2">
+                            <Code className="w-4 h-4 text-blue-400" />
+                            3. Core Skills & Technologies
                           </CardTitle>
+                          <CardDescription className="text-xs">
+                            List your technical and domain skills (comma-separated or click tags below to add).
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3.5">
+                          <Input
+                            placeholder="e.g. JavaScript, TypeScript, React, Node.js, Python, PostgreSQL, Docker, AWS, System Design"
+                            value={resumeData.skills}
+                            onChange={(e) => setResumeData({ ...resumeData, skills: e.target.value })}
+                            className="bg-background/50 border-input h-10 text-sm"
+                          />
+
+                          {/* Quick Suggested Tags */}
+                          <div className="space-y-1.5">
+                            <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              Click to quick-add common skills:
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {suggestedSkills.map((skill) => {
+                                const isAdded = resumeData.skills
+                                  ?.split(",")
+                                  .map(s => s.trim().toLowerCase())
+                                  .includes(skill.toLowerCase());
+                                return (
+                                  <button
+                                    key={skill}
+                                    type="button"
+                                    onClick={() => isAdded ? handleRemoveSkillTag(skill) : handleAddSkillTag(skill)}
+                                    className={`text-xs px-2.5 py-1 rounded-lg border transition-all ${
+                                      isAdded
+                                        ? 'bg-blue-500/20 text-blue-300 border-blue-500/40 font-semibold'
+                                        : 'bg-secondary/20 hover:bg-secondary/40 text-muted-foreground border-border/50 hover:text-foreground'
+                                    }`}
+                                  >
+                                    {isAdded ? '✓ ' : '+ '}{skill}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* 4. WORK & INTERNSHIP EXPERIENCE */}
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                        <CardHeader className="pb-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <Briefcase className="w-4 h-4 text-blue-400" />
+                                4. Work & Internship Experience
+                              </CardTitle>
+                              <CardDescription className="text-xs">
+                                Your past employment, internships, and professional roles.
+                              </CardDescription>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleAddExperience}
+                              className="h-8 text-xs rounded-xl gap-1 border-border/80"
+                            >
+                              <Plus className="w-3.5 h-3.5" /> Add Role
+                            </Button>
+                          </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          {recentActivity.length === 0 ? (
-                            <div className="text-center py-12 text-muted-foreground">No recent activity</div>
+                          {resumeData.experience.length === 0 ? (
+                            <div className="text-center py-6 border border-dashed border-border/60 rounded-xl bg-secondary/10">
+                              <p className="text-xs text-muted-foreground mb-3">No work experience added yet.</p>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleAddExperience}
+                                className="h-8 text-xs rounded-xl gap-1"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> Add Experience
+                              </Button>
+                            </div>
                           ) : (
-                            recentActivity.map((activity, idx) => (
-                              <div key={activity.id} className="flex items-center justify-between p-4 rounded-xl bg-secondary/10 hover:bg-secondary/20 transition-colors border border-border/50">
-                                <div className="flex items-center gap-4">
-                                  <div className={`p-3 rounded-full ${activity.status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
-                                    <Target className="w-5 h-5" />
+                            resumeData.experience.map((exp, index) => (
+                              <div
+                                key={exp.id}
+                                className="p-4 rounded-xl border border-border/60 bg-secondary/15 space-y-3 relative group"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-foreground flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-md bg-blue-500/10 text-blue-400 flex items-center justify-center text-[10px] font-bold">
+                                      {index + 1}
+                                    </span>
+                                    {exp.role || exp.company ? `${exp.role || 'Role'} at ${exp.company || 'Company'}` : `Experience Entry #${index + 1}`}
+                                  </span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveExperience(exp.id)}
+                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  <div className="space-y-1">
+                                    <Label className="text-[11px] text-muted-foreground">Job Title / Role *</Label>
+                                    <Input
+                                      placeholder="e.g. Software Engineer"
+                                      value={exp.role}
+                                      onChange={(e) => handleUpdateExperience(exp.id, 'role', e.target.value)}
+                                      className="bg-background/50 border-input h-9 text-xs"
+                                    />
                                   </div>
-                                  <div>
-                                    <h4 className="font-semibold text-foreground capitalize">{activity.interview_type} Interview</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                      {new Date(activity.created_at).toLocaleDateString()} • {activity.total_duration_seconds ? Math.round(activity.total_duration_seconds / 60) + ' mins' : 'Incomplete'}
-                                    </p>
+                                  <div className="space-y-1">
+                                    <Label className="text-[11px] text-muted-foreground">Company Name *</Label>
+                                    <Input
+                                      placeholder="e.g. Google / Microsoft"
+                                      value={exp.company}
+                                      onChange={(e) => handleUpdateExperience(exp.id, 'company', e.target.value)}
+                                      className="bg-background/50 border-input h-9 text-xs"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-[11px] text-muted-foreground">Duration / Dates</Label>
+                                    <Input
+                                      placeholder="e.g. Jun 2023 - Present"
+                                      value={exp.duration}
+                                      onChange={(e) => handleUpdateExperience(exp.id, 'duration', e.target.value)}
+                                      className="bg-background/50 border-input h-9 text-xs"
+                                    />
                                   </div>
                                 </div>
-                                <Badge variant="secondary">
-                                  {activity.status}
-                                </Badge>
+
+                                <div className="space-y-1">
+                                  <Label className="text-[11px] text-muted-foreground">Key Achievements & Impact (Bullet Points)</Label>
+                                  <Textarea
+                                    placeholder="• Designed and deployed scalable REST/GraphQL APIs serving 50k+ daily users&#10;• Reduced latency by 40% through Redis caching and query indexing&#10;• Collaborated with product designers to ship 4 major feature sets"
+                                    value={exp.description}
+                                    onChange={(e) => handleUpdateExperience(exp.id, 'description', e.target.value)}
+                                    className="bg-background/50 border-input min-h-[75px] text-xs leading-relaxed"
+                                  />
+                                </div>
                               </div>
                             ))
                           )}
                         </CardContent>
                       </Card>
+
+                      {/* 5. EDUCATION */}
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                        <CardHeader className="pb-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <GraduationCap className="w-4 h-4 text-blue-400" />
+                                5. Education
+                              </CardTitle>
+                              <CardDescription className="text-xs">
+                                Degrees, universities, graduation years, and relevant coursework.
+                              </CardDescription>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleAddEducation}
+                              className="h-8 text-xs rounded-xl gap-1 border-border/80"
+                            >
+                              <Plus className="w-3.5 h-3.5" /> Add Degree
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {resumeData.education.length === 0 ? (
+                            <div className="text-center py-6 border border-dashed border-border/60 rounded-xl bg-secondary/10">
+                              <p className="text-xs text-muted-foreground mb-3">No education details added yet.</p>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleAddEducation}
+                                className="h-8 text-xs rounded-xl gap-1"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> Add Education
+                              </Button>
+                            </div>
+                          ) : (
+                            resumeData.education.map((edu, index) => (
+                              <div
+                                key={edu.id}
+                                className="p-4 rounded-xl border border-border/60 bg-secondary/15 space-y-3 relative group"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-foreground flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-md bg-blue-500/10 text-blue-400 flex items-center justify-center text-[10px] font-bold">
+                                      {index + 1}
+                                    </span>
+                                    {edu.degree || edu.school ? `${edu.degree || 'Degree'} - ${edu.school || 'School'}` : `Education Entry #${index + 1}`}
+                                  </span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveEducation(edu.id)}
+                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  <div className="space-y-1">
+                                    <Label className="text-[11px] text-muted-foreground">Degree / Major *</Label>
+                                    <Input
+                                      placeholder="e.g. B.Tech in Computer Science"
+                                      value={edu.degree}
+                                      onChange={(e) => handleUpdateEducation(edu.id, 'degree', e.target.value)}
+                                      className="bg-background/50 border-input h-9 text-xs"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-[11px] text-muted-foreground">School / University *</Label>
+                                    <Input
+                                      placeholder="e.g. Stanford University"
+                                      value={edu.school}
+                                      onChange={(e) => handleUpdateEducation(edu.id, 'school', e.target.value)}
+                                      className="bg-background/50 border-input h-9 text-xs"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-[11px] text-muted-foreground">Graduation Year</Label>
+                                    <Input
+                                      placeholder="e.g. 2020 - 2024"
+                                      value={edu.year}
+                                      onChange={(e) => handleUpdateEducation(edu.id, 'year', e.target.value)}
+                                      className="bg-background/50 border-input h-9 text-xs"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-[11px] text-muted-foreground">GPA / Relevant Coursework</Label>
+                                  <Input
+                                    placeholder="e.g. GPA: 3.9/4.0 • Data Structures, Algorithms, Operating Systems, Computer Networks"
+                                    value={edu.coursework || ''}
+                                    onChange={(e) => handleUpdateEducation(edu.id, 'coursework', e.target.value)}
+                                    className="bg-background/50 border-input h-9 text-xs"
+                                  />
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* 6. FEATURED PROJECTS */}
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                        <CardHeader className="pb-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <Layers className="w-4 h-4 text-blue-400" />
+                                6. Featured Projects
+                              </CardTitle>
+                              <CardDescription className="text-xs">
+                                Key software and technical projects demonstrating your hands-on engineering skills.
+                              </CardDescription>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleAddProject}
+                              className="h-8 text-xs rounded-xl gap-1 border-border/80"
+                            >
+                              <Plus className="w-3.5 h-3.5" /> Add Project
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {resumeData.projects.length === 0 ? (
+                            <div className="text-center py-6 border border-dashed border-border/60 rounded-xl bg-secondary/10">
+                              <p className="text-xs text-muted-foreground mb-3">No projects added yet.</p>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleAddProject}
+                                className="h-8 text-xs rounded-xl gap-1"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> Add Project
+                              </Button>
+                            </div>
+                          ) : (
+                            resumeData.projects.map((proj, index) => (
+                              <div
+                                key={proj.id}
+                                className="p-4 rounded-xl border border-border/60 bg-secondary/15 space-y-3 relative group"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-foreground flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-md bg-blue-500/10 text-blue-400 flex items-center justify-center text-[10px] font-bold">
+                                      {index + 1}
+                                    </span>
+                                    {proj.name || `Project #${index + 1}`}
+                                  </span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveProject(proj.id)}
+                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <Label className="text-[11px] text-muted-foreground">Project Name *</Label>
+                                    <Input
+                                      placeholder="e.g. AI Code Assistant"
+                                      value={proj.name}
+                                      onChange={(e) => handleUpdateProject(proj.id, 'name', e.target.value)}
+                                      className="bg-background/50 border-input h-9 text-xs"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-[11px] text-muted-foreground">Live URL or GitHub Link</Label>
+                                    <Input
+                                      placeholder="e.g. https://github.com/username/project"
+                                      value={proj.link}
+                                      onChange={(e) => handleUpdateProject(proj.id, 'link', e.target.value)}
+                                      className="bg-background/50 border-input h-9 text-xs"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-[11px] text-muted-foreground">Tech Stack & Description</Label>
+                                  <Textarea
+                                    placeholder="e.g. Built with React, Next.js, Node.js, and Supabase. Implemented real-time synchronization, reducing state latency by 50% and supporting 1,000+ active users."
+                                    value={proj.description}
+                                    onChange={(e) => handleUpdateProject(proj.id, 'description', e.target.value)}
+                                    className="bg-background/50 border-input min-h-[65px] text-xs leading-relaxed"
+                                  />
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </CardContent>
+                      </Card>
+
+                    
 
                     </motion.div>
                   </TabsContent>
@@ -923,7 +1703,7 @@ const Profile = () => {
                               <Input
                                 value={formData.full_name}
                                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                className="bg-background/50 border-input focus:border-violet-500 transition-colors h-11"
+                                className="bg-background/50 border-input focus:border-blue-500 transition-colors h-11"
                               />
                             </div>
                             <div className="space-y-2">
@@ -934,7 +1714,7 @@ const Profile = () => {
                               <Label>GitHub Integration</Label>
                               <div className="p-3.5 rounded-xl border border-border/50 bg-secondary/20 flex items-center justify-between">
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+                                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                                     <Github className="w-4 h-4" />
                                   </div>
                                   <div>
@@ -964,7 +1744,7 @@ const Profile = () => {
                                         });
                                         if (error) toast.error(error.message);
                                       }}
-                                      className="text-[11px] font-bold text-violet-400 hover:text-violet-300 underline cursor-pointer ml-1"
+                                      className="text-[11px] font-bold text-blue-400 hover:text-blue-300 underline cursor-pointer ml-1"
                                     >
                                       Re-connect
                                     </button>
@@ -976,13 +1756,13 @@ const Profile = () => {
                                       const { error } = await supabase.auth.signInWithOAuth({
                                         provider: 'github',
                                         options: {
-                                          scopes: 'read:user repo',
+                                          scopes: 'read:user repo read:org',
                                           redirectTo: `${window.location.origin}/profile`
                                         }
                                       });
                                       if (error) toast.error(error.message);
                                     }}
-                                    className="text-xs font-bold text-violet-400 hover:text-violet-300 flex items-center gap-1.5 cursor-pointer transition-colors bg-violet-500/10 px-3 py-1.5 rounded-lg border border-violet-500/20 hover:bg-violet-500/20"
+                                    className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1.5 cursor-pointer transition-colors bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-500/20"
                                   >
                                     <Github className="w-3.5 h-3.5" /> ⚡ Connect GitHub
                                   </button>
@@ -994,7 +1774,7 @@ const Profile = () => {
                               <Input
                                 value={formData.leetcode_id}
                                 onChange={(e) => setFormData({ ...formData, leetcode_id: e.target.value })}
-                                className="bg-background/50 border-input focus:border-violet-500 transition-colors h-11"
+                                className="bg-background/50 border-input focus:border-blue-500 transition-colors h-11"
                               />
                             </div>
                             <div className="space-y-2">
@@ -1002,7 +1782,7 @@ const Profile = () => {
                               <Input
                                 value={formData.codeforces_id}
                                 onChange={(e) => setFormData({ ...formData, codeforces_id: e.target.value })}
-                                className="bg-background/50 border-input focus:border-violet-500 transition-colors h-11"
+                                className="bg-background/50 border-input focus:border-blue-500 transition-colors h-11"
                               />
                             </div>
                           </div>
@@ -1027,7 +1807,7 @@ const Profile = () => {
                               <Button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="bg-violet-600 hover:bg-violet-500 text-white flex-1 sm:flex-none"
+                                className="bg-blue-600 hover:bg-blue-500 text-white flex-1 sm:flex-none"
                               >
                                 {saving ? "Saving..." : "Save Changes"}
                               </Button>
@@ -1041,7 +1821,7 @@ const Profile = () => {
                         <CardHeader className="border-b border-border/50 bg-secondary/10 pb-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center text-violet-400 font-bold">
+                              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold">
                                 <Github className="w-5 h-5" />
                               </div>
                               <div>
@@ -1053,7 +1833,7 @@ const Profile = () => {
                                 </CardDescription>
                               </div>
                             </div>
-                            <Badge variant="outline" className="border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs px-3 py-1 font-bold">
+                            <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-300 text-xs px-3 py-1 font-bold">
                               {userRepos.length} Repositories
                             </Badge>
                           </div>
@@ -1072,14 +1852,14 @@ const Profile = () => {
                                 return (
                                   <div
                                     key={repo.name}
-                                    className="p-4 rounded-2xl border border-border/50 bg-secondary/20 hover:border-violet-500/40 hover:bg-secondary/40 transition-all flex flex-col justify-between group"
+                                    className="p-4 rounded-2xl border border-border/50 bg-secondary/20 hover:border-blue-500/40 hover:bg-secondary/40 transition-all flex flex-col justify-between group"
                                   >
                                     <div>
                                       <div className="flex items-start justify-between gap-2 mb-2">
-                                        <h4 className="text-xs font-bold text-foreground group-hover:text-violet-400 transition-colors tracking-wide truncate">
+                                        <h4 className="text-xs font-bold text-foreground group-hover:text-blue-400 transition-colors tracking-wide truncate">
                                           {repo.name}
                                         </h4>
-                                        <Badge variant="outline" className="text-[9px] font-mono border-violet-500/20 bg-violet-500/10 text-violet-300 px-1.5 py-0">
+                                        <Badge variant="outline" className="text-[9px] font-mono border-blue-500/20 bg-blue-500/10 text-blue-300 px-1.5 py-0">
                                           {repo.language || 'Code'}
                                         </Badge>
                                       </div>
@@ -1095,7 +1875,7 @@ const Profile = () => {
                                         href={repoUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1"
+                                        className="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"
                                       >
                                         View on GitHub <ChevronRight className="w-3 h-3" />
                                       </a>
@@ -1122,7 +1902,7 @@ const Profile = () => {
                         <CardDescription>Upload your latest resume to keep your profile updated.</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="border-2 border-dashed border-border/50 rounded-2xl p-8 hover:border-violet-500/50 transition-colors bg-secondary/5 text-center relative group">
+                        <div className="border-2 border-dashed border-border/50 rounded-2xl p-8 hover:border-blue-500/50 transition-colors bg-secondary/5 text-center relative group">
                           <input
                             type="file"
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
@@ -1131,7 +1911,7 @@ const Profile = () => {
                           />
                           <div className="mx-auto w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             {resumeFile ? (
-                              <FileText className="w-8 h-8 text-violet-500" />
+                              <FileText className="w-8 h-8 text-blue-500" />
                             ) : (
                               <Upload className="w-8 h-8 text-muted-foreground" />
                             )}
@@ -1144,7 +1924,7 @@ const Profile = () => {
                           </p>
                           {resumeFile && (
                             <Button
-                              className="mt-6 bg-violet-600 hover:bg-violet-500 text-white relative z-30"
+                              className="mt-6 bg-blue-600 hover:bg-blue-500 text-white relative z-30"
                               onClick={handleResumeUpload}
                               disabled={saving}
                             >

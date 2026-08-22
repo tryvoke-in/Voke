@@ -46,8 +46,8 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
       transition={{ duration: 0.25, ease: "easeOut" }}
       className="h-full"
     >
-      <Card id="tour-daily-practice" className="relative border-0 bg-card text-card-foreground transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group">
-        <CardContent className="p-5 flex flex-col justify-between flex-1 space-y-4">
+      <Card id="tour-daily-practice" className="relative border border-border/60 shadow-sm hover:shadow-md bg-card text-card-foreground transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group">
+        <CardContent className="p-5 flex flex-col justify-between flex-1 space-y-6">
           {/* Header Row */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
