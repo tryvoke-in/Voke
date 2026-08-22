@@ -8,14 +8,14 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 215 25% 15%;
+    --background: 38 42% 93.5%;
+    --foreground: 28 20% 14%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card: 38 36% 97.5%;
+    --card-foreground: 28 20% 14%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover: 38 36% 97.5%;
+    --popover-foreground: 28 20% 14%;
 
     --primary: 215 85% 28%;
     --primary-foreground: 0 0% 100%;
@@ -23,35 +23,35 @@ All colors MUST be HSL.
     --secondary: 180 75% 50%;
     --secondary-foreground: 215 85% 28%;
 
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 15% 45%;
+    --muted: 36 28% 88%;
+    --muted-foreground: 30 12% 40%;
 
-    --accent: 180 75% 50%;
-    --accent-foreground: 215 85% 28%;
+    --accent: 36 28% 89%;
+    --accent-foreground: 28 20% 14%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 88%;
-    --input: 214 20% 88%;
+    --border: 36 22% 83%;
+    --input: 36 22% 83%;
     --ring: 215 85% 28%;
 
     --radius: 0.5rem;
 
     /* Custom tokens for AI Interview platform */
     --gradient-hero: linear-gradient(135deg, hsl(215, 85%, 28%) 0%, hsl(195, 80%, 35%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(210, 20%, 98%) 100%);
-    --shadow-soft: 0 4px 20px -2px hsl(215, 85%, 28%, 0.08);
-    --shadow-medium: 0 10px 40px -5px hsl(215, 85%, 28%, 0.12);
-    --shadow-strong: 0 20px 60px -10px hsl(215, 85%, 28%, 0.18);
+    --gradient-card: linear-gradient(145deg, hsl(38, 36%, 97.5%) 0%, hsl(38, 42%, 93.5%) 100%);
+    --shadow-soft: 0 4px 20px -2px hsl(30, 30%, 25%, 0.06);
+    --shadow-medium: 0 10px 40px -5px hsl(30, 30%, 25%, 0.10);
+    --shadow-strong: 0 20px 60px -10px hsl(30, 30%, 25%, 0.15);
     
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 215 25% 15%;
+    --sidebar-background: 38 35% 92%;
+    --sidebar-foreground: 28 20% 14%;
     --sidebar-primary: 215 85% 28%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 96%;
-    --sidebar-accent-foreground: 215 25% 15%;
-    --sidebar-border: 214 20% 88%;
+    --sidebar-accent: 36 28% 88%;
+    --sidebar-accent-foreground: 28 20% 14%;
+    --sidebar-border: 36 22% 83%;
     --sidebar-ring: 215 85% 28%;
   }
 
