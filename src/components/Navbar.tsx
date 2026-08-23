@@ -13,7 +13,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { UpgradeButton } from "@/components/UpgradeButton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-export const Navbar = () => {
+interface NavbarProps {
+  variant?: "default" | "minimal";
+}
+
+export const Navbar = ({ variant }: NavbarProps = {}) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [notifications, setNotifications] = useState<any[]>([]);
@@ -23,6 +27,8 @@ export const Navbar = () => {
 
     const isCommunityPage = location.pathname === '/community';
     const isPricingPage = location.pathname === '/pricing' || location.pathname.startsWith('/pricing');
+    const isJobRecommendationsPage = location.pathname === '/job-recommendations' || location.pathname.startsWith('/job-recommendations');
+    const isMinimalMode = variant === "minimal" || isPricingPage || isJobRecommendationsPage;
     const brandName = isCommunityPage ? "Voke Pulse" : "Voke";
     const logoSrc = "/images/voke_logo.png";
 
@@ -224,10 +230,10 @@ export const Navbar = () => {
         );
     }
 
-    // SPECIALIZED MINIMAL NAVBAR FOR PRICING / BUY PLAN PAGE
-    if (isPricingPage) {
+    // SPECIALIZED MINIMAL NAVBAR FOR PRICING / APP WORKSPACE PAGES
+    if (isMinimalMode) {
         return (
-            <nav aria-label="Pricing Navigation" className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200/50 dark:border-gray-800/50 bg-white/30 dark:bg-gray-950/30 backdrop-blur-xl transition-colors duration-300">
+            <nav aria-label="Navigation" className="fixed top-0 left-0 right-0 z-50 border-b border-border/80 bg-background/80 dark:bg-background/80 backdrop-blur-xl transition-colors duration-300">
                 <div className="container mx-auto px-4">
                     <div className="flex items-center justify-between h-16">
                         {/* Logo/Brand */}
@@ -235,7 +241,7 @@ export const Navbar = () => {
                             role="button"
                             tabIndex={0}
                             aria-label="Go to Voke Homepage"
-                            className="flex items-center gap-0 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-lg p-1"
+                            className="flex items-center gap-0 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg p-1"
                             onClick={handleLogoClick}
                             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleLogoClick(); }}
                         >
@@ -245,15 +251,16 @@ export const Navbar = () => {
                                 width={48}
                                 height={48}
                                 decoding="async"
-                                className="w-12 h-12 object-contain group-hover:scale-110 transition-transform duration-300"
+                                className="w-11 h-11 object-contain group-hover:scale-105 transition-transform duration-200"
                             />
-                            <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">
+                            <span className="text-2xl font-bold tracking-tight text-foreground">
                                 Voke
                             </span>
                         </div>
 
-                        {/* Right Side - Theme Toggle & Avatar Only */}
-                        <div className="flex items-center gap-3.5">
+                        {/* Right Side - Upgrade, Theme Toggle & Avatar Only */}
+                        <div className="flex items-center gap-3">
+                            <UpgradeButton />
                             <ThemeToggle />
 
                             {userId ? (
@@ -276,7 +283,7 @@ export const Navbar = () => {
                                             role="button"
                                             tabIndex={0}
                                             aria-label="Go to Profile"
-                                            className="relative flex items-center justify-center w-10 h-10 cursor-pointer group rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                                            className="relative flex items-center justify-center w-10 h-10 cursor-pointer group rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                             onClick={() => navigate('/profile')}
                                             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate('/profile'); }}
                                         >
@@ -318,7 +325,7 @@ export const Navbar = () => {
                                                     alt={profile?.full_name || "Profile"}
                                                     className="object-cover"
                                                 />
-                                                <AvatarFallback className="bg-violet-100 dark:bg-violet-900/50 text-[10px] font-bold text-violet-600 dark:text-violet-300">
+                                                <AvatarFallback className="bg-muted text-foreground text-[10px] font-bold">
                                                     {(profile?.full_name || "U")[0].toUpperCase()}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -328,7 +335,7 @@ export const Navbar = () => {
                             ) : (
                                 <Button
                                     onClick={() => navigate("/auth")}
-                                    className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 dark:from-violet-500 dark:to-purple-500 dark:hover:from-violet-600 dark:hover:to-purple-600 text-white shadow-lg shadow-violet-500/30 dark:shadow-violet-500/20 transition-all duration-300 hover:scale-105"
+                                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs rounded-lg h-9 px-4 shadow-2xs"
                                 >
                                     Get Started
                                 </Button>
