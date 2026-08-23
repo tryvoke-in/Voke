@@ -809,6 +809,17 @@ export const collegeService = {
         }).catch(() => {});
       } catch (e) {}
 
+      // Persist globally into Supabase for 100% cross-device availability
+      try {
+        supabase.from('waitlist').upsert({
+          id: `drv-${newDrive.id.replace(/[^a-z0-9]/gi, "-").substring(0, 36)}`,
+          email: `${newDrive.id}@drives.voke.internal`,
+          college_name: newDrive.collegeName,
+          phone_number: JSON.stringify(newDrive),
+          status: 'college_drive_record'
+        }, { onConflict: 'email' }).then().catch(() => {});
+      } catch (dbe) {}
+
       // Broadcast reliably to all active tabs and browsers
       this.broadcastCollegeEvent("college_drive_scheduled", {
         drive: newDrive,
@@ -827,11 +838,21 @@ export const collegeService = {
       const existing: CollegeScheduledDrive[] = stored ? JSON.parse(stored) : [];
       const updated = existing.filter(d => d.id !== driveId);
       localStorage.setItem(STORAGE_KEYS.COLLEGE_DRIVES, JSON.stringify(updated));
-      fetch("/api/college-drives", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updated)
-      }).catch(() => {});
+      
+      try {
+        fetch("/api/college-drives", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updated)
+        }).catch(() => {});
+      } catch (e) {}
+
+      try {
+        supabase.from('waitlist')
+          .delete()
+          .eq('email', `${driveId}@drives.voke.internal`)
+          .then().catch(() => {});
+      } catch (e) {}
     } catch (e) {
       console.warn("Failed to delete drive", e);
     }
@@ -984,42 +1005,78 @@ export const collegeService = {
     const college = this.getCollegeById(collegeId);
     const targetId = college?.id || collegeId;
 
+    const combinedMap = new Map<string, CollegeScheduledDrive>();
+
+    // 1. Fetch from Supabase database table for global multi-device persistence
+    try {
+      const { data: dbDrives } = await supabase
+        .from('waitlist')
+        .select('*')
+        .eq('status', 'college_drive_record');
+
+      if (dbDrives && dbDrives.length > 0) {
+        for (const row of dbDrives) {
+          if (row.phone_number) {
+            try {
+              const drive: CollegeScheduledDrive = JSON.parse(row.phone_number);
+              if (drive && drive.id) {
+                combinedMap.set(drive.id, drive);
+              }
+            } catch (pe) {}
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Supabase drive sync read:", e);
+    }
+
+    // 2. Fetch from /api/college-drives (serverless function)
     try {
       const res = await fetch("/api/college-drives").catch(() => null);
       if (res && res.ok) {
         const parsedDrives: CollegeScheduledDrive[] = await res.json().catch(() => []);
         if (Array.isArray(parsedDrives) && parsedDrives.length > 0) {
-          const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
-          const existing: CollegeScheduledDrive[] = stored ? JSON.parse(stored) : [];
-          
-          const combinedMap = new Map<string, CollegeScheduledDrive>();
-          parsedDrives.forEach(d => combinedMap.set(d.id, d));
-          existing.forEach(d => {
-            if (!combinedMap.has(d.id)) combinedMap.set(d.id, d);
+          parsedDrives.forEach(d => {
+            if (d && d.id) combinedMap.set(d.id, d);
           });
-
-          const merged = Array.from(combinedMap.values());
-          localStorage.setItem(STORAGE_KEYS.COLLEGE_DRIVES, JSON.stringify(merged));
-
-          const collegeDrives = merged.filter(d => 
-            d.collegeId === targetId || 
-            d.collegeId.includes(targetId) ||
-            targetId.includes(d.collegeId) ||
-            (college && (
-              d.collegeName.toLowerCase().includes(college.name.toLowerCase()) ||
-              college.name.toLowerCase().includes(d.collegeName.toLowerCase()) ||
-              d.collegeId === college.slug ||
-              d.collegeId === college.id
-            ))
-          );
-          if (collegeDrives.length > 0) {
-            return collegeDrives;
-          }
-          return merged;
         }
       }
     } catch (e) {
       console.warn("Local sync read:", e);
+    }
+
+    // 3. Merge with localStorage
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
+      const existing: CollegeScheduledDrive[] = stored ? JSON.parse(stored) : [];
+      existing.forEach(d => {
+        if (d && d.id && !combinedMap.has(d.id)) {
+          combinedMap.set(d.id, d);
+        }
+      });
+    } catch (e) {}
+
+    if (combinedMap.size > 0) {
+      const merged = Array.from(combinedMap.values());
+      try {
+        localStorage.setItem(STORAGE_KEYS.COLLEGE_DRIVES, JSON.stringify(merged));
+      } catch (e) {}
+
+      const collegeDrives = merged.filter(d => 
+        d.collegeId === targetId || 
+        d.collegeId.includes(targetId) ||
+        targetId.includes(d.collegeId) ||
+        (college && (
+          d.collegeName.toLowerCase().includes(college.name.toLowerCase()) ||
+          college.name.toLowerCase().includes(d.collegeName.toLowerCase()) ||
+          d.collegeId === college.slug ||
+          d.collegeId === college.id
+        ))
+      );
+      if (collegeDrives.length > 0) {
+        return collegeDrives;
+      }
+      return merged;
     }
 
     return this.getCollegeDrives(collegeId);
