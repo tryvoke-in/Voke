@@ -303,6 +303,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
         }
 
         const finalScore = evaluation?.score || 0;
+        const durationSeconds = Math.max(1, Math.round((Date.now() - startTime) / 1000));
 
         const { data, error } = await supabase
           .from("interview_sessions")
@@ -310,6 +311,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
             user_id: user.id,
             interview_type: activeCategory,
             status: "completed",
+            total_duration_seconds: durationSeconds,
             job_profile_id: null,
           })
           .select()

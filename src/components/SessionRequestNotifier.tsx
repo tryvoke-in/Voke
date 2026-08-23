@@ -7,12 +7,15 @@ export const SessionRequestNotifier = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let active = true;
+    let channel: any = null;
+
     const checkUserAndSubscribe = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
-      if (!user) return;
+      if (!user || !active) return;
 
-      const channel = supabase
+      channel = supabase
         .channel('global_requests')
         .on(
           'postgres_changes',
@@ -36,20 +39,19 @@ export const SessionRequestNotifier = () => {
                 },
               });
             }
-            
-            // Check if status changed to 'scheduled' (Request Approved) - for Guest?
-            // This listener is filtered by host_user_id, so it only notifies the host.
-            // We could add another listener for the guest if needed, but the host is the one who needs to act.
           }
         )
         .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     };
 
     checkUserAndSubscribe();
+
+    return () => {
+      active = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [navigate]);
 
   return null;
