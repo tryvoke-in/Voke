@@ -24,6 +24,7 @@ import AICoachChat from "@/components/AICoachChat";
 import ResumeAnalyzer from "@/components/ResumeAnalyzer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { loadUserProfileContext } from "@/utils/profileContext";
+import { collegeService } from "@/services/collegeService";
 
 interface ExperienceItem {
   id: string;
@@ -498,6 +499,18 @@ const Profile = () => {
       }));
       if (loadedProfile.coding_stats) {
         setCodingStats(loadedProfile.coding_stats);
+      }
+
+      // Sync student with matching college partner
+      const studentEmail = loadedProfile.email || activeUser?.email;
+      if (studentEmail) {
+        collegeService.recordStudentRegistration({
+          email: studentEmail,
+          fullName: loadedProfile.full_name || studentEmail.split('@')[0],
+          targetRole: loadedProfile.target_role || loadedProfile.role || "Full Stack Developer",
+          branch: "Computer Science & AI",
+          batch: "2025"
+        });
       }
 
 

@@ -7,6 +7,7 @@ export type GroqVoiceConnectOptions = string | {
     systemPrompt?: string;
     initialGreeting?: string;
     mode?: 'conversational' | 'coding_silent';
+    fixedQuestions?: string[];
 };
 
 const SYSTEM_INSTRUCTION = `YOU ARE:
@@ -49,6 +50,7 @@ interface UseGroqVoiceReturn {
     isSilentMode: boolean;
     setIsSilentMode: (silent: boolean) => void;
     submitCurrentSpeech: () => void;
+    speakText: (text: string) => Promise<void>;
 }
 
 interface UseGroqVoiceProps {
@@ -72,6 +74,8 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const audioChunksRef = useRef<Blob[]>([]);
     const contextRef = useRef<string>('');
     const conversationHistoryRef = useRef<{ role: 'user' | 'assistant' | 'system'; content: string }[]>([]);
+    const fixedQuestionsRef = useRef<string[] | null>(null);
+    const fixedQuestionIndexRef = useRef<number>(0);
     const statusRef = useRef(status);
     const isAiSpeakingRef = useRef(isAiSpeaking);
     const isListeningRef = useRef(false);
@@ -131,6 +135,29 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         }
 
         let aiText = "";
+
+        // ================= ENGINE 0: STRICT COLLEGE FIXED QUESTION MODE (0 TOKEN CONSUMPTION) =================
+        if (fixedQuestionsRef.current && fixedQuestionsRef.current.length > 0) {
+            const questions = fixedQuestionsRef.current;
+            const nextIndex = fixedQuestionIndexRef.current + 1;
+            fixedQuestionIndexRef.current = nextIndex;
+
+            if (nextIndex < questions.length) {
+                const nextQ = questions[nextIndex];
+                const politeTransitions = [
+                    "Thank you. Next question: ",
+                    "Got it. Moving on to the next question: ",
+                    "Understood. Here is your next question: ",
+                    "Thank you for explaining that. Next question: "
+                ];
+                const transition = politeTransitions[(nextIndex - 1) % politeTransitions.length];
+                aiText = `${transition}${nextQ}`;
+            } else {
+                aiText = "Thank you for answering all questions in this placement assessment round! Please click the red Finish button below to finalize your session and generate your official evaluation scorecard.";
+            }
+            setApiLabel('(college uploaded questions • 0 tokens)');
+            console.log(`[useGroqVoice] College Fixed Question Progression (Turn ${nextIndex + 1}/${questions.length}):`, aiText);
+        }
 
         const sysPrompt = fullMessages.find((m: any) => m.role === 'system')?.content || contextRef.current || '';
         // STRICT regex: Must explicitly specify it is Round 3 or Live Coding Assessment to prevent matching resume keywords
@@ -381,70 +408,101 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 resumeTimerRef.current = null;
             }
 
-            if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                window.speechSynthesis.resume();
                 window.speechSynthesis.cancel();
                 await new Promise(r => setTimeout(r, 60));
-            }
 
-            if (window.speechSynthesis.paused) {
-                window.speechSynthesis.resume();
-            }
-
-            setIsAiSpeaking(true);
-            setVolume(0.8);
-
-            const utterance = new SpeechSynthesisUtterance(speechText);
-            activeUtteranceRef.current = utterance;
-            (window as any).__vokeUtterance = utterance;
-
-            let voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v =>
-                (v.lang.includes('en') || v.lang.includes('EN')) &&
-                (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Guy'))
-            ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
-
-            if (preferredVoice) {
-                utterance.voice = preferredVoice;
-                utterance.lang = preferredVoice.lang || 'en-US';
-            } else {
-                utterance.lang = 'en-US';
-            }
-
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-
-            resumeTimerRef.current = setInterval(() => {
-                if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
-                    window.speechSynthesis.resume();
-                }
-            }, 4000);
-
-            utterance.onstart = () => {
-                console.log('DEBUG: AI speech playback started successfully.');
                 setIsAiSpeaking(true);
                 setVolume(0.8);
-            };
 
-            utterance.onend = () => {
-                console.log('DEBUG: AI speech finished.');
-                if (resumeTimerRef.current) {
-                    clearInterval(resumeTimerRef.current);
-                    resumeTimerRef.current = null;
-                }
-                activeUtteranceRef.current = null;
-                (window as any).__vokeUtterance = null;
-                setIsAiSpeaking(false);
-                setVolume(0);
+                const utterance = new SpeechSynthesisUtterance(speechText);
+                activeUtteranceRef.current = utterance;
+                (window as any).__vokeUtterance = utterance;
 
-                // Resume candidate microphone listening ONLY if NOT in silent mode!
-                if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
-                    setTimeout(() => {
-                        if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && !isAiSpeakingRef.current) {
-                            startListeningRef.current?.();
-                        }
-                    }, 400);
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length === 0) {
+                    await new Promise(resolve => {
+                        const handler = () => {
+                            window.speechSynthesis.removeEventListener('voiceschanged', handler);
+                            resolve(null);
+                        };
+                        window.speechSynthesis.addEventListener('voiceschanged', handler);
+                        setTimeout(resolve, 150);
+                    });
+                    voices = window.speechSynthesis.getVoices();
                 }
-            };
+
+                const preferredVoice = voices.find(v =>
+                    (v.lang.includes('en') || v.lang.includes('EN')) &&
+                    (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Alex'))
+                ) || voices.find(v => v.lang.startsWith('en')) || (voices.length > 0 ? voices[0] : undefined);
+
+                if (preferredVoice) {
+                    utterance.voice = preferredVoice;
+                    utterance.lang = preferredVoice.lang || 'en-US';
+                } else {
+                    utterance.lang = 'en-US';
+                }
+
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+
+                resumeTimerRef.current = setInterval(() => {
+                    if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
+                        window.speechSynthesis.resume();
+                    }
+                }, 2000);
+
+                utterance.onstart = () => {
+                    console.log('DEBUG: AI speech playback started successfully.');
+                    setIsAiSpeaking(true);
+                    setVolume(0.8);
+                };
+
+                utterance.onend = () => {
+                    console.log('DEBUG: AI speech finished.');
+                    if (resumeTimerRef.current) {
+                        clearInterval(resumeTimerRef.current);
+                        resumeTimerRef.current = null;
+                    }
+                    activeUtteranceRef.current = null;
+                    (window as any).__vokeUtterance = null;
+                    setIsAiSpeaking(false);
+                    setVolume(0);
+
+                    // Resume candidate microphone listening ONLY if NOT in silent mode!
+                    if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
+                        setTimeout(() => {
+                            if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && !isAiSpeakingRef.current) {
+                                startListeningRef.current?.();
+                            }
+                        }, 400);
+                    }
+                };
+
+                utterance.onerror = (e) => {
+                    console.warn('DEBUG: Speech synthesis event note:', e);
+                    if (resumeTimerRef.current) {
+                        clearInterval(resumeTimerRef.current);
+                        resumeTimerRef.current = null;
+                    }
+                    activeUtteranceRef.current = null;
+                    (window as any).__vokeUtterance = null;
+                    setIsAiSpeaking(false);
+                    setVolume(0);
+
+                    if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
+                        setTimeout(() => {
+                            if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && !isAiSpeakingRef.current) {
+                                startListeningRef.current?.();
+                            }
+                        }, 400);
+                    }
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
 
             utterance.onerror = (e) => {
                 console.warn('DEBUG: Speech synthesis event note:', e);
@@ -877,12 +935,25 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
         if (typeof context === 'string') {
             systemPromptText = context || '';
+            fixedQuestionsRef.current = null;
+            fixedQuestionIndexRef.current = 0;
         } else if (context && typeof context === 'object') {
             systemPromptText = context.systemPrompt || '';
             initialGreetingText = context.initialGreeting || '';
             if (context.mode === 'coding_silent') {
                 setIsSilentMode(true);
             }
+            if (context.fixedQuestions && context.fixedQuestions.length > 0) {
+                fixedQuestionsRef.current = context.fixedQuestions;
+                fixedQuestionIndexRef.current = 0;
+                console.log('[useGroqVoice] Initialized College Fixed Question Mode with', context.fixedQuestions.length, 'questions.');
+            } else {
+                fixedQuestionsRef.current = null;
+                fixedQuestionIndexRef.current = 0;
+            }
+        } else {
+            fixedQuestionsRef.current = null;
+            fixedQuestionIndexRef.current = 0;
         }
 
         contextRef.current = systemPromptText;
@@ -979,6 +1050,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         apiLabel,
         isSilentMode,
         setIsSilentMode,
-        submitCurrentSpeech
+        submitCurrentSpeech,
+        speakText: speakResponse
     };
 }

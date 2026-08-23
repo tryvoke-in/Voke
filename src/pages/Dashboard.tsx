@@ -23,6 +23,7 @@ import { DailyQuestionWidget } from "@/components/dashboard/DailyQuestionWidget"
 import { WeeklyGoals } from "@/components/dashboard/WeeklyGoals";
 import { InterviewCalendarWidget } from "@/components/dashboard/InterviewCalendarWidget";
 import { CompactAICoach } from "@/components/dashboard/CompactAICoach";
+import { collegeService } from "@/services/collegeService";
 
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -226,6 +227,17 @@ const Dashboard = () => {
         setProfile({
           full_name: userMetadata.full_name || userMetadata.name || user.email?.split('@')[0] || "Anonymous User",
           avatar_url: userMetadata.avatar_url || null
+        });
+      }
+
+      // Sync student with their college
+      if (user.email) {
+        collegeService.recordStudentRegistration({
+          email: user.email,
+          fullName: user.user_metadata?.full_name || user.email.split('@')[0],
+          targetRole: "Full Stack Developer",
+          branch: "Computer Science & AI",
+          batch: "2025"
         });
       }
 
@@ -936,7 +948,7 @@ const Dashboard = () => {
 
             {/* Upcoming Interview Schedule & Events */}
             <div className="mt-8">
-              <InterviewCalendarWidget />
+              <InterviewCalendarWidget userEmail={profile?.email} />
             </div>
           </main>
 

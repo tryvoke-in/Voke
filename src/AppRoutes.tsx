@@ -1,10 +1,25 @@
 import React, { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useParams, useSearchParams } from "react-router-dom";
 import Index from "./pages/Index";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
+const CollegeAssessmentRoute: React.FC = () => {
+  const { driveId } = useParams();
+  const [searchParams] = useSearchParams();
+  const id = driveId || searchParams.get("driveId") || "";
+  const role = searchParams.get("role") || "";
+  const query = [
+    id ? `driveId=${id}` : "",
+    role ? `role=${encodeURIComponent(role)}` : ""
+  ].filter(Boolean).join("&");
+  
+  return <Navigate to={`/voice-assistant${query ? `?${query}` : ""}`} replace />;
+};
+
 // Lazy load non-critical marketing & heavy dynamic pages for optimal Core Web Vitals (LCP, INP, CLS)
 const Auth = lazy(() => import("./pages/Auth"));
+const CollegeAuth = lazy(() => import("./pages/CollegeAuth"));
+const CollegeAdminDashboard = lazy(() => import("./pages/CollegeAdminDashboard"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -20,6 +35,7 @@ const MultiQuestionResults = lazy(() => import("./pages/MultiQuestionResults"));
 const VideoPracticeHistory = lazy(() => import("./pages/VideoPracticeHistory"));
 const ProgressAnalytics = lazy(() => import("./pages/ProgressAnalytics"));
 const AdaptiveInterview = lazy(() => import("./pages/AdaptiveInterview"));
+const CollegeAssessmentSession = lazy(() => import("./pages/CollegeAssessmentSession"));
 const PeerInterviews = lazy(() => import("./pages/PeerInterviews"));
 const CreatePeerSession = lazy(() => import("./pages/CreatePeerSession"));
 const PeerSessionRoom = lazy(() => import("./pages/PeerSessionRoom"));
@@ -59,6 +75,9 @@ export const AppRoutes: React.FC = () => {
         <Route path="/" element={<Index />} />
         <Route path="/waitlist" element={<Waitlist />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/college" element={<Navigate to="/college/auth" replace />} />
+        <Route path="/college/auth" element={<CollegeAuth />} />
+        <Route path="/college/dashboard" element={<CollegeAdminDashboard />} />
         <Route path="/help" element={<Help />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/about" element={<About />} />
@@ -89,6 +108,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="/video-practice/history" element={<ProtectedRoute><VideoPracticeHistory /></ProtectedRoute>} />
         <Route path="/progress-analytics" element={<ProtectedRoute><ProgressAnalytics /></ProtectedRoute>} />
         <Route path="/adaptive-interview" element={<ProtectedRoute><AdaptiveInterview /></ProtectedRoute>} />
+        <Route path="/college/assessment/:driveId" element={<ProtectedRoute><CollegeAssessmentRoute /></ProtectedRoute>} />
+        <Route path="/college/assessment" element={<ProtectedRoute><CollegeAssessmentRoute /></ProtectedRoute>} />
         
         <Route path="/peer-interviews" element={<ProtectedRoute><PeerInterviews /></ProtectedRoute>} />
         <Route path="/peer-interviews/create" element={<ProtectedRoute><CreatePeerSession /></ProtectedRoute>} />

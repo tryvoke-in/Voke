@@ -1317,7 +1317,6 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                   ? debugCode
                   : systemDesignCode
               }
-              options={{ contextmenu: false }}
               onChange={(value) => {
                 if (currentSection === 'A_CODING') {
                   if (!isEditorUnlocked) return;
@@ -1330,6 +1329,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                 }
               }}
               options={{
+                contextmenu: false,
                 fontSize: 13,
                 minimap: { enabled: false },
                 scrollBeyondLastLine: false,

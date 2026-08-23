@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,9 +60,16 @@ export default function AdaptiveInterview() {
 
   const { credits, hasGivenFeedback, isPremium, canTakeInterview, loading: creditsLoading, refreshCredits, grantFeedbackCredits } = useInterviewCredits('elite');
 
+  const [searchParams] = useSearchParams();
+
   useEffect(() => {
+    const driveId = searchParams.get("driveId");
+    if (driveId) {
+      navigate(`/college/assessment/${driveId}${window.location.search}`, { replace: true });
+      return;
+    }
     checkAuth();
-  }, []);
+  }, [searchParams]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();

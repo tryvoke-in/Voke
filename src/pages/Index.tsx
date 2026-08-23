@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { 
   ArrowRight, Sparkles, Users, Award, Zap, Shield, 
   Globe, Play, Star, Menu, X, Terminal, Code,
   Layers, MessageSquare, BarChart3, Check, Camera,
-  Mic, FileText, Github, Smile, Building, MapPin, DollarSign
+  Mic, FileText, Github, Smile, Building, MapPin, DollarSign, GraduationCap
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -181,16 +182,23 @@ const Index = () => {
               ))}
             </div>
 
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-3">
+              <Button 
+                onClick={() => navigate("/college/auth")}
+                className="text-violet-300 hover:text-white bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 rounded-full px-4 h-10 flex items-center gap-1.5 transition-all text-xs font-semibold shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+              >
+                <GraduationCap className="w-4 h-4 text-violet-400" />
+                Sign in as College
+              </Button>
               <Button 
                 onClick={handleAuthNavigation}
-                className="text-gray-300 hover:text-white bg-transparent hover:bg-white/5 rounded-full px-5 h-10 flex items-center justify-center transition-all border-0 shadow-none font-medium text-sm"
+                className="text-gray-300 hover:text-white bg-transparent hover:bg-white/5 rounded-full px-4 h-10 flex items-center justify-center transition-all border-0 shadow-none font-medium text-sm"
               >
                 Sign In
               </Button>
               <Button
                 onClick={handleAuthNavigation}
-                className="bg-white text-black hover:bg-zinc-200 rounded-full px-6 font-semibold transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.08)] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] hover:scale-105"
+                className="bg-white text-black hover:bg-zinc-200 rounded-full px-5 font-semibold transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.08)] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] hover:scale-105"
               >
                 Get Started
               </Button>
@@ -220,7 +228,7 @@ const Index = () => {
             <div className="flex flex-col gap-8 text-center">
               {["Features", "Job Matching", "How it Works", "Pricing"].map((item) => (
                 <a 
-                  key={item}
+                  key={item} 
                   href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
                   className="text-2xl font-semibold text-gray-300 hover:text-white transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
@@ -228,7 +236,17 @@ const Index = () => {
                   {item}
                 </a>
               ))}
-              <div className="flex flex-col gap-4 mt-12">
+              <div className="flex flex-col gap-3 mt-8">
+                <Button 
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate("/college/auth");
+                  }}
+                  className="w-full border border-violet-500/30 bg-violet-600/15 text-violet-300 hover:bg-violet-600/25 rounded-full h-12 flex items-center justify-center gap-2 font-semibold"
+                >
+                  <GraduationCap className="w-5 h-5 text-violet-400" />
+                  Sign in as College
+                </Button>
                 <Button 
                   onClick={handleAuthNavigation}
                   className="w-full border border-white/10 rounded-full text-white bg-transparent hover:bg-white/5 h-12 flex items-center justify-center font-medium"
@@ -1023,6 +1041,102 @@ const Index = () => {
                 </Button>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Voke for Universities & Colleges B2B Section */}
+      <section id="for-colleges" className="py-20 relative bg-gradient-to-b from-[#050509] via-[#090814] to-[#050509] border-y border-violet-500/20 overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-violet-600/10 rounded-full blur-[140px] pointer-events-none" />
+        
+        <div className="container mx-auto px-4 md:px-6 relative z-10 max-w-6xl">
+          <div className="rounded-3xl border border-violet-500/30 bg-[#0c0c16]/90 p-8 md:p-14 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+              <GraduationCap className="w-64 h-64 text-violet-400" />
+            </div>
+
+            <div className="grid lg:grid-cols-12 gap-8 items-center relative z-10">
+              <div className="lg:col-span-7 space-y-5">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-300 text-xs font-semibold uppercase tracking-wider">
+                  <GraduationCap className="w-3.5 h-3.5" /> Institutional & Campus Partnerships
+                </div>
+                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                  Power Your College Placements with <br />
+                  <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-white bg-clip-text text-transparent">
+                    Enterprise AI Mock Assessment Drives
+                  </span>
+                </h2>
+                <p className="text-gray-300 text-sm md:text-base leading-relaxed">
+                  Give your students an unfair advantage with institution-wide AI mock interviews. Automated email domain mapping, customized department drives, and real-time student readiness dashboards for your placement cell.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  {[
+                    "Auto-mapping via official student emails",
+                    "Schedule custom role-based mock drives",
+                    "DSA, System Design & Voice AI evaluations",
+                    "Comprehensive candidate readiness analytics"
+                  ].map(feat => (
+                    <div key={feat} className="flex items-center gap-2 text-xs md:text-sm text-gray-200">
+                      <div className="w-4 h-4 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center shrink-0">
+                        <Check className="w-2.5 h-2.5" />
+                      </div>
+                      <span>{feat}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-4 flex flex-wrap items-center gap-4">
+                  <Button
+                    onClick={() => navigate("/college/auth")}
+                    className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold px-6 py-5 rounded-full shadow-lg shadow-violet-600/30 text-sm transition-all"
+                  >
+                    <GraduationCap className="w-4 h-4 mr-2" />
+                    Sign in as College Admin
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/college/auth?mode=register")}
+                    className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5 rounded-full px-5 py-5 text-sm"
+                  >
+                    Onboard Your University →
+                  </Button>
+                </div>
+              </div>
+
+              <div className="lg:col-span-5">
+                <div className="p-5 rounded-2xl bg-black/50 border border-white/10 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                      <span className="text-xs font-semibold text-white">Campus T&P Live Suite</span>
+                    </div>
+                    <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-[10px]">
+                      Enterprise Tier
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2.5 text-xs">
+                    <div className="p-2.5 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between">
+                      <span className="text-gray-300 font-medium">Batch 2025 SDE Readiness</span>
+                      <span className="font-bold text-emerald-400 font-mono">88% Ready</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between">
+                      <span className="text-gray-300 font-medium">Active College Drives</span>
+                      <span className="font-bold text-violet-300 font-mono">3 Scheduled</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between">
+                      <span className="text-gray-300 font-medium">Domain Auto-Enrollment</span>
+                      <span className="font-bold text-indigo-300 font-mono">Instant (@*.edu.in)</span>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-gray-400 text-center pt-1 italic">
+                    Already trusted by top engineering institutions & technical colleges.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

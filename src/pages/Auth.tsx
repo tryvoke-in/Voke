@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ADMIN_EMAIL, isAdminEmail } from "@/config/admin";
 import { useToast } from "@/components/ui/use-toast";
-import { Mail, Lock, User, ArrowRight, Sparkles, Github, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Sparkles, Github, Loader2, Eye, EyeOff, GraduationCap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isDisposableEmail } from "@/utils/emailValidation";
 import {
@@ -764,6 +764,29 @@ const Auth = () => {
                   <Github className="mr-2 h-5 w-5" />
                   GitHub
                 </Button>
+              </div>
+
+              <div className="pt-5 mt-3 border-t border-white/10">
+                <div className="p-3.5 rounded-xl bg-violet-950/20 border border-violet-500/20 flex items-center justify-between gap-3">
+                  <div className="text-left">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
+                      <GraduationCap className="w-4 h-4 text-violet-400" />
+                      <span>College Placement Cell?</span>
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      Access student directory & schedule campus mock drives
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/college/auth")}
+                    className="border-violet-500/30 bg-violet-600/10 text-violet-300 hover:bg-violet-600 hover:text-white text-xs h-8 px-3 shrink-0"
+                  >
+                    College Portal →
+                  </Button>
+                </div>
               </div>
             </>
           )}

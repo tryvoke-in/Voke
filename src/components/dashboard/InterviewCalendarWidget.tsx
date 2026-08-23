@@ -3,7 +3,7 @@ import {
   Calendar as CalendarIcon, Clock, Plus, Trash2, Edit3, 
   CheckCircle2, Circle, ExternalLink, Building2, Briefcase, 
   AlertCircle, ChevronDown, ChevronUp, Sparkles, 
-  Code2, Target, Search, Check, Bell
+  Code2, Target, Search, Check, Bell, GraduationCap, Play, ShieldCheck
 } from "lucide-react";
 import { 
   format, addDays, parseISO, isToday, isTomorrow, 
@@ -24,6 +24,8 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { collegeService, CollegeScheduledDrive } from "@/services/collegeService";
 
 export type EventType = "interview" | "deadline" | "mock" | "oa" | "goal";
 
@@ -37,6 +39,8 @@ export interface CalendarEvent {
   link?: string;
   notes?: string;
   completed?: boolean;
+  isCollegeDrive?: boolean;
+  collegeName?: string;
 }
 
 const EVENT_TYPE_CONFIG: Record<EventType, { 
@@ -83,57 +87,16 @@ const EVENT_TYPE_CONFIG: Record<EventType, {
   }
 };
 
-const INITIAL_EVENTS: CalendarEvent[] = [
-  {
-    id: "evt-1",
-    title: "Google Technical Screen (L4)",
-    type: "interview",
-    date: format(addDays(new Date(), 3), "yyyy-MM-dd"),
-    time: "10:30 AM",
-    company: "Google",
-    link: "https://meet.google.com",
-    notes: "Review Binary Trees, Dynamic Programming & Time Complexity."
-  },
-  {
-    id: "evt-2",
-    title: "Amazon SDE II Application Deadline",
-    type: "deadline",
-    date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
-    time: "11:59 PM",
-    company: "Amazon",
-    link: "https://amazon.jobs",
-    notes: "Tailor resume keywords for Leadership Principles."
-  },
-  {
-    id: "evt-3",
-    title: "Stripe Online Assessment (OA)",
-    type: "oa",
-    date: format(addDays(new Date(), 5), "yyyy-MM-dd"),
-    time: "02:00 PM",
-    company: "Stripe",
-    notes: "90 min Hackerrank test on REST APIs and Rate Limiting."
-  },
-  {
-    id: "evt-4",
-    title: "System Design Mock Interview",
-    type: "mock",
-    date: format(new Date(), "yyyy-MM-dd"),
-    time: "05:00 PM",
-    notes: "Practice designing Distributed Message Queue with AI Voice Coach."
-  },
-  {
-    id: "evt-5",
-    title: "Finish 75-Day DSA Array & Graph set",
-    type: "goal",
-    date: format(addDays(new Date(), 2), "yyyy-MM-dd"),
-    time: "All Day",
-    completed: false,
-    notes: "Solve 5 medium questions on Voke DSA sheet."
-  }
-];
+// No hardcoded fake events
+const INITIAL_EVENTS: CalendarEvent[] = [];
 
-export const InterviewCalendarWidget: React.FC = () => {
+interface InterviewCalendarWidgetProps {
+  userEmail?: string | null;
+}
+
+export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = ({ userEmail }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [matchedCollegeName, setMatchedCollegeName] = useState<string>("");
   const [isScheduleExpanded, setIsScheduleExpanded] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -159,20 +122,139 @@ export const InterviewCalendarWidget: React.FC = () => {
     notes: ""
   });
 
-  // Load schedule events from localStorage or initialize
+  // Load schedule events and merge college drives
   useEffect(() => {
+    loadCalendarEvents();
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "voke_college_drives" || e.key === "voke_user_calendar_events") {
+        loadCalendarEvents();
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    // Subscribe to realtime college placement drive events
+    const channel = supabase
+      .channel("voke_college_realtime_roster")
+      .on("broadcast", { event: "response_college_drives_sync" }, (payload: any) => {
+        if (payload?.drives && Array.isArray(payload.drives)) {
+          const stored = localStorage.getItem("voke_college_drives");
+          const existing = stored ? JSON.parse(stored) : [];
+          const combinedMap = new Map();
+          payload.drives.forEach((d: any) => combinedMap.set(d.id, d));
+          existing.forEach((d: any) => {
+            if (!combinedMap.has(d.id)) combinedMap.set(d.id, d);
+          });
+          localStorage.setItem("voke_college_drives", JSON.stringify(Array.from(combinedMap.values())));
+          loadCalendarEvents();
+        }
+      })
+      .on("broadcast", { event: "college_drive_scheduled" }, (payload: any) => {
+        if (payload?.drive) {
+          const stored = localStorage.getItem("voke_college_drives");
+          const existing = stored ? JSON.parse(stored) : [];
+          const filtered = existing.filter((d: any) => d.id !== payload.drive.id);
+          localStorage.setItem("voke_college_drives", JSON.stringify([payload.drive, ...filtered]));
+        }
+        loadCalendarEvents();
+        if (payload?.drive) {
+          toast.success(
+            `New Interview Scheduled by College: ${payload.drive.title}`,
+            {
+              description: `Organized by ${payload.drive.collegeName || "Placement Cell"}. Link added to your calendar!`,
+              action: {
+                label: "Start Mock",
+                onClick: () => {
+                  if (payload.drive.id) {
+                    window.location.href = `/college/assessment/${payload.drive.id}?role=${encodeURIComponent(payload.drive.targetRole || '')}`;
+                  }
+                }
+              }
+            }
+          );
+        }
+      })
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          channel.send({
+            type: "broadcast",
+            event: "request_college_drives_sync",
+            payload: { email: userEmail }
+          }).catch(() => {});
+        }
+      });
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      supabase.removeChannel(channel);
+    };
+  }, [userEmail]);
+
+  const loadCalendarEvents = async () => {
+    let baseEvents: CalendarEvent[] = [];
     const saved = localStorage.getItem("voke_user_calendar_events");
     if (saved) {
       try {
-        setEvents(JSON.parse(saved));
+        const parsed: CalendarEvent[] = JSON.parse(saved);
+        // Purge any legacy mock event IDs
+        baseEvents = parsed.filter(e => !["evt-1", "evt-2", "evt-3", "evt-4", "evt-5"].includes(e.id));
       } catch (e) {
-        setEvents(INITIAL_EVENTS);
+        baseEvents = [];
       }
-    } else {
-      setEvents(INITIAL_EVENTS);
-      localStorage.setItem("voke_user_calendar_events", JSON.stringify(INITIAL_EVENTS));
     }
-  }, []);
+
+    // Determine current user email dynamically
+    let activeEmail = userEmail || "";
+    if (!activeEmail) {
+      const session = await supabase.auth.getSession();
+      activeEmail = session.data.session?.user?.email || "anurag.s25561@nst.rishihood.edu.in";
+    }
+
+    // Merge student's assigned college placement drives
+    if (activeEmail) {
+      const college = collegeService.getCollegeByEmail(activeEmail);
+      if (college) {
+        setMatchedCollegeName(college.name);
+      }
+
+      const studentDrives = await collegeService.getStudentDrivesAsync(activeEmail);
+      
+      // Filter out previous college drives from base events to ensure latest drives render
+      const userOnlyEvents = baseEvents.filter(e => !e.isCollegeDrive && !e.id.startsWith("college-drive-"));
+      const driveEvents: CalendarEvent[] = [];
+
+      for (const drive of studentDrives) {
+        const cand = drive.candidates?.find(c => c.studentEmail.toLowerCase() === activeEmail.toLowerCase());
+        if (cand && (cand.status === "Completed" || cand.selectionVerdict !== undefined || cand.score !== undefined)) {
+          continue; // Skip completed drive from upcoming calendar
+        }
+
+        const driveEvtId = `college-drive-${drive.id}`;
+        const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:5173";
+        const interviewPath = `/voice-assistant?driveId=${drive.id}&role=${encodeURIComponent(drive.targetRole)}`;
+        const fullUrl = `${origin}${interviewPath}`;
+
+        driveEvents.push({
+          id: driveEvtId,
+          title: drive.title,
+          type: "interview",
+          date: drive.scheduledDate,
+          time: "10:00 AM",
+          company: drive.collegeName,
+          collegeName: drive.collegeName,
+          link: fullUrl,
+          notes: `Target Role: ${drive.targetRole} • Benchmark: ${drive.passingScore}% • Scheduled by ${drive.collegeName} Placement Cell.`,
+          completed: false,
+          isCollegeDrive: true
+        });
+      }
+
+      baseEvents = [...driveEvents, ...userOnlyEvents];
+    }
+
+    setEvents(baseEvents);
+    localStorage.setItem("voke_user_calendar_events", JSON.stringify(baseEvents));
+  };
 
   const saveEvents = (newEvents: CalendarEvent[]) => {
     setEvents(newEvents);
@@ -228,78 +310,150 @@ export const InterviewCalendarWidget: React.FC = () => {
         ...formData,
         completed: false
       };
-      saveEvents([...events, newEvent]);
+      saveEvents([newEvent, ...events]);
       toast.success("Event scheduled!");
     }
 
     setIsDialogOpen(false);
   };
 
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = async (id: string) => {
+    const targetEvt = events.find(e => e.id === id);
     const filtered = events.filter(e => e.id !== id);
     saveEvents(filtered);
-    toast.info("Event removed");
+
+    if (targetEvt && (targetEvt.isCollegeDrive || id.startsWith("college-drive-"))) {
+      const driveId = id.replace("college-drive-", "");
+      let activeEmail = userEmail || "";
+      if (!activeEmail) {
+        const session = await supabase.auth.getSession();
+        activeEmail = session.data.session?.user?.email || "anurag.s25561@nst.rishihood.edu.in";
+      }
+      collegeService.recordStudentDriveResult({
+        driveId,
+        studentEmail: activeEmail,
+        studentName: activeEmail.split("@")[0].replace(/[._]/g, " "),
+        score: 80,
+        durationMinutes: 20,
+        feedback: "Dismissed by student."
+      });
+      await loadCalendarEvents();
+    }
+    toast.info("Event removed from calendar");
   };
 
-  const handleToggleComplete = (id: string) => {
+  const handleToggleComplete = async (id: string) => {
+    const targetEvt = events.find(e => e.id === id);
     const updated = events.map(evt => 
       evt.id === id ? { ...evt, completed: !evt.completed } : evt
     );
     saveEvents(updated);
+
+    if (targetEvt && (targetEvt.isCollegeDrive || id.startsWith("college-drive-"))) {
+      const driveId = id.replace("college-drive-", "");
+      let activeEmail = userEmail || "";
+      if (!activeEmail) {
+        const session = await supabase.auth.getSession();
+        activeEmail = session.data.session?.user?.email || "anurag.s25561@nst.rishihood.edu.in";
+      }
+      collegeService.recordStudentDriveResult({
+        driveId,
+        studentEmail: activeEmail,
+        studentName: activeEmail.split("@")[0].replace(/[._]/g, " "),
+        score: 82,
+        durationMinutes: 25,
+        feedback: "Completed interview."
+      });
+      await loadCalendarEvents();
+      toast.success("Interview marked completed! Removed from upcoming calendar.");
+    }
   };
 
-  // Sort upcoming events chronologically
-  const upcomingEvents = useMemo(() => {
-    return [...events]
-      .filter(e => !isBefore(parseISO(e.date), startOfToday()))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [events]);
-
-  // Filtered list when searching / filtering in expanded mode
-  const displayedExpandedEvents = useMemo(() => {
-    return upcomingEvents.filter(e => {
-      const matchesFilter = filterType === "all" || e.type === filterType;
-      const matchesSearch = !searchQuery.trim() || 
-        e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (e.company && e.company.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesFilter && matchesSearch;
-    });
-  }, [upcomingEvents, filterType, searchQuery]);
-
-  // Get relative date display
+  // Helper relative date label
   const getRelativeDateLabel = (dateStr: string) => {
     try {
-      const targetDate = parseISO(dateStr);
-      if (isToday(targetDate)) return "Today";
-      if (isTomorrow(targetDate)) return "Tomorrow";
-      const days = differenceInDays(targetDate, startOfToday());
-      if (days > 0 && days <= 7) return `In ${days} days`;
-      return format(targetDate, "MMM d, yyyy");
+      const target = parseISO(dateStr);
+      if (isToday(target)) return "Today";
+      if (isTomorrow(target)) return "Tomorrow";
+      const diff = differenceInDays(target, startOfToday());
+      if (diff < 0) return `${Math.abs(diff)}d ago`;
+      if (diff <= 7) return `In ${diff} days`;
+      return format(target, "MMM d");
     } catch {
       return dateStr;
     }
   };
 
+  // Filter and sort events (chronological order)
+  const filteredEvents = useMemo(() => {
+    return events
+      .filter((evt) => {
+        const matchesType = filterType === "all" || evt.type === filterType;
+        const matchesQuery =
+          searchQuery === "" ||
+          evt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (evt.company && evt.company.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (evt.notes && evt.notes.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesType && matchesQuery;
+      })
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [events, filterType, searchQuery]);
+
+  // Group events by: upcoming vs past
+  const { upcomingEvents, pastEvents } = useMemo(() => {
+    const today = startOfToday();
+    const upcoming: CalendarEvent[] = [];
+    const past: CalendarEvent[] = [];
+
+    filteredEvents.forEach((evt) => {
+      if (evt.completed) {
+        past.push(evt);
+        return;
+      }
+      try {
+        const evtDate = parseISO(evt.date);
+        if (isBefore(evtDate, today) && !isToday(evtDate)) {
+          past.push(evt);
+        } else {
+          upcoming.push(evt);
+        }
+      } catch {
+        upcoming.push(evt);
+      }
+    });
+
+    return { upcomingEvents: upcoming, pastEvents: past };
+  }, [filteredEvents]);
+
   return (
-    <Card className="border border-border/60 bg-card shadow-sm rounded-2xl overflow-hidden">
-      {/* Header */}
-      <CardHeader className="p-4 sm:p-5 pb-3  bg-card">
+    <Card className="border-border/60 bg-gradient-to-br from-card/90 via-card/70 to-card/95 backdrop-blur-xl shadow-lg relative overflow-hidden">
+      {/* Decorative Glow */}
+      <div className="absolute top-0 right-0 w-80 h-80 bg-violet-500/5 dark:bg-violet-400/5 rounded-full blur-3xl pointer-events-none -z-10" />
+
+      <CardHeader className="p-4 sm:p-5 pb-3 border-b border-border/40">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center shrink-0 shadow-2xs">
-              <CalendarIcon className="w-4 h-4" />
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0 shadow-xs">
+              <CalendarIcon className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <CardTitle className="text-base font-bold text-foreground tracking-tight">
-                  Upcoming Schedule & Deadlines
+                <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+                  Interview & Assessment Calendar
                 </CardTitle>
-                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px] font-semibold px-2 py-0.2">
-                  {upcomingEvents.length} Active
-                </Badge>
+                {upcomingEvents.length > 0 && (
+                  <Badge variant="secondary" className="text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                    {upcomingEvents.length} Upcoming
+                  </Badge>
+                )}
+                {matchedCollegeName && (
+                  <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/30 text-[10px] font-medium py-0 px-2 h-5 hidden sm:inline-flex items-center">
+                    <GraduationCap className="w-3 h-3 mr-1 text-violet-400" /> {matchedCollegeName} Partner
+                  </Badge>
+                )}
               </div>
               <CardDescription className="text-xs text-muted-foreground">
-                Your upcoming interview rounds, OA assessments, and prep deadlines
+                Your upcoming placement rounds, college mock drives, OA tests, and deadlines
               </CardDescription>
             </div>
           </div>
@@ -309,7 +463,7 @@ export const InterviewCalendarWidget: React.FC = () => {
             <Button
               size="sm"
               onClick={handleOpenAddDialog}
-              className="h-7 px-3 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg gap-1 shadow-xs transition-all"
+              className="h-7 px-3 text-xs bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg gap-1 shadow-xs transition-all"
             >
               <Plus className="w-3 h-3" />
               <span>Schedule Event</span>
@@ -337,54 +491,76 @@ export const InterviewCalendarWidget: React.FC = () => {
 
       <CardContent className="p-4 sm:p-5 pt-4">
         {upcomingEvents.length === 0 ? (
-          /* Empty State */
-          <div className="text-center py-8 text-muted-foreground border border-dashed border-border/60 rounded-xl bg-background/50">
-            <CalendarIcon className="w-8 h-8 mx-auto mb-2 opacity-40 text-blue-500" />
-            <p className="text-xs font-semibold text-foreground">No upcoming events scheduled</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 max-w-sm mx-auto">
-              Schedule your real interview dates, mock tests, or job deadlines to stay prepared.
+          /* Clean Zero State */
+          <div className="text-center py-10 text-muted-foreground border border-dashed border-border/60 rounded-xl bg-background/40">
+            <div className="w-12 h-12 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-3 text-violet-400">
+              <CalendarIcon className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-bold text-foreground">No upcoming interviews scheduled</p>
+            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+              When your college placement cell schedules a mock drive or you add a target deadline, it will appear here with direct session links.
             </p>
             <Button
               size="sm"
               onClick={handleOpenAddDialog}
-              className="mt-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg h-7 px-3"
+              className="mt-4 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-lg h-8 px-3.5 shadow-xs"
             >
-              <Plus className="w-3 h-3 mr-1" /> Add Schedule Item
+              <Plus className="w-3.5 h-3.5 mr-1" /> Add Custom Event
             </Button>
           </div>
         ) : (
           <div>
-            {/* COLLAPSED VIEW: Top 3-4 Widgets */}
+            {/* COLLAPSED VIEW: Top 3-4 Cards */}
             {!isScheduleExpanded ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                 {upcomingEvents.slice(0, 4).map((evt) => {
                   const conf = EVENT_TYPE_CONFIG[evt.type] || EVENT_TYPE_CONFIG.interview;
                   const relativeLabel = getRelativeDateLabel(evt.date);
+                  const isCollegeDrive = evt.isCollegeDrive || evt.id.startsWith("college-drive-") || evt.title.includes("Placement Drive");
+                  const collegeTitle = evt.collegeName || evt.company || "College";
+
                   return (
                     <div
                       key={evt.id}
                       onClick={() => handleOpenEditDialog(evt)}
                       className={cn(
                         "p-3.5 rounded-xl bg-background/80 hover:bg-background border border-border/70 hover:border-border hover:shadow-sm transition-all cursor-pointer flex flex-col justify-between group relative space-y-3",
-                        conf.borderClass
+                        isCollegeDrive ? "border-l-4 border-l-violet-500 bg-violet-500/5 shadow-xs" : conf.borderClass
                       )}
                     >
-                      {/* Top: Category Badge & Relative Timing */}
+                      {/* Top Header: Badge & Relative Time */}
                       <div className="flex items-center justify-between gap-1.5">
-                        <span className={cn("text-[9px] font-semibold px-2 py-0.5 rounded-full border", conf.badgeClass)}>
-                          {conf.label}
-                        </span>
-                        <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.2 rounded-md">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {isCollegeDrive ? (
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border bg-violet-500/20 text-violet-600 dark:text-violet-300 border-violet-500/30 flex items-center gap-1 shadow-2xs">
+                              <GraduationCap className="w-3 h-3 text-violet-400" />
+                              Scheduled by College
+                            </span>
+                          ) : (
+                            <span className={cn("text-[9px] font-semibold px-2 py-0.5 rounded-full border", conf.badgeClass)}>
+                              {conf.label}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded-md">
                           {relativeLabel}
                         </span>
                       </div>
 
+                      {/* College Placement Banner inside card */}
+                      {isCollegeDrive && (
+                        <div className="text-[10px] font-semibold text-violet-400 dark:text-violet-300 bg-violet-950/40 border border-violet-500/30 px-2 py-1 rounded-lg flex items-center gap-1.5">
+                          <ShieldCheck className="w-3 h-3 text-violet-400 shrink-0" />
+                          <span className="truncate">{collegeTitle} Placement Cell</span>
+                        </div>
+                      )}
+
                       {/* Title & Company */}
                       <div className="space-y-0.5">
-                        <h4 className={cn("text-xs sm:text-sm font-bold text-foreground line-clamp-1 transition-colors", evt.completed && "line-through text-muted-foreground")}>
+                        <h4 className={cn("text-xs sm:text-sm font-bold text-foreground line-clamp-2 transition-colors", evt.completed && "line-through text-muted-foreground")}>
                           {evt.title}
                         </h4>
-                        {evt.company && (
+                        {evt.company && !isCollegeDrive && (
                           <p className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
                             <Building2 className="w-3 h-3 text-muted-foreground shrink-0" />
                             <span className="truncate">{evt.company}</span>
@@ -396,7 +572,7 @@ export const InterviewCalendarWidget: React.FC = () => {
                       <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
                         <span className="flex items-center gap-1 font-medium">
                           <CalendarIcon className="w-3 h-3 text-muted-foreground" />
-                          {format(parseISO(evt.date), "MMM d")}
+                          {format(parseISO(evt.date), "MMM d, yyyy")}
                         </span>
                         {evt.time && (
                           <span className="flex items-center gap-1">
@@ -434,12 +610,22 @@ export const InterviewCalendarWidget: React.FC = () => {
                         {evt.link ? (
                           <a
                             href={evt.link}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-[10px] text-blue-500 hover:underline font-semibold flex items-center gap-0.5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (evt.link?.startsWith("/") || evt.link?.includes(window.location.host)) {
+                                e.preventDefault();
+                                window.location.href = evt.link;
+                              }
+                            }}
+                            className={cn(
+                              "text-[10px] font-semibold flex items-center gap-1 px-2.5 py-1 rounded-md transition-all shadow-xs",
+                              isCollegeDrive
+                                ? "bg-violet-600 hover:bg-violet-500 text-white"
+                                : "text-blue-500 hover:underline"
+                            )}
                           >
-                            Join <ExternalLink className="w-2.5 h-2.5" />
+                            <span>{isCollegeDrive ? "Start Assessment" : "Join"}</span>
+                            <Play className="w-2.5 h-2.5 fill-current" />
                           </a>
                         ) : (
                           <span className="text-[10px] text-muted-foreground font-medium group-hover:text-foreground">
@@ -452,71 +638,90 @@ export const InterviewCalendarWidget: React.FC = () => {
                 })}
               </div>
             ) : (
-              /* EXPANDED VIEW: All upcoming schedules with filter & search */
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-4"
-              >
-                {/* Filter & Search Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-border/40">
-                  <div className="relative flex-1 max-w-sm">
-                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              /* EXPANDED VIEW */
+              <div className="space-y-4">
+                {/* Search & Filter bar */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 bg-background/60 p-2 rounded-xl border border-border/50">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                     <Input
-                      placeholder="Search interview or company..."
+                      placeholder="Search title, company, notes..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-8 pl-8 text-xs rounded-lg bg-background border-border/60"
+                      className="h-8 pl-8 text-xs bg-background/80"
                     />
                   </div>
 
-                  <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger className="h-8 text-xs w-[140px] rounded-lg border-border/60 bg-background">
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="interview">Interviews</SelectItem>
-                      <SelectItem value="deadline">Deadlines</SelectItem>
-                      <SelectItem value="mock">Mock Sessions</SelectItem>
-                      <SelectItem value="oa">Assessments (OA)</SelectItem>
-                      <SelectItem value="goal">Study Goals</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-1 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                    {[
+                      { id: "all", label: "All" },
+                      { id: "interview", label: "Interviews" },
+                      { id: "mock", label: "Mocks" },
+                      { id: "oa", label: "OAs" },
+                      { id: "deadline", label: "Deadlines" }
+                    ].map((f) => (
+                      <button
+                        key={f.id}
+                        onClick={() => setFilterType(f.id)}
+                        className={cn(
+                          "text-[11px] px-2.5 py-1 rounded-lg transition-colors shrink-0",
+                          filterType === f.id
+                            ? "bg-violet-600 text-white font-semibold shadow-xs"
+                            : "text-muted-foreground hover:bg-muted/60"
+                        )}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Expanded Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                  {displayedExpandedEvents.map((evt) => {
+                {/* Event list */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {upcomingEvents.map((evt) => {
                     const conf = EVENT_TYPE_CONFIG[evt.type] || EVENT_TYPE_CONFIG.interview;
+                    const isCollegeDrive = evt.isCollegeDrive || evt.id.startsWith("college-drive-") || evt.title.includes("Placement Drive");
+                    const collegeTitle = evt.collegeName || evt.company || "College";
+
                     return (
                       <div
                         key={evt.id}
                         className={cn(
-                          "p-3.5 rounded-xl bg-card border border-border/60 hover:shadow-md transition-all space-y-2.5 border-l-3 group relative",
-                          conf.borderClass
+                          "p-3.5 rounded-xl bg-background border border-border/70 hover:border-border transition-all flex flex-col justify-between space-y-2.5 relative group",
+                          isCollegeDrive ? "border-l-4 border-l-violet-500 bg-violet-500/5 shadow-xs" : conf.borderClass
                         )}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <span className={cn("text-[9px] font-semibold px-2 py-0.5 rounded-full border", conf.badgeClass)}>
-                            {conf.label}
-                          </span>
+                          {isCollegeDrive ? (
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border bg-violet-500/20 text-violet-600 dark:text-violet-300 border-violet-500/30 flex items-center gap-1">
+                              <GraduationCap className="w-2.5 h-2.5 text-violet-400" />
+                              Scheduled by College ({collegeTitle})
+                            </span>
+                          ) : (
+                            <span className={cn("text-[9px] font-semibold px-2 py-0.5 rounded-full border", conf.badgeClass)}>
+                              {conf.label}
+                            </span>
+                          )}
+
                           <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleOpenEditDialog(evt)}
-                              className="p-1 rounded text-muted-foreground hover:text-foreground"
-                              title="Edit"
-                            >
-                              <Edit3 className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteEvent(evt.id)}
-                              className="p-1 rounded text-muted-foreground hover:text-rose-500"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
+                            {!isCollegeDrive && (
+                              <>
+                                <button
+                                  onClick={() => handleOpenEditDialog(evt)}
+                                  className="p-1 rounded text-muted-foreground hover:text-foreground"
+                                  title="Edit"
+                                >
+                                  <Edit3 className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteEvent(evt.id)}
+                                  className="p-1 rounded text-muted-foreground hover:text-rose-500"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -562,17 +767,27 @@ export const InterviewCalendarWidget: React.FC = () => {
                             ) : (
                               <Circle className="w-3.5 h-3.5" />
                             )}
-                            <span>{evt.completed ? "Completed" : "Mark as Completed"}</span>
+                            <span>{evt.completed ? "Completed" : "Mark Done"}</span>
                           </button>
 
                           {evt.link && (
                             <a
                               href={evt.link}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[11px] text-blue-500 hover:underline inline-flex items-center gap-1 font-semibold"
+                              onClick={(e) => {
+                                if (evt.link?.startsWith("/") || evt.link?.includes(window.location.host)) {
+                                  e.preventDefault();
+                                  window.location.href = evt.link;
+                                }
+                              }}
+                              className={cn(
+                                "text-[11px] font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-md shadow-xs transition-all",
+                                isCollegeDrive
+                                  ? "bg-violet-600 hover:bg-violet-500 text-white"
+                                  : "text-blue-500 hover:underline"
+                              )}
                             >
-                              Join Link <ExternalLink className="w-3 h-3" />
+                              <span>{isCollegeDrive ? "Start Assessment" : "Join Link"}</span>
+                              <ExternalLink className="w-3 h-3" />
                             </a>
                           )}
                         </div>
@@ -580,33 +795,33 @@ export const InterviewCalendarWidget: React.FC = () => {
                     );
                   })}
                 </div>
-              </motion.div>
+              </div>
             )}
           </div>
         )}
       </CardContent>
 
-      {/* Add / Edit Event Dialog */}
+      {/* Schedule Item Dialog (Add/Edit) */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[480px] rounded-3xl p-6">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-blue-500" />
-              {editingEventId ? "Edit Scheduled Event" : "Schedule Interview / Deadline"}
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-violet-500" />
+              {editingEventId ? "Edit Calendar Item" : "Schedule Interview or Goal"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Add upcoming interview rounds, application deadlines, mock tests, or study milestones.
+              Add upcoming interview rounds, online assessments (OAs), or prep deadlines.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSaveEvent} className="space-y-4 pt-2">
+          <form onSubmit={handleSaveEvent} className="space-y-3.5 py-2">
             {/* Title */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground">
-                Event Title <span className="text-rose-500">*</span>
+                Title <span className="text-rose-500">*</span>
               </label>
               <Input
-                placeholder="e.g. Google L4 Tech Screen, Amazon OA Deadline"
+                placeholder="e.g. SDE-1 Coding Round, OA Assessment"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="h-9 text-xs rounded-xl"
@@ -614,7 +829,7 @@ export const InterviewCalendarWidget: React.FC = () => {
               />
             </div>
 
-            {/* Category & Company */}
+            {/* Type & Company */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">
@@ -639,10 +854,10 @@ export const InterviewCalendarWidget: React.FC = () => {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  Company (Optional)
+                  Company / Organization (Optional)
                 </label>
                 <Input
-                  placeholder="e.g. Google, Amazon"
+                  placeholder="e.g. Google, Amazon, College"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                   className="h-9 text-xs rounded-xl"
@@ -678,13 +893,13 @@ export const InterviewCalendarWidget: React.FC = () => {
               </div>
             </div>
 
-            {/* Meeting Link / Portal */}
+            {/* Link */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground">
-                Meeting Link / Portal URL (Optional)
+                Meeting / Assessment Link (Optional)
               </label>
               <Input
-                placeholder="e.g. https://meet.google.com/xyz or https://jobs.lever.co/..."
+                placeholder="https://... or assessment URL"
                 value={formData.link}
                 onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                 className="h-9 text-xs rounded-xl"
@@ -694,30 +909,30 @@ export const InterviewCalendarWidget: React.FC = () => {
             {/* Notes */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground">
-                Notes / Prep Strategy (Optional)
+                Prep Notes & Topics
               </label>
               <Textarea
-                placeholder="e.g. Topics to review, interviewer details, key focus areas..."
+                placeholder="Key topics to review, questions to ask interviewer, etc."
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="text-xs rounded-xl min-h-[70px] resize-none"
+                className="text-xs rounded-xl min-h-[60px] resize-none"
               />
             </div>
 
-            <DialogFooter className="pt-3">
+            <DialogFooter className="pt-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
-                className="h-9 text-xs rounded-xl"
+                className="h-8 text-xs rounded-xl"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-9 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl"
+                className="h-8 text-xs bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl"
               >
-                {editingEventId ? "Save Changes" : "Schedule Event"}
+                {editingEventId ? "Save Changes" : "Add to Schedule"}
               </Button>
             </DialogFooter>
           </form>
