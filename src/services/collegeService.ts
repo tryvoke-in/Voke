@@ -291,20 +291,61 @@ export const collegeService = {
   getCollegeByDomain(domain: string): College | undefined {
     if (!domain) return undefined;
     const cleanDomain = domain.toLowerCase().trim().replace(/^@/, "");
-    const colleges = this.getColleges();
+    
+    // Generic public email domains must never match a partner college
+    const publicEmailProviders = [
+      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", 
+      "icloud.com", "aol.com", "zoho.com", "protonmail.com", "proton.me",
+      "yandex.com", "mail.com", "gmx.com", "rediffmail.com"
+    ];
+    if (publicEmailProviders.includes(cleanDomain)) {
+      return undefined;
+    }
 
+    const colleges = this.getColleges();
     return colleges.find(c =>
       c.domains.some(d => {
         const cd = d.toLowerCase().trim().replace(/^@/, "");
-        return cleanDomain === cd || cleanDomain.endsWith("." + cd) || cd.endsWith("." + cleanDomain);
+        return cleanDomain === cd || cleanDomain.endsWith("." + cd);
       })
     );
   },
 
   getCollegeByEmail(email: string): College | undefined {
     if (!email || !email.includes("@")) return undefined;
-    const domain = email.split("@")[1].toLowerCase().trim();
+    const domain = email.split("@")[1]?.toLowerCase().trim();
+    if (!domain) return undefined;
+
+    const publicEmailProviders = [
+      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", 
+      "icloud.com", "aol.com", "zoho.com", "protonmail.com", "proton.me",
+      "yandex.com", "mail.com", "gmx.com", "rediffmail.com"
+    ];
+    if (publicEmailProviders.includes(domain)) {
+      return undefined;
+    }
+
     return this.getCollegeByDomain(domain);
+  },
+
+  isEmailMatchingCollege(email: string, college: College): boolean {
+    if (!email || !email.includes("@") || !college || !college.domains) return false;
+    const domain = email.split("@")[1]?.toLowerCase().trim();
+    if (!domain) return false;
+
+    const publicEmailProviders = [
+      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", 
+      "icloud.com", "aol.com", "zoho.com", "protonmail.com", "proton.me",
+      "yandex.com", "mail.com", "gmx.com", "rediffmail.com"
+    ];
+    if (publicEmailProviders.includes(domain)) {
+      return false;
+    }
+
+    return college.domains.some(d => {
+      const cd = d.toLowerCase().trim().replace(/^@/, "");
+      return domain === cd || domain.endsWith("." + cd);
+    });
   },
 
   // Authenticate College Admin
@@ -427,8 +468,13 @@ export const collegeService = {
 
     const cleanEmail = studentInfo.email.toLowerCase().trim();
     const college = this.getCollegeByEmail(cleanEmail);
-    const collegeName = college?.name || "Newton School of Technology";
-    const collegeId = college?.id || "college-nst";
+    // ONLY register students whose email domain strictly matches a partner college
+    if (!college) {
+      return null;
+    }
+
+    const collegeName = college.name;
+    const collegeId = college.id;
 
     const newStudent: CollegeStudent = {
       id: `std-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
@@ -451,7 +497,8 @@ export const collegeService = {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
       const existing: CollegeStudent[] = stored ? JSON.parse(stored) : [];
-      const filtered = existing.filter(s => s.email.toLowerCase() !== cleanEmail);
+      // Clean up and keep only matching institutional students
+      const filtered = existing.filter(s => s.email.toLowerCase() !== cleanEmail && this.getCollegeByEmail(s.email));
       const updated = [newStudent, ...filtered];
       localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(updated));
 
@@ -498,7 +545,8 @@ export const collegeService = {
 
     const cleanEmail = student.email.toLowerCase().trim();
     const resolvedCollege = this.getCollegeByEmail(cleanEmail);
-    const finalCollegeName = resolvedCollege?.name || student.collegeName;
+    if (!resolvedCollege) return null;
+    const finalCollegeName = resolvedCollege.name;
 
     try {
       await supabase.from('waitlist').upsert({
@@ -573,23 +621,14 @@ export const collegeService = {
 
     let registeredList: CollegeStudent[] = [];
 
-    // 1. Fetch dynamically registered students from local registry
+    // 1. Fetch dynamically registered students from local registry (strictly matching domain)
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
       if (stored) {
         const allRegistered: CollegeStudent[] = JSON.parse(stored);
         const filtered = allRegistered.filter(s => {
           if (!s.email) return false;
-          const emailDomain = s.email.split("@")[1]?.toLowerCase();
-          return (
-            s.collegeId === college.id ||
-            s.collegeName.toLowerCase() === college.name.toLowerCase() ||
-            (emailDomain && college.domains.some(d => {
-              const cd = d.toLowerCase().trim().replace(/^@/, "");
-              return emailDomain === cd || emailDomain.endsWith("." + cd) || cd.endsWith("." + emailDomain);
-            })) ||
-            (college.id === "college-nst" && (s.email.includes("nst") || s.email.includes("rishihood") || s.email.includes("newton")))
-          );
+          return this.isEmailMatchingCollege(s.email, college);
         });
         registeredList.push(...filtered);
       }
@@ -611,6 +650,11 @@ export const collegeService = {
           const cleanEmail = row.email.toLowerCase().trim();
           if (cleanEmail.includes('@drives.voke.internal')) continue;
 
+          // STRICT ENFORCEMENT: Email domain MUST match this college's official domains
+          if (!this.isEmailMatchingCollege(cleanEmail, college)) {
+            continue;
+          }
+
           let parsedStudent: Partial<CollegeStudent> | null = null;
           if (row.phone_number) {
             try {
@@ -618,49 +662,30 @@ export const collegeService = {
             } catch {}
           }
 
-          const emailDomain = cleanEmail.split("@")[1];
-          const matchesDomain = emailDomain && college.domains.some(d => {
-            const cd = d.toLowerCase().trim().replace(/^@/, "");
-            return emailDomain === cd || emailDomain.endsWith("." + cd) || cd.endsWith("." + emailDomain);
+          const studentName = parsedStudent?.fullName || cleanEmail.split("@")[0].replace(/[._]/g, " ");
+          registeredList.push({
+            id: parsedStudent?.id || `std-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
+            collegeId: college.id,
+            collegeName: college.name,
+            fullName: studentName,
+            email: cleanEmail,
+            branch: parsedStudent?.branch || "Computer Science & AI",
+            batch: parsedStudent?.batch || "2025",
+            targetRole: parsedStudent?.targetRole || "Software Development Engineer (SDE-1)",
+            interviewsCompleted: parsedStudent?.interviewsCompleted ?? 0,
+            averageScore: parsedStudent?.averageScore ?? 0,
+            readinessStatus: parsedStudent?.readinessStatus || ((parsedStudent?.averageScore ?? 0) >= 80 ? "Placement Ready" : "Needs Practice"),
+            lastActive: parsedStudent?.lastActive || "Enrolled",
+            registeredAt: parsedStudent?.registeredAt || (row.created_at ? row.created_at.split("T")[0] : new Date().toISOString().split("T")[0]),
+            skills: parsedStudent?.skills || { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
           });
-          const matchesCollege = row.college_name && (
-            row.college_name.toLowerCase().includes(college.shortName.toLowerCase()) ||
-            college.name.toLowerCase().includes(row.college_name.toLowerCase()) ||
-            row.college_name.toLowerCase() === college.name.toLowerCase()
-          );
-          const isNST = (college.id === "college-nst" || college.domains.some(d => d.includes("nst") || d.includes("rishihood"))) && (
-            cleanEmail.includes("nst") || 
-            cleanEmail.includes("rishihood") || 
-            cleanEmail.includes("newton") || 
-            matchesDomain
-          );
-
-          if (matchesDomain || matchesCollege || isNST) {
-            const studentName = parsedStudent?.fullName || cleanEmail.split("@")[0].replace(/[._]/g, " ");
-            registeredList.push({
-              id: parsedStudent?.id || `std-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
-              collegeId: college.id,
-              collegeName: college.name,
-              fullName: studentName,
-              email: cleanEmail,
-              branch: parsedStudent?.branch || "Computer Science & AI",
-              batch: parsedStudent?.batch || "2025",
-              targetRole: parsedStudent?.targetRole || "Software Development Engineer (SDE-1)",
-              interviewsCompleted: parsedStudent?.interviewsCompleted ?? 0,
-              averageScore: parsedStudent?.averageScore ?? 0,
-              readinessStatus: parsedStudent?.readinessStatus || ((parsedStudent?.averageScore ?? 0) >= 80 ? "Placement Ready" : "Needs Practice"),
-              lastActive: parsedStudent?.lastActive || "Enrolled",
-              registeredAt: parsedStudent?.registeredAt || (row.created_at ? row.created_at.split("T")[0] : new Date().toISOString().split("T")[0]),
-              skills: parsedStudent?.skills || { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
-            });
-          }
         }
       }
     } catch (e) {
       console.warn("Error querying waitlist for students:", e);
     }
 
-    // 3. Query Supabase database profiles & public profiles dynamically
+    // 3. Query Supabase database profiles & public profiles dynamically (strictly matching domain)
     try {
       const { data: dbProfiles } = await supabase
         .from('profiles')
@@ -669,48 +694,37 @@ export const collegeService = {
       if (dbProfiles && dbProfiles.length > 0) {
         for (const prof of dbProfiles) {
           const profEmail = (prof.email || "").toLowerCase().trim();
-          const profName = prof.full_name || prof.name || (profEmail ? profEmail.split("@")[0].replace(/[._]/g, " ") : "");
-          if (!profEmail && !profName) continue;
+          if (!profEmail) continue;
 
-          const emailDomain = profEmail.split("@")[1];
-          const matchesDomain = emailDomain && college.domains.some(d => {
-            const cd = d.toLowerCase().trim().replace(/^@/, "");
-            return emailDomain === cd || emailDomain.endsWith("." + cd) || cd.endsWith("." + emailDomain);
-          });
-          const matchesCollege = prof.college_id === college.id || prof.college_name?.toLowerCase() === college.name.toLowerCase();
-          const isNST = college.id === "college-nst" && (
-            profEmail.includes("nst") || 
-            profEmail.includes("rishihood") || 
-            profEmail.includes("newton") || 
-            matchesDomain
-          );
-
-          if (matchesDomain || matchesCollege || isNST || (!profEmail && prof.full_name)) {
-            const resolvedEmail = profEmail || `student-${prof.id.substring(0, 6)}@${college.domains[0] || 'nst.rishihood.edu.in'}`;
-            registeredList.push({
-              id: prof.id,
-              collegeId: college.id,
-              collegeName: college.name,
-              fullName: profName || "College Student",
-              email: resolvedEmail,
-              branch: prof.branch || "Computer Science & AI",
-              batch: prof.batch || "2025",
-              targetRole: prof.target_role || prof.role || "Software Development Engineer (SDE-1)",
-              interviewsCompleted: prof.interviews_completed || 0,
-              averageScore: prof.average_score || 0,
-              readinessStatus: (prof.average_score || 0) >= 80 ? "Placement Ready" : (prof.average_score || 0) >= 60 ? "Intermediate" : "Needs Practice",
-              lastActive: "Active recently",
-              registeredAt: prof.created_at ? prof.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
-              skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
-            });
+          // STRICT ENFORCEMENT: Email domain MUST match this college's official domains
+          if (!this.isEmailMatchingCollege(profEmail, college)) {
+            continue;
           }
+
+          const profName = prof.full_name || prof.name || profEmail.split("@")[0].replace(/[._]/g, " ");
+          registeredList.push({
+            id: prof.id,
+            collegeId: college.id,
+            collegeName: college.name,
+            fullName: profName,
+            email: profEmail,
+            branch: prof.branch || "Computer Science & AI",
+            batch: prof.batch || "2025",
+            targetRole: prof.target_role || prof.role || "Software Development Engineer (SDE-1)",
+            interviewsCompleted: prof.interviews_completed || 0,
+            averageScore: prof.average_score || 0,
+            readinessStatus: (prof.average_score || 0) >= 80 ? "Placement Ready" : (prof.average_score || 0) >= 60 ? "Intermediate" : "Needs Practice",
+            lastActive: "Active recently",
+            registeredAt: prof.created_at ? prof.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
+            skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
+          });
         }
       }
     } catch (e) {
       console.warn("Error querying database profiles:", e);
     }
 
-    // 4. Include all candidates from college drives (so anyone invited or evaluated is in the directory)
+    // 4. Include candidates from college drives (strictly matching domain)
     try {
       const allDrives = await this.getCollegeDrivesAsync(college.id);
       for (const drive of allDrives) {
@@ -718,13 +732,8 @@ export const collegeService = {
           for (const cand of drive.candidates) {
             if (cand.studentEmail) {
               const cleanEmail = cand.studentEmail.toLowerCase().trim();
-              // Only include candidates whose email domain matches the college
-              const candDomain = cleanEmail.split("@")[1];
-              const domainMatchesCollege = candDomain && college.domains.some(d => {
-                const cd = d.toLowerCase().trim().replace(/^@/, "");
-                return candDomain === cd || candDomain.endsWith("." + cd) || cd.endsWith("." + candDomain);
-              });
-              if (!domainMatchesCollege) continue;
+              if (!this.isEmailMatchingCollege(cleanEmail, college)) continue;
+
               registeredList.push({
                 id: `cand-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
                 collegeId: college.id,
@@ -752,7 +761,7 @@ export const collegeService = {
     // Strict deduplication by unique student email
     const uniqueMap = new Map<string, CollegeStudent>();
     for (const student of registeredList) {
-      if (student.email) {
+      if (student.email && this.isEmailMatchingCollege(student.email, college)) {
         const clean = student.email.toLowerCase().trim();
         if (!uniqueMap.has(clean)) {
           uniqueMap.set(clean, student);

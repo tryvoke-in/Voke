@@ -143,10 +143,12 @@ function normalizeAndCompare(actual: any, expectedStr: string): boolean {
   return false;
 }
 
+export type SupportedLanguage = 'javascript' | 'python' | 'bash' | 'typescript' | 'java' | 'cpp' | 'c' | 'rust' | 'go' | 'ruby' | 'php' | 'swift' | 'kotlin' | 'scala';
+
 // ─── Main Execution Function ─────────────────────────────────────────────────
 export const executeCode = async (
   userCode: string,
-  language: 'javascript' | 'python' | 'bash' | 'typescript' | 'java' | 'cpp' | 'c' | 'rust' | 'go' | 'ruby' | 'php' | 'swift' | 'kotlin' | 'scala',
+  language: SupportedLanguage,
   onLog?: (log: string) => void,
   onInputRequest?: (prompt: string) => void,
   stdin?: string,

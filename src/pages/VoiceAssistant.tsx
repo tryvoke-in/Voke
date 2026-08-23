@@ -2,14 +2,21 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { AudioVisualizerSimple } from '@/components/AudioVisualizerSimple';
 import { LiveStatus, MessageLog } from '@/types/voice';
-import { Mic, X, MessageSquare, Sparkles, AlertCircle, ArrowLeft, Code, Play, Send, Maximize2, Minimize2, FileText, LogOut, Video, VideoOff, Camera, User, Briefcase, Building, Layers, Award, Target, Settings, ChevronRight, Check, Volume2 } from 'lucide-react';
-import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
+import {
+  Mic, MicOff, X, MessageSquare, Sparkles, AlertCircle, ArrowLeft,
+  Code2, Play, Send, Maximize2, Minimize2, FileText, LogOut, Video,
+  VideoOff, Camera, User, Briefcase, Building2, Layers, Award, Target,
+  Settings, ChevronRight, Check, Volume2, Radio, Terminal, RefreshCw,
+  Clock, ShieldCheck, CheckCircle2, Bot, HelpCircle, ChevronDown, ChevronUp,
+  Cpu, Zap, BookOpen, Laptop, Edit3
+} from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import Editor from "@monaco-editor/react";
-import { executeCode } from "@/utils/codeExecutor";
+import { executeCode, SupportedLanguage } from "@/utils/codeExecutor";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import ReactMarkdown from 'react-markdown';
@@ -17,6 +24,32 @@ import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 import { InterviewGate } from "@/components/InterviewGate";
 import { loadUserProfileContext } from "@/utils/profileContext";
 import { collegeService, CollegeScheduledDrive } from "@/services/collegeService";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+const PRESET_ROLES = [
+  "Full Stack Developer",
+  "Frontend Engineer",
+  "Backend Engineer",
+  "Software Engineer (SDE II)",
+  "AI & Machine Learning Engineer",
+  "System Design & Architecture",
+];
+
+const PRESET_COMPANIES = [
+  "Google", "Amazon", "Microsoft", "Meta", "Uber", "High-Growth Startup"
+];
+
+const PRESET_EXPERIENCE = [
+  { id: "Fresh Graduate / Entry", label: "Fresher / Entry (0-1 yr)" },
+  { id: "Mid-Level (2-5 yrs)", label: "Mid-Level (2-5 yrs)" },
+  { id: "Senior / Lead (5+ yrs)", label: "Senior (5+ yrs)" },
+];
 
 const VoiceAssistant: React.FC = () => {
   const navigate = useNavigate();
@@ -44,13 +77,12 @@ const VoiceAssistant: React.FC = () => {
   const [loadingContext, setLoadingContext] = useState(true);
   const [interviewMode, setInterviewMode] = useState<'voice' | 'coding'>('voice');
 
-  // Pre-Interview Setup / Configuration State (Defaults to true for direct interview screen)
-  const [isConfigured, setIsConfigured] = useState<boolean>(true);
-  const [targetRole, setTargetRole] = useState<string>("Software Engineer");
+  // Interview Target Context State
+  const [targetRole, setTargetRole] = useState<string>("Full Stack Developer");
   const [customRole, setCustomRole] = useState<string>("");
-  const [selectedDomain, setSelectedDomain] = useState<string>("Full Stack & Web");
-  const [interviewType, setInterviewType] = useState<string>("Full Mock Interview");
-  const [targetCompany, setTargetCompany] = useState<string>("Top Tech Company");
+  const [selectedDomain, setSelectedDomain] = useState<string>("Full Stack & Web Development");
+  const [interviewType, setInterviewType] = useState<string>("Comprehensive Technical & Behavioral Mock");
+  const [targetCompany, setTargetCompany] = useState<string>("Google");
   const [customCompany, setCustomCompany] = useState<string>("");
   const [experienceLevel, setExperienceLevel] = useState<string>("Mid-Level (2-5 yrs)");
   const [candidateProfileName, setCandidateProfileName] = useState<string>("Candidate");
@@ -66,14 +98,17 @@ const VoiceAssistant: React.FC = () => {
   const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean>(false);
   const [isRecordingVideo, setIsRecordingVideo] = useState<boolean>(false);
+  const [isTranscriptOpen, setIsTranscriptOpen] = useState<boolean>(true);
 
   // Coding State
+  const [codeLanguage, setCodeLanguage] = useState<SupportedLanguage>("python");
   const [code, setCode] = useState<string>("# Write your solution here\ndef solve():\n    pass");
   const [codeOutput, setCodeOutput] = useState<string>("");
   const [isRunning, setIsRunning] = useState(false);
-  const [problemStatement, setProblemStatement] = useState<string>("Waiting for problem statement...");
+  const [problemStatement, setProblemStatement] = useState<string>("Waiting for technical problem statement...");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [evaluationStage, setEvaluationStage] = useState<string>("");
 
   // Detailed Feedback State
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -97,6 +132,7 @@ const VoiceAssistant: React.FC = () => {
       mediaStreamRef.current = stream;
       setHasCameraPermission(true);
       setIsCameraOn(true);
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
@@ -181,7 +217,7 @@ const VoiceAssistant: React.FC = () => {
     if (miniVideoRef.current && mediaStreamRef.current) {
       miniVideoRef.current.srcObject = mediaStreamRef.current;
     }
-  }, [hasCameraPermission, interviewMode, status, isConfigured]);
+  }, [hasCameraPermission, interviewMode, status]);
 
   // Handle recording trigger on status change
   useEffect(() => {
@@ -205,10 +241,9 @@ const VoiceAssistant: React.FC = () => {
             setInterviewMode('coding');
 
             const text = lastMsg.text.replace('[START_CODING]', '').trim();
-            // Clean up other tokens just in case
             const cleanText = text.replace(/\[.*?\]/g, '').trim();
             setProblemStatement(cleanText || "Listen to the interviewer for the problem statement.");
-            toast.info("Coding Phase Started!");
+            toast.info("💻 Coding phase started! Write and test your solution.");
           }
         }
 
@@ -217,7 +252,7 @@ const VoiceAssistant: React.FC = () => {
           if (interviewMode !== 'voice') {
             console.log("Transitioning back to VOICE mode");
             setInterviewMode('voice');
-            toast.success("Coding phase completed. Switching back to voice.");
+            toast.success("✅ Coding phase completed. Switching back to voice dialogue.");
           }
         }
 
@@ -227,12 +262,7 @@ const VoiceAssistant: React.FC = () => {
           if (parts.length > 1) {
             const feedbackContent = parts[1].trim();
             setFeedback(feedbackContent);
-            toast("New feedback available!", {
-              action: {
-                label: "View",
-                onClick: () => console.log("Feedback clicked")
-              }
-            });
+            toast("💡 New interviewer feedback available!");
           }
         }
       }
@@ -280,7 +310,7 @@ const VoiceAssistant: React.FC = () => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const loadUserContext = async () => {
@@ -300,11 +330,13 @@ const VoiceAssistant: React.FC = () => {
         if (profileCtx.context) {
           setGithubProjectsText(profileCtx.context);
         }
+        if (profileCtx.targetRole) {
+          setTargetRole(profileCtx.targetRole);
+        }
       }
 
       // Check if launched for a College Placement Drive
       if (driveId) {
-        setIsConfigured(true);
         let drive = collegeService.getDriveById(driveId);
         if (!drive) {
           const drives = await collegeService.getCollegeDrivesAsync("college-nst");
@@ -314,7 +346,7 @@ const VoiceAssistant: React.FC = () => {
           setCollegeDrive(drive);
           setTargetRole(drive.targetRole);
           setTargetCompany(drive.collegeName);
-          setInterviewType("College Placement Drive");
+          setInterviewType("College Placement Assessment");
         }
       }
     } catch (error) {
@@ -340,21 +372,15 @@ const VoiceAssistant: React.FC = () => {
     }
 
     if (collegeDrive) {
-      // Mandatory Question 1 is ALWAYS: Introduce yourself
-      const introQ = "Please introduce yourself, your academic background, core technical skills, and key projects you have built.";
-      
       const rawCustom = collegeDrive.customQuestions || [];
-      
-      // If the college uploaded custom questions (cq-...), prioritize those over default dummy presets (q1, q2, q3, q4)
       const customUploaded = rawCustom.filter(q => q.id && q.id.startsWith("cq-"));
       const baseQuestions = customUploaded.length > 0 ? customUploaded : rawCustom;
 
-      const filteredCustom = baseQuestions.filter(q => 
+      const filteredCustom = baseQuestions.filter(q =>
         !q.question.toLowerCase().includes("introduce yourself") &&
         !q.question.toLowerCase().includes("tell me about yourself")
       );
 
-      // Randomize / shuffle question sequence so every student receives questions in a random order
       const shuffledCustom = [...filteredCustom];
       for (let i = shuffledCustom.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -371,10 +397,9 @@ const VoiceAssistant: React.FC = () => {
         ...customSlice.map(q => q.question)
       ];
 
-      console.log('[VoiceAssistant] Loaded Random-Ordered College Assessment Questions (Total:', fixedQuestions.length, '):', fixedQuestions);
+      console.log('[VoiceAssistant] Loaded Random-Ordered College Assessment Questions:', fixedQuestions);
 
       setUserContext(`Institutional Placement Assessment for ${collegeDrive.collegeName}. Candidate: ${candidateProfileName}. Target Role: ${collegeDrive.targetRole}`);
-      setIsConfigured(true);
 
       if (!hasCameraPermission) {
         await startCamera();
@@ -396,7 +421,6 @@ CRITICAL INTERVIEW GUIDELINES:
 4. LIVE CODING: When ready to evaluate coding, say "[START_CODING]" and present an algorithmic challenge tailored for a ${activeRole}.`;
 
     setUserContext(context);
-    setIsConfigured(true);
 
     if (!hasCameraPermission) {
       await startCamera();
@@ -412,20 +436,20 @@ CRITICAL INTERVIEW GUIDELINES:
 
   const handleEndInterview = async () => {
     if (logs.length === 0) {
-      toast.error("No conversation to analyze yet.");
+      toast.error("No conversation recorded to analyze yet.");
       return;
     }
 
     disconnect();
     const videoBlob = stopVideoRecording();
-    const toastId = toast.loading("Saving session...");
     setIsSaving(true);
+    setEvaluationStage("Analyzing speech transcript & technical depth...");
 
     const activeRole = customRole.trim() || targetRole;
     const activeCompany = customCompany.trim() || targetCompany;
 
     const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
-    const activeEmail = user?.email || (collegeDrive?.targetEmails && collegeDrive.targetEmails[0]) || "anurag.s25561@nst.rishihood.edu.in";
+    const activeEmail = user?.email || (collegeDrive?.targetEmails && collegeDrive.targetEmails[0]) || "student@voke.in";
     const candidateName = candidateProfileName || user?.user_metadata?.full_name || activeEmail.split("@")[0].replace(/[._]/g, " ");
 
     // 1. FIRST: Always record college drive completion immediately
@@ -445,19 +469,18 @@ CRITICAL INTERVIEW GUIDELINES:
           feedback: isPassed ? "Candidate exceeded institutional passing criteria with strong technical depth." : "Below benchmark score threshold.",
         });
 
-        // Clean calendar cache in localStorage
         try {
           const calSaved = localStorage.getItem("voke_user_calendar_events");
           if (calSaved) {
             const calEvents = JSON.parse(calSaved);
-            const filteredCal = calEvents.filter((e: any) => 
-              e.id !== `college-drive-${collegeDrive.id}` && 
+            const filteredCal = calEvents.filter((e: any) =>
+              e.id !== `college-drive-${collegeDrive.id}` &&
               e.id !== collegeDrive.id &&
               (!e.link || !e.link.includes(collegeDrive.id))
             );
             localStorage.setItem("voke_user_calendar_events", JSON.stringify(filteredCal));
           }
-        } catch (e) {}
+        } catch (e) { }
       } catch (colErr) {
         console.error("College sync record error:", colErr);
       }
@@ -488,7 +511,7 @@ CRITICAL INTERVIEW GUIDELINES:
         if (data) sessionId = data.id;
       }
 
-      toast.loading("Analyzing session performance...", { id: toastId });
+      setEvaluationStage("Generating 6Q competency matrix & scorecard...");
 
       // Trigger analysis
       try {
@@ -543,13 +566,12 @@ CRITICAL INTERVIEW GUIDELINES:
               analysis_result: evaluation
             } as any)
             .eq('id', sessionId);
-
-          }
+        }
       } catch (evalError) {
         console.error("Evaluation trigger failed:", evalError);
       }
 
-      // Synchronize candidate score and selection status to College Admin Portal & purge from calendar
+      // Synchronize candidate score and selection status to College Admin Portal
       if (collegeDrive) {
         try {
           const finalScore = (evaluation && evaluation.score) || 75;
@@ -565,17 +587,6 @@ CRITICAL INTERVIEW GUIDELINES:
             feedback: (evaluation && evaluation.feedback) || (isPassed ? "Candidate exceeded institutional passing benchmark." : "Below benchmark threshold."),
           });
 
-          const calSaved = localStorage.getItem("voke_user_calendar_events");
-          if (calSaved) {
-            const calEvents = JSON.parse(calSaved);
-            const filteredCal = calEvents.filter((e: any) => 
-              e.id !== `college-drive-${collegeDrive.id}` && 
-              e.id !== collegeDrive.id &&
-              (!e.link || !e.link.includes(collegeDrive.id))
-            );
-            localStorage.setItem("voke_user_calendar_events", JSON.stringify(filteredCal));
-          }
-
           if (isPassed) {
             toast.success(`🎉 CONGRATULATIONS! Score: ${finalScore}% >= ${benchmark}%. You are SELECTED for the campus shortlist!`, { duration: 7000 });
           } else {
@@ -586,9 +597,7 @@ CRITICAL INTERVIEW GUIDELINES:
         }
       }
 
-      toast.dismiss(toastId);
       toast.success("Pro Interview session saved successfully!");
-
       navigate(`/voice-interview/results/${sessionId}`);
       if (!collegeDrive && !driveId) {
         await consumeCredit();
@@ -596,7 +605,6 @@ CRITICAL INTERVIEW GUIDELINES:
 
     } catch (error: any) {
       console.error("Error saving session:", error);
-      toast.dismiss(toastId);
       toast.error(`Failed to save session: ${error.message}`);
     } finally {
       setIsSaving(false);
@@ -605,10 +613,10 @@ CRITICAL INTERVIEW GUIDELINES:
 
   const handleRunCode = async () => {
     setIsRunning(true);
-    setCodeOutput("Running...");
+    setCodeOutput("Executing code...\n");
     try {
-      await executeCode(code, 'python',
-        (log) => setCodeOutput(prev => prev === "Running..." ? log : prev + log),
+      await executeCode(code, codeLanguage,
+        (log) => setCodeOutput(prev => prev === "Executing code...\n" ? log : prev + log),
         () => { },
         ""
       );
@@ -622,9 +630,9 @@ CRITICAL INTERVIEW GUIDELINES:
   const handleSubmitCode = async () => {
     setIsSubmitting(true);
     try {
-      const prompt = `USER SUBMITTED CODE:\n\`\`\`python\n${code}\n\`\`\`\n\nOUTPUT:\n${codeOutput}\n\nINSTRUCTION: Review this code. Do NOT simply accept it or say it's correct. Ask a SOCRATIC QUESTION about their implementation choices, efficiency, or potential bugs. engage in a discussion.`;
+      const prompt = `USER SUBMITTED CODE (${codeLanguage}):\n\`\`\`${codeLanguage}\n${code}\n\`\`\`\n\nOUTPUT:\n${codeOutput}\n\nINSTRUCTION: Review this code. Do NOT simply accept it or say it's correct. Ask a SOCRATIC QUESTION about their implementation choices, efficiency, Big-O complexity, or edge cases. Engage in a realistic technical discussion.`;
       await sendHiddenContext(prompt);
-      toast.success("Code submitted for discussion!");
+      toast.success("Code submitted for discussion with the interviewer!");
     } catch (e) {
       toast.error("Failed to submit code");
     } finally {
@@ -635,44 +643,106 @@ CRITICAL INTERVIEW GUIDELINES:
   const isConnected = status === LiveStatus.CONNECTED;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden font-sans select-none">
 
-      {/* Header / Nav */}
-      <header className="sticky top-0 z-50 w-full px-4 sm:px-6 py-3 flex items-center justify-between backdrop-blur-xl bg-background/80 dark:bg-background/60 border-b border-border/60">
-        <Button
-          variant="outline"
-          size="sm"
-          className="bg-card hover:bg-secondary/60 text-foreground border-border/80 shadow-xs rounded-xl px-3.5 py-2 font-semibold text-xs sm:text-sm flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
-          onClick={() => navigate('/dashboard')}
-        >
-          <ArrowLeft className="w-4 h-4 text-foreground" />
-          Back to Dashboard
-        </Button>
+      {/* Atmospheric Theme Gradient Glows */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-primary/10 dark:bg-primary/15 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-32 w-[600px] h-[600px] bg-violet-500/10 dark:bg-violet-600/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 dark:bg-cyan-500/10 rounded-full blur-3xl" />
+      </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+      {/* Header Bar */}
+      <header className="sticky top-0 z-50 w-full px-4 sm:px-6 py-2.5 flex items-center justify-between backdrop-blur-xl bg-background/80 dark:bg-background/70 border-b border-border/70 transition-all">
+        {/* Left: Brand / Back */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/dashboard')}
+            className="rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-medium hover:bg-secondary/70 text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Dashboard</span>
+          </Button>
+
+          <div className="h-4 w-[1px] bg-border/80 hidden sm:block" />
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
+              <img
+                src="/images/voke_logo.png"
+                alt="Voke"
+                className="w-6 h-6 object-contain"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+              <span className="font-extrabold text-sm tracking-tight text-foreground">
+                Voke
+              </span>
+            </div>
+
+            <Badge className="bg-primary/15 hover:bg-primary/20 text-primary border border-primary/30 text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">
+              Pro Interview
+            </Badge>
+
+            {collegeDrive && (
+              <Badge className="hidden md:inline-flex bg-violet-500/15 text-violet-600 dark:text-violet-300 border-violet-500/30 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                <Building2 className="w-3 h-3 mr-1" />
+                {collegeDrive.collegeName} Drive
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Center: Live Mode / Timer Status */}
+        <div className="flex items-center gap-2">
           
 
-          {status === LiveStatus.CONNECTED && (
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-xs font-mono font-bold text-red-600 dark:text-red-400 shadow-xs">
-              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span>LIVE {formatTime(duration)}</span>
-            </div>
+          {/* {isConnected && (
+            <Badge variant="outline" className="hidden sm:inline-flex text-xs px-2.5 py-1 rounded-full bg-card/80 border-border font-medium text-muted-foreground">
+              {interviewMode === 'coding' ? (
+                <span className="flex items-center gap-1.5 text-blue-500">
+                  <Code2 className="w-3.5 h-3.5" /> Coding Round
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-emerald-500">
+                  <Radio className="w-3.5 h-3.5 animate-pulse" /> Voice Dialogue
+                </span>
+              )}
+            </Badge>
+          )} */}
+        </div>
+
+        {/* Right: Theme Toggle & Actions */}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          {isConnected && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEndInterview}
+              disabled={isSaving}
+              className="rounded-xl text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 shadow-xs transition-all flex items-center gap-1.5"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>End & Score</span>
+            </Button>
           )}
         </div>
       </header>
 
-      {/* Background Decoration */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-violet-500/10 dark:bg-violet-500/15 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-fuchsia-500/10 dark:bg-purple-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }}></div>
-      </div>
+      {/* Main Container Area */}
+      <div className="z-10 flex-1 flex flex-col w-full relative">
 
-      {/* MAIN CONTENT AREA */}
-      <div className="z-10 flex-1 flex flex-col">
-
+        {/* Credits Gate / Loading Screen */}
         {creditsLoading && !driveId && !collegeDrive ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="flex-1 flex flex-col items-center justify-center p-8 gap-4">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-muted-foreground font-medium animate-pulse">
+              Preparing your interview room...
+            </p>
           </div>
         ) : !canTakeInterview && !isSaving && !collegeDrive && !driveId ? (
           <div className="flex-1 flex items-center justify-center p-4 md:p-8">
@@ -684,254 +754,244 @@ CRITICAL INTERVIEW GUIDELINES:
               grantFeedbackCredits={grantFeedbackCredits}
             />
           </div>
-        ) : !isConfigured && !collegeDrive && !driveId ? (
-          // === PRE-INTERVIEW SETUP CONFIGURATION SCREEN ===
-          <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-4xl mx-auto w-full my-10">
-            <div className="w-full bg-card dark:bg-card/60 backdrop-blur-xl border border-border/80 rounded-3xl p-6 md:p-10 shadow-2xl space-y-8 animate-in fade-in zoom-in-95">
-
-              {/* Header */}
-              <div className="text-center space-y-3">
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 dark:from-violet-400 dark:via-purple-300 dark:to-fuchsia-400 bg-clip-text text-transparent">
-                  Pro Interview
-                </h1>
-                <p className="text-muted-foreground dark:text-zinc-300 text-sm max-w-lg mx-auto leading-relaxed">
-                  Click below to start your AI-powered Pro Interview session.
-                </p>
-              </div>
-
-              {/* Action Submit Button */}
-              <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/50">
-                <div className="text-xs text-muted-foreground dark:text-zinc-300 flex items-center gap-2">
-                  <Video className="w-4 h-4 text-emerald-500" />
-                  Webcam video and audio recording enabled.
-                </div>
-                <Button
-                  onClick={handleStartConfiguredInterview}
-                  size="lg"
-                  className="w-full sm:w-auto bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-bold text-sm px-8 py-3 rounded-2xl shadow-xl shadow-purple-500/25 transition-all hover:scale-105"
-                >
-                  <Play className="w-4 h-4 mr-2 fill-white" />
-                  Start Pro Interview
-                </Button>
-              </div>
-
-            </div>
-          </div>
         ) : (
-          <>
+
+          /* =========================================================================
+             DIRECT INTERVIEW ROOM (VOICE OR CODING MODE)
+             ========================================================================= */
+          <div className="flex-1 flex flex-col w-full max-w-6xl mx-auto p-3 sm:p-5 md:p-6 gap-4 animate-in fade-in duration-300">
+
             {interviewMode === 'voice' ? (
-              // === VOICE & VIDEO MODE LAYOUT ===
-              <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full">
-                <div className="w-full flex flex-col gap-5">
-                  {/* Header Info */}
-                  {/* Header Info */}
-                  <div className="text-center space-y-2">
-                    <div className="flex items-center justify-center gap-2 flex-wrap">
-                      {collegeDrive && (
-                        <>
-                          <Badge className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs px-3 py-1 font-semibold shadow-md">
-                            <Building className="w-3.5 h-3.5 mr-1" /> {collegeDrive.collegeName} Placement Round
-                          </Badge>
-                          <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs px-2.5 py-1">
-                            Passing Benchmark: {collegeDrive.passingScore || 75}%
-                          </Badge>
-                        </>
-                      )}
-                      {status === LiveStatus.CONNECTED && (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground font-mono shadow-sm">
-                          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                          <span>REC {formatTime(duration)}</span>
-                        </div>
-                      )}
-                    </div>
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 dark:from-violet-400 dark:via-purple-300 dark:to-fuchsia-400 bg-clip-text text-transparent">
-                      {collegeDrive ? collegeDrive.title : "Pro Interview"}
-                    </h1>
-                    <p className="text-foreground/90 dark:text-zinc-200 text-xs sm:text-sm font-semibold max-w-md mx-auto">
-                      {collegeDrive ? (
-                        <>Role: <span className="text-violet-400 font-semibold">{collegeDrive.targetRole}</span> • Q1: Mandatory Intro + Randomized Questions</>
-                      ) : (
-                        <>{customRole.trim() || targetRole} • <span className="text-muted-foreground dark:text-zinc-400 font-normal">{selectedDomain}</span></>
-                      )}
-                    </p>
+              /* --- VOICE & VIDEO 1-ON-1 CALL STAGE --- */
+              <div className="flex-1 flex flex-col gap-4">
+
+                {/* Subheader / Role Context Banner */}
+                {collegeDrive && (
+                  <div className="flex items-center justify-between flex-wrap gap-2 px-1">
+                    <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-xs px-2.5 py-1">
+                      Passing Benchmark: {collegeDrive.passingScore || 75}%
+                    </Badge>
                   </div>
+                )}
 
-                  {/* 1-on-1 Video Call Container Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl mx-auto">
+                {/* 1-on-1 Video Grid (Interviewer vs Candidate) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 flex-1 min-h-[340px] items-stretch">
 
-                    {/* Card 1: AI Interviewer */}
-                    <div className="relative bg-card dark:bg-card/60 border-2 border-violet-500/30 dark:border-violet-500/30 rounded-3xl overflow-hidden backdrop-blur-xl shadow-xl dark:shadow-2xl flex flex-col items-center justify-center min-h-[360px] p-6 group hover:border-violet-500/60 transition-all duration-300">
-                      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-border/80 dark:border-zinc-700 text-xs font-bold text-foreground shadow-sm">
-                        <span>AI Interviewer</span>
-                      </div>
+                  {/* Card 1: AI Interviewer */}
+                  <div className="relative bg-card/90 dark:bg-card/70 border border-border/80 rounded-3xl overflow-hidden backdrop-blur-2xl shadow-xl flex flex-col items-center justify-center min-h-[320px] p-6 group transition-all">
 
-                      {status === LiveStatus.CONNECTING && (
-                        <div className="absolute inset-0 flex items-center justify-center z-30 bg-background/80 backdrop-blur-sm">
-                          <div className="flex flex-col items-center gap-3">
-                            <div className="w-9 h-9 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
-                            <span className="text-xs sm:text-sm font-bold text-foreground">Connecting AI agent...</span>
-                          </div>
+                    {/* Top Status Header Pill */}
+                    <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-background/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-border/80 text-xs font-bold text-foreground shadow-xs">
+                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                      <span>AI Lead Interviewer</span>
+                    </div>
+
+                    {/* Connecting State */}
+                    {status === LiveStatus.CONNECTING && (
+                      <div className="absolute inset-0 flex items-center justify-center z-30 bg-background/80 backdrop-blur-sm">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-9 h-9 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                          <span className="text-xs font-bold text-foreground">
+                            Connecting AI interviewer...
+                          </span>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      <AudioVisualizerSimple
-                        isUserSpeaking={isUserSpeaking}
-                        isAiSpeaking={isAiSpeaking}
-                        volume={volume}
-                      />
+                    {/* Center: Audio Visualizer */}
+                    <AudioVisualizerSimple
+                      isUserSpeaking={isUserSpeaking}
+                      isAiSpeaking={isAiSpeaking}
+                      volume={volume}
+                      size="lg"
+                    />
 
-                      <div className="mt-4 text-xs font-medium flex items-center justify-center gap-2 flex-wrap">
-                        <div className={`text-xs font-bold px-3.5 py-1 rounded-full border flex items-center gap-2 transition-all ${
+                    {/* Dynamic AI Status Footer */}
+                    <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
+                      <div className={`text-xs font-bold px-3.5 py-1 rounded-full border flex items-center gap-2 transition-all ${
+                        isAiSpeaking
+                          ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/40 shadow-xs'
+                          : isUserSpeaking
+                          ? 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/40 shadow-xs'
+                          : 'bg-secondary/70 text-muted-foreground border-border/70'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full ${
                           isAiSpeaking
-                            ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/40 shadow-xs'
+                            ? 'bg-purple-500 animate-ping'
                             : isUserSpeaking
-                            ? 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/40 shadow-xs'
-                            : 'bg-secondary/70 dark:bg-zinc-800/80 text-foreground/80 dark:text-zinc-200 border-border/70 dark:border-zinc-700'
-                        }`}>
-                          <div className={`w-2 h-2 rounded-full ${
-                            isAiSpeaking
-                              ? 'bg-purple-500 animate-ping'
-                              : isUserSpeaking
-                              ? 'bg-blue-500 animate-ping'
-                              : 'bg-emerald-500'
-                          }`} />
-                          <span>{isAiSpeaking ? "AI Interviewer Speaking..." : isUserSpeaking ? "Listening to you..." : "Ready & Active"}</span>
-                        </div>
-
-                        {logs.some(l => l.role === 'assistant') && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const lastAssistantMsg = [...logs].reverse().find(l => l.role === 'assistant');
-                              if (lastAssistantMsg) speakText(lastAssistantMsg.text);
-                            }}
-                            className="text-[11px] h-6 px-3 rounded-full border-violet-500/40 bg-violet-950/40 text-violet-300 hover:bg-violet-600 hover:text-white transition-all shadow-sm flex items-center gap-1"
-                          >
-                            <Volume2 className="w-3 h-3 text-violet-400" /> Replay AI Voice
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Card 2: Candidate Video Feed (Webcam) */}
-                    <div className="relative bg-card dark:bg-card/60 border-2 border-fuchsia-500/30 dark:border-fuchsia-500/30 rounded-3xl overflow-hidden backdrop-blur-xl shadow-xl dark:shadow-2xl flex flex-col items-center justify-center min-h-[360px] group hover:border-fuchsia-500/60 transition-all duration-300">
-                      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-border/80 dark:border-zinc-700 text-xs font-bold text-foreground shadow-sm">
-                        <User className="w-3.5 h-3.5 text-fuchsia-500 dark:text-fuchsia-400" />
-                        <span>Candidate (You)</span>
-                      </div>
-
-                      {isConnected && (
-                        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-red-600 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md animate-pulse">
-                          REC
-                        </div>
-                      )}
-
-                      {hasCameraPermission && isCameraOn ? (
-                        <video
-                          ref={videoRef}
-                          autoPlay
-                          playsInline
-                          muted
-                          className="w-full h-full object-cover min-h-[360px] rounded-3xl transform -scale-x-100"
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center gap-3 p-8 text-center min-h-[360px]">
-                          <div className="w-16 h-16 rounded-2xl bg-secondary/80 dark:bg-zinc-800 border border-border/80 dark:border-zinc-700 flex items-center justify-center text-foreground">
-                            <VideoOff className="w-7 h-7 text-muted-foreground dark:text-zinc-400" />
-                          </div>
-                          <p className="text-xs sm:text-sm font-semibold text-foreground/80 dark:text-zinc-300">
-                            Camera disabled or permission needed
-                          </p>
-                          <Button size="sm" variant="outline" onClick={startCamera} className="text-xs rounded-xl gap-2 font-semibold border-border/80 bg-card hover:bg-secondary/60 text-foreground">
-                            <Camera className="w-3.5 h-3.5 text-blue-500" /> Enable Camera
-                          </Button>
-                        </div>
-                      )}
-
-                      {/* Video Controls Overlay */}
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md p-1.5 px-2.5 rounded-full border border-border/80 dark:border-zinc-700 shadow-md">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={toggleCamera}
-                          className="h-8 w-8 rounded-full text-foreground hover:bg-secondary/80 dark:hover:bg-zinc-800"
-                          title={isCameraOn ? "Turn Camera Off" : "Turn Camera On"}
-                        >
-                          {isCameraOn ? <Video className="w-4 h-4 text-emerald-500" /> : <VideoOff className="w-4 h-4 text-red-500" />}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Controls */}
-                  <div className="flex flex-col items-center justify-center gap-3 my-2">
-                    {!isConnected ? (
-                      <div className="flex flex-col items-center gap-2">
-                        <Button
-                          onClick={handleStartConfiguredInterview}
-                          disabled={status === LiveStatus.CONNECTING || loadingContext}
-                          size="lg"
-                          className="h-14 px-8 rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-bold text-sm shadow-xl shadow-purple-500/25 transition-all hover:scale-105 active:scale-95 flex items-center gap-2.5"
-                        >
-                          <Mic className="w-5 h-5 fill-white/20" />
-                          <span>Start Voice Interview Session</span>
-                        </Button>
-                        <span className="text-[11px] font-semibold text-muted-foreground dark:text-zinc-400">
-                          Click to connect with the AI Interviewer
+                            ? 'bg-blue-500 animate-ping'
+                            : 'bg-emerald-500'
+                        }`} />
+                        <span>
+                          {isAiSpeaking ? "Interviewer Speaking..." : isUserSpeaking ? "Listening to you..." : isConnected ? "Ready & Listening" : "Standby • Click Start Below"}
                         </span>
                       </div>
+
+                      {/* {logs.some(l => l.role === 'assistant') && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const lastAssistantMsg = [...logs].reverse().find(l => l.role === 'assistant');
+                            if (lastAssistantMsg) speakText(lastAssistantMsg.text);
+                          }}
+                          className="text-[11px] h-6 px-3 rounded-full border-border bg-secondary/50 text-foreground hover:bg-primary hover:text-primary-foreground transition-all shadow-xs flex items-center gap-1"
+                        >
+                          <Volume2 className="w-3 h-3" /> Replay Voice
+                        </Button>
+                      )} */}
+                    </div>
+                  </div>
+
+                  {/* Card 2: Candidate Video Feed (Webcam) */}
+                  <div className="relative bg-card/90 dark:bg-card/70 border border-border/80 rounded-3xl overflow-hidden backdrop-blur-2xl shadow-xl flex flex-col items-center justify-center min-h-[320px] transition-all">
+
+                    {/* Top Left: Candidate Badge */}
+                    <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-background/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-border/80 text-xs font-bold text-foreground shadow-xs">
+                      <User className="w-3.5 h-3.5 text-primary" />
+                      <span>{candidateProfileName}</span>
+                    </div>
+
+                    {/* Top Right: Live Recording Pill */}
+                    {isConnected && (
+                      <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-red-600 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md animate-pulse">
+                        REC
+                      </div>
+                    )}
+
+                    {/* Video Element / Fallback */}
+                    {hasCameraPermission && isCameraOn ? (
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-full object-cover min-h-[320px] rounded-3xl transform -scale-x-100"
+                      />
                     ) : (
-                      <div className="p-2 px-4 rounded-2xl bg-card/90 dark:bg-card/60 backdrop-blur-xl border border-border/80 dark:border-zinc-800 shadow-xl flex items-center gap-3">
+                      <div className="flex flex-col items-center justify-center gap-3 p-8 text-center min-h-[320px]">
+                        <div className="w-16 h-16 rounded-2xl bg-secondary border border-border flex items-center justify-center text-muted-foreground">
+                          <VideoOff className="w-7 h-7" />
+                        </div>
+                        <p className="text-xs sm:text-sm font-semibold text-muted-foreground">
+                          Camera feed is disabled
+                        </p>
                         <Button
-                          onClick={submitCurrentSpeech}
+                          size="sm"
                           variant="outline"
-                          size="sm"
-                          className="h-10 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-600 dark:text-violet-400 border-violet-500/30 font-semibold text-xs gap-1.5 transition-all"
-                          title="Submit answer immediately (or press Enter)"
+                          onClick={startCamera}
+                          className="text-xs rounded-xl gap-2 font-semibold border-border bg-card hover:bg-secondary text-foreground"
                         >
-                          <Send className="w-3.5 h-3.5" />
-                          <span>Send Speech (Enter ↵)</span>
-                        </Button>
-
-                        <div className="h-6 w-[1px] bg-border/80" />
-
-                        <Button
-                          onClick={disconnect}
-                          variant="outline"
-                          size="sm"
-                          className="h-10 rounded-xl bg-secondary/80 dark:bg-zinc-800 hover:bg-secondary text-foreground border-border font-semibold text-xs gap-1.5 transition-all"
-                          title="Cancel Interview"
-                        >
-                          <X className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span>Cancel</span>
-                        </Button>
-
-                        <Button
-                          onClick={handleEndInterview}
-                          size="sm"
-                          className="h-10 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs gap-1.5 shadow-md shadow-red-500/25 transition-all hover:scale-105 active:scale-95"
-                          title="Finish & Get Evaluation Scorecard"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5 fill-white/20" />
-                          <span>Finish & Score</span>
+                          <Camera className="w-3.5 h-3.5 text-primary" /> Enable Camera
                         </Button>
                       </div>
                     )}
+
+                    {/* Bottom Video Controls Overlay */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-background/90 backdrop-blur-md p-1.5 px-3 rounded-full border border-border/80 shadow-md">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={toggleCamera}
+                        className="h-7 w-7 rounded-full text-foreground hover:bg-secondary"
+                        title={isCameraOn ? "Turn Camera Off" : "Turn Camera On"}
+                      >
+                        {isCameraOn ? <Video className="w-4 h-4 text-emerald-500" /> : <VideoOff className="w-4 h-4 text-red-500" />}
+                      </Button>
+                    </div>
                   </div>
 
-                  {/* Transcript Display */}
-                  <div className="w-full max-w-5xl mx-auto max-h-52 overflow-y-auto p-4 rounded-3xl bg-card/90 dark:bg-card/40 backdrop-blur-xl border border-border/80 dark:border-zinc-800 shadow-xl">
-                    <div className="text-[11px] font-bold text-muted-foreground dark:text-zinc-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <FileText className="w-3.5 h-3.5 text-violet-500" /> Live Interview Transcript
-                      </span>
-                      <span className="text-[10px] font-normal lowercase">auto-scrolls with live dialogue</span>
+                </div>
+
+                {/* Floating Interactive Bottom Dock */}
+                <div className="flex items-center justify-center my-1 z-20">
+                  {!isConnected ? (
+                    <Button
+                      onClick={handleStartConfiguredInterview}
+                      disabled={status === LiveStatus.CONNECTING || loadingContext}
+                      size="lg"
+                      className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm shadow-xl shadow-primary/25 transition-all hover:scale-105 active:scale-95 flex items-center gap-2.5"
+                    >
+                      <Mic className="w-5 h-5" />
+                      <span>Start Pro Interview</span>
+                    </Button>
+                  ) : (
+                    <div className="p-2 px-4 rounded-2xl bg-card/90 dark:bg-card/75 backdrop-blur-2xl border border-border/80 shadow-2xl flex items-center gap-2.5 sm:gap-3 flex-wrap justify-center">
+
+                      {/* 1. Quick Speech Submit Button */}
+                      <Button
+                        onClick={submitCurrentSpeech}
+                        variant="outline"
+                        size="sm"
+                        className="h-10 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 font-semibold text-xs gap-1.5 transition-all"
+                        title="Submit current answer immediately (or press Enter)"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Send Speech (Enter ↵)</span>
+                      </Button>
+
+                      <div className="h-5 w-[1px] bg-border/80 hidden sm:block" />
+
+                      {/* 2. Camera Toggle */}
+                      <Button
+                        onClick={toggleCamera}
+                        variant="outline"
+                        size="sm"
+                        className="h-10 rounded-xl bg-secondary/60 hover:bg-secondary text-foreground border-border font-semibold text-xs gap-1.5 transition-all"
+                        title="Toggle Webcam"
+                      >
+                        {isCameraOn ? <Video className="w-3.5 h-3.5 text-emerald-500" /> : <VideoOff className="w-3.5 h-3.5 text-red-500" />}
+                        <span className="hidden sm:inline">{isCameraOn ? "Camera On" : "Camera Off"}</span>
+                      </Button>
+
+                      {/* 4. Cancel / Exit */}
+                      <Button
+                        onClick={disconnect}
+                        variant="ghost"
+                        size="sm"
+                        className="h-10 rounded-xl text-muted-foreground hover:text-foreground font-semibold text-xs gap-1.5"
+                        title="Cancel Session"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Cancel</span>
+                      </Button>
+
+                      {/* 5. Finish & Score Button */}
+                      <Button
+                        onClick={handleEndInterview}
+                        size="sm"
+                        disabled={isSaving}
+                        className="h-10 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs gap-1.5 shadow-md shadow-red-500/25 transition-all hover:scale-105 active:scale-95"
+                      >
+                        <Award className="w-3.5 h-3.5" />
+                        <span>Finish & Score</span>
+                      </Button>
                     </div>
-                    <div className="space-y-2.5">
+                  )}
+                </div>
+
+                {/* Live Conversation Transcript Drawer */}
+                <div className="w-full max-w-6xl mx-auto rounded-3xl bg-card/90 dark:bg-card/60 backdrop-blur-2xl border border-border/80 shadow-xl overflow-hidden">
+                  <div
+                    className="p-3.5 px-5 flex items-center justify-between border-b border-border/60 cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors"
+                    onClick={() => setIsTranscriptOpen(!isTranscriptOpen)}
+                  >
+                    <span className="text-xs font-bold text-foreground flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5 text-primary" /> Live Interview Dialogue Transcript
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground">
+                        {logs.length} exchange{logs.length === 1 ? '' : 's'}
+                      </span>
+                      {isTranscriptOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                    </div>
+                  </div>
+
+                  {isTranscriptOpen && (
+                    <div className="max-h-56 overflow-y-auto p-4 space-y-3">
                       {logs.length === 0 ? (
-                        <div className="py-6 text-center text-xs text-muted-foreground dark:text-zinc-400">
-                          Interview transcript will appear here in real-time as you and the AI speak.
+                        <div className="py-8 text-center text-xs text-muted-foreground font-medium">
+                          Conversation dialogue will appear here in real-time as you and the AI speak.
                         </div>
                       ) : (
                         logs.map((log) => (
@@ -940,23 +1000,27 @@ CRITICAL INTERVIEW GUIDELINES:
                             className={`flex ${log.role === 'user' ? 'justify-end' : 'justify-start'}`}
                           >
                             <div className={`
-                              max-w-[85%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm shadow-sm flex items-start gap-2.5
+                              max-w-[85%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm shadow-xs flex items-start gap-2.5
                               ${log.role === 'user'
                                 ? 'bg-primary text-primary-foreground rounded-br-sm'
-                                : 'bg-muted/90 text-foreground border border-border/80 rounded-bl-sm'
+                                : 'bg-secondary/70 dark:bg-zinc-800/80 text-foreground border border-border/70 rounded-bl-sm'
                               }
                             `}>
                               <div className="flex-1 leading-relaxed">
-                                <span className="text-[10px] font-bold opacity-75 block mb-0.5">
-                                  {log.role === 'user' ? 'You' : 'AI Interviewer'}
+                                <span className="text-[10px] font-bold opacity-75 block mb-0.5 uppercase tracking-wider">
+                                  {log.role === 'user' ? candidateProfileName : 'AI Interviewer'}
                                 </span>
-                                {log.text.replace('[START_CODING]', '').replace('[END_CODING]', '').split('[DETAILED_FEEDBACK]')[0]}
+                                <div className="prose dark:prose-invert prose-xs text-inherit max-w-none">
+                                  <ReactMarkdown>
+                                    {log.text.replace('[START_CODING]', '').replace('[END_CODING]', '').split('[DETAILED_FEEDBACK]')[0]}
+                                  </ReactMarkdown>
+                                </div>
                               </div>
                               {log.role === 'assistant' && (
                                 <button
                                   onClick={() => speakText(log.text)}
                                   title="Listen to AI voice"
-                                  className="p-1 rounded-md text-violet-400 hover:text-violet-200 hover:bg-violet-500/20 transition-all shrink-0 mt-0.5"
+                                  className="p-1 rounded-md text-primary hover:bg-primary/20 transition-all shrink-0 mt-0.5"
                                 >
                                   <Volume2 className="w-3.5 h-3.5" />
                                 </button>
@@ -967,38 +1031,101 @@ CRITICAL INTERVIEW GUIDELINES:
                       )}
                       <div ref={messagesEndRef} />
                     </div>
-                  </div>
-
-                  {/* Feedback Display (Voice Mode) */}
-                  {feedback && (
-                    <div className="mt-4 w-full max-w-5xl mx-auto bg-card/90 dark:bg-card/60 border border-green-500/30 rounded-2xl p-4 shadow-xl animate-in slide-in-from-bottom-5">
-                      <h3 className="text-green-600 dark:text-green-400 font-bold mb-2 flex items-center gap-2 text-sm">
-                        <FileText className="w-4 h-4" /> Feedback from Last Challenge
-                      </h3>
-                      <ScrollArea className="h-32 rounded-xl bg-secondary/30 dark:bg-black/20 p-3">
-                        <div className="prose dark:prose-invert prose-sm text-foreground">
-                          <ReactMarkdown>{feedback}</ReactMarkdown>
-                        </div>
-                      </ScrollArea>
-                    </div>
                   )}
                 </div>
+
+                {/* Socratic Feedback Alert (if generated) */}
+                {feedback && (
+                  <div className="w-full max-w-6xl mx-auto bg-card/90 dark:bg-card/60 border border-emerald-500/30 rounded-2xl p-4 shadow-xl animate-in slide-in-from-bottom-5">
+                    <h3 className="text-emerald-600 dark:text-emerald-400 font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-wider">
+                      <Sparkles className="w-4 h-4" /> Interviewer Assessment on Last Challenge
+                    </h3>
+                    <ScrollArea className="h-28 rounded-xl bg-secondary/30 dark:bg-black/20 p-3">
+                      <div className="prose dark:prose-invert prose-xs text-foreground leading-relaxed">
+                        <ReactMarkdown>{feedback}</ReactMarkdown>
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
+
               </div>
             ) : (
-              // === CODING MODE LAYOUT ===
-              <div className="flex-1 flex flex-col h-screen pt-16 px-4 pb-4 gap-4">
-                <ResizablePanelGroup direction="horizontal" className="flex-1 rounded-xl border border-border bg-card/50 backdrop-blur-sm overflow-hidden">
-                  {/* Left Panel: Problem & Candidate Video Preview & Chat */}
-                  <ResizablePanel defaultSize={30} minSize={20} className="flex flex-col border-r border-border bg-[#1e1e1e]">
-                    <div className="p-4 border-b border-border bg-[#252526] flex items-center justify-between">
-                      <h2 className="font-semibold text-white flex items-center gap-2 text-sm">
-                        <Code className="w-4 h-4 text-blue-400" />
-                        Coding Challenge
-                      </h2>
+              /* --- LIVE CODING SPLIT IDE STAGE --- */
+              <div className="flex-1 flex flex-col h-[calc(100vh-6rem)] gap-3">
+
+                {/* Top Coding Header & Controls */}
+                <div className="flex items-center justify-between bg-card/80 backdrop-blur-xl border border-border/80 rounded-2xl p-3 px-4 shadow-md">
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInterviewMode('voice')}
+                      className="rounded-xl text-xs font-semibold gap-1.5 border-border bg-secondary/50"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Back to 1-on-1 Video</span>
+                    </Button>
+
+                    <div className="h-4 w-[1px] bg-border hidden sm:block" />
+
+                    <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                      <Code2 className="w-4 h-4 text-primary" />
+                      <span>Interactive Coding Assessment</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={codeLanguage}
+                      onChange={(e) => setCodeLanguage(e.target.value as SupportedLanguage)}
+                      className="text-xs px-2.5 py-1.5 rounded-xl bg-background border border-border font-medium focus:outline-none"
+                    >
+                      <option value="python">Python</option>
+                      <option value="javascript">JavaScript</option>
+                      <option value="typescript">TypeScript</option>
+                      <option value="cpp">C++</option>
+                      <option value="java">Java</option>
+                    </select>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRunCode}
+                      disabled={isRunning}
+                      className="rounded-xl text-xs font-semibold border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 gap-1.5"
+                    >
+                      <Play className="w-3 h-3 fill-current" />
+                      <span>{isRunning ? "Running..." : "Run Code"}</span>
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      onClick={handleSubmitCode}
+                      disabled={isSubmitting}
+                      className="rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-md shadow-primary/20"
+                    >
+                      <Send className="w-3 h-3" />
+                      <span>Submit & Discuss</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Resizable Code & Challenge Workspace */}
+                <ResizablePanelGroup direction="horizontal" className="flex-1 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-xl overflow-hidden shadow-2xl">
+
+                  {/* Left Panel: Problem Statement & Webcam Mini PiP */}
+                  <ResizablePanel defaultSize={35} minSize={25} className="flex flex-col border-r border-border/80 bg-background/50">
+                    <div className="p-3 border-b border-border/60 bg-secondary/30 flex items-center justify-between text-xs font-bold text-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5 text-primary" /> Problem Description
+                      </span>
+                      <span className="text-[10px] text-muted-foreground font-mono">
+                        REC {formatTime(duration)}
+                      </span>
                     </div>
 
-                    {/* Compact Candidate Video preview box in side panel */}
-                    <div className="relative w-full h-36 bg-black border-b border-border overflow-hidden">
+                    {/* Mini Candidate Video Stream */}
+                    <div className="relative w-full h-32 bg-black border-b border-border/60 overflow-hidden">
                       {hasCameraPermission && isCameraOn ? (
                         <video
                           ref={miniVideoRef}
@@ -1012,126 +1139,148 @@ CRITICAL INTERVIEW GUIDELINES:
                           Camera stream paused
                         </div>
                       )}
-                      <div className="absolute top-2 left-2 bg-black/60 text-[10px] px-2 py-0.5 rounded text-white font-mono">
+                      <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-[10px] px-2 py-0.5 rounded text-white font-mono flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                         Candidate Cam
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-auto p-4 text-sm text-gray-300 font-sans leading-relaxed">
-                      <div className="space-y-4">
-                        {!feedback ? (
-                          <>
-                            <div className="font-medium text-indigo-300">Problem Statement:</div>
-                            <p className="whitespace-pre-wrap">{problemStatement}</p>
-                          </>
-                        ) : (
-                          <div className="bg-green-900/10 border border-green-500/20 p-3 rounded">
-                            <div className="font-medium text-green-400 mb-2">Previous Feedback:</div>
-                            <div className="prose prose-invert prose-xs">
-                              <ReactMarkdown>{feedback}</ReactMarkdown>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-8 border-t border-white/10 pt-4">
-                        <div className="font-medium text-indigo-300 mb-2">Transcript:</div>
-                        <div className="flex flex-col gap-2 opacity-70">
-                          {logs.slice(-5).map((msg) => (
-                            <div key={msg.id} className={`text-xs p-2 rounded ${msg.role === 'user' ? 'bg-indigo-500/20 self-end' : 'bg-gray-700/50 self-start'}`}>
-                              <span className="font-bold opacity-50 block mb-0.5">{msg.role === 'user' ? 'You' : 'Interviewer'}:</span>
-                              {msg.text
-                                .replace('[START_CODING]', '')
-                                .replace('[END_CODING]', '')
-                                .split('[DETAILED_FEEDBACK]')[0]
-                              }
-                            </div>
-                          ))}
+                    {/* Problem Statement Text */}
+                    <div className="flex-1 overflow-y-auto p-4 text-xs sm:text-sm text-foreground leading-relaxed space-y-4">
+                      <div className="p-3 rounded-xl bg-card border border-border/60 shadow-xs">
+                        <div className="font-bold text-primary mb-1.5 text-xs uppercase tracking-wider">
+                          Challenge Prompt
+                        </div>
+                        <div className="prose dark:prose-invert prose-xs max-w-none text-foreground whitespace-pre-wrap">
+                          {problemStatement}
                         </div>
                       </div>
+
+                      {feedback && (
+                        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                          <div className="font-bold text-emerald-600 dark:text-emerald-400 mb-1 text-xs">
+                            Interviewer Note:
+                          </div>
+                          <div className="prose dark:prose-invert prose-xs text-foreground">
+                            <ReactMarkdown>{feedback}</ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </ResizablePanel>
 
                   <ResizableHandle />
 
-                  {/* Right Panel: Code Editor */}
-                  <ResizablePanel defaultSize={70} className="flex flex-col bg-[#1e1e1e]">
-                    <div className="h-10 bg-[#252526] flex items-center justify-between px-4 border-b border-border">
-                      <span className="text-xs text-gray-400">main.py</span>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1 border-green-500/30 text-green-400 hover:text-green-300 hover:bg-green-500/10" onClick={handleRunCode} disabled={isRunning}>
-                          <Play className="w-3 h-3" /> Run
-                        </Button>
-                        <Button size="sm" className="h-7 text-xs gap-1 bg-indigo-600 hover:bg-indigo-700 text-white border-none" onClick={handleSubmitCode} disabled={isSubmitting}>
-                          <Send className="w-3 h-3" /> Submit & Discuss
-                        </Button>
-                      </div>
-                    </div>
+                  {/* Right Panel: Monaco Editor & Output Terminal */}
+                  <ResizablePanel defaultSize={65} className="flex flex-col bg-[#1e1e1e]">
                     <div className="flex-1 relative">
                       <Editor
                         height="100%"
-                        defaultLanguage="python"
+                        language={codeLanguage}
                         theme="vs-dark"
                         value={code}
                         onChange={(val) => setCode(val || "")}
                         options={{
                           minimap: { enabled: false },
-                          fontSize: 14,
-                          padding: { top: 16 }
+                          fontSize: 13.5,
+                          fontFamily: "JetBrains Mono, Menlo, Monaco, Consolas, monospace",
+                          padding: { top: 14 },
+                          scrollBeyondLastLine: false,
+                          smoothScrolling: true,
                         }}
                       />
                     </div>
-                    {/* Terminal / Output */}
-                    <div className="h-32 bg-[#0f0f0f] border-t border-[#333] flex flex-col">
-                      <div className="px-4 py-1.5 text-xs text-gray-500 font-mono border-b border-[#333]">Output</div>
-                      <ScrollArea className="flex-1 p-3 font-mono text-sm text-gray-300">
-                        <pre>{codeOutput || "Run code to see output..."}</pre>
+
+                    {/* Output Terminal */}
+                    <div className="h-36 bg-[#0f0f0f] border-t border-[#333] flex flex-col">
+                      <div className="px-4 py-1.5 text-[11px] font-mono text-zinc-400 border-b border-[#252525] flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Terminal className="w-3 h-3 text-emerald-400" /> Output Console
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCodeOutput("")}
+                          className="h-5 px-2 text-[10px] text-zinc-400 hover:text-white"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                      <ScrollArea className="flex-1 p-3 font-mono text-xs text-zinc-300">
+                        <pre className="whitespace-pre-wrap">{codeOutput || "Click 'Run Code' to execute and inspect output..."}</pre>
                       </ScrollArea>
                     </div>
                   </ResizablePanel>
                 </ResizablePanelGroup>
 
-                {/* Sticky Voice Control Bar (Mini) */}
-                <div className="h-16 bg-card border border-border rounded-xl flex items-center px-4 justify-between shadow-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                    <div className="text-sm font-medium">Live Interview & Cam</div>
-                    <div className="text-xs text-muted-foreground font-mono">{formatTime(duration)}</div>
-                  </div>
-
-                  <div className="flex-1 max-w-xs mx-4 h-8 bg-black/20 rounded-lg overflow-hidden relative">
-                    {/* Mini Visualizer */}
-                    <div className="absolute inset-0 flex items-center justify-center gap-0.5">
-                      {[...Array(10)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="w-1 bg-indigo-500/80 rounded"
-                          style={{
-                            height: Math.max(4, Math.random() * (volume * 100)) + 'px',
-                            opacity: 0.5 + (volume * 0.5)
-                          }}
-                        />
-                      ))}
-                    </div>
+                {/* Bottom Voice Bar during Coding */}
+                <div className="h-14 bg-card/90 backdrop-blur-xl border border-border/80 rounded-2xl flex items-center px-4 justify-between shadow-xl">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2.5 h-2.5 rounded-full ${isAiSpeaking ? 'bg-purple-500 animate-ping' : isUserSpeaking ? 'bg-cyan-500 animate-ping' : 'bg-emerald-500'}`} />
+                    <span className="text-xs font-bold text-foreground">
+                      {isAiSpeaking ? "Interviewer speaking..." : isUserSpeaking ? "Listening to your explanation..." : "Voice session active"}
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Button
+                      onClick={submitCurrentSpeech}
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl text-xs font-semibold bg-primary/10 text-primary border-primary/30"
+                    >
+                      <Send className="w-3 h-3 mr-1" /> Send Speech
+                    </Button>
+                    <Button
                       size="sm"
                       variant="destructive"
                       onClick={handleEndInterview}
-                      className="gap-2 px-4 shadow-md hover:shadow-red-500/20 transition-all hover:scale-105 font-semibold tracking-wide"
+                      className="rounded-xl text-xs font-semibold"
                     >
-                      <LogOut className="w-4 h-4" />
-                      End Interview
+                      <LogOut className="w-3.5 h-3.5 mr-1" /> End Interview
                     </Button>
                   </div>
                 </div>
+
               </div>
             )}
-          </>
+
+          </div>
         )}
+
       </div>
+
+      {/* Finishing & Evaluating Modal Overlay */}
+      <AnimatePresence>
+        {isSaving && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background/85 backdrop-blur-xl flex flex-col items-center justify-center p-4"
+          >
+            <div className="w-full max-w-md bg-card border border-border/80 rounded-3xl p-8 shadow-2xl text-center space-y-6 animate-in zoom-in-95 duration-200">
+              <div className="w-16 h-16 rounded-3xl bg-primary/15 border border-primary/30 mx-auto flex items-center justify-center text-primary shadow-lg">
+                <Sparkles className="w-8 h-8 animate-spin" style={{ animationDuration: '3s' }} />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold tracking-tight text-foreground">
+                  Finalizing Pro Interview
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium animate-pulse">
+                  {evaluationStage || "Analyzing dialogue transcript and generating comprehensive performance scorecard..."}
+                </p>
+              </div>
+
+              <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+                <div className="h-full bg-primary animate-pulse w-3/4 rounded-full" />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };
