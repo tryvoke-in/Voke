@@ -86,16 +86,16 @@ const InterviewAnalytics = ({ userId }: InterviewAnalyticsProps) => {
             // Calculate 6Q evolution (first vs latest)
             const sessionsWithSixQ = allSessions.filter(s => s.six_q_score);
             if (sessionsWithSixQ.length > 0) {
-                const firstSixQ = sessionsWithSixQ[0].six_q_score;
-                const latestSixQ = sessionsWithSixQ[sessionsWithSixQ.length - 1].six_q_score;
+                const firstSixQ = sessionsWithSixQ[0].six_q_score as any;
+                const latestSixQ = sessionsWithSixQ[sessionsWithSixQ.length - 1].six_q_score as any;
 
                 const evolution = [
-                    { trait: "IQ", first: firstSixQ.iq, latest: latestSixQ.iq, fullMark: 100 },
-                    { trait: "EQ", first: firstSixQ.eq, latest: latestSixQ.eq, fullMark: 100 },
-                    { trait: "CQ", first: firstSixQ.cq, latest: latestSixQ.cq, fullMark: 100 },
-                    { trait: "AQ", first: firstSixQ.aq, latest: latestSixQ.aq, fullMark: 100 },
-                    { trait: "SQ", first: firstSixQ.sq, latest: latestSixQ.sq, fullMark: 100 },
-                    { trait: "MQ", first: firstSixQ.mq, latest: latestSixQ.mq, fullMark: 100 },
+                    { trait: "IQ", first: firstSixQ?.iq || 0, latest: latestSixQ?.iq || 0, fullMark: 100 },
+                    { trait: "EQ", first: firstSixQ?.eq || 0, latest: latestSixQ?.eq || 0, fullMark: 100 },
+                    { trait: "CQ", first: firstSixQ?.cq || 0, latest: latestSixQ?.cq || 0, fullMark: 100 },
+                    { trait: "AQ", first: firstSixQ?.aq || 0, latest: latestSixQ?.aq || 0, fullMark: 100 },
+                    { trait: "SQ", first: firstSixQ?.sq || 0, latest: latestSixQ?.sq || 0, fullMark: 100 },
+                    { trait: "MQ", first: firstSixQ?.mq || 0, latest: latestSixQ?.mq || 0, fullMark: 100 },
                 ];
 
                 setSixQEvolution(evolution);
@@ -209,7 +209,7 @@ const InterviewAnalytics = ({ userId }: InterviewAnalyticsProps) => {
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-primary" />
+                        <TrendingUp className="h-5 w-5 text-emerald-500" />
                         Score Trends Over Time
                     </CardTitle>
                     <CardDescription>Track your interview performance improvement</CardDescription>
@@ -222,7 +222,14 @@ const InterviewAnalytics = ({ userId }: InterviewAnalyticsProps) => {
                             <YAxis domain={[0, 100]} className="text-xs" />
                             <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
                             <Legend />
-                            <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
+                            <Line
+                                type="monotone"
+                                dataKey="score"
+                                stroke="#10b981"
+                                strokeWidth={2.5}
+                                dot={{ fill: '#10b981' }}
+                                activeDot={{ r: 6, fill: '#10b981', stroke: '#ffffff', strokeWidth: 2 }}
+                            />
                         </LineChart>
                     </ResponsiveContainer>
                 </CardContent>

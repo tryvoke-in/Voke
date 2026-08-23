@@ -14,7 +14,7 @@ import {
   User, Briefcase, Activity, Sparkles, MessageSquare, BarChart3,
   Github, Code, Terminal, Zap, Shield, Crown, ChevronRight, Settings, Camera, Check,
   Loader2, Mic, ArrowRight, GraduationCap, Plus, Trash2, Globe, Mail, Phone, MapPin,
-  Linkedin, CheckCircle2, AlertCircle, Save, ExternalLink, BookOpen, Layers
+  Linkedin, CheckCircle2, AlertCircle, Save, ExternalLink, BookOpen, Layers, Link2
 } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -1068,36 +1068,41 @@ const Profile = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 p-4 rounded-xl bg-card/60 border border-border/80 backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm"
+                  className="relative overflow-hidden rounded-2xl bg-card/90 dark:bg-card/70 border border-amber-500/30 dark:border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-blue-500/5 dark:from-amber-500/10 dark:to-blue-500/10 p-4 mb-6 backdrop-blur-xl shadow-sm hover:shadow-md transition-shadow"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-secondary/80 border border-border/70 flex items-center justify-center text-muted-foreground shrink-0 mt-0.5">
-                      <FileText className="w-4 h-4" />
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                        <Link2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-foreground flex flex-wrap items-center gap-2">
+                          <span>Complete Profile Integrations</span>
+                          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                            RECOMMENDED
+                          </span>
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                          Connect your {(!formData.github_url && !profile?.github_url) ? 'GitHub account' : ''}{((!formData.github_url && !profile?.github_url) && !profile?.resume_url) ? ' & ' : ''}{!profile?.resume_url ? 'Resume' : ''} in the{' '}
+                          <button type="button" onClick={() => setActiveTab("settings")} className="text-blue-500 font-medium underline hover:text-blue-600 dark:text-blue-400 cursor-pointer">Settings</button>{' '}
+                          &{' '}
+                          <button type="button" onClick={() => setActiveTab("resume")} className="text-blue-500 font-medium underline hover:text-blue-600 dark:text-blue-400 cursor-pointer">Resume</button>{' '}
+                          tabs to enable tailored mock interviews.
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                        Complete Profile Integrations
-                        <span className="text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border/60">
-                          Recommended
-                        </span>
-                      </h4>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Connect your {(!formData.github_url && !profile?.github_url) ? 'GitHub account' : ''}{((!formData.github_url && !profile?.github_url) && !profile?.resume_url) ? ' & ' : ''}{!profile?.resume_url ? 'Resume' : ''} in the{' '}
-                        <button type="button" onClick={() => setActiveTab("settings")} className="text-primary font-medium underline hover:text-primary/80">Settings</button>{' '}
-                        &{' '}
-                        <button type="button" onClick={() => setActiveTab("resume")} className="text-primary font-medium underline hover:text-primary/80">Resume</button>{' '}
-                        tabs to enable tailored mock interviews.
-                      </p>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+                      <Button
+                        size="sm"
+                        onClick={() => setActiveTab("settings")}
+                        className="bg-blue-500 dark:bg-blue-700 dark:hover:bg-blue-600 text-white font-semibold rounded-xl text-xs h-9 px-4 shadow-sm shadow-blue-500/20 flex items-center gap-1 transition-all active:scale-95 cursor-pointer shrink-0"
+                      >
+                        Go to Settings
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setActiveTab("settings")}
-                    className="rounded-lg text-xs shrink-0 h-8 px-3 gap-1 border-border/80"
-                  >
-                    Go to Settings <ChevronRight className="w-3.5 h-3.5" />
-                  </Button>
                 </motion.div>
               )}
 

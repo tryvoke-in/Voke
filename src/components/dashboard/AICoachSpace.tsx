@@ -202,7 +202,7 @@ export const AICoachSpace: React.FC<AICoachSpaceProps> = ({
               duration: 2.2,
               ease: [0.35, 0.1, 0.25, 1],
             }}
-            className="absolute z-50 select-none flex items-center justify-center cursor-grab active:cursor-grabbing"
+            className="absolute z-30 select-none flex items-center justify-center cursor-grab active:cursor-grabbing"
             style={{ touchAction: "none" }}
           >
             {/* Speech Bubble */}

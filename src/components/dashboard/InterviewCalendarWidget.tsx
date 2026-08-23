@@ -9,17 +9,18 @@ import {
   format, addDays, parseISO, isToday, isTomorrow, 
   isBefore, startOfToday, differenceInDays 
 } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, 
-  DialogDescription, DialogFooter 
+  Dialog, DialogContent, DialogDescription, 
+  DialogHeader, DialogTitle, DialogFooter 
 } from "@/components/ui/dialog";
 import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+  Select, SelectContent, SelectItem, 
+  SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
@@ -27,7 +28,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { collegeService, CollegeScheduledDrive } from "@/services/collegeService";
 
-export type EventType = "interview" | "deadline" | "mock" | "oa" | "goal";
+export type EventType = "interview" | "mock" | "oa" | "goal";
+export type EventSource = "admin" | "user";
 
 export interface CalendarEvent {
   id: string;
@@ -41,54 +43,84 @@ export interface CalendarEvent {
   completed?: boolean;
   isCollegeDrive?: boolean;
   collegeName?: string;
+  source?: EventSource; // 'admin' (official, no mark done/edit/delete) or 'user'
 }
 
 const EVENT_TYPE_CONFIG: Record<EventType, { 
   label: string; 
   badgeClass: string; 
-  dotClass: string; 
+  icon: React.ComponentType<{ className?: string }>;
   borderClass: string;
-  icon: any;
+  categoryGroup: "interview" | "event";
 }> = {
   interview: {
     label: "Interview",
     badgeClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-    dotClass: "bg-blue-500",
-    borderClass: "border-l-blue-500",
-    icon: Briefcase
-  },
-  deadline: {
-    label: "Deadline",
-    badgeClass: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
-    dotClass: "bg-rose-500",
-    borderClass: "border-l-rose-500",
-    icon: AlertCircle
+    icon: Briefcase,
+    borderClass: "border-l-4 border-l-blue-500",
+    categoryGroup: "interview"
   },
   mock: {
     label: "Mock Session",
-    badgeClass: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20",
-    dotClass: "bg-violet-500",
-    borderClass: "border-l-violet-500",
-    icon: Target
+    badgeClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+    icon: Target,
+    borderClass: "border-l-4 border-l-indigo-500",
+    categoryGroup: "interview"
   },
   oa: {
-    label: "Assessment (OA)",
+    label: "Online Assessment",
     badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-    dotClass: "bg-amber-500",
-    borderClass: "border-l-amber-500",
-    icon: Code2
+    icon: Code2,
+    borderClass: "border-l-4 border-l-amber-500",
+    categoryGroup: "event"
   },
   goal: {
-    label: "Study Goal",
+    label: "Prep Milestone",
     badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-    dotClass: "bg-emerald-500",
-    borderClass: "border-l-emerald-500",
-    icon: Sparkles
+    icon: Sparkles,
+    borderClass: "border-l-4 border-l-emerald-500",
+    categoryGroup: "event"
   }
 };
 
-// No hardcoded fake events
-const INITIAL_EVENTS: CalendarEvent[] = [];
+const INITIAL_EVENTS: CalendarEvent[] = [
+  {
+    id: "admin-evt-1",
+    title: "Google Technical Screen (L4)",
+    type: "interview",
+    date: format(addDays(new Date(), 2), "yyyy-MM-dd"),
+    time: "02:30 PM",
+    company: "Google",
+    link: "https://meet.google.com/abc-defg-hij",
+    notes: "Official Technical Round with Google hiring committee. System Design & DSA.",
+    completed: false,
+    source: "admin"
+  },
+  {
+    id: "evt-user-1",
+    title: "Amazon SDE-2 System Design Mock",
+    type: "mock",
+    date: format(addDays(new Date(), 3), "yyyy-MM-dd"),
+    time: "06:00 PM",
+    company: "Amazon",
+    link: "https://meet.google.com/mock-prep",
+    notes: "Focus on Rate Limiter, Cache Invalidation, and Distributed Lock patterns.",
+    completed: false,
+    source: "user"
+  },
+  {
+    id: "evt-user-2",
+    title: "Stripe Online Assessment (OA)",
+    type: "oa",
+    date: format(addDays(new Date(), 5), "yyyy-MM-dd"),
+    time: "11:00 AM",
+    company: "Stripe",
+    link: "https://codesignal.com/assessments/stripe-oa",
+    notes: "90 minutes coding assessment on HackerRank/CodeSignal.",
+    completed: false,
+    source: "user"
+  }
+];
 
 interface InterviewCalendarWidgetProps {
   userEmail?: string | null;
@@ -97,11 +129,6 @@ interface InterviewCalendarWidgetProps {
 export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = ({ userEmail }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [matchedCollegeName, setMatchedCollegeName] = useState<string>("");
-  const [isScheduleExpanded, setIsScheduleExpanded] = useState(false);
-  const [filterType, setFilterType] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Modal State for adding/editing schedule
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [formData, setFormData] = useState<{
@@ -115,7 +142,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
   }>({
     title: "",
     type: "interview",
-    date: format(new Date(), "yyyy-MM-dd"),
+    date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
     time: "10:00 AM",
     company: "",
     link: "",
@@ -127,7 +154,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
     loadCalendarEvents();
 
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === "voke_college_drives" || e.key === "voke_user_calendar_events") {
+      if (e.key === "voke_college_drives" || e.key === "voke_user_calendar_events_v2") {
         loadCalendarEvents();
       }
     };
@@ -192,22 +219,24 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
 
   const loadCalendarEvents = async () => {
     let baseEvents: CalendarEvent[] = [];
-    const saved = localStorage.getItem("voke_user_calendar_events");
+    const saved = localStorage.getItem("voke_user_calendar_events_v2");
     if (saved) {
       try {
         const parsed: CalendarEvent[] = JSON.parse(saved);
-        // Purge any legacy mock event IDs
         baseEvents = parsed.filter(e => !["evt-1", "evt-2", "evt-3", "evt-4", "evt-5"].includes(e.id));
       } catch (e) {
-        baseEvents = [];
+        baseEvents = INITIAL_EVENTS;
       }
+    } else {
+      baseEvents = INITIAL_EVENTS;
+      localStorage.setItem("voke_user_calendar_events_v2", JSON.stringify(INITIAL_EVENTS));
     }
 
     // Determine current user email dynamically
     let activeEmail = userEmail || "";
     if (!activeEmail) {
       const session = await supabase.auth.getSession();
-      activeEmail = session.data.session?.user?.email || "anurag.s25561@nst.rishihood.edu.in";
+      activeEmail = session.data.session?.user?.email || "";
     }
 
     // Merge student's assigned college placement drives
@@ -245,7 +274,8 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
           link: fullUrl,
           notes: `Target Role: ${drive.targetRole} • Benchmark: ${drive.passingScore}% • Scheduled by ${drive.collegeName} Placement Cell.`,
           completed: false,
-          isCollegeDrive: true
+          isCollegeDrive: true,
+          source: "admin"
         });
       }
 
@@ -253,20 +283,20 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
     }
 
     setEvents(baseEvents);
-    localStorage.setItem("voke_user_calendar_events", JSON.stringify(baseEvents));
+    localStorage.setItem("voke_user_calendar_events_v2", JSON.stringify(baseEvents));
   };
 
   const saveEvents = (newEvents: CalendarEvent[]) => {
     setEvents(newEvents);
-    localStorage.setItem("voke_user_calendar_events", JSON.stringify(newEvents));
+    localStorage.setItem("voke_user_calendar_events_v2", JSON.stringify(newEvents));
   };
 
-  const handleOpenAddDialog = () => {
+  const handleOpenAddDialog = (type: EventType = "interview") => {
     setEditingEventId(null);
     setFormData({
       title: "",
-      type: "interview",
-      date: format(new Date(), "yyyy-MM-dd"),
+      type: type,
+      date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
       time: "10:00 AM",
       company: "",
       link: "",
@@ -276,12 +306,19 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
   };
 
   const handleOpenEditDialog = (event: CalendarEvent) => {
+    // Admin / College controlled events cannot be edited by user
+    if (event.source === "admin" || event.isCollegeDrive) {
+      if (event.link) {
+        window.open(event.link, "_blank", "noopener,noreferrer");
+      }
+      return;
+    }
     setEditingEventId(event.id);
     setFormData({
       title: event.title,
       type: event.type,
       date: event.date,
-      time: event.time || "",
+      time: event.time || "10:00 AM",
       company: event.company || "",
       link: event.link || "",
       notes: event.notes || ""
@@ -292,22 +329,28 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
   const handleSaveEvent = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.date) {
-      toast.error("Please provide an event title and date");
+      toast.error("Please enter a title and date");
       return;
     }
 
     if (editingEventId) {
-      const updated = events.map(evt => 
-        evt.id === editingEventId 
-          ? { ...evt, ...formData }
-          : evt
-      );
+      const updated = events.map(evt => {
+        if (evt.id === editingEventId) {
+          return {
+            ...evt,
+            ...formData,
+            source: evt.source || "user"
+          };
+        }
+        return evt;
+      });
       saveEvents(updated);
-      toast.success("Event updated!");
+      toast.success("Schedule updated!");
     } else {
       const newEvent: CalendarEvent = {
         id: `evt-${Date.now()}`,
         ...formData,
+        source: "user",
         completed: false
       };
       saveEvents([newEvent, ...events]);
@@ -327,7 +370,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
       let activeEmail = userEmail || "";
       if (!activeEmail) {
         const session = await supabase.auth.getSession();
-        activeEmail = session.data.session?.user?.email || "anurag.s25561@nst.rishihood.edu.in";
+        activeEmail = session.data.session?.user?.email || "";
       }
       collegeService.recordStudentDriveResult({
         driveId,
@@ -354,7 +397,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
       let activeEmail = userEmail || "";
       if (!activeEmail) {
         const session = await supabase.auth.getSession();
-        activeEmail = session.data.session?.user?.email || "anurag.s25561@nst.rishihood.edu.in";
+        activeEmail = session.data.session?.user?.email || "";
       }
       collegeService.recordStudentDriveResult({
         driveId,
@@ -369,459 +412,421 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
     }
   };
 
-  // Helper relative date label
-  const getRelativeDateLabel = (dateStr: string) => {
-    try {
-      const target = parseISO(dateStr);
-      if (isToday(target)) return "Today";
-      if (isTomorrow(target)) return "Tomorrow";
-      const diff = differenceInDays(target, startOfToday());
-      if (diff < 0) return `${Math.abs(diff)}d ago`;
-      if (diff <= 7) return `In ${diff} days`;
-      return format(target, "MMM d");
-    } catch {
-      return dateStr;
-    }
-  };
-
-  // Filter and sort events (chronological order)
-  const filteredEvents = useMemo(() => {
-    return events
-      .filter((evt) => {
-        const matchesType = filterType === "all" || evt.type === filterType;
-        const matchesQuery =
-          searchQuery === "" ||
-          evt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (evt.company && evt.company.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (evt.notes && evt.notes.toLowerCase().includes(searchQuery.toLowerCase()));
-        return matchesType && matchesQuery;
-      })
+  // Sort upcoming events chronologically (excluding completed or past)
+  const activeEvents = useMemo(() => {
+    return [...events]
+      .filter(evt => !evt.completed)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [events, filterType, searchQuery]);
+  }, [events]);
 
-  // Group events by: upcoming vs past
-  const { upcomingEvents, pastEvents } = useMemo(() => {
-    const today = startOfToday();
-    const upcoming: CalendarEvent[] = [];
-    const past: CalendarEvent[] = [];
+  // Section 1: Scheduled Interviews
+  const interviewEvents = useMemo(() => {
+    return activeEvents.filter(evt => evt.type === "interview" || evt.type === "mock");
+  }, [activeEvents]);
 
-    filteredEvents.forEach((evt) => {
-      if (evt.completed) {
-        past.push(evt);
-        return;
-      }
-      try {
-        const evtDate = parseISO(evt.date);
-        if (isBefore(evtDate, today) && !isToday(evtDate)) {
-          past.push(evt);
-        } else {
-          upcoming.push(evt);
-        }
-      } catch {
-        upcoming.push(evt);
-      }
-    });
+  // Section 2: Upcoming Events & Assessments
+  const upcomingEventItems = useMemo(() => {
+    return activeEvents.filter(evt => evt.type === "oa" || evt.type === "goal");
+  }, [activeEvents]);
 
-    return { upcomingEvents: upcoming, pastEvents: past };
-  }, [filteredEvents]);
+  const totalActiveCount = interviewEvents.length + upcomingEventItems.length;
 
   return (
-    <Card className="border-border/60 bg-gradient-to-br from-card/90 via-card/70 to-card/95 backdrop-blur-xl shadow-lg relative overflow-hidden">
-      {/* Decorative Glow */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-violet-500/5 dark:bg-violet-400/5 rounded-full blur-3xl pointer-events-none -z-10" />
-
-      <CardHeader className="p-4 sm:p-5 pb-3 border-b border-border/40">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0 shadow-xs">
-              <CalendarIcon className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-tight">
-                  Interview & Assessment Calendar
-                </CardTitle>
-                {upcomingEvents.length > 0 && (
-                  <Badge variant="secondary" className="text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                    {upcomingEvents.length} Upcoming
-                  </Badge>
-                )}
-                {matchedCollegeName && (
-                  <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/30 text-[10px] font-medium py-0 px-2 h-5 hidden sm:inline-flex items-center">
-                    <GraduationCap className="w-3 h-3 mr-1 text-violet-400" /> {matchedCollegeName} Partner
-                  </Badge>
-                )}
-              </div>
-              <CardDescription className="text-xs text-muted-foreground">
-                Your upcoming placement rounds, college mock drives, OA tests, and deadlines
-              </CardDescription>
-            </div>
+    <Card className="border border-border/60 bg-card text-card-foreground shadow-sm rounded-2xl sm:rounded-3xl p-5 sm:p-6 space-y-6">
+      {/* Top Header Row inside Main Card */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/40">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 shadow-xs">
+            <CalendarIcon className="w-5 h-5" />
           </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Quick Add Button */}
-            <Button
-              size="sm"
-              onClick={handleOpenAddDialog}
-              className="h-7 px-3 text-xs bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg gap-1 shadow-xs transition-all"
-            >
-              <Plus className="w-3 h-3" />
-              <span>Schedule Event</span>
-            </Button>
-
-            {/* Show All / Collapse Toggle */}
-            {upcomingEvents.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
-                className="h-7 px-2.5 text-xs font-semibold rounded-lg border-border/60 hover:bg-muted/80 gap-1 text-foreground"
-              >
-                <span>{isScheduleExpanded ? "Show Less" : `Show All (${upcomingEvents.length})`}</span>
-                {isScheduleExpanded ? (
-                  <ChevronUp className="w-3 h-3 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                )}
-              </Button>
-            )}
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
+                Upcoming Schedule
+              </h3>
+              {matchedCollegeName && (
+                <Badge variant="outline" className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30 text-[10px] font-medium py-0 px-2 h-5 flex items-center">
+                  <GraduationCap className="w-3 h-3 mr-1" /> {matchedCollegeName} Partner
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="p-4 sm:p-5 pt-4">
-        {upcomingEvents.length === 0 ? (
-          /* Clean Zero State */
-          <div className="text-center py-10 text-muted-foreground border border-dashed border-border/60 rounded-xl bg-background/40">
-            <div className="w-12 h-12 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-3 text-violet-400">
-              <CalendarIcon className="w-6 h-6" />
-            </div>
-            <p className="text-sm font-bold text-foreground">No upcoming interviews scheduled</p>
-            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-              When your college placement cell schedules a mock drive or you add a target deadline, it will appear here with direct session links.
-            </p>
-            <Button
-              size="sm"
-              onClick={handleOpenAddDialog}
-              className="mt-4 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-lg h-8 px-3.5 shadow-xs"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1" /> Add Custom Event
-            </Button>
+        <div className="flex items-center gap-2 self-start sm:self-center">
+          <Button
+            size="sm"
+            onClick={() => handleOpenAddDialog("interview")}
+            className="h-8.5 px-3.5 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl gap-1.5 shadow-xs transition-all cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Schedule Event</span>
+          </Button>
+
+          <div className="h-4 w-px bg-border/60 mx-1 hidden sm:block"></div>
+
+          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
+            {totalActiveCount} Active
+          </Badge>
+        </div>
+      </div>
+
+      {totalActiveCount === 0 ? (
+        /* Clean Zero State */
+        <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-border/70 bg-muted/20 flex flex-col items-center justify-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+            <CalendarIcon className="w-6 h-6" />
           </div>
-        ) : (
-          <div>
-            {/* COLLAPSED VIEW: Top 3-4 Cards */}
-            {!isScheduleExpanded ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                {upcomingEvents.slice(0, 4).map((evt) => {
+          <div className="space-y-1 max-w-sm">
+            <p className="text-sm font-bold text-foreground">No upcoming schedule</p>
+            <p className="text-xs text-muted-foreground">
+              Add your upcoming technical screens, mock interviews, or online assessments to stay organized.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => handleOpenAddDialog("interview")}
+            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl h-8.5 px-4 shadow-xs mt-2 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" /> Schedule an Interview
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* SECTION 1: SCHEDULED INTERVIEWS (Rendered ONLY if items exist) */}
+          {interviewEvents.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    Scheduled Interviews
+                  </h4>
+                  <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0 rounded-md">
+                    {interviewEvents.length}
+                  </Badge>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleOpenAddDialog("interview")}
+                  className="h-7 px-2 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-500 font-semibold cursor-pointer gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span className="hidden sm:inline">Add Interview</span>
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {interviewEvents.map((evt) => {
                   const conf = EVENT_TYPE_CONFIG[evt.type] || EVENT_TYPE_CONFIG.interview;
-                  const relativeLabel = getRelativeDateLabel(evt.date);
-                  const isCollegeDrive = evt.isCollegeDrive || evt.id.startsWith("college-drive-") || evt.title.includes("Placement Drive");
-                  const collegeTitle = evt.collegeName || evt.company || "College";
+                  const isAdminControlled = evt.source === "admin" || evt.isCollegeDrive;
+                  const collegeTitle = evt.collegeName || evt.company || "Placement Drive";
 
                   return (
                     <div
                       key={evt.id}
                       onClick={() => handleOpenEditDialog(evt)}
                       className={cn(
-                        "p-3.5 rounded-xl bg-background/80 hover:bg-background border border-border/70 hover:border-border hover:shadow-sm transition-all cursor-pointer flex flex-col justify-between group relative space-y-3",
-                        isCollegeDrive ? "border-l-4 border-l-violet-500 bg-violet-500/5 shadow-xs" : conf.borderClass
+                        "p-4 rounded-xl sm:rounded-2xl border transition-all duration-200 flex flex-col justify-between space-y-3 group relative shadow-xs",
+                        isAdminControlled
+                          ? "bg-blue-500/5 dark:bg-blue-950/20 border-blue-500/30 hover:border-blue-500/50"
+                          : "bg-background/80 dark:bg-background/50 hover:bg-background border-border/60 hover:border-border cursor-pointer"
                       )}
                     >
-                      {/* Top Header: Badge & Relative Time */}
-                      <div className="flex items-center justify-between gap-1.5">
+                      {/* Top Row: Type Badge + Admin Verification Pill */}
+                      <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {isCollegeDrive ? (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border bg-violet-500/20 text-violet-600 dark:text-violet-300 border-violet-500/30 flex items-center gap-1 shadow-2xs">
-                              <GraduationCap className="w-3 h-3 text-violet-400" />
-                              Scheduled by College
-                            </span>
-                          ) : (
-                            <span className={cn("text-[9px] font-semibold px-2 py-0.5 rounded-full border", conf.badgeClass)}>
-                              {conf.label}
+                          <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider", conf.badgeClass)}>
+                            {conf.label}
+                          </span>
+
+                          {isAdminControlled && (
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-md border bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30 flex items-center gap-1">
+                              <ShieldCheck className="w-3 h-3 text-blue-500" />
+                              {evt.isCollegeDrive ? "College Scheduled" : "Admin Scheduled"}
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded-md">
-                          {relativeLabel}
+
+                        <span className="text-[10px] font-semibold text-muted-foreground">
+                          {format(parseISO(evt.date), "MMM d")}
                         </span>
                       </div>
 
-                      {/* College Placement Banner inside card */}
-                      {isCollegeDrive && (
-                        <div className="text-[10px] font-semibold text-violet-400 dark:text-violet-300 bg-violet-950/40 border border-violet-500/30 px-2 py-1 rounded-lg flex items-center gap-1.5">
-                          <ShieldCheck className="w-3 h-3 text-violet-400 shrink-0" />
-                          <span className="truncate">{collegeTitle} Placement Cell</span>
-                        </div>
-                      )}
-
                       {/* Title & Company */}
-                      <div className="space-y-0.5">
-                        <h4 className={cn("text-xs sm:text-sm font-bold text-foreground line-clamp-2 transition-colors", evt.completed && "line-through text-muted-foreground")}>
+                      <div className="space-y-1">
+                        <h5 className="text-xs sm:text-sm font-bold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
                           {evt.title}
-                        </h4>
-                        {evt.company && !isCollegeDrive && (
-                          <p className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-                            <Building2 className="w-3 h-3 text-muted-foreground shrink-0" />
+                        </h5>
+                        {evt.company && (
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                            <Building2 className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
                             <span className="truncate">{evt.company}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Time & Notes */}
+                      <div className="space-y-1 text-[11px] text-muted-foreground">
+                        {evt.time && (
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
+                            <span>{evt.time}</span>
+                          </div>
+                        )}
+                        {evt.notes && (
+                          <p className="text-[10px] text-muted-foreground/90 bg-muted/40 p-2 rounded-xl border border-border/40 line-clamp-2 mt-1">
+                            {evt.notes}
                           </p>
                         )}
                       </div>
 
-                      {/* Date & Time */}
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
-                        <span className="flex items-center gap-1 font-medium">
-                          <CalendarIcon className="w-3 h-3 text-muted-foreground" />
-                          {format(parseISO(evt.date), "MMM d, yyyy")}
+                      {/* Action Bar */}
+                      <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-2">
+                        {isAdminControlled ? (
+                          /* Admin card: NO mark done, NO edit, NO delete */
+                          <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+                            <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
+                            <span>Official Interview</span>
+                          </div>
+                        ) : (
+                          /* User card: Mark done checkbox */
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleComplete(evt.id);
+                            }}
+                            className="text-[11px] text-muted-foreground hover:text-emerald-500 font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            {evt.completed ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
+                            ) : (
+                              <Circle className="w-4 h-4" />
+                            )}
+                            <span>{evt.completed ? "Done" : "Mark Done"}</span>
+                          </button>
+                        )}
+
+                        <div className="flex items-center gap-1.5">
+                          {!isAdminControlled && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenEditDialog(evt);
+                                }}
+                                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                                title="Edit"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteEvent(evt.id);
+                                }}
+                                className="p-1 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
+
+                          {evt.link ? (
+                            <a
+                              href={evt.link}
+                              target={evt.link.startsWith("http") ? "_blank" : undefined}
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className={cn(
+                                "text-[11px] font-bold px-3 py-1 rounded-xl transition-all flex items-center gap-1 shadow-2xs",
+                                isAdminControlled
+                                  ? "bg-blue-600 hover:bg-blue-500 text-white"
+                                  : "bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
+                              )}
+                            >
+                              <span>{evt.isCollegeDrive ? "Start Assessment" : "Join Call"}</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground font-semibold">
+                              Details →
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* SECTION 2: UPCOMING EVENTS & ASSESSMENTS (Rendered ONLY if items exist) */}
+          {upcomingEventItems.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    Upcoming Events & Assessments
+                  </h4>
+                  <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0 rounded-md">
+                    {upcomingEventItems.length}
+                  </Badge>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleOpenAddDialog("oa")}
+                  className="h-7 px-2 text-[11px] text-amber-600 dark:text-amber-400 hover:text-amber-500 font-semibold cursor-pointer gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span className="hidden sm:inline">Add Event</span>
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {upcomingEventItems.map((evt) => {
+                  const conf = EVENT_TYPE_CONFIG[evt.type] || EVENT_TYPE_CONFIG.oa;
+
+                  return (
+                    <div
+                      key={evt.id}
+                      onClick={() => handleOpenEditDialog(evt)}
+                      className="p-4 rounded-xl sm:rounded-2xl bg-background/80 dark:bg-background/50 hover:bg-background border border-border/60 hover:border-border transition-all duration-200 flex flex-col justify-between space-y-3 group cursor-pointer shadow-xs"
+                    >
+                      {/* Top Row */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider", conf.badgeClass)}>
+                          {conf.label}
                         </span>
-                        {evt.time && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-2.5 h-2.5 text-muted-foreground" />
-                            {evt.time}
-                          </span>
+                        <span className="text-[10px] font-semibold text-muted-foreground">
+                          {format(parseISO(evt.date), "MMM d")}
+                        </span>
+                      </div>
+
+                      {/* Title & Organization */}
+                      <div className="space-y-1">
+                        <h5 className="text-xs sm:text-sm font-bold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                          {evt.title}
+                        </h5>
+                        {evt.company && (
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                            <Building2 className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
+                            <span className="truncate">{evt.company}</span>
+                          </div>
                         )}
                       </div>
 
-                      {/* Notes preview if any */}
-                      {evt.notes && (
-                        <p className="text-[10px] text-muted-foreground bg-muted/60 px-2 py-1 rounded-md border border-border/50 line-clamp-1">
-                          {evt.notes}
-                        </p>
-                      )}
+                      {/* Time & Notes */}
+                      <div className="space-y-1 text-[11px] text-muted-foreground">
+                        {evt.time && (
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
+                            <span>{evt.time}</span>
+                          </div>
+                        )}
+                        {evt.notes && (
+                          <p className="text-[10px] text-muted-foreground/90 bg-muted/40 p-2 rounded-xl border border-border/40 line-clamp-2 mt-1">
+                            {evt.notes}
+                          </p>
+                        )}
+                      </div>
 
-                      {/* Bottom Actions */}
-                      <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[11px]">
+                      {/* Action Bar */}
+                      <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-2">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleToggleComplete(evt.id);
                           }}
-                          className="text-[10px] text-muted-foreground hover:text-emerald-500 font-medium flex items-center gap-1 transition-colors"
+                          className="text-[11px] text-muted-foreground hover:text-emerald-500 font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           {evt.completed ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500/20" />
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
                           ) : (
-                            <Circle className="w-3.5 h-3.5" />
+                            <Circle className="w-4 h-4" />
                           )}
                           <span>{evt.completed ? "Done" : "Mark Done"}</span>
                         </button>
 
-                        {evt.link ? (
-                          <a
-                            href={evt.link}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (evt.link?.startsWith("/") || evt.link?.includes(window.location.host)) {
-                                e.preventDefault();
-                                window.location.href = evt.link;
-                              }
-                            }}
-                            className={cn(
-                              "text-[10px] font-semibold flex items-center gap-1 px-2.5 py-1 rounded-md transition-all shadow-xs",
-                              isCollegeDrive
-                                ? "bg-violet-600 hover:bg-violet-500 text-white"
-                                : "text-blue-500 hover:underline"
-                            )}
-                          >
-                            <span>{isCollegeDrive ? "Start Assessment" : "Join"}</span>
-                            <Play className="w-2.5 h-2.5 fill-current" />
-                          </a>
-                        ) : (
-                          <span className="text-[10px] text-muted-foreground font-medium group-hover:text-foreground">
-                            Details →
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              /* EXPANDED VIEW */
-              <div className="space-y-4">
-                {/* Search & Filter bar */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 bg-background/60 p-2 rounded-xl border border-border/50">
-                  <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
-                    <Input
-                      placeholder="Search title, company, notes..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-8 pl-8 text-xs bg-background/80"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-1 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-                    {[
-                      { id: "all", label: "All" },
-                      { id: "interview", label: "Interviews" },
-                      { id: "mock", label: "Mocks" },
-                      { id: "oa", label: "OAs" },
-                      { id: "deadline", label: "Deadlines" }
-                    ].map((f) => (
-                      <button
-                        key={f.id}
-                        onClick={() => setFilterType(f.id)}
-                        className={cn(
-                          "text-[11px] px-2.5 py-1 rounded-lg transition-colors shrink-0",
-                          filterType === f.id
-                            ? "bg-violet-600 text-white font-semibold shadow-xs"
-                            : "text-muted-foreground hover:bg-muted/60"
-                        )}
-                      >
-                        {f.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Event list */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {upcomingEvents.map((evt) => {
-                    const conf = EVENT_TYPE_CONFIG[evt.type] || EVENT_TYPE_CONFIG.interview;
-                    const isCollegeDrive = evt.isCollegeDrive || evt.id.startsWith("college-drive-") || evt.title.includes("Placement Drive");
-                    const collegeTitle = evt.collegeName || evt.company || "College";
-
-                    return (
-                      <div
-                        key={evt.id}
-                        className={cn(
-                          "p-3.5 rounded-xl bg-background border border-border/70 hover:border-border transition-all flex flex-col justify-between space-y-2.5 relative group",
-                          isCollegeDrive ? "border-l-4 border-l-violet-500 bg-violet-500/5 shadow-xs" : conf.borderClass
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          {isCollegeDrive ? (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border bg-violet-500/20 text-violet-600 dark:text-violet-300 border-violet-500/30 flex items-center gap-1">
-                              <GraduationCap className="w-2.5 h-2.5 text-violet-400" />
-                              Scheduled by College ({collegeTitle})
-                            </span>
-                          ) : (
-                            <span className={cn("text-[9px] font-semibold px-2 py-0.5 rounded-full border", conf.badgeClass)}>
-                              {conf.label}
-                            </span>
-                          )}
-
-                          <div className="flex items-center gap-1">
-                            {!isCollegeDrive && (
-                              <>
-                                <button
-                                  onClick={() => handleOpenEditDialog(evt)}
-                                  className="p-1 rounded text-muted-foreground hover:text-foreground"
-                                  title="Edit"
-                                >
-                                  <Edit3 className="w-3 h-3" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteEvent(evt.id)}
-                                  className="p-1 rounded text-muted-foreground hover:text-rose-500"
-                                  title="Delete"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="space-y-0.5">
-                          <h4 className={cn("text-xs sm:text-sm font-bold text-foreground", evt.completed && "line-through text-muted-foreground")}>
-                            {evt.title}
-                          </h4>
-                          {evt.company && (
-                            <p className="text-[11px] font-semibold text-foreground flex items-center gap-1">
-                              <Building2 className="w-3 h-3 text-muted-foreground" />
-                              {evt.company}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-0.5 text-[11px] text-muted-foreground">
-                          <div className="flex items-center gap-1.5">
-                            <CalendarIcon className="w-3 h-3 text-muted-foreground" />
-                            <span>{format(parseISO(evt.date), "EEEE, MMMM d, yyyy")}</span>
-                          </div>
-                          {evt.time && (
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="w-3 h-3 text-muted-foreground" />
-                              <span>{evt.time}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {evt.notes && (
-                          <p className="text-[10px] text-muted-foreground bg-muted/40 p-2 rounded-lg border border-border/40 line-clamp-2">
-                            {evt.notes}
-                          </p>
-                        )}
-
-                        <div className="pt-2 border-t border-border/40 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5">
                           <button
                             type="button"
-                            onClick={() => handleToggleComplete(evt.id)}
-                            className="text-[11px] text-muted-foreground hover:text-emerald-500 font-medium flex items-center gap-1 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditDialog(evt);
+                            }}
+                            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                            title="Edit"
                           >
-                            {evt.completed ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500/20" />
-                            ) : (
-                              <Circle className="w-3.5 h-3.5" />
-                            )}
-                            <span>{evt.completed ? "Completed" : "Mark Done"}</span>
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteEvent(evt.id);
+                            }}
+                            className="p-1 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
 
                           {evt.link && (
                             <a
                               href={evt.link}
-                              onClick={(e) => {
-                                if (evt.link?.startsWith("/") || evt.link?.includes(window.location.host)) {
-                                  e.preventDefault();
-                                  window.location.href = evt.link;
-                                }
-                              }}
-                              className={cn(
-                                "text-[11px] font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-md shadow-xs transition-all",
-                                isCollegeDrive
-                                  ? "bg-violet-600 hover:bg-violet-500 text-white"
-                                  : "text-blue-500 hover:underline"
-                              )}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-[11px] font-bold px-3 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-all flex items-center gap-1 shadow-2xs"
                             >
-                              <span>{isCollegeDrive ? "Start Assessment" : "Join Link"}</span>
+                              <span>Open</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
-        )}
-      </CardContent>
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* Schedule Item Dialog (Add/Edit) */}
+      {/* Add / Edit Event Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-[480px] rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-violet-500" />
-              {editingEventId ? "Edit Calendar Item" : "Schedule Interview or Goal"}
+            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5 text-blue-500" />
+              {editingEventId ? "Edit Scheduled Item" : "Schedule Interview or Event"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Add upcoming interview rounds, online assessments (OAs), or prep deadlines.
+              Schedule your upcoming mock sessions, interview rounds, or online assessments.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSaveEvent} className="space-y-3.5 py-2">
+          <form onSubmit={handleSaveEvent} className="space-y-4 pt-2">
             {/* Title */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground">
-                Title <span className="text-rose-500">*</span>
+                Title / Role *
               </label>
               <Input
-                placeholder="e.g. SDE-1 Coding Round, OA Assessment"
+                placeholder="e.g. System Design Mock, Stripe OA, Amazon Screen"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="h-9 text-xs rounded-xl"
@@ -829,35 +834,34 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
               />
             </div>
 
-            {/* Type & Company */}
+            {/* Category & Company */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  Category
+                  Category *
                 </label>
                 <Select
                   value={formData.type}
                   onValueChange={(val: EventType) => setFormData({ ...formData, type: val })}
                 >
                   <SelectTrigger className="h-9 text-xs rounded-xl">
-                    <SelectValue />
+                    <SelectValue placeholder="Select type" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="interview">Job Interview</SelectItem>
-                    <SelectItem value="deadline">Job Deadline</SelectItem>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="interview">Official Interview</SelectItem>
                     <SelectItem value="mock">Mock Session</SelectItem>
-                    <SelectItem value="oa">Assessment / OA</SelectItem>
-                    <SelectItem value="goal">Study Goal</SelectItem>
+                    <SelectItem value="oa">Online Assessment (OA)</SelectItem>
+                    <SelectItem value="goal">Prep Milestone</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  Company / Organization (Optional)
+                  Company (Optional)
                 </label>
                 <Input
-                  placeholder="e.g. Google, Amazon, College"
+                  placeholder="e.g. Google, Stripe, Meta"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                   className="h-9 text-xs rounded-xl"
@@ -869,7 +873,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  Date <span className="text-rose-500">*</span>
+                  Date *
                 </label>
                 <Input
                   type="date"
@@ -885,7 +889,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                   Time
                 </label>
                 <Input
-                  placeholder="e.g. 10:30 AM or All Day"
+                  placeholder="e.g. 02:30 PM"
                   value={formData.time}
                   onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                   className="h-9 text-xs rounded-xl"
@@ -893,13 +897,13 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
               </div>
             </div>
 
-            {/* Link */}
+            {/* Meeting Link / Portal */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground">
-                Meeting / Assessment Link (Optional)
+                Meeting Link / Portal URL (Optional)
               </label>
               <Input
-                placeholder="https://... or assessment URL"
+                placeholder="e.g. https://meet.google.com/... or test portal link"
                 value={formData.link}
                 onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                 className="h-9 text-xs rounded-xl"
@@ -909,30 +913,30 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
             {/* Notes */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground">
-                Prep Notes & Topics
+                Notes & Prep Focus (Optional)
               </label>
               <Textarea
-                placeholder="Key topics to review, questions to ask interviewer, etc."
+                placeholder="Key topics to review, question formats, checklist..."
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="text-xs rounded-xl min-h-[60px] resize-none"
+                className="text-xs rounded-xl min-h-[70px] resize-none"
               />
             </div>
 
-            <DialogFooter className="pt-2">
+            <DialogFooter className="pt-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
-                className="h-8 text-xs rounded-xl"
+                className="h-9 text-xs rounded-xl cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-8 text-xs bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl"
+                className="h-9 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl cursor-pointer"
               >
-                {editingEventId ? "Save Changes" : "Add to Schedule"}
+                {editingEventId ? "Save Changes" : "Schedule Event"}
               </Button>
             </DialogFooter>
           </form>

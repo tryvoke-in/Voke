@@ -155,7 +155,7 @@ export const MotivationalMascot: React.FC<MotivationalMascotProps> = ({
         y: { duration: 3.5, ease: [0.25, 0.1, 0.25, 1] },
         rotate: { duration: 0.8, ease: "easeOut" },
       }}
-      className="fixed top-0 left-0 z-50 select-none pointer-events-none flex flex-col items-center"
+      className="fixed top-0 left-0 z-30 select-none pointer-events-none flex flex-col items-center"
       style={{ touchAction: "none" }}
     >
       {/* Short & Clean Floating Speech Bubble */}

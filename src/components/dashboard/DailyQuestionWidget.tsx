@@ -3,18 +3,87 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Target, ArrowRight, Zap } from "lucide-react";
+import { Target, ArrowRight, Flame } from "lucide-react";
 import { motion } from "motion/react";
 import { getDailyQuestion } from "@/data/questions";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DailyQuestionWidgetProps {
+  questionStreak?: number;
   userStreak?: number;
 }
 
-export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userStreak }) => {
+const calculateStreak = (dates: (string | null | undefined)[]) => {
+  if (!dates || dates.length === 0) return 0;
+
+  const validDates = dates.filter(Boolean).map((d) => {
+    const date = new Date(d!);
+    return !isNaN(date.getTime()) ? date.toISOString().split("T")[0] : null;
+  }).filter(Boolean) as string[];
+
+  const uniqueDates = Array.from(new Set(validDates))
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+  if (uniqueDates.length === 0) return 0;
+
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+
+  if (!uniqueDates.includes(today) && !uniqueDates.includes(yesterday)) {
+    return 0;
+  }
+
+  let streak = 0;
+  const currentCheck = uniqueDates.includes(today) ? new Date(today) : new Date(yesterday);
+
+  for (const dateStr of uniqueDates) {
+    const date = new Date(dateStr);
+    const d1 = new Date(currentCheck).setHours(12, 0, 0, 0);
+    const d2 = new Date(date).setHours(12, 0, 0, 0);
+
+    if (d1 === d2) {
+      streak++;
+      currentCheck.setDate(currentCheck.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  return streak;
+};
+
+export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ questionStreak, userStreak }) => {
   const navigate = useNavigate();
   const dailyQuestion = getDailyQuestion();
+  const [internalStreak, setInternalStreak] = useState<number | null>(null);
+
+  // If questionStreak is not provided, fetch solved_questions streak directly
+  useEffect(() => {
+    if (typeof questionStreak === "number") {
+      setInternalStreak(questionStreak);
+      return;
+    }
+
+    const fetchQuestionStreak = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: solvedQuestions } = await supabase
+            .from("solved_questions" as any)
+            .select("solved_at, created_at")
+            .eq("user_id", user.id);
+
+          const dates = (solvedQuestions || []).map((sq: any) => sq.solved_at || sq.created_at);
+          setInternalStreak(calculateStreak(dates));
+        }
+      } catch {
+        setInternalStreak(userStreak || 0);
+      }
+    };
+
+    fetchQuestionStreak();
+  }, [questionStreak, userStreak]);
+
+  const activeStreak = typeof questionStreak === "number" ? questionStreak : (internalStreak ?? (userStreak || 0));
 
   // Difficulty style tokens
   const difficultyConfig = {
@@ -82,7 +151,7 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
             </p>
           </div>
 
-          {/* Type & Reward Info Cards */}
+          {/* Type & Question Solving Streak Info Cards */}
           <div className="grid grid-cols-2 gap-2 pt-1">
             <motion.div
               whileHover={{ scale: 1.02 }}
@@ -91,14 +160,15 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
               <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Type</span>
               <span className="text-xs font-bold text-foreground mt-0.5">Coding</span>
             </motion.div>
+
             <motion.div
               whileHover={{ scale: 1.02 }}
               className="bg-muted/30 hover:bg-muted/50 rounded-xl p-2.5 text-center flex flex-col items-center justify-center transition-all cursor-default"
             >
-              <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Reward</span>
-              <span className="text-xs font-extrabold text-amber-400 mt-0.5 flex items-center gap-1">
-                <Zap className="w-3 h-3 fill-amber-400 text-amber-400" />
-                {currentDiff.xp}
+              <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Solving Streak</span>
+              <span className="text-xs font-extrabold text-orange-500 dark:text-orange-400 mt-0.5 flex items-center justify-center gap-1">
+                <Flame className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
+                <span>{activeStreak} {activeStreak === 1 ? 'Day' : 'Days'}</span>
               </span>
             </motion.div>
           </div>
@@ -118,4 +188,3 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ userSt
     </motion.div>
   );
 };
-

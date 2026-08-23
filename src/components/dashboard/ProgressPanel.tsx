@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { Card } from "@/components/ui/card";
-import { FileText, Clock, TrendingUp, ArrowRight, Zap, Target, AlertCircle, CheckCircle2, Sparkles, ChevronDown } from "lucide-react";
+import { TrendingUp, ArrowRight, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "motion/react";
 
 interface ProgressPanelProps {
   allSessions?: any[];
@@ -50,7 +48,6 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
   const navigate = useNavigate();
-  const [isExpanded, setIsExpanded] = useState(false);
 
   // 1. Process and normalize session scores across Text, Video, Peer & Practice sessions
   const scoredSessions = allSessions
@@ -230,13 +227,13 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
   }
 
   return (
-    <Card className="border-border/50 bg-card text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl p-5 flex flex-col justify-between space-y-3.5">
+    <Card className="border border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl p-5 flex flex-col justify-between space-y-3.5">
       {/* Overall Score Progression */}
-      <div id="tour-overall-score" className="space-y-2 pt-0.5">
+      <div id="tour-overall-score" className="space-y-1.5 pt-0.5">
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Overall Score</span>
           {ptsDifference !== 0 && (
-            <span className={`text-xs font-bold ${ptsDifference > 0 ? "text-emerald-400" : "text-amber-400"}`}>
+            <span className={`text-xs font-bold ${ptsDifference > 0 ? "text-emerald-400" : "text-red-600"}`}>
               {ptsDifference > 0 ? `+${ptsDifference}%` : `${ptsDifference}%`}
             </span>
           )}
@@ -310,80 +307,40 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         )}
       </div>
 
-      {/* Top 2 Stats Grid (Always visible) */}
+      {/* Dynamic Insights Row */}
       <div className="grid grid-cols-2 gap-4 pt-1">
-        {/* Total Sessions Count */}
-        <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex items-center gap-3 hover:border-violet-500/30 transition-all duration-300">
-          <div className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 text-violet-400">
-            <FileText className="w-5 h-5" />
+        {/* Biggest Improvement */}
+        <div className="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md border border-gray-200/50 dark:border-gray-800/50 rounded-2xl p-4 flex flex-col hover:border-emerald-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
+          <div className="text-emerald-500 text-xs font-semibold flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>Biggest improvement</span>
           </div>
-          <div>
-            <div className="text-xl font-bold text-foreground">{totalInterviews}</div>
-            <div className="text-[11px] text-muted-foreground">Interviews</div>
+          <div className="mt-2">
+            <div className="text-sm font-medium text-foreground/90 line-clamp-1">{biggestImprovementLabel}</div>
           </div>
         </div>
 
-        {/* Practiced Time */}
-        <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex items-center gap-3 hover:border-violet-500/30 transition-all duration-300">
-          <div className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 text-violet-400">
-            <Clock className="w-5 h-5" />
+        {/* Needs Attention */}
+        <div className="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md border border-gray-200/50 dark:border-gray-800/50 rounded-2xl p-4 flex flex-col hover:border-orange-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
+          <div className="text-orange-500 text-xs font-semibold flex items-center gap-1">
+            <AlertCircle className="w-3.5 h-3.5" />
+            <span>Needs attention</span>
           </div>
-          <div>
-            <div className="text-xl font-bold text-foreground">{practiceTimeText}</div>
-            <div className="text-[11px] text-muted-foreground">Time Practiced</div>
+          <div className="mt-2 space-y-1">
+            <div className="text-sm font-medium text-foreground/90 truncate">{needsAttentionLabel}</div>
           </div>
         </div>
       </div>
 
-      {/* Collapsible Bottom 2 Insights (Expands smoothly above the Details button) */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.28, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            {/* Dynamic Insights Row */}
-            <div className="grid grid-cols-2 gap-4 pt-1">
-              {/* Biggest Improvement */}
-              <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex flex-col hover:border-emerald-500/30 transition-all duration-300 min-h-[100px]">
-                <div className="text-emerald-500 text-xs font-semibold flex items-center gap-1">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  <span>Biggest improvement</span>
-                </div>
-                <div className="mt-2">
-                  <div className="text-sm font-medium text-foreground/90 line-clamp-1">{biggestImprovementLabel}</div>
-                </div>
-              </div>
-
-              {/* Needs Attention */}
-              <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 flex flex-col hover:border-orange-500/30 transition-all duration-300 min-h-[100px]">
-                <div className="text-orange-500 text-xs font-semibold flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  <span>Needs attention</span>
-                </div>
-                <div className="mt-2 space-y-1">
-                  <div className="text-sm font-medium text-foreground/90 truncate">{needsAttentionLabel}</div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Details Button (Placed at the bottom) */}
+      {/* Button to Profile Analytics */}
       <button
         id="tour-view-details-btn"
         type="button"
-        onClick={() => setIsExpanded(prev => !prev)}
-        className="w-full py-3 px-4 rounded-xl border border-blue-500/40 text-blue-500 dark:text-blue-400 font-semibold text-sm hover:bg-blue-500/10 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-sm"
+        onClick={() => navigate("/profile", { state: { tab: "analytics" } })}
+        className="w-full py-3 px-4 rounded-xl border border-blue-500/40 text-blue-600 dark:text-blue-400 bg-blue-500/5 hover:bg-blue-500/15 backdrop-blur-sm font-semibold text-sm active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-xs"
       >
-        <span>{isExpanded ? "Hide Details" : "View Details"}</span>
-        <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown className="w-4 h-4" />
-        </motion.div>
+        <span>View Detailed Analytics</span>
+        <ArrowRight className="w-4 h-3 group-hover:translate-x-1 transition-transform" />
       </button>
     </Card>
   );

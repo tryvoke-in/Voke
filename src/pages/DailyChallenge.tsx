@@ -148,13 +148,28 @@ const DailyChallenge = () => {
     setIsRunning(false);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!output.includes("All test cases passed")) {
       toast.error("Please run your code and pass all tests first!");
       return;
     }
     
     setIsSubmitted(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("solved_questions" as any).upsert({
+          user_id: user.id,
+          question_id: dailyQuestion.id,
+          question_title: dailyQuestion.title,
+          difficulty: dailyQuestion.difficulty,
+          platform_url: dailyQuestion.url,
+          solved_at: new Date().toISOString()
+        }, { onConflict: 'user_id,question_id' });
+      }
+    } catch (e) {
+      console.error("Error saving solved question:", e);
+    }
     toast.success("Challenge Completed! +50 XP");
   };
 

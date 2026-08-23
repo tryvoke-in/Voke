@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Mic, Bell, Check, Users, LogOut, Settings, ArrowUpRight, Activity, Sparkles } from "lucide-react";
+import { Bell, LogOut, Settings, ArrowUpRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   Popover,
@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-
 import { UpgradeButton } from "@/components/UpgradeButton";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export const Navbar = () => {
     const navigate = useNavigate();
@@ -22,12 +22,24 @@ export const Navbar = () => {
     const [profile, setProfile] = useState<any>(null);
 
     const isCommunityPage = location.pathname === '/community';
+    const isPricingPage = location.pathname === '/pricing' || location.pathname.startsWith('/pricing');
     const brandName = isCommunityPage ? "Voke Pulse" : "Voke";
     const logoSrc = "/images/voke_logo.png";
 
     useEffect(() => {
         checkUser();
-        
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session?.user) {
+                setUserId(session.user.id);
+                fetchNotifications(session.user.id);
+                fetchProfile(session.user.id, session.user);
+            } else {
+                setUserId(null);
+                setProfile(null);
+            }
+        });
+
         // Subscribe to realtime notifications
         const channel = supabase
             .channel('public:notifications')
@@ -43,26 +55,44 @@ export const Navbar = () => {
             .subscribe();
 
         return () => {
+            subscription.unsubscribe();
             supabase.removeChannel(channel);
         };
-    }, [userId]); // Re-subscribe if userId changes
+    }, [userId]);
 
     const checkUser = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
             setUserId(session.user.id);
             fetchNotifications(session.user.id);
-            fetchProfile(session.user.id);
+            fetchProfile(session.user.id, session.user);
         }
     };
 
-    const fetchProfile = async (uid: string) => {
-        const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', uid)
-            .single();
-        if (data) setProfile(data);
+    const fetchProfile = async (uid: string, userObj?: any) => {
+        try {
+            const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', uid)
+                .maybeSingle();
+
+            const user = userObj || (await supabase.auth.getUser()).data?.user;
+            const metaAvatar = user?.user_metadata?.avatar_url;
+            const metaName = user?.user_metadata?.full_name || user?.email?.split('@')[0];
+
+            let resolvedProfile: any = data ? { ...data } : { id: uid };
+            if (!resolvedProfile.avatar_url && metaAvatar) {
+                resolvedProfile.avatar_url = metaAvatar;
+            }
+            if (!resolvedProfile.full_name) {
+                resolvedProfile.full_name = metaName || 'User';
+            }
+
+            setProfile(resolvedProfile);
+        } catch (err) {
+            console.error('[Navbar] Error fetching profile:', err);
+        }
     };
 
     const fetchNotifications = async (uid = userId) => {
@@ -86,7 +116,6 @@ export const Navbar = () => {
             .update({ read: true })
             .eq('id', id);
         
-        // Update local state
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
         setUnreadCount(prev => Math.max(0, prev - 1));
     };
@@ -195,6 +224,122 @@ export const Navbar = () => {
         );
     }
 
+    // SPECIALIZED MINIMAL NAVBAR FOR PRICING / BUY PLAN PAGE
+    if (isPricingPage) {
+        return (
+            <nav aria-label="Pricing Navigation" className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200/50 dark:border-gray-800/50 bg-white/30 dark:bg-gray-950/30 backdrop-blur-xl transition-colors duration-300">
+                <div className="container mx-auto px-4">
+                    <div className="flex items-center justify-between h-16">
+                        {/* Logo/Brand */}
+                        <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Go to Voke Homepage"
+                            className="flex items-center gap-0 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-lg p-1"
+                            onClick={handleLogoClick}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleLogoClick(); }}
+                        >
+                            <img
+                                src={logoSrc}
+                                alt="Voke Logo"
+                                width={48}
+                                height={48}
+                                decoding="async"
+                                className="w-12 h-12 object-contain group-hover:scale-110 transition-transform duration-300"
+                            />
+                            <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">
+                                Voke
+                            </span>
+                        </div>
+
+                        {/* Right Side - Theme Toggle & Avatar Only */}
+                        <div className="flex items-center gap-3.5">
+                            <ThemeToggle />
+
+                            {userId ? (
+                                (() => {
+                                    const score = (() => {
+                                        if (!profile) return 0;
+                                        let s = 0;
+                                        const fields = ['full_name', 'linkedin_url', 'github_url', 'resume_url'];
+                                        fields.forEach(k => { if (profile[k]) s += 25; });
+                                        return s;
+                                    })();
+                                    
+                                    const strokeColor = score === 100 ? "#10b981" : score >= 50 ? "#eab308" : "#ef4444";
+                                    const radius = 18;
+                                    const circumference = 2 * Math.PI * radius;
+                                    const offset = circumference - (score / 100) * circumference;
+
+                                    return (
+                                        <div
+                                            role="button"
+                                            tabIndex={0}
+                                            aria-label="Go to Profile"
+                                            className="relative flex items-center justify-center w-10 h-10 cursor-pointer group rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                                            onClick={() => navigate('/profile')}
+                                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate('/profile'); }}
+                                        >
+                                            {/* Tooltip */}
+                                            <div className="absolute top-12 right-0 w-max px-3 py-1.5 bg-popover border border-border text-xs font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                                Profile Strength: <span style={{ color: strokeColor }}>{score}%</span>
+                                            </div>
+
+                                            {/* Background Circle */}
+                                            <svg className="absolute w-full h-full transform -rotate-90">
+                                                <circle
+                                                    cx="20"
+                                                    cy="20"
+                                                    r={radius}
+                                                    stroke="currentColor"
+                                                    strokeWidth="2.5"
+                                                    fill="transparent"
+                                                    className="text-muted/30"
+                                                />
+                                                {/* Progress Circle */}
+                                                <circle
+                                                    cx="20"
+                                                    cy="20"
+                                                    r={radius}
+                                                    stroke={strokeColor}
+                                                    strokeWidth="2.5"
+                                                    fill="transparent"
+                                                    strokeDasharray={circumference}
+                                                    strokeDashoffset={offset}
+                                                    strokeLinecap="round"
+                                                    className="transition-all duration-1000 ease-out"
+                                                />
+                                            </svg>
+
+                                            {/* Avatar / Profile Picture */}
+                                            <Avatar className="w-7 h-7">
+                                                <AvatarImage
+                                                    src={profile?.avatar_url}
+                                                    alt={profile?.full_name || "Profile"}
+                                                    className="object-cover"
+                                                />
+                                                <AvatarFallback className="bg-violet-100 dark:bg-violet-900/50 text-[10px] font-bold text-violet-600 dark:text-violet-300">
+                                                    {(profile?.full_name || "U")[0].toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        </div>
+                                    );
+                                })()
+                            ) : (
+                                <Button
+                                    onClick={() => navigate("/auth")}
+                                    className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 dark:from-violet-500 dark:to-purple-500 dark:hover:from-violet-600 dark:hover:to-purple-600 text-white shadow-lg shadow-violet-500/30 dark:shadow-violet-500/20 transition-all duration-300 hover:scale-105"
+                                >
+                                    Get Started
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        );
+    }
+
     return (
         <nav aria-label="Main Navigation" className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl transition-colors duration-300">
             <div className="container mx-auto px-4">
@@ -269,7 +414,6 @@ export const Navbar = () => {
 
                                 {/* Profile Strength - Circular Ring */}
                                 {(() => {
-                                    // Calculate Score
                                     const score = (() => {
                                         if (!profile) return 0;
                                         let s = 0;
@@ -278,7 +422,6 @@ export const Navbar = () => {
                                         return s;
                                     })();
                                     
-                                    // Ring Color
                                     const strokeColor = score === 100 ? "#10b981" : score >= 50 ? "#eab308" : "#ef4444";
                                     const radius = 18;
                                     const circumference = 2 * Math.PI * radius;
@@ -317,10 +460,17 @@ export const Navbar = () => {
                                                 />
                                             </svg>
 
-                                            {/* Avatar/Initials */}
-                                            <div className="w-7 h-7 bg-violet-100 dark:bg-violet-900/50 rounded-full flex items-center justify-center text-[10px] font-bold text-violet-600 dark:text-violet-300">
-                                                {profile?.full_name?.charAt(0) || "U"}
-                                            </div>
+                                            {/* Avatar / Profile Picture */}
+                                            <Avatar className="w-7 h-7">
+                                                <AvatarImage
+                                                    src={profile?.avatar_url}
+                                                    alt={profile?.full_name || "Profile"}
+                                                    className="object-cover"
+                                                />
+                                                <AvatarFallback className="bg-violet-100 dark:bg-violet-900/50 text-[10px] font-bold text-violet-600 dark:text-violet-300">
+                                                    {(profile?.full_name || "U")[0].toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
                                         </div>
                                     )
                                 })()}
@@ -354,4 +504,3 @@ export const Navbar = () => {
         </nav>
     );
 };
-

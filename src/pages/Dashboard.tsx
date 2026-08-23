@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   FileText, LogOut, TrendingUp, Upload, Play, Target, Users, Mic, Settings,
-  Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search,
+  Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search, X,
   Globe, Briefcase, FileQuestion, ChevronRight, ChevronDown, ChevronUp, Sparkles, Lock, LayoutDashboard,
   Bot, Video, Compass, Crown, Terminal, Brain
 } from "lucide-react";
@@ -38,7 +38,7 @@ import { Footer } from "@/components/Footer";
 import { getDailyQuestion } from "@/data/questions";
 import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 import { FeedbackFormDialog } from "@/components/FeedbackFormDialog";
-import { SearchDialog } from "@/components/SearchDialog";
+import { DashboardSearchBar } from "@/components/dashboard/DashboardSearchBar";
 import { CodingProfilesDialog } from "@/components/CodingProfilesDialog";
 import { InteractiveTour } from "@/components/dashboard/InteractiveTour";
 
@@ -62,6 +62,7 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userStreak, setUserStreak] = useState(0);
+  const [questionStreak, setQuestionStreak] = useState(0);
 
   const {
     isPremium,
@@ -74,7 +75,7 @@ const Dashboard = () => {
   } = useInterviewCredits();
   const totalCredits = creditsElite + creditsVoice + creditsVideo;
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
@@ -314,8 +315,13 @@ const Dashboard = () => {
       setSessions(allActivity.slice(0, 5));
       setAllSessions(allActivity);
 
-      // Calculate Stats
-      const statsData = calculateRealStats(textSessions || [], videoSessions || [], peerSessions || [], user.id);
+      // Calculate Question Solving Streak specifically
+      const questionDates = (solvedQuestions || []).map((sq: any) => sq.solved_at || sq.created_at);
+      const qStreak = calculateStreak(questionDates);
+      setQuestionStreak(qStreak);
+
+      // Calculate Stats (includes all activity for overall platform streak)
+      const statsData = calculateRealStats(textSessions || [], videoSessions || [], peerSessions || [], user.id, solvedQuestions || []);
       setRealStats(statsData);
 
     } catch (error) {
@@ -364,7 +370,7 @@ const Dashboard = () => {
     return streak;
   };
 
-  const calculateRealStats = (text: any[], video: any[], peer: any[], userId: string) => {
+  const calculateRealStats = (text: any[], video: any[], peer: any[], userId: string, solved: any[] = []) => {
     // 1. Total Count
     const total = text.length + video.length + peer.filter((p: any) => p.status === 'completed').length;
 
@@ -385,13 +391,6 @@ const Dashboard = () => {
       const myRating = p.peer_interview_ratings?.find((r: any) => r.rated_user_id === userId);
       if (myRating && myRating.overall_score) { totalScore += myRating.overall_score * 20; scoredCount++; } // 1-5 scale mapped to percentage
     });
-    // Note: Peer ratings might be 1-10 or 1-5, adjust normalization if user confirms scale. Assuming 1-100 for text/video.
-    // Let's assume Peer is 1-10 and map to 1-100 for consistency if average is distinct.
-    // If peer ratings are not yet standard, we might need to adjust. For now, treating raw.
-
-    // Correction: Peer ratings schema shows `overall_score` as number. Let's assume 100 base for now or normalize later.
-    // Actually, looking at previous artifacts, peer might be new. Let's stick to raw average if unsure, or normalize.
-    // Safe bet: Normalize everything to %
 
     const avgScore = scoredCount > 0 ? Math.round(totalScore / scoredCount) : 0;
 
@@ -422,11 +421,12 @@ const Dashboard = () => {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const hoursDisplay = hours > 0 ? (minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`) : `${minutes}m`;
 
-    // 4. Streak
+    // 4. Overall Platform Streak (all platform features)
     const allDates = [
       ...text.map(s => s.created_at),
       ...video.map(s => s.created_at),
-      ...peer.map(s => s.scheduled_at) // Using scheduled_at for peer dates
+      ...peer.map(s => s.scheduled_at || s.created_at),
+      ...solved.map((sq: any) => sq.solved_at || sq.created_at)
     ];
     const streak = calculateStreak(allDates);
     setUserStreak(streak);
@@ -578,7 +578,7 @@ const Dashboard = () => {
       <div className="fixed bottom-20 left-10 w-[500px] h-[500px] bg-emerald-500/4 dark:bg-emerald-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
 
       {/* Header */}
-      <header className="bg-card/60 backdrop-blur-md border-b border-border sticky top-0 z-50 shadow-xs w-full">
+      <header className="fixed top-0 left-0 right-0 z-[100] border-b border-gray-200/50 dark:border-gray-800/50 bg-white/40 dark:bg-gray-950/40 backdrop-blur-xl transition-colors duration-300 w-full">
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-0.5 cursor-pointer" onClick={() => navigate("/dashboard")}>
             <img
@@ -590,16 +590,7 @@ const Dashboard = () => {
           </div>
 
           <div className="flex-1 max-w-md ml-3 mr-9 hidden md:flex items-center gap-3">
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="relative flex-1 text-left w-full h-9 pl-7 pr-12 rounded-full bg-muted/50 border border-transparent hover:bg-muted/70 focus:bg-background focus:border-primary/20 transition-all outline-none text-xs text-muted-foreground cursor-pointer flex items-center"
-            >
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <span>Search questions, companies...</span>
-              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[9px] font-medium text-muted-foreground opacity-100">
-                <span className="text-[10px]">⌘</span>K
-              </kbd>
-            </button>
+            <DashboardSearchBar className="flex-1" />
             <ReferralButton />
           </div>
 
@@ -608,9 +599,9 @@ const Dashboard = () => {
               variant="ghost"
               size="icon"
               className="md:hidden text-muted-foreground hover:text-foreground"
-              onClick={() => setSearchOpen(true)}
+              onClick={() => setMobileSearchOpen((prev) => !prev)}
             >
-              <Search className="w-5 h-5" />
+              {mobileSearchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
             </Button>
             <div className="md:hidden">
               <ReferralButton iconOnly />
@@ -675,10 +666,17 @@ const Dashboard = () => {
             </Button> */}
           </nav>
         </div>
+
+        {/* Mobile Search Bar Dropdown Expansion */}
+        {mobileSearchOpen && (
+          <div className="md:hidden px-4 pb-3 pt-1 border-t border-border/40 bg-background/95 backdrop-blur-md">
+            <DashboardSearchBar isMobile onCloseMobile={() => setMobileSearchOpen(false)} />
+          </div>
+        )}
       </header>
 
       {/* Main Layout Container */}
-      <div className="flex-1 flex w-full min-w-0 relative">
+      <div className="flex-1 flex w-full min-w-0 relative pt-[72px]">
         {/* Sidebar */}
         <Sidebar />
 
@@ -941,7 +939,7 @@ const Dashboard = () => {
                   layout
                   transition={{ duration: 0.35, ease: "easeInOut" }}
                 >
-                  <DailyQuestionWidget userStreak={userStreak} />
+                  <DailyQuestionWidget questionStreak={questionStreak} userStreak={userStreak} />
                 </motion.div>
               </div>
             </div>
@@ -961,10 +959,6 @@ const Dashboard = () => {
         onOpenChange={setShowFeedbackModal}
         onSuccess={refreshCredits}
         grantFeedbackCredits={grantFeedbackCredits}
-      />
-      <SearchDialog
-        open={searchOpen}
-        onOpenChange={setSearchOpen}
       />
       {userId && (
         <InteractiveTour

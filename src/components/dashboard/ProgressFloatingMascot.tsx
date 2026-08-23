@@ -199,7 +199,7 @@ export const ProgressFloatingMascot: React.FC<ProgressFloatingMascotProps> = ({
         duration: 2.0,
         ease: [0.35, 0.1, 0.25, 1],
       }}
-      className="absolute top-2 right-4 z-50 select-none flex items-center justify-end cursor-grab active:cursor-grabbing"
+      className="absolute top-2 right-4 z-30 select-none flex items-center justify-end cursor-grab active:cursor-grabbing"
       style={{ touchAction: "none" }}
     >
       {/* Sleek, Minimal Message Box (No Emojis, Short Text, Smooth Refresh Animation) */}

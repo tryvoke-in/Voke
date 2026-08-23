@@ -90,18 +90,14 @@ const DailyChallengeLanding = () => {
         return;
       }
 
-      // Fetch all user activity for streak calculation
-      const { data: textSessions } = await supabase.from("interview_sessions").select("created_at").eq("user_id", user.id);
-      const { data: videoSessions } = await supabase.from("video_interview_sessions").select("created_at").eq("user_id", user.id);
-      const { data: peerSessions } = await supabase.from("peer_interview_sessions").select("scheduled_at").eq("host_user_id", user.id); // Simplified for host
+      // Fetch solved questions specifically for daily challenge question streak
+      const { data: solvedQuestions } = await supabase
+        .from("solved_questions" as any)
+        .select("solved_at, created_at")
+        .eq("user_id", user.id);
 
-      const allDates = [
-        ...(textSessions || []).map(s => s.created_at),
-        ...(videoSessions || []).map(s => s.created_at),
-        ...(peerSessions || []).map(s => s.scheduled_at)
-      ];
-      
-      setStreak(calculateStreak(allDates));
+      const questionDates = (solvedQuestions || []).map((sq: any) => sq.solved_at || sq.created_at);
+      setStreak(calculateStreak(questionDates));
     } catch (error) {
       console.error("Error fetching user data", error);
     } finally {
