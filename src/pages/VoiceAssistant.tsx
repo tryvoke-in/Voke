@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import Editor from "@monaco-editor/react";
-import { executeCode } from "@/utils/codeExecutor";
+import { executeCode, SupportedLanguage } from "@/utils/codeExecutor";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import ReactMarkdown from 'react-markdown';
@@ -101,7 +101,7 @@ const VoiceAssistant: React.FC = () => {
   const [isTranscriptOpen, setIsTranscriptOpen] = useState<boolean>(true);
 
   // Coding State
-  const [codeLanguage, setCodeLanguage] = useState<string>("python");
+  const [codeLanguage, setCodeLanguage] = useState<SupportedLanguage>("python");
   const [code, setCode] = useState<string>("# Write your solution here\ndef solve():\n    pass");
   const [codeOutput, setCodeOutput] = useState<string>("");
   const [isRunning, setIsRunning] = useState(false);
@@ -1077,7 +1077,7 @@ CRITICAL INTERVIEW GUIDELINES:
                   <div className="flex items-center gap-2">
                     <select
                       value={codeLanguage}
-                      onChange={(e) => setCodeLanguage(e.target.value)}
+                      onChange={(e) => setCodeLanguage(e.target.value as SupportedLanguage)}
                       className="text-xs px-2.5 py-1.5 rounded-xl bg-background border border-border font-medium focus:outline-none"
                     >
                       <option value="python">Python</option>
