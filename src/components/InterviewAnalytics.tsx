@@ -272,7 +272,22 @@ const InterviewAnalytics = ({ userId }: InterviewAnalyticsProps) => {
                         <ResponsiveContainer width="100%" height={400}>
                             <RadarChart data={sixQEvolution}>
                                 <PolarGrid />
-                                <PolarAngleAxis dataKey="trait" />
+                                <PolarAngleAxis 
+                                    dataKey="trait" 
+                                    tick={({ payload, x, y, textAnchor, stroke, radius }: any) => {
+                                        return (
+                                            <text
+                                                x={x}
+                                                y={payload.value === 'AQ' ? y + 10 : y}
+                                                textAnchor={textAnchor}
+                                                fill="hsl(var(--muted-foreground))"
+                                                fontSize={12}
+                                            >
+                                                {payload.value}
+                                            </text>
+                                        );
+                                    }}
+                                />
                                 <PolarRadiusAxis domain={[0, 100]} />
                                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
                                 <Legend />

@@ -229,15 +229,15 @@ export const DevResetWidget = () => {
             {activeTab === 'elite' && (
               <div className="space-y-2">
                 {/* Master Unlock Switch */}
-                <div className="p-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800/60 space-y-2">
+                <div className="p-2.5 rounded-xl bg-muted/50 dark:bg-zinc-900/70 border border-border/60 dark:border-zinc-800/60 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       {isUnlockedAll ? (
-                        <Unlock className="w-3.5 h-3.5 text-amber-400" />
+                        <Unlock className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                       ) : (
-                        <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                        <Lock className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-400" />
                       )}
-                      <span className="text-xs font-bold text-zinc-200">Unlock All 4 Rounds</span>
+                      <span className="text-xs font-bold text-foreground dark:text-zinc-200">Unlock All 4 Rounds</span>
                     </div>
                     <button
                       type="button"
@@ -245,13 +245,13 @@ export const DevResetWidget = () => {
                       className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
                         isUnlockedAll
                           ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/20'
-                          : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
+                          : 'bg-muted dark:bg-zinc-800 text-muted-foreground dark:text-zinc-300 border-border dark:border-zinc-700 hover:bg-muted/80 dark:hover:bg-zinc-700'
                       }`}
                     >
                       {isUnlockedAll ? 'ENABLED' : 'DISABLED'}
                     </button>
                   </div>
-                  <p className="text-[10px] text-zinc-400 leading-snug">
+                  <p className="text-[10px] text-muted-foreground dark:text-zinc-400 leading-snug">
                     {isUnlockedAll
                       ? 'All 4 rounds unlocked. Directly click & test any round.'
                       : 'Standard: Round 2-4 require passing earlier rounds.'}
@@ -259,11 +259,11 @@ export const DevResetWidget = () => {
                 </div>
 
                 {/* Anti-Cheat Toggle */}
-                <div className="p-2.5 rounded-xl bg-zinc-900/70 border border-zinc-800/60 space-y-2">
+                <div className="p-2.5 rounded-xl bg-muted/50 dark:bg-zinc-900/70 border border-border/60 dark:border-zinc-800/60 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <ShieldCheck className={`w-3.5 h-3.5 ${isProctoringDisabled ? 'text-rose-400' : 'text-emerald-400'}`} />
-                      <span className="text-xs font-bold text-zinc-200">Anti-Cheat System</span>
+                      <ShieldCheck className={`w-3.5 h-3.5 ${isProctoringDisabled ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-500 dark:text-emerald-400'}`} />
+                      <span className="text-xs font-bold text-foreground dark:text-zinc-200">Anti-Cheat System</span>
                     </div>
                     <button
                       type="button"
@@ -277,13 +277,13 @@ export const DevResetWidget = () => {
                       className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
                         !isProctoringDisabled
                           ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20'
-                          : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
+                          : 'bg-muted dark:bg-zinc-800 text-muted-foreground dark:text-zinc-300 border-border dark:border-zinc-700 hover:bg-muted/80 dark:hover:bg-zinc-700'
                       }`}
                     >
                       {!isProctoringDisabled ? 'ACTIVE' : 'DISABLED'}
                     </button>
                   </div>
-                  <p className="text-[10px] text-zinc-400 leading-snug">
+                  <p className="text-[10px] text-muted-foreground dark:text-zinc-400 leading-snug">
                     {isProctoringDisabled
                       ? 'Anti-cheat DISABLED. Copy/paste & tab switching allowed.'
                       : 'Anti-cheat ACTIVE. Copy/paste & tab switching blocked.'}
@@ -298,9 +298,9 @@ export const DevResetWidget = () => {
                   }}
                   variant="outline"
                   size="sm"
-                  className="w-full justify-center h-7 px-2 bg-zinc-900 border-amber-500/20 hover:bg-amber-950/40 hover:text-amber-300 rounded-lg text-[10px] font-bold"
+                  className="w-full justify-center h-7 px-2 bg-muted dark:bg-zinc-900 text-foreground dark:text-zinc-200 border-amber-500/30 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg text-[10px] font-bold"
                 >
-                  <Unlock className="w-3 h-3 mr-1.5 text-amber-400" />
+                  <Unlock className="w-3 h-3 mr-1.5 text-amber-500 dark:text-amber-400" />
                   Force Unlock Editor (Skip AI)
                 </Button>
 
@@ -311,9 +311,9 @@ export const DevResetWidget = () => {
                     disabled={isProcessing}
                     variant="outline"
                     size="sm"
-                    className="w-full justify-start h-7 px-2 bg-zinc-900 border-zinc-800 hover:bg-emerald-950/40 hover:text-emerald-300 rounded-lg text-[10px] font-semibold"
+                    className="w-full justify-start h-7 px-2 bg-muted dark:bg-zinc-900 text-foreground dark:text-zinc-200 border-border dark:border-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-300 rounded-lg text-[10px] font-semibold"
                   >
-                    <Check className="w-3 h-3 mr-1 text-emerald-400" />
+                    <Check className="w-3 h-3 mr-1 text-emerald-500 dark:text-emerald-400" />
                     Pass All 4 (90%)
                   </Button>
                   <Button
@@ -321,9 +321,9 @@ export const DevResetWidget = () => {
                     disabled={isProcessing}
                     variant="outline"
                     size="sm"
-                    className="w-full justify-start h-7 px-2 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg text-[10px] font-semibold"
+                    className="w-full justify-start h-7 px-2 bg-muted dark:bg-zinc-900 text-foreground dark:text-zinc-200 border-border dark:border-zinc-800 hover:bg-muted/80 dark:hover:bg-zinc-800 hover:text-foreground dark:hover:text-white rounded-lg text-[10px] font-semibold"
                   >
-                    <RefreshCw className={`w-3 h-3 mr-1 text-amber-400 ${isProcessing ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`w-3 h-3 mr-1 text-amber-500 dark:text-amber-400 ${isProcessing ? 'animate-spin' : ''}`} />
                     Reset Pipeline
                   </Button>
                 </div>
@@ -333,9 +333,9 @@ export const DevResetWidget = () => {
                   onClick={() => navigate('/elite-prep')}
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start h-7 px-2.5 bg-gradient-to-r from-amber-500/10 to-violet-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20 rounded-lg text-[11px] font-bold"
+                  className="w-full justify-start h-7 px-2.5 bg-gradient-to-r from-amber-500/10 to-violet-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300 hover:bg-amber-500/20 rounded-lg text-[11px] font-bold"
                 >
-                  <Layers className="w-3 h-3 mr-1.5 text-amber-400" />
+                  <Layers className="w-3 h-3 mr-1.5 text-amber-500 dark:text-amber-400" />
                   Open Elite Prep Mind Map
                 </Button>
               </div>
