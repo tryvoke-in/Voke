@@ -900,11 +900,11 @@ export const collegeService = {
         title: newDrive.title,
         type: "interview",
         date: newDrive.scheduledDate,
-        time: "10:00 AM",
+        time: newDrive.durationMinutes ? `${newDrive.durationMinutes} mins` : undefined,
         company: driveData.collegeName,
         collegeName: driveData.collegeName,
         link: fullInterviewUrl,
-        notes: `Target Role: ${newDrive.targetRole} • Benchmark: ${newDrive.passingScore}% • Scheduled by ${driveData.collegeName} Placement Cell.`,
+        notes: driveData.instructions || "",
         completed: false,
         isCollegeDrive: true
       };

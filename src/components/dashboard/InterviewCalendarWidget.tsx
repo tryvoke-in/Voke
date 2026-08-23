@@ -83,44 +83,7 @@ const EVENT_TYPE_CONFIG: Record<EventType, {
   }
 };
 
-const INITIAL_EVENTS: CalendarEvent[] = [
-  {
-    id: "admin-evt-1",
-    title: "Google Technical Screen (L4)",
-    type: "interview",
-    date: format(addDays(new Date(), 2), "yyyy-MM-dd"),
-    time: "02:30 PM",
-    company: "Google",
-    link: "https://meet.google.com/abc-defg-hij",
-    notes: "Official Technical Round with Google hiring committee. System Design & DSA.",
-    completed: false,
-    source: "admin"
-  },
-  {
-    id: "evt-user-1",
-    title: "Amazon SDE-2 System Design Mock",
-    type: "mock",
-    date: format(addDays(new Date(), 3), "yyyy-MM-dd"),
-    time: "06:00 PM",
-    company: "Amazon",
-    link: "https://meet.google.com/mock-prep",
-    notes: "Focus on Rate Limiter, Cache Invalidation, and Distributed Lock patterns.",
-    completed: false,
-    source: "user"
-  },
-  {
-    id: "evt-user-2",
-    title: "Stripe Online Assessment (OA)",
-    type: "oa",
-    date: format(addDays(new Date(), 5), "yyyy-MM-dd"),
-    time: "11:00 AM",
-    company: "Stripe",
-    link: "https://codesignal.com/assessments/stripe-oa",
-    notes: "90 minutes coding assessment on HackerRank/CodeSignal.",
-    completed: false,
-    source: "user"
-  }
-];
+const INITIAL_EVENTS: CalendarEvent[] = [];
 
 interface InterviewCalendarWidgetProps {
   userEmail?: string | null;
@@ -220,16 +183,17 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
   const loadCalendarEvents = async () => {
     let baseEvents: CalendarEvent[] = [];
     const saved = localStorage.getItem("voke_user_calendar_events_v2");
+    const DUMMY_IDS = ["admin-evt-1", "evt-user-1", "evt-user-2", "evt-1", "evt-2", "evt-3", "evt-4", "evt-5"];
+    
     if (saved) {
       try {
         const parsed: CalendarEvent[] = JSON.parse(saved);
-        baseEvents = parsed.filter(e => !["evt-1", "evt-2", "evt-3", "evt-4", "evt-5"].includes(e.id));
+        baseEvents = parsed.filter(e => !DUMMY_IDS.includes(e.id));
       } catch (e) {
-        baseEvents = INITIAL_EVENTS;
+        baseEvents = [];
       }
     } else {
-      baseEvents = INITIAL_EVENTS;
-      localStorage.setItem("voke_user_calendar_events_v2", JSON.stringify(INITIAL_EVENTS));
+      baseEvents = [];
     }
 
     // Determine current user email dynamically
@@ -249,7 +213,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
       const studentDrives = await collegeService.getStudentDrivesAsync(activeEmail);
       
       // Filter out previous college drives from base events to ensure latest drives render
-      const userOnlyEvents = baseEvents.filter(e => !e.isCollegeDrive && !e.id.startsWith("college-drive-"));
+      const userOnlyEvents = baseEvents.filter(e => !e.isCollegeDrive && !e.id.startsWith("college-drive-") && !DUMMY_IDS.includes(e.id));
       const driveEvents: CalendarEvent[] = [];
 
       for (const drive of studentDrives) {
@@ -268,11 +232,11 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
           title: drive.title,
           type: "interview",
           date: drive.scheduledDate,
-          time: "10:00 AM",
+          time: drive.durationMinutes ? `${drive.durationMinutes} mins` : undefined,
           company: drive.collegeName,
           collegeName: drive.collegeName,
           link: fullUrl,
-          notes: `Target Role: ${drive.targetRole} • Benchmark: ${drive.passingScore}% • Scheduled by ${drive.collegeName} Placement Cell.`,
+          notes: drive.instructions || "",
           completed: false,
           isCollegeDrive: true,
           source: "admin"
@@ -442,7 +406,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
-                Upcoming Schedule
+                Upcoming Schedules
               </h3>
               {matchedCollegeName && (
                 <Badge variant="outline" className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30 text-[10px] font-medium py-0 px-2 h-5 flex items-center">
@@ -457,7 +421,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
           <Button
             size="sm"
             onClick={() => handleOpenAddDialog("interview")}
-            className="h-8.5 px-3.5 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl gap-1.5 shadow-xs transition-all cursor-pointer"
+            className="h-9 px-3.5 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl gap-1.5 shadow-xs transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Schedule Event</span>
@@ -569,25 +533,27 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                       </div>
 
                       {/* Time & Notes */}
-                      <div className="space-y-1 text-[11px] text-muted-foreground">
-                        {evt.time && (
-                          <div className="flex items-center gap-1.5 font-medium">
-                            <Clock className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
-                            <span>{evt.time}</span>
-                          </div>
-                        )}
-                        {evt.notes && (
-                          <p className="text-[10px] text-muted-foreground/90 bg-muted/40 p-2 rounded-xl border border-border/40 line-clamp-2 mt-1">
-                            {evt.notes}
-                          </p>
-                        )}
-                      </div>
+                      {(evt.time || evt.notes) && (
+                        <div className="space-y-1 text-[11px] text-muted-foreground">
+                          {evt.time && (
+                            <div className="flex items-center gap-1.5 font-medium">
+                              <Clock className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
+                              <span>{evt.time}</span>
+                            </div>
+                          )}
+                          {evt.notes && (
+                            <p className="text-[10px] text-muted-foreground/90 bg-muted/40 p-2 rounded-xl border border-border/40 line-clamp-2 mt-1">
+                              {evt.notes}
+                            </p>
+                          )}
+                        </div>
+                      )}
 
                       {/* Action Bar */}
                       <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-2">
                         {isAdminControlled ? (
                           /* Admin card: NO mark done, NO edit, NO delete */
-                          <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+                          <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
                             <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
                             <span>Official Interview</span>
                           </div>
@@ -645,14 +611,14 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
                               className={cn(
-                                "text-[11px] font-bold px-3 py-1 rounded-xl transition-all flex items-center gap-1 shadow-2xs",
+                                "inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-tight transition-all duration-200 cursor-pointer shadow-xs",
                                 isAdminControlled
-                                  ? "bg-blue-600 hover:bg-blue-500 text-white"
-                                  : "bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
+                                  ? "bg-blue-600 hover:bg-blue-500 text-white hover:shadow-sm hover:shadow-blue-500/25 active:scale-[0.98]"
+                                  : "bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 active:scale-[0.98]"
                               )}
                             >
-                              <span>{evt.isCollegeDrive ? "Start Assessment" : "Join Call"}</span>
-                              <ExternalLink className="w-3 h-3" />
+                              <span>Join Interview</span>
+                              <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-90" />
                             </a>
                           ) : (
                             <span className="text-[10px] text-muted-foreground font-semibold">
@@ -727,19 +693,21 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                       </div>
 
                       {/* Time & Notes */}
-                      <div className="space-y-1 text-[11px] text-muted-foreground">
-                        {evt.time && (
-                          <div className="flex items-center gap-1.5 font-medium">
-                            <Clock className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
-                            <span>{evt.time}</span>
-                          </div>
-                        )}
-                        {evt.notes && (
-                          <p className="text-[10px] text-muted-foreground/90 bg-muted/40 p-2 rounded-xl border border-border/40 line-clamp-2 mt-1">
-                            {evt.notes}
-                          </p>
-                        )}
-                      </div>
+                      {(evt.time || evt.notes) && (
+                        <div className="space-y-1 text-[11px] text-muted-foreground">
+                          {evt.time && (
+                            <div className="flex items-center gap-1.5 font-medium">
+                              <Clock className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
+                              <span>{evt.time}</span>
+                            </div>
+                          )}
+                          {evt.notes && (
+                            <p className="text-[10px] text-muted-foreground/90 bg-muted/40 p-2 rounded-xl border border-border/40 line-clamp-2 mt-1">
+                              {evt.notes}
+                            </p>
+                          )}
+                        </div>
+                      )}
 
                       {/* Action Bar */}
                       <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-2">
@@ -789,10 +757,10 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="text-[11px] font-bold px-3 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-all flex items-center gap-1 shadow-2xs"
+                              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 active:scale-[0.98] transition-all duration-200 shadow-2xs cursor-pointer"
                             >
                               <span>Open</span>
-                              <ExternalLink className="w-3 h-3" />
+                              <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-90" />
                             </a>
                           )}
                         </div>
