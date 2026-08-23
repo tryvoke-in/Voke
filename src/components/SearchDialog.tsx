@@ -29,7 +29,8 @@ import {
   Building2,
   Keyboard,
   LogOut,
-  Target
+  Target,
+  Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
