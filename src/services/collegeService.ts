@@ -868,6 +868,27 @@ export const collegeService = {
     return [];
   },
 
+  getCollegeDriveById(driveId: string): CollegeScheduledDrive | undefined {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
+      if (stored) {
+        const parsed: CollegeScheduledDrive[] = JSON.parse(stored);
+        const drive = parsed.find(d => d.id === driveId);
+        if (drive) return drive;
+      }
+    } catch (e) {
+      console.warn("Failed to load drives from localStorage", e);
+    }
+    
+    // Fallback to searching through active session drives
+    const session = this.getCollegeSession();
+    if (session) {
+      const drives = this.getCollegeDrives(session.id);
+      return drives.find(d => d.id === driveId);
+    }
+    return undefined;
+  },
+
   scheduleCollegeDrive(driveData: Omit<CollegeScheduledDrive, 'id' | 'createdAt'>): CollegeScheduledDrive {
     const driveId = `drive-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     

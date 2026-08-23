@@ -20,6 +20,7 @@ const CollegeAssessmentRoute: React.FC = () => {
 const Auth = lazy(() => import("./pages/Auth"));
 const CollegeAuth = lazy(() => import("./pages/CollegeAuth"));
 const CollegeAdminDashboard = lazy(() => import("./pages/CollegeAdminDashboard"));
+const CollegeDriveDetails = lazy(() => import("./pages/CollegeDriveDetails"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -78,6 +79,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/college" element={<Navigate to="/college/auth" replace />} />
         <Route path="/college/auth" element={<CollegeAuth />} />
         <Route path="/college/dashboard" element={<CollegeAdminDashboard />} />
+        <Route path="/college/drive/:driveId" element={<CollegeDriveDetails />} />
         <Route path="/help" element={<Help />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/about" element={<About />} />

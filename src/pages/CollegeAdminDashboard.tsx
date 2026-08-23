@@ -45,7 +45,7 @@ const CollegeAdminDashboard = () => {
   // Modals
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [preSelectedEmailsForSchedule, setPreSelectedEmailsForSchedule] = useState<string[]>([]);
-  const [selectedDriveForDetails, setSelectedDriveForDetails] = useState<CollegeScheduledDrive | null>(null);
+
   const [selectedStudentForReport, setSelectedStudentForReport] = useState<CollegeStudent | null>(null);
   const [selectedCandidateForReport, setSelectedCandidateForReport] = useState<{ candidate: ScheduledDriveCandidate; drive: CollegeScheduledDrive } | null>(null);
 
@@ -455,13 +455,7 @@ const CollegeAdminDashboard = () => {
                 <BarChart3 className="w-4 h-4 mr-1.5" />
                 Placement Analytics
               </TabsTrigger>
-              <TabsTrigger
-                value="settings"
-                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5"
-              >
-                <ShieldCheck className="w-4 h-4 mr-1.5" />
-                College Config
-              </TabsTrigger>
+
             </TabsList>
 
             <div className="flex items-center gap-2">
@@ -709,7 +703,7 @@ const CollegeAdminDashboard = () => {
                   <Card
                     key={drive.id}
                     className="bg-card border-border text-black dark:text-white overflow-hidden hover:border-blue-500/40 transition-all cursor-pointer group"
-                    onClick={() => setSelectedDriveForDetails(drive)}
+                    onClick={() => navigate(`/college/drive/${drive.id}`)}
                   >
                     <div className="p-5 space-y-3">
                       <div className="flex items-start justify-between gap-3">
@@ -795,15 +789,15 @@ const CollegeAdminDashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {[
-                    { label: "Data Structures & Algorithms", value: analytics?.skillAverages.dsa || 85, color: "bg-emerald-500" },
-                    { label: "System Design & Architecture", value: analytics?.skillAverages.systemDesign || 80, color: "bg-cyan-500" },
-                    { label: "Technical Articulation & Communication", value: analytics?.skillAverages.communication || 88, color: "bg-blue-500" },
-                    { label: "Problem Solving & Complexity Analysis", value: analytics?.skillAverages.problemSolving || 86, color: "bg-amber-500" }
+                    { label: "Data Structures & Algorithms", value: analytics?.skillAverages.dsa || 85, color: "bg-emerald-600 dark:bg-emerald-300" },
+                    { label: "System Design & Architecture", value: analytics?.skillAverages.systemDesign || 80, color: "bg-cyan-600 dark:bg-cyan-300" },
+                    { label: "Technical Articulation & Communication", value: analytics?.skillAverages.communication || 88, color: "bg-blue-600 dark:bg-blue-300" },
+                    { label: "Problem Solving & Complexity Analysis", value: analytics?.skillAverages.problemSolving || 86, color: "bg-amber-600 dark:bg-amber-300" }
                   ].map(skill => (
                     <div key={skill.label} className="space-y-1.5">
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-300 font-medium">{skill.label}</span>
-                        <span className="font-bold text-white font-mono">{skill.value}%</span>
+                        <span className="text-black dark:text-gray-300 font-medium">{skill.label}</span>
+                        <span className="font-bold text-black dark:text-white font-mono">{skill.value}%</span>
                       </div>
                       <div className="w-full h-2 bg-muted/50 rounded-full overflow-hidden">
                         <div
@@ -861,9 +855,9 @@ const CollegeAdminDashboard = () => {
                       className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 dark:bg-muted/30 border border-border/50 hover:border-blue-500/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${idx === 0 ? "bg-amber-500/20 text-amber-300 border border-amber-500/40" :
-                            idx === 1 ? "bg-slate-300/20 text-slate-200 border border-slate-300/40" :
-                              "bg-amber-700/20 text-amber-500 border border-amber-700/40"
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${idx === 0 ? "bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40" :
+                            idx === 1 ? "bg-slate-300/20 text-slate-600 dark:text-slate-300 border border-slate-300/40" :
+                              "bg-amber-700/20 text-amber-600 dark:text-amber-300 border border-amber-700/40"
                           }`}>
                           #{idx + 1}
                         </div>
@@ -882,7 +876,7 @@ const CollegeAdminDashboard = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => setSelectedStudentForReport(student)}
-                          className="border-border text-xs h-8 bg-transparent text-gray-300 hover:bg-muted/50"
+                          className="border-border text-xs h-8 bg-transparent text-gray-600 dark:text-gray-300 hover:bg-muted/50"
                         >
                           View Profile
                         </Button>
@@ -894,43 +888,7 @@ const CollegeAdminDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* TAB 4: College Config & Domain Settings */}
-          <TabsContent value="settings" className="space-y-4 mt-0">
-            <Card className="bg-card border-border text-foreground">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-300" />
-                  Institutional Partnership Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
-                    <Label className="text-xs text-gray-400 uppercase">Institution Name</Label>
-                    <div className="font-bold text-white text-base">{college.name}</div>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
-                    <Label className="text-xs text-gray-400 uppercase">Partnership Tier</Label>
-                    <div className="font-bold text-emerald-400 text-base">{college.tier}</div>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
-                    <Label className="text-xs text-gray-400 uppercase">Authorized Email Domains</Label>
-                    <div className="font-mono text-blue-600 dark:text-blue-300 text-sm">
-                      {college.domains.map(d => `@${d}`).join(", ")}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground/70">
-                      Students using these email addresses get instant college partner access.
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
-                    <Label className="text-xs text-gray-400 uppercase">T&P Coordinator Contact</Label>
-                    <div className="font-semibold text-foreground">{college.adminName}</div>
-                    <div className="text-xs text-muted-foreground">{college.adminEmail} • {college.contactPhone}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+
         </Tabs>
       </main>
 
@@ -1032,216 +990,7 @@ const CollegeAdminDashboard = () => {
         onDriveCreated={() => loadCollegeData(false)}
       />
 
-      {/* Drive Details & Candidate Results Modal */}
-      {selectedDriveForDetails && (
-        <Dialog open={!!selectedDriveForDetails} onOpenChange={() => setSelectedDriveForDetails(null)}>
-          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto bg-card border-border text-white p-6">
-            <DialogHeader className="border-b border-border pb-4">
-              <div className="flex items-center gap-2">
-                <Badge className="bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30 text-xs">
-                  {selectedDriveForDetails.status.toUpperCase()} DRIVE
-                </Badge>
-              </div>
-              <DialogTitle className="text-xl font-bold text-white mt-1">
-                {selectedDriveForDetails.title}
-              </DialogTitle>
-              <DialogDescription className="text-gray-400 text-xs">
-                Target Role: <strong className="text-foreground">{selectedDriveForDetails.targetRole}</strong> • Passing Benchmark: <strong className="text-emerald-400">{selectedDriveForDetails.passingScore}%</strong> • Duration: {selectedDriveForDetails.durationMinutes} mins
-              </DialogDescription>
-            </DialogHeader>
 
-            <div className="py-4 space-y-4">
-              {/* Direct Interview Room Link */}
-              <div className="p-3.5 rounded-xl bg-blue-950/25 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="space-y-0.5 min-w-0 flex-1">
-                  <div className="text-xs font-semibold text-blue-600 dark:text-blue-300 flex items-center gap-1.5">
-                    <Link className="w-3.5 h-3.5 text-blue-600 dark:text-blue-300" /> Direct Candidate Assessment Link
-                  </div>
-                  <p className="text-[11px] font-mono text-gray-300 truncate">
-                    {selectedDriveForDetails.interviewUrl || `${window.location.origin}/adaptive-interview?role=${encodeURIComponent(selectedDriveForDetails.targetRole)}&driveId=${selectedDriveForDetails.id}`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      const url = selectedDriveForDetails.interviewUrl || `${window.location.origin}/adaptive-interview?role=${encodeURIComponent(selectedDriveForDetails.targetRole)}&driveId=${selectedDriveForDetails.id}`;
-                      navigator.clipboard.writeText(url);
-                      toast.success("Interview link copied to clipboard!");
-                    }}
-                    className="border-blue-500/30 text-blue-600 dark:text-blue-300 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white text-xs h-8 px-2.5"
-                  >
-                    <Copy className="w-3.5 h-3.5 mr-1" /> Copy Link
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      const url = selectedDriveForDetails.interviewUrl || `${window.location.origin}/adaptive-interview?role=${encodeURIComponent(selectedDriveForDetails.targetRole)}&driveId=${selectedDriveForDetails.id}`;
-                      window.open(url, "_blank");
-                    }}
-                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8 px-2.5"
-                  >
-                    <Play className="w-3.5 h-3.5 mr-1" /> Test Link
-                  </Button>
-                </div>
-              </div>
-
-              {/* Uploaded Question Bank */}
-              <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-500/30 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-300 flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-300" />
-                    Uploaded Question Set ({selectedDriveForDetails.customQuestions?.length || 3} Questions)
-                  </h4>
-                  <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
-                    Passing Benchmark: {selectedDriveForDetails.passingScore || 75}%
-                  </Badge>
-                </div>
-
-                <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
-                  {(selectedDriveForDetails.customQuestions && selectedDriveForDetails.customQuestions.length > 0
-                    ? selectedDriveForDetails.customQuestions
-                    : [
-                      { id: "q1", question: "Explain difference between process and thread, PCB/TCB switching.", difficulty: "Medium", expectedAnswerOrKeyPoints: "Memory isolation, virtual address space vs heap" },
-                      { id: "q2", question: "Implement LRU Cache with O(1) get and put operations.", difficulty: "Medium", expectedAnswerOrKeyPoints: "Doubly linked list + hash map" },
-                      { id: "q3", question: "QuickSort vs MergeSort complexity and real-world selection trade-offs.", difficulty: "Medium", expectedAnswerOrKeyPoints: "O(N log N) avg vs worst, memory auxiliary space" }
-                    ]
-                  ).map((q, idx) => (
-                    <div key={idx} className="p-2.5 rounded-lg bg-black/40 border border-border/50 text-xs space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-muted/50 text-gray-300 text-[9px] px-1.5 py-0 font-mono">
-                          Q{idx + 1}
-                        </Badge>
-                        <span className="text-[10px] text-blue-600 dark:text-blue-300 font-semibold uppercase">
-                          {q.difficulty || "Medium"}
-                        </span>
-                        <span className="text-gray-200 font-medium">{q.question}</span>
-                      </div>
-                      {q.expectedAnswerOrKeyPoints && (
-                        <p className="text-[11px] text-gray-400 pl-6">
-                          <strong className="text-blue-600 dark:text-blue-300">Expected:</strong> {q.expectedAnswerOrKeyPoints}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Instructions */}
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
-                  Drive Instructions:
-                </h4>
-                <p className="text-xs text-gray-300 p-3 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50">
-                  {selectedDriveForDetails.instructions}
-                </p>
-              </div>
-
-              {/* Candidate Evaluations & Selection Verdict Table */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Candidate Results & Selection Status:
-                  </h4>
-                  <div className="text-xs text-muted-foreground">
-                    Threshold: <span className="text-emerald-400 font-bold">{selectedDriveForDetails.passingScore || 75}%</span>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-border overflow-hidden">
-                  <Table>
-                    <TableHeader className="bg-muted/40 dark:bg-muted/30">
-                      <TableRow className="border-border">
-                        <TableHead className="text-xs text-foreground/80">Candidate Email</TableHead>
-                        <TableHead className="text-xs text-foreground/80">Status</TableHead>
-                        <TableHead className="text-xs text-gray-300 text-center">Score</TableHead>
-                        <TableHead className="text-xs text-gray-300 text-center">Selection Verdict</TableHead>
-                        <TableHead className="text-xs text-gray-300 text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedDriveForDetails.candidates && selectedDriveForDetails.candidates.length > 0 ? (
-                        selectedDriveForDetails.candidates.map(candidate => {
-                          const hasAttempted = candidate.status === "Completed" && candidate.score !== undefined;
-                          const isCandidatePassed = hasAttempted && (
-                            candidate.selectionVerdict === "SELECTED" ||
-                            (candidate.score !== undefined && candidate.score >= selectedDriveForDetails.passingScore)
-                          );
-
-                          return (
-                            <TableRow key={candidate.studentEmail} className="border-border/50 text-xs">
-                              <TableCell className="font-mono text-foreground">
-                                <div className="font-semibold text-foreground">{candidate.studentName || candidate.studentEmail.split('@')[0]}</div>
-                                <div className="text-[11px] text-muted-foreground">{candidate.studentEmail}</div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge className={`text-[10px] ${candidate.status === "Completed"
-                                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                                    : "bg-amber-500/20 text-amber-300 border-amber-500/30"
-                                  }`}>
-                                  {candidate.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-center font-bold font-mono">
-                                {candidate.score !== undefined ? (
-                                  <span className={isCandidatePassed ? "text-emerald-400" : "text-rose-400"}>
-                                    {candidate.score}%
-                                  </span>
-                                ) : (
-                                  <span className="text-muted-foreground/70">-</span>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                {!hasAttempted ? (
-                                  <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
-                                    Pending
-                                  </Badge>
-                                ) : isCandidatePassed ? (
-                                  <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px] font-bold">
-                                    <Check className="w-3 h-3 mr-1" /> SELECTED
-                                  </Badge>
-                                ) : (
-                                  <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/40 text-[10px] font-bold">
-                                    <X className="w-3 h-3 mr-1" /> NOT SELECTED
-                                  </Badge>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {hasAttempted ? (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => setSelectedCandidateForReport({
-                                      candidate,
-                                      drive: selectedDriveForDetails
-                                    })}
-                                    className="border-blue-500/30 text-blue-600 dark:text-blue-300 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white text-xs h-7 px-2"
-                                  >
-                                    <FileText className="w-3 h-3 mr-1" /> AI Report
-                                  </Button>
-                                ) : (
-                                  <span className="text-gray-500 text-[11px]">-</span>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                            No candidate records found for this drive.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* Candidate AI Evaluation Report Modal */}
       {selectedCandidateForReport && (
