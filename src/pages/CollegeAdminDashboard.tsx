@@ -260,7 +260,7 @@ const CollegeAdminDashboard = () => {
                 className="w-8 h-8 object-contain group-hover:rotate-12 transition-transform duration-300"
               />
               <span className="text-xl font-bold tracking-tight text-foreground">
-                Voke <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">Institutional</span>
+                Voke <span className="text-xs text-blue-600 dark:text-blue-300 font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">Institutional</span>
               </span>
             </div>
             <div className="h-4 w-px bg-border hidden sm:block" />
@@ -280,7 +280,7 @@ const CollegeAdminDashboard = () => {
               className="text-xs h-9 px-3"
               title="Sync latest student registrations"
             >
-              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin text-blue-500' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin text-blue-600 dark:text-blue-300' : ''}`} />
               <span className="hidden sm:inline">Sync</span>
             </Button>
 
@@ -288,7 +288,7 @@ const CollegeAdminDashboard = () => {
               size="sm"
               variant="outline"
               onClick={() => setAddStudentOpen(true)}
-              className="border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-600/10 text-blue-700 dark:text-blue-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 text-xs h-9 px-3 hidden md:flex items-center"
+              className="border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 text-xs h-9 px-3 hidden md:flex items-center"
             >
               <UserPlus className="w-3.5 h-3.5 mr-1.5" />
               Enroll Student
@@ -335,13 +335,13 @@ const CollegeAdminDashboard = () => {
         {/* College Header Banner */}
         <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-r from-blue-100/60 via-card to-card dark:from-blue-950/40 dark:via-card dark:to-card border border-border relative overflow-hidden shadow-xl dark:shadow-2xl">
           <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-            <GraduationCap className="w-48 h-48 text-blue-500 dark:text-blue-400" />
+            <GraduationCap className="w-48 h-48 text-blue-600 dark:text-blue-300" />
           </div>
 
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge className="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30 text-xs">
+                <Badge className="bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-500/30 text-xs">
                   {college.shortName} Placement & Training Cell
                 </Badge>
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -368,7 +368,7 @@ const CollegeAdminDashboard = () => {
                 <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Ready Rate</div>
               </div>
               <div className="p-3 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border text-center min-w-[100px]">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{drives.length}</div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-300">{drives.length}</div>
                 <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Mock Drives</div>
               </div>
             </div>
@@ -381,7 +381,7 @@ const CollegeAdminDashboard = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between text-muted-foreground mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wider">Students Roster</span>
-                <Users className="w-4 h-4 text-blue-500" />
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-300" />
               </div>
               <div className="text-2xl font-bold text-foreground">{students.length}</div>
               <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
@@ -433,31 +433,31 @@ const CollegeAdminDashboard = () => {
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-border">
-            <TabsList className="bg-card border border-border p-1">
+            <TabsList className="bg-card border border-border p-1 gap-3 rounded-full">
               <TabsTrigger
                 value="students"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
+                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5"
               >
                 <Users className="w-4 h-4 mr-1.5" />
                 Registered Students ({students.length})
               </TabsTrigger>
               <TabsTrigger
                 value="drives"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
+                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5"
               >
                 <Calendar className="w-4 h-4 mr-1.5" />
                 Scheduled Drives ({drives.length})
               </TabsTrigger>
               <TabsTrigger
                 value="analytics"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
+                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5"
               >
                 <BarChart3 className="w-4 h-4 mr-1.5" />
                 Placement Analytics
               </TabsTrigger>
               <TabsTrigger
                 value="settings"
-                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
+                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5"
               >
                 <ShieldCheck className="w-4 h-4 mr-1.5" />
                 College Config
@@ -465,19 +465,9 @@ const CollegeAdminDashboard = () => {
             </TabsList>
 
             <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setAddStudentOpen(true)}
-                className="border-border bg-muted/40 dark:bg-muted/30 hover:bg-muted/50 text-foreground text-xs h-8"
-              >
-                <UserPlus className="w-3.5 h-3.5 mr-1 text-blue-400" />
-                Enroll Student
-              </Button>
-
               {activeTab === "students" && selectedStudentEmails.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-blue-300 font-medium">
+                <div className="flex items-center gap-2 mr-1">
+                  <span className="text-xs text-blue-600 dark:text-blue-300 font-medium">
                     {selectedStudentEmails.length} selected
                   </span>
                   <Button
@@ -490,6 +480,16 @@ const CollegeAdminDashboard = () => {
                   </Button>
                 </div>
               )}
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setAddStudentOpen(true)}
+                className="border-border bg-muted/40 dark:bg-muted/30 hover:bg-muted/50 text-foreground text-xs h-8"
+              >
+                <UserPlus className="w-3.5 h-3.5 mr-1 text-blue-600 dark:text-blue-300" />
+                Enroll Student
+              </Button>
             </div>
           </div>
 
@@ -511,7 +511,7 @@ const CollegeAdminDashboard = () => {
                 <span className="text-xs text-gray-400 flex items-center gap-1">
                   <Filter className="w-3.5 h-3.5" /> Filter:
                 </span>
-                <div className="flex items-center gap-1 bg-muted/40 dark:bg-muted/30 p-1 rounded-lg border border-border">
+                <div className="flex items-center gap-1 bg-muted/40 dark:bg-muted/30 p-1 rounded-full border border-border">
                   {[
                     { id: "all", label: "All" },
                     { id: "ready", label: "Ready (80%+)" },
@@ -521,7 +521,7 @@ const CollegeAdminDashboard = () => {
                     <button
                       key={filter.id}
                       onClick={() => setStatusFilter(filter.id)}
-                      className={`text-xs px-2.5 py-1 rounded transition-colors ${statusFilter === filter.id
+                      className={`text-xs px-2.5 py-1 rounded-full transition-colors ${statusFilter === filter.id
                           ? "bg-blue-600 text-white font-medium"
                           : "text-muted-foreground hover:text-foreground"
                         }`}
@@ -550,17 +550,17 @@ const CollegeAdminDashboard = () => {
                     <TableHead className="text-xs font-semibold text-foreground/80">Student & College Email</TableHead>
                     <TableHead className="text-xs font-semibold text-foreground/80">Branch & Batch</TableHead>
                     <TableHead className="text-xs font-semibold text-foreground/80">Target Role</TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-300 text-center">Mocks</TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-300 text-center">Avg AI Score</TableHead>
+                    <TableHead className="text-xs font-semibold text-foreground/80 text-center">Mocks</TableHead>
+                    <TableHead className="text-xs font-semibold text-foreground/80 text-center">Avg AI Score</TableHead>
                     <TableHead className="text-xs font-semibold text-foreground/80">Placement Readiness</TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-300 text-right">Actions</TableHead>
+                    <TableHead className="text-xs font-semibold text-foreground/80 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredStudents.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-16 text-muted-foreground">
-                        <Users className="w-10 h-10 mx-auto mb-3 text-muted-foreground/60" />
+                        <Users className="w-10 h-10 mx-auto mb-3 text-blue-600 dark:text-blue-300" />
                         <h4 className="font-semibold text-white text-sm mb-1">No Registered Students Yet</h4>
                         <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
                           Students with authorized college email domains will automatically appear here once they sign up, or you can enroll them directly.
@@ -592,14 +592,14 @@ const CollegeAdminDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-blue-600/30 border border-blue-500/30 flex items-center justify-center font-bold text-xs text-blue-300 dark:text-blue-200">
+                              <div className="w-8 h-8 bg-blue-600/30 border border-blue-500/30 flex items-center justify-center font-bold text-xs text-blue-600 dark:text-blue-300">
                                 {student.fullName.slice(0, 2).toUpperCase()}
                               </div>
                               <div>
-                                <div className="font-semibold text-sm text-white flex items-center gap-1.5">
+                                <div className="font-semibold text-sm text-foreground flex items-center gap-1.5">
                                   {student.fullName}
                                 </div>
-                                <div className="text-xs text-gray-400 font-mono flex items-center gap-1">
+                                <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
                                   <Mail className="w-3 h-3 text-muted-foreground/70" />
                                   {student.email}
                                 </div>
@@ -608,29 +608,29 @@ const CollegeAdminDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <div className="text-xs text-foreground/80">{student.branch}</div>
-                            <div className="text-[11px] text-gray-500 font-mono">{student.batch}</div>
+                            <div className="text-[11px] text-muted-foreground/80 font-mono">{student.batch}</div>
                           </TableCell>
                           <TableCell>
                             <span className="text-xs text-foreground/80">{student.targetRole}</span>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge variant="outline" className="border-border text-gray-300 font-mono text-xs">
+                            <Badge variant="outline" className="border-border text-foreground/80 font-mono text-xs">
                               {student.interviewsCompleted}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className={`font-bold text-sm font-mono ${student.averageScore >= 85 ? "text-emerald-400" :
-                                student.averageScore >= 70 ? "text-amber-400" : "text-rose-400"
+                            <span className={`font-bold text-sm font-mono ${student.averageScore >= 85 ? "text-emerald-600 dark:text-emerald-400" :
+                                student.averageScore >= 70 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"
                               }`}>
                               {student.averageScore}%
                             </span>
                           </TableCell>
                           <TableCell>
                             <Badge className={`text-[11px] px-2.5 py-0.5 border ${student.readinessStatus === "Placement Ready"
-                                ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                                 : student.readinessStatus === "Intermediate"
-                                  ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
-                                  : "bg-rose-500/15 text-rose-300 border-rose-500/30"
+                                  ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                                  : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30"
                               }`}>
                               {student.readinessStatus}
                             </Badge>
@@ -641,14 +641,14 @@ const CollegeAdminDashboard = () => {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => setSelectedStudentForReport(student)}
-                                className="h-8 px-2 text-xs text-gray-400 hover:text-white hover:bg-muted/50"
+                                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50"
                               >
                                 Report
                               </Button>
                               <Button
                                 size="sm"
                                 onClick={() => handleScheduleForSingleStudent(student.email)}
-                                className="h-8 px-2.5 text-xs bg-blue-600/30 hover:bg-blue-600 text-blue-200 hover:text-white border border-blue-500/30"
+                                className="h-8 px-2.5 text-xs bg-blue-600/30 hover:bg-blue-600 text-blue-600 dark:text-blue-300 hover:text-white border border-blue-500/30"
                               >
                                 Schedule
                               </Button>
@@ -716,7 +716,7 @@ const CollegeAdminDashboard = () => {
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <Badge className={`text-[10px] px-2 py-0.5 uppercase tracking-wider ${drive.status === "active" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" :
-                                drive.status === "scheduled" ? "bg-blue-500/20 text-blue-300 border-blue-500/30" :
+                                drive.status === "scheduled" ? "bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30" :
                                   "bg-gray-500/20 text-gray-300 border-gray-500/30"
                               }`}>
                               {drive.status}
@@ -729,7 +729,7 @@ const CollegeAdminDashboard = () => {
                             {drive.title}
                           </h4>
                           <p className="text-xs text-gray-400 flex items-center gap-1">
-                            <Building2 className="w-3.5 h-3.5 text-blue-400" /> Target Role: <span className="text-gray-200 font-medium">{drive.targetRole}</span>
+                            <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-300" /> Target Role: <span className="text-gray-200 font-medium">{drive.targetRole}</span>
                           </p>
                         </div>
                       </div>
@@ -768,7 +768,7 @@ const CollegeAdminDashboard = () => {
                         </div>
                       )}
 
-                      <div className="pt-2 flex items-center justify-between border-t border-border/50 text-xs text-blue-400 font-medium">
+                      <div className="pt-2 flex items-center justify-between border-t border-border/50 text-xs text-blue-600 dark:text-blue-300 font-medium">
                         <span>View Candidates & Results Leaderboard</span>
                         <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                       </div>
@@ -832,7 +832,7 @@ const CollegeAdminDashboard = () => {
                     <div key={dist.range} className="flex items-center justify-between p-3 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50">
                       <span className="text-xs font-semibold text-foreground/80">{dist.range}</span>
                       <div className="flex items-center gap-2">
-                        <Badge className="bg-blue-600/30 text-blue-300 border-blue-500/30 font-mono text-xs">
+                        <Badge className="bg-blue-600/30 text-blue-600 dark:text-blue-300 border-blue-500/30 font-mono text-xs">
                           {dist.count} student{dist.count !== 1 ? "s" : ""}
                         </Badge>
                       </div>
@@ -899,7 +899,7 @@ const CollegeAdminDashboard = () => {
             <Card className="bg-card border-border text-foreground">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-blue-400" />
+                  <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-300" />
                   Institutional Partnership Details
                 </CardTitle>
               </CardHeader>
@@ -915,7 +915,7 @@ const CollegeAdminDashboard = () => {
                   </div>
                   <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
                     <Label className="text-xs text-gray-400 uppercase">Authorized Email Domains</Label>
-                    <div className="font-mono text-blue-300 text-sm">
+                    <div className="font-mono text-blue-600 dark:text-blue-300 text-sm">
                       {college.domains.map(d => `@${d}`).join(", ")}
                     </div>
                     <p className="text-[11px] text-muted-foreground/70">
@@ -938,8 +938,8 @@ const CollegeAdminDashboard = () => {
       <Dialog open={addStudentOpen} onOpenChange={setAddStudentOpen}>
         <DialogContent className="max-w-md bg-card border-border text-white p-6">
           <DialogHeader className="border-b border-border pb-3">
-            <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-blue-400" />
+            <DialogTitle className="text-lg font-bold text-black flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-blue-600 dark:text-blue-300" />
               Enroll Student to College Roster
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -1007,7 +1007,7 @@ const CollegeAdminDashboard = () => {
                 type="button"
                 variant="outline"
                 onClick={() => setAddStudentOpen(false)}
-                className="border-border text-gray-300 text-xs"
+                className="border-border text-gray-600 dark:text-gray-300 text-xs"
               >
                 Cancel
               </Button>
@@ -1038,7 +1038,7 @@ const CollegeAdminDashboard = () => {
           <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto bg-card border-border text-white p-6">
             <DialogHeader className="border-b border-border pb-4">
               <div className="flex items-center gap-2">
-                <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
+                <Badge className="bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30 text-xs">
                   {selectedDriveForDetails.status.toUpperCase()} DRIVE
                 </Badge>
               </div>
@@ -1054,8 +1054,8 @@ const CollegeAdminDashboard = () => {
               {/* Direct Interview Room Link */}
               <div className="p-3.5 rounded-xl bg-blue-950/25 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-0.5 min-w-0 flex-1">
-                  <div className="text-xs font-semibold text-blue-300 flex items-center gap-1.5">
-                    <Link className="w-3.5 h-3.5 text-blue-400" /> Direct Candidate Assessment Link
+                  <div className="text-xs font-semibold text-blue-600 dark:text-blue-300 flex items-center gap-1.5">
+                    <Link className="w-3.5 h-3.5 text-blue-600 dark:text-blue-300" /> Direct Candidate Assessment Link
                   </div>
                   <p className="text-[11px] font-mono text-gray-300 truncate">
                     {selectedDriveForDetails.interviewUrl || `${window.location.origin}/adaptive-interview?role=${encodeURIComponent(selectedDriveForDetails.targetRole)}&driveId=${selectedDriveForDetails.id}`}
@@ -1070,7 +1070,7 @@ const CollegeAdminDashboard = () => {
                       navigator.clipboard.writeText(url);
                       toast.success("Interview link copied to clipboard!");
                     }}
-                    className="border-blue-500/30 text-blue-200 hover:bg-blue-600 hover:text-white text-xs h-8 px-2.5"
+                    className="border-blue-500/30 text-blue-600 dark:text-blue-300 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white text-xs h-8 px-2.5"
                   >
                     <Copy className="w-3.5 h-3.5 mr-1" /> Copy Link
                   </Button>
@@ -1090,8 +1090,8 @@ const CollegeAdminDashboard = () => {
               {/* Uploaded Question Bank */}
               <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-500/30 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-blue-300 flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-blue-400" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-300 flex items-center gap-1.5">
+                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-300" />
                     Uploaded Question Set ({selectedDriveForDetails.customQuestions?.length || 3} Questions)
                   </h4>
                   <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
@@ -1113,14 +1113,14 @@ const CollegeAdminDashboard = () => {
                         <Badge className="bg-muted/50 text-gray-300 text-[9px] px-1.5 py-0 font-mono">
                           Q{idx + 1}
                         </Badge>
-                        <span className="text-[10px] text-blue-400 font-semibold uppercase">
+                        <span className="text-[10px] text-blue-600 dark:text-blue-300 font-semibold uppercase">
                           {q.difficulty || "Medium"}
                         </span>
                         <span className="text-gray-200 font-medium">{q.question}</span>
                       </div>
                       {q.expectedAnswerOrKeyPoints && (
                         <p className="text-[11px] text-gray-400 pl-6">
-                          <strong className="text-blue-300">Expected:</strong> {q.expectedAnswerOrKeyPoints}
+                          <strong className="text-blue-600 dark:text-blue-300">Expected:</strong> {q.expectedAnswerOrKeyPoints}
                         </p>
                       )}
                     </div>
@@ -1216,7 +1216,7 @@ const CollegeAdminDashboard = () => {
                                       candidate,
                                       drive: selectedDriveForDetails
                                     })}
-                                    className="border-blue-500/30 text-blue-300 hover:bg-blue-600 hover:text-white text-xs h-7 px-2"
+                                    className="border-blue-500/30 text-blue-600 dark:text-blue-300 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white text-xs h-7 px-2"
                                   >
                                     <FileText className="w-3 h-3 mr-1" /> AI Report
                                   </Button>
@@ -1250,7 +1250,7 @@ const CollegeAdminDashboard = () => {
             <DialogHeader className="border-b border-border pb-4">
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-400" />
+                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                   Candidate Assessment Report
                 </DialogTitle>
                 <Badge className={
@@ -1278,7 +1278,7 @@ const CollegeAdminDashboard = () => {
                   <p className="text-xs text-gray-400 font-mono">
                     {selectedCandidateForReport.candidate.studentEmail}
                   </p>
-                  <p className="text-xs text-blue-300 mt-0.5">
+                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-0.5">
                     Completed: {selectedCandidateForReport.candidate.completedAt ? new Date(selectedCandidateForReport.candidate.completedAt).toLocaleString() : "Recently"}
                   </p>
                 </div>
@@ -1299,7 +1299,7 @@ const CollegeAdminDashboard = () => {
 
               {/* Feedback note */}
               <div className="p-3.5 rounded-xl bg-blue-950/30 border border-blue-500/20 text-xs space-y-1">
-                <span className="font-bold text-blue-300 block">Placement Cell Assessment Summary:</span>
+                <span className="font-bold text-blue-600 dark:text-blue-300 block">Placement Cell Assessment Summary:</span>
                 <p className="text-gray-300 leading-relaxed">
                   {selectedCandidateForReport.candidate.feedback}
                 </p>
@@ -1315,7 +1315,7 @@ const CollegeAdminDashboard = () => {
                   {selectedCandidateForReport.candidate.answers.map((ans, idx) => (
                     <div key={idx} className="p-3.5 rounded-xl bg-black/40 border border-border/50 space-y-2 text-xs">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-blue-300">
+                        <span className="font-bold text-blue-600 dark:text-blue-300">
                           Q{idx + 1}: {ans.question}
                         </span>
                         <Badge className={`text-[10px] font-mono font-bold ${ans.score >= (selectedCandidateForReport.drive.passingScore || 75)
@@ -1331,8 +1331,8 @@ const CollegeAdminDashboard = () => {
                         <p className="italic text-foreground/80">{ans.studentAnswer}</p>
                       </div>
 
-                      <div className="p-2.5 rounded-lg bg-blue-950/20 border border-blue-500/20 text-blue-300 dark:text-blue-200">
-                        <strong className="text-blue-400 block text-[10px] uppercase mb-0.5">AI Feedback:</strong>
+                      <div className="p-2.5 rounded-lg bg-blue-950/20 border border-blue-500/20 text-blue-600 dark:text-blue-300">
+                        <strong className="text-blue-600 dark:text-blue-300 block text-[10px] uppercase mb-0.5">AI Feedback:</strong>
                         <p>{ans.aiFeedback}</p>
                       </div>
                     </div>
@@ -1356,13 +1356,13 @@ const CollegeAdminDashboard = () => {
 
             <div className="py-4 space-y-4">
               <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/40 dark:bg-muted/30 border border-border">
-                <div className="w-12 h-12 rounded-full bg-blue-600/30 border border-blue-500/40 flex items-center justify-center font-bold text-lg text-blue-300 dark:text-blue-200">
+                <div className="w-12 h-12 rounded-full bg-blue-600/30 border border-blue-500/40 flex items-center justify-center font-bold text-lg text-blue-600 dark:text-blue-300">
                   {selectedStudentForReport.fullName.slice(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <h3 className="font-bold text-base text-foreground">{selectedStudentForReport.fullName}</h3>
                   <p className="text-xs text-gray-400 font-mono">{selectedStudentForReport.email}</p>
-                  <p className="text-xs text-blue-300 mt-0.5">
+                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-0.5">
                     {selectedStudentForReport.branch} • {selectedStudentForReport.batch}
                   </p>
                 </div>
