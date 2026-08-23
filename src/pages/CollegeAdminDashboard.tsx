@@ -687,8 +687,8 @@ const CollegeAdminDashboard = () => {
             {drives.length === 0 ? (
               <div className="text-center py-16 p-6 rounded-xl border border-border bg-card text-muted-foreground">
                 <Calendar className="w-10 h-10 mx-auto mb-3 text-muted-foreground/60" />
-                <h4 className="font-semibold text-white text-sm mb-1">No Placement Drives Scheduled Yet</h4>
-                <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
+                <h4 className="font-semibold text-black dark:text-white text-sm mb-1">No Placement Drives Scheduled Yet</h4>
+                <p className="text-xs text-gray-600 dark:text-gray-300 max-w-sm mx-auto mb-4">
                   Schedule customized mock interviews and placement drives for your college students.
                 </p>
                 <Button
@@ -697,7 +697,7 @@ const CollegeAdminDashboard = () => {
                     setPreSelectedEmailsForSchedule([]);
                     setScheduleModalOpen(true);
                   }}
-                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
+                  className="bg-blue-600 hover:bg-blue-500 text-black dark:text-white text-xs h-8"
                 >
                   <Plus className="w-3.5 h-3.5 mr-1.5" />
                   Schedule First Placement Drive
@@ -708,28 +708,28 @@ const CollegeAdminDashboard = () => {
                 {drives.map(drive => (
                   <Card
                     key={drive.id}
-                    className="bg-card border-border text-white overflow-hidden hover:border-blue-500/40 transition-all cursor-pointer group"
+                    className="bg-card border-border text-black dark:text-white overflow-hidden hover:border-blue-500/40 transition-all cursor-pointer group"
                     onClick={() => setSelectedDriveForDetails(drive)}
                   >
                     <div className="p-5 space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <Badge className={`text-[10px] px-2 py-0.5 uppercase tracking-wider ${drive.status === "active" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" :
-                                drive.status === "scheduled" ? "bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30" :
-                                  "bg-gray-500/20 text-gray-300 border-gray-500/30"
+                            <Badge className={`text-[10px] px-2 py-0.5 uppercase tracking-wider ${drive.status === "active" ? "bg-emerald-400/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/30" :
+                                drive.status === "scheduled" ? "bg-blue-400/20 text-blue-600 dark:text-blue-300 border-blue-400/30" :
+                                  "bg-gray-500/20 text-gray-600 dark:text-gray-300 border-gray-500/30"
                               }`}>
                               {drive.status}
                             </Badge>
-                            <span className="text-xs text-gray-400 font-mono">
+                            <span className="text-xs text-gray-600 dark:text-gray-300 font-mono">
                               {drive.durationMinutes} mins • Benchmark: {drive.passingScore}%
                             </span>
                           </div>
-                          <h4 className="text-base font-bold text-white group-hover:text-blue-300 transition-colors">
+                          <h4 className="text-base font-bold text-black dark:text-white group-hover:text-blue-300 transition-colors">
                             {drive.title}
                           </h4>
-                          <p className="text-xs text-gray-400 flex items-center gap-1">
-                            <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-300" /> Target Role: <span className="text-gray-200 font-medium">{drive.targetRole}</span>
+                          <p className="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                            <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-300" /> Target Role: <span className="text-gray-400 dark:text-gray-200 font-medium">{drive.targetRole}</span>
                           </p>
                         </div>
                       </div>
@@ -743,7 +743,7 @@ const CollegeAdminDashboard = () => {
                         </div>
                         <div className="w-full h-1.5 bg-muted/50 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full"
+                            className="h-full bg-emerald-600 rounded-full"
                             style={{
                               width: `${drive.candidatesCount > 0 ? (drive.completedCount / drive.candidatesCount) * 100 : 0}%`
                             }}
@@ -752,7 +752,7 @@ const CollegeAdminDashboard = () => {
                         <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1">
                           <span>Window: {drive.scheduledDate} → {drive.deadlineDate}</span>
                           {drive.completedCount > 0 && (
-                            <span className="text-emerald-400 font-semibold">Avg Score: {drive.avgScore}%</span>
+                            <span className="text-emerald-600 dark:text-emerald-300 font-semibold">Avg Score: {drive.avgScore}%</span>
                           )}
                         </div>
                       </div>
