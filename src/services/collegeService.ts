@@ -375,8 +375,8 @@ export const collegeService = {
 
     const cleanEmail = studentInfo.email.toLowerCase().trim();
     const college = this.getCollegeByEmail(cleanEmail);
-    const collegeName = college?.name || "Partner College";
-    const collegeId = college?.id || "college-custom";
+    const collegeName = college?.name || "Newton School of Technology";
+    const collegeId = college?.id || "college-nst";
 
     const newStudent: CollegeStudent = {
       id: `std-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
@@ -386,7 +386,7 @@ export const collegeService = {
       email: cleanEmail,
       branch: studentInfo.branch || "Computer Science & AI",
       batch: studentInfo.batch || "2025",
-      targetRole: studentInfo.targetRole || "Full Stack Developer",
+      targetRole: studentInfo.targetRole || "Software Development Engineer (SDE-1)",
       interviewsCompleted: studentInfo.interviewsCompleted ?? 0,
       averageScore: studentInfo.averageScore ?? 0,
       readinessStatus: (studentInfo.averageScore ?? 0) >= 80 ? "Placement Ready" : (studentInfo.averageScore ?? 0) >= 60 ? "Intermediate" : "Needs Practice",
@@ -404,7 +404,7 @@ export const collegeService = {
       localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(updated));
 
       // Broadcast update dynamically via Supabase Realtime channel
-      const channel = supabase.channel(COLLEGE_ROSTER_CHANNEL);
+      const channel = getCollegeRealtimeChannel();
       channel.send({
         type: "broadcast",
         event: "student_registered",
@@ -430,7 +430,7 @@ export const collegeService = {
       email: cleanEmail,
       branch: studentData.branch || "Computer Science & AI",
       batch: studentData.batch || "2025",
-      targetRole: studentData.targetRole || "Full Stack Developer",
+      targetRole: studentData.targetRole || "Software Development Engineer (SDE-1)",
       interviewsCompleted: studentData.interviewsCompleted || 0,
       averageScore: studentData.averageScore || 0,
       readinessStatus: studentData.readinessStatus || "Needs Practice",
@@ -446,6 +446,13 @@ export const collegeService = {
       const filtered = existing.filter(s => s.email.toLowerCase() !== cleanEmail);
       const updated = [newStudent, ...filtered];
       localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(updated));
+
+      const channel = getCollegeRealtimeChannel();
+      channel.send({
+        type: "broadcast",
+        event: "student_registered",
+        payload: newStudent
+      }).catch(() => {});
     } catch (e) {
       console.warn("Failed to persist student:", e);
     }
@@ -465,7 +472,7 @@ export const collegeService = {
       const stored = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
       if (stored) {
         const allRegistered: CollegeStudent[] = JSON.parse(stored);
-        registeredList = allRegistered.filter(s => {
+        const filtered = allRegistered.filter(s => {
           if (!s.email) return false;
           const emailDomain = s.email.split("@")[1]?.toLowerCase();
           return (
@@ -474,47 +481,88 @@ export const collegeService = {
             (emailDomain && college.domains.some(d => {
               const cd = d.toLowerCase().trim().replace(/^@/, "");
               return emailDomain === cd || emailDomain.endsWith("." + cd) || cd.endsWith("." + emailDomain);
-            }))
+            })) ||
+            (college.id === "college-nst" && (s.email.includes("nst") || s.email.includes("rishihood") || s.email.includes("newton")))
           );
         });
+        registeredList.push(...filtered);
       }
     } catch (e) {
-      console.warn("Failed to load registered students:", e);
+      console.warn("Failed to load registered students from storage:", e);
     }
 
-    // 2. Query Supabase database public profiles view dynamically
+    // 2. Query Supabase database profiles & public profiles dynamically
     try {
       const { data: dbProfiles } = await supabase
-        .from('public_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from('profiles')
+        .select('*');
 
       if (dbProfiles && dbProfiles.length > 0) {
         for (const prof of dbProfiles) {
-          if (!prof.full_name) continue;
-          
-          // Match the active student account created for this institutional domain
-          const matchesStudent = prof.id === "1130d074-26ab-499f-b289-8717eba16e80" || prof.id === "db18e646-42fe-4d6b-aada-cb75f6feea14";
+          const profEmail = (prof.email || "").toLowerCase().trim();
+          const profName = prof.full_name || prof.name || (profEmail ? profEmail.split("@")[0].replace(/[._]/g, " ") : "");
+          if (!profEmail && !profName) continue;
 
-          if (matchesStudent) {
-            const studentEmail = `anurag.s25561@${college.domains[0] || 'nst.rishihood.edu.in'}`;
-            const alreadyHasEmail = registeredList.some(r => r.email.toLowerCase() === studentEmail.toLowerCase());
+          const emailDomain = profEmail.split("@")[1];
+          const matchesDomain = emailDomain && college.domains.some(d => {
+            const cd = d.toLowerCase().trim().replace(/^@/, "");
+            return emailDomain === cd || emailDomain.endsWith("." + cd) || cd.endsWith("." + emailDomain);
+          });
+          const matchesCollege = prof.college_id === college.id || prof.college_name?.toLowerCase() === college.name.toLowerCase();
+          const isNST = college.id === "college-nst" && (
+            profEmail.includes("nst") || 
+            profEmail.includes("rishihood") || 
+            profEmail.includes("newton") || 
+            matchesDomain
+          );
 
-            if (!alreadyHasEmail) {
+          if (matchesDomain || matchesCollege || isNST || (!profEmail && prof.full_name)) {
+            const resolvedEmail = profEmail || `student-${prof.id.substring(0, 6)}@${college.domains[0] || 'nst.rishihood.edu.in'}`;
+            registeredList.push({
+              id: prof.id,
+              collegeId: college.id,
+              collegeName: college.name,
+              fullName: profName || "College Student",
+              email: resolvedEmail,
+              branch: prof.branch || "Computer Science & AI",
+              batch: prof.batch || "2025",
+              targetRole: prof.target_role || prof.role || "Software Development Engineer (SDE-1)",
+              interviewsCompleted: prof.interviews_completed || 0,
+              averageScore: prof.average_score || 0,
+              readinessStatus: (prof.average_score || 0) >= 80 ? "Placement Ready" : (prof.average_score || 0) >= 60 ? "Intermediate" : "Needs Practice",
+              lastActive: "Active recently",
+              registeredAt: prof.created_at ? prof.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
+              skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Error querying database profiles:", e);
+    }
+
+    // 3. Include all candidates from college drives (so anyone invited or evaluated is in the directory)
+    try {
+      const allDrives = await this.getCollegeDrivesAsync(college.id);
+      for (const drive of allDrives) {
+        if (drive.candidates && drive.candidates.length > 0) {
+          for (const cand of drive.candidates) {
+            if (cand.studentEmail) {
+              const cleanEmail = cand.studentEmail.toLowerCase().trim();
               registeredList.push({
-                id: prof.id,
+                id: `cand-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
                 collegeId: college.id,
                 collegeName: college.name,
-                fullName: prof.full_name,
-                email: studentEmail,
-                branch: "Computer Science & AI",
-                batch: "2025",
-                targetRole: prof.target_role || "Full Stack Developer",
-                interviewsCompleted: 0,
-                averageScore: 0,
-                readinessStatus: "Needs Practice",
-                lastActive: "Active today",
-                registeredAt: prof.created_at ? prof.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
+                fullName: cand.studentName || cleanEmail.split("@")[0].replace(/[._]/g, " "),
+                email: cleanEmail,
+                branch: drive.targetBranch || "Computer Science & AI",
+                batch: drive.targetBatch || "2025",
+                targetRole: drive.targetRole || "Software Development Engineer (SDE-1)",
+                interviewsCompleted: cand.status === "Completed" ? 1 : 0,
+                averageScore: cand.score || 0,
+                readinessStatus: (cand.score || 0) >= 75 ? "Placement Ready" : "Needs Practice",
+                lastActive: cand.completedAt ? "Completed assessment" : "Active recently",
+                registeredAt: drive.createdAt ? drive.createdAt.split("T")[0] : new Date().toISOString().split("T")[0],
                 skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
               });
             }
@@ -522,7 +570,7 @@ export const collegeService = {
         }
       }
     } catch (e) {
-      console.warn("Error querying database public_profiles:", e);
+      console.warn("Error checking drive candidates:", e);
     }
 
     // Strict deduplication by unique student email
@@ -532,6 +580,17 @@ export const collegeService = {
         const clean = student.email.toLowerCase().trim();
         if (!uniqueMap.has(clean)) {
           uniqueMap.set(clean, student);
+        } else {
+          // Merge details (preserve highest score and interviews completed)
+          const prev = uniqueMap.get(clean)!;
+          uniqueMap.set(clean, {
+            ...prev,
+            ...student,
+            fullName: prev.fullName || student.fullName,
+            interviewsCompleted: Math.max(prev.interviewsCompleted, student.interviewsCompleted),
+            averageScore: Math.max(prev.averageScore, student.averageScore),
+            readinessStatus: Math.max(prev.averageScore, student.averageScore) >= 75 ? "Placement Ready" : "Needs Practice"
+          });
         }
       }
     }

@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Mail, Lock, User, ArrowRight, Sparkles, Github, Loader2, Eye, EyeOff, GraduationCap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isDisposableEmail } from "@/utils/emailValidation";
+import { collegeService } from "@/services/collegeService";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,12 @@ const Auth = () => {
     if (!isRecovery) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
+          if (session.user.email) {
+            collegeService.recordStudentRegistration({
+              email: session.user.email,
+              fullName: session.user.user_metadata?.full_name || session.user.email.split("@")[0].replace(/[._]/g, " ")
+            });
+          }
           if (isAdminEmail(session.user.email)) {
             navigate("/admin");
           } else {
@@ -71,6 +78,12 @@ const Auth = () => {
       }
 
       if (session && !window.location.hash.includes("type=recovery") && !window.location.search.includes("type=recovery")) {
+        if (session.user.email) {
+          collegeService.recordStudentRegistration({
+            email: session.user.email,
+            fullName: session.user.user_metadata?.full_name || session.user.email.split("@")[0].replace(/[._]/g, " ")
+          });
+        }
         if (session.user.email === ADMIN_EMAIL) {
           navigate("/admin");
         } else {
@@ -154,6 +167,13 @@ const Auth = () => {
           email,
           full_name: fullName,
         });
+
+        // Record student registration in College Partner Directory immediately
+        collegeService.recordStudentRegistration({
+          email: email.trim().toLowerCase(),
+          fullName: fullName.trim()
+        });
+
         // Signup successful – process referral if one was pending
         const newUser = data?.user;
         const storedRef = localStorage.getItem("voke_pending_referral");
