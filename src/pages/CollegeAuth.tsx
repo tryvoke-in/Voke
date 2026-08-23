@@ -6,13 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Building2, GraduationCap, Sparkles, ShieldCheck, ArrowRight, 
+import {
+  Building2, GraduationCap, Sparkles, ShieldCheck, ArrowRight,
   CheckCircle2, Users, BarChart3, Bot, Key, Mail, Lock, Phone, MapPin
 } from "lucide-react";
 import { collegeService, DEFAULT_COLLEGES, College } from "@/services/collegeService";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const CollegeAuth = () => {
   const navigate = useNavigate();
@@ -106,15 +107,18 @@ const CollegeAuth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white selection:bg-violet-500/30 flex flex-col justify-center relative overflow-hidden px-4 py-12">
+    <div className="min-h-screen bg-background text-foreground selection:bg-blue-500/30 flex flex-col justify-center relative overflow-hidden px-4 py-12">
       {/* Dynamic Background Mesh */}
-      <div className="absolute top-[-15%] left-[-10%] w-[600px] h-[600px] bg-gradient-to-br from-violet-600/25 via-purple-600/15 to-transparent rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[-15%] right-[-10%] w-[600px] h-[600px] bg-gradient-to-tr from-indigo-600/20 via-violet-600/10 to-transparent rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none -z-10" />
+      <div className="absolute top-[-15%] left-[-10%] w-[600px] h-[600px] bg-gradient-to-br from-blue-600/10 via-blue-600/5 to-transparent dark:from-blue-600/25 dark:via-blue-600/15 rounded-full blur-[140px] pointer-events-none transform-gpu" />
+      <div className="absolute bottom-[-15%] right-[-10%] w-[600px] h-[600px] bg-gradient-to-tr from-indigo-600/8 via-blue-600/5 to-transparent dark:from-indigo-600/20 dark:via-blue-600/10 rounded-full blur-[150px] pointer-events-none transform-gpu" />
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(0,0,0,0.04)_1px,transparent_1px)] dark:bg-[radial-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] [background-size:48px_48px] pointer-events-none -z-10" />
 
       {/* Top Brand Header */}
-      <div className="max-w-4xl mx-auto w-full mb-8 text-center">
-        <div 
+      <div className="max-w-4xl mx-auto w-full mb-8 text-center relative">
+        <div className="absolute top-0 right-0">
+          <ThemeToggle />
+        </div>
+        <div
           onClick={() => navigate("/")}
           className="inline-flex items-center gap-3 cursor-pointer group mb-4"
         >
@@ -123,36 +127,36 @@ const CollegeAuth = () => {
             alt="Voke AI Logo"
             className="w-10 h-10 object-contain group-hover:rotate-12 transition-transform duration-300"
           />
-          <span className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-gray-400">
-            Voke <span className="text-violet-400 font-semibold text-lg">for Universities</span>
+          <span className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-gray-400">
+            Voke <span className="text-blue-600 dark:text-blue-400 font-semibold text-lg">for Universities</span>
           </span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white max-w-2xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground max-w-2xl mx-auto">
           Institutional Placement & AI Mock Assessment Portal
         </h1>
-        <p className="text-gray-400 text-sm md:text-base mt-2 max-w-xl mx-auto">
+        <p className="text-muted-foreground text-sm md:text-base mt-2 max-w-xl mx-auto">
           Empower your students with enterprise AI technical interviews, automated placement drives, and real-time candidate readiness analytics.
         </p>
       </div>
 
       {/* Auth Container */}
       <div className="max-w-xl mx-auto w-full">
-        <Card className="bg-[#0c0c14]/90 border-white/10 shadow-2xl backdrop-blur-2xl text-white overflow-hidden relative">
-          <div className="h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-purple-500" />
-          
+        <Card className="bg-card/95 border-border shadow-2xl backdrop-blur-2xl overflow-hidden relative">
+          <div className="h-1 bg-blue-500" />
+
           <CardHeader className="pb-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 bg-white/5 border border-white/10 p-1">
-                <TabsTrigger 
-                  value="signin" 
-                  className="data-[state=active]:bg-violet-600 data-[state=active]:text-white font-medium text-xs md:text-sm py-2"
+              <TabsList className="grid grid-cols-2 bg-muted/50 dark:bg-muted/30 border border-border p-1 rounded-full h-auto">
+                <TabsTrigger
+                  value="signin"
+                  className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium text-xs md:text-sm py-2"
                 >
                   <GraduationCap className="w-4 h-4 mr-2" />
                   College Admin Login
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="register" 
-                  className="data-[state=active]:bg-violet-600 data-[state=active]:text-white font-medium text-xs md:text-sm py-2"
+                <TabsTrigger
+                  value="register"
+                  className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium text-xs md:text-sm py-2"
                 >
                   <Building2 className="w-4 h-4 mr-2" />
                   New Partnership
@@ -162,45 +166,45 @@ const CollegeAuth = () => {
               {/* Sign In Tab */}
               <TabsContent value="signin" className="mt-6 space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Sign In to College Admin Dashboard</h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <h3 className="text-lg font-semibold text-foreground">Sign In to College Admin Dashboard</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     Access your student directory, schedule campus mock drives, and view placement readiness reports.
                   </p>
                 </div>
 
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Official Institutional Email
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/50" />
                       <Input
                         type="email"
                         placeholder="placement@nst.edu.in or tnp@dtu.ac.in"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        className="bg-white/5 border-white/10 pl-9 text-white placeholder:text-gray-600 text-sm focus:border-violet-500"
+                        className="pl-9 text-sm focus:border-blue-500"
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Partner Security Key / Password
                     </Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/50" />
                       <Input
                         type="password"
                         placeholder="••••••••••••"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
-                        className="bg-white/5 border-white/10 pl-9 text-white placeholder:text-gray-600 text-sm focus:border-violet-500"
+                        className="pl-9 text-sm focus:border-blue-500"
                       />
                     </div>
-                    <p className="text-[11px] text-gray-500">
+                    <p className="text-[11px] text-muted-foreground/70">
                       Demo mode enabled: Password optional for verified partner accounts.
                     </p>
                   </div>
@@ -208,7 +212,7 @@ const CollegeAuth = () => {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold py-5 shadow-lg shadow-violet-600/30 transition-all text-sm"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-5 shadow-lg shadow-blue-600/20 dark:shadow-blue-600/30 transition-all text-sm"
                   >
                     {isLoading ? "Authenticating College Admin..." : "Access College Admin Dashboard"}
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -216,13 +220,13 @@ const CollegeAuth = () => {
                 </form>
 
                 {/* 1-Click Quick Demo Sign-Ins */}
-                <div className="pt-4 border-t border-white/10">
+                <div className="pt-4 border-t border-border">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-violet-400 flex items-center gap-1">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1">
                       <Sparkles className="w-3.5 h-3.5" />
                       Instant Partner Demo Access:
                     </span>
-                    <span className="text-[11px] text-gray-500">1-click test</span>
+                    <span className="text-[11px] text-muted-foreground/70">1-click test</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     {DEFAULT_COLLEGES.map(college => (
@@ -230,17 +234,17 @@ const CollegeAuth = () => {
                         key={college.id}
                         type="button"
                         onClick={() => handleQuickDemoSignIn(college)}
-                        className="flex items-center justify-between p-2.5 rounded-lg border border-white/10 bg-white/5 hover:bg-violet-950/40 hover:border-violet-500/50 transition-all text-left group"
+                        className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-muted/30 dark:bg-muted/20 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:border-blue-500/50 transition-all text-left group"
                       >
                         <div className="truncate">
-                          <div className="text-xs font-semibold text-white group-hover:text-violet-300 truncate">
+                          <div className="text-xs font-semibold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-300 truncate">
                             {college.shortName}
                           </div>
-                          <div className="text-[10px] text-gray-400 truncate">
+                          <div className="text-[10px] text-muted-foreground truncate">
                             {college.name}
                           </div>
                         </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-violet-400 group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
+                        <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
                       </button>
                     ))}
                   </div>
@@ -250,8 +254,8 @@ const CollegeAuth = () => {
               {/* Register Tab */}
               <TabsContent value="register" className="mt-6 space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Onboard Your University / Institution</h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <h3 className="text-lg font-semibold text-foreground">Onboard Your University / Institution</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     Register your institution's email domain to auto-map students and unlock bulk mock assessment drives.
                   </p>
                 </div>
@@ -259,60 +263,60 @@ const CollegeAuth = () => {
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="md:col-span-2 space-y-1.5">
-                      <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         College / University Name
                       </Label>
                       <Input
                         placeholder="e.g. Newton School of Technology"
                         value={regCollegeName}
                         onChange={e => setRegCollegeName(e.target.value)}
-                        className="bg-white/5 border-white/10 text-white text-sm"
+                        className="text-sm"
                         required
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Short Code
                       </Label>
                       <Input
                         placeholder="e.g. NST"
                         value={regShortName}
                         onChange={e => setRegShortName(e.target.value)}
-                        className="bg-white/5 border-white/10 text-white text-sm"
+                        className="text-sm"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Official Student Email Domain(s)
                     </Label>
                     <Input
                       placeholder="nst.rishihood.edu.in, university.ac.in (no @ needed)"
                       value={regDomain}
                       onChange={e => setRegDomain(e.target.value)}
-                      className="bg-white/5 border-white/10 text-white text-sm"
+                      className="text-sm"
                       required
                     />
-                    <p className="text-[11px] text-gray-500">
-                      Enter without the <code className="text-violet-400 font-mono">@</code> symbol. Students registering with these domains will automatically appear in your roster.
+                    <p className="text-[11px] text-muted-foreground/70">
+                      Enter without the <code className="text-blue-600 dark:text-blue-400 font-mono">@</code> symbol. Students registering with these domains will automatically appear in your roster.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Placement Head / Admin Name
                       </Label>
                       <Input
                         placeholder="Prof. / Dr. Name"
                         value={regAdminName}
                         onChange={e => setRegAdminName(e.target.value)}
-                        className="bg-white/5 border-white/10 text-white text-sm"
+                        className="text-sm"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Admin Email
                       </Label>
                       <Input
@@ -320,7 +324,7 @@ const CollegeAuth = () => {
                         placeholder="placement@university.edu"
                         value={regAdminEmail}
                         onChange={e => setRegAdminEmail(e.target.value)}
-                        className="bg-white/5 border-white/10 text-white text-sm"
+                        className="text-sm"
                         required
                       />
                     </div>
@@ -328,18 +332,18 @@ const CollegeAuth = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Campus Location
                       </Label>
                       <Input
                         placeholder="City, State"
                         value={regLocation}
                         onChange={e => setRegLocation(e.target.value)}
-                        className="bg-white/5 border-white/10 text-white text-sm"
+                        className="text-sm"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Student Scale
                       </Label>
                       <Input
@@ -347,7 +351,7 @@ const CollegeAuth = () => {
                         min="50"
                         value={regSlots}
                         onChange={e => setRegSlots(Number(e.target.value))}
-                        className="bg-white/5 border-white/10 text-white text-sm"
+                        className="text-sm"
                       />
                     </div>
                   </div>
@@ -355,7 +359,7 @@ const CollegeAuth = () => {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold py-5 shadow-lg shadow-violet-600/30 text-sm mt-2"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-5 shadow-lg shadow-blue-600/20 dark:shadow-blue-600/30 text-sm mt-2"
                   >
                     {isLoading ? "Registering Institution..." : "Register & Launch College Portal"}
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -368,19 +372,19 @@ const CollegeAuth = () => {
 
         {/* Footer Navigation */}
         <div className="text-center mt-6 space-y-2">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Are you a student preparing for interviews?{" "}
             <button
               type="button"
               onClick={() => navigate("/auth")}
-              className="text-violet-400 hover:text-violet-300 font-semibold underline underline-offset-4"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-semibold underline underline-offset-4"
             >
               Sign In to Student Account →
             </button>
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground/70">
             Need institutional API access or customized campus licensing? Contact us at{" "}
-            <a href="mailto:partnerships@tryvoke.in" className="text-gray-400 underline">
+            <a href="mailto:partnerships@tryvoke.in" className="text-muted-foreground underline">
               partnerships@tryvoke.in
             </a>
           </p>

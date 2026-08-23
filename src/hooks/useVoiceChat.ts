@@ -18,10 +18,14 @@ export function useVoiceChat({ onTranscript, onError }: UseVoiceChatOptions = {}
   return useMemo(
     () => ({
       isListening: false,
+      isSupported: true,
       speak: (text: string) => {
         // Optional: you can implement Text-to-Speech on the client here.
         // We keep it a no-op to avoid any runtime issues.
         void text;
+      },
+      startListening: () => {
+        // No-op stub
       },
       stopListening: () => {
         // No-op stub

@@ -11,20 +11,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Building2, GraduationCap, Users, Calendar, Plus, Download, 
-  Search, Award, Sparkles, LogOut, CheckCircle2, Clock, AlertCircle, 
+import {
+  Building2, GraduationCap, Users, Calendar, Plus, Download,
+  Search, Award, Sparkles, LogOut, CheckCircle2, Clock, AlertCircle,
   ChevronRight, ExternalLink, Bot, Video, Code, Layers, Mail, Phone,
   TrendingUp, BarChart3, ShieldCheck, Filter, ArrowUpRight, Trophy, RefreshCw, UserPlus,
-  Copy, Link, Play
+  Copy, Link, Play, BookOpen, Check, X, FileText
 } from "lucide-react";
-import { 
-  College, CollegeStudent, CollegeScheduledDrive, CollegeAnalytics, 
-  collegeService 
+import {
+  College, CollegeStudent, CollegeScheduledDrive, CollegeAnalytics,
+  collegeService, ScheduledDriveCandidate
 } from "@/services/collegeService";
 import { ScheduleInterviewModal } from "@/components/college/ScheduleInterviewModal";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const CollegeAdminDashboard = () => {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ const CollegeAdminDashboard = () => {
               type: "broadcast",
               event: "response_college_drives_sync",
               payload: { drives }
-            }).catch(() => {});
+            }).catch(() => { });
           }
         }
       })
@@ -230,26 +231,26 @@ const CollegeAdminDashboard = () => {
 
   if (loading || !college) {
     return (
-      <div className="min-h-screen bg-[#07070c] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-400">Loading College Admin Portal...</p>
+          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading College Admin Portal...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#07070c] text-white selection:bg-violet-500/30">
+    <div className="min-h-screen bg-background text-foreground selection:bg-blue-500/30">
       {/* Background Glow */}
-      <div className="fixed top-0 left-1/4 w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
-      <div className="fixed bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed top-0 left-1/4 w-[600px] h-[600px] bg-blue-600/5 dark:bg-blue-600/10 rounded-full blur-[140px] pointer-events-none -z-10 transform-gpu" />
+      <div className="fixed bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/5 dark:bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none -z-10 transform-gpu" />
 
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-[#0c0c14]/90 backdrop-blur-xl border-b border-white/10 px-4 md:px-8 py-3.5">
+      <header className="sticky top-0 z-40 bg-background/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-border/50 px-4 md:px-8 py-3.5 transition-colors">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div 
+            <div
               onClick={() => navigate("/")}
               className="flex items-center gap-2 cursor-pointer group"
             >
@@ -258,14 +259,14 @@ const CollegeAdminDashboard = () => {
                 alt="Voke Logo"
                 className="w-8 h-8 object-contain group-hover:rotate-12 transition-transform duration-300"
               />
-              <span className="text-xl font-bold tracking-tight text-white">
-                Voke <span className="text-xs text-violet-400 font-semibold px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20">Institutional</span>
+              <span className="text-xl font-bold tracking-tight text-foreground">
+                Voke <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">Institutional</span>
               </span>
             </div>
-            <div className="h-4 w-px bg-white/10 hidden sm:block" />
+            <div className="h-4 w-px bg-border hidden sm:block" />
             <div className="hidden sm:flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-200">{college.name}</span>
-              <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30 text-[10px] px-2 py-0.5">
+              <span className="text-sm font-semibold text-foreground">{college.name}</span>
+              <Badge className="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30 text-[10px] px-2 py-0.5">
                 {college.tier}
               </Badge>
             </div>
@@ -276,10 +277,10 @@ const CollegeAdminDashboard = () => {
               size="sm"
               variant="outline"
               onClick={handleManualRefresh}
-              className="border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 text-xs h-9 px-3"
+              className="text-xs h-9 px-3"
               title="Sync latest student registrations"
             >
-              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin text-violet-400' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing ? 'animate-spin text-blue-500' : ''}`} />
               <span className="hidden sm:inline">Sync</span>
             </Button>
 
@@ -287,7 +288,7 @@ const CollegeAdminDashboard = () => {
               size="sm"
               variant="outline"
               onClick={() => setAddStudentOpen(true)}
-              className="border-violet-500/30 bg-violet-600/10 text-violet-300 hover:bg-violet-600 hover:text-white text-xs h-9 px-3 hidden md:flex items-center"
+              className="border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-600/10 text-blue-700 dark:text-blue-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 text-xs h-9 px-3 hidden md:flex items-center"
             >
               <UserPlus className="w-3.5 h-3.5 mr-1.5" />
               Enroll Student
@@ -298,7 +299,7 @@ const CollegeAdminDashboard = () => {
                 setPreSelectedEmailsForSchedule([]);
                 setScheduleModalOpen(true);
               }}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium text-xs md:text-sm px-3.5 md:px-4 py-2 shadow-lg shadow-violet-600/25 h-9"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-xs md:text-sm px-3.5 md:px-4 py-2 shadow-lg shadow-blue-600/15 dark:shadow-blue-600/25 h-9"
             >
               <Plus className="w-4 h-4 mr-1.5" />
               Schedule Drive
@@ -308,17 +309,19 @@ const CollegeAdminDashboard = () => {
               variant="outline"
               size="sm"
               onClick={handleExportCSV}
-              className="border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 text-xs hidden lg:flex items-center gap-1.5 h-9"
+              className="text-xs hidden lg:flex items-center gap-1.5 h-9"
             >
               <Download className="w-3.5 h-3.5" />
               Export
             </Button>
 
+            <ThemeToggle />
+
             <Button
               variant="ghost"
               size="sm"
               onClick={handleSignOut}
-              className="text-gray-400 hover:text-white hover:bg-white/5 text-xs h-9"
+              className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 text-xs h-9"
             >
               <LogOut className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">Sign Out</span>
@@ -330,43 +333,43 @@ const CollegeAdminDashboard = () => {
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6">
         {/* College Header Banner */}
-        <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-r from-violet-950/40 via-[#0e0e1a] to-[#0c0c16] border border-white/10 relative overflow-hidden shadow-2xl">
+        <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-r from-blue-100/60 via-card to-card dark:from-blue-950/40 dark:via-card dark:to-card border border-border relative overflow-hidden shadow-xl dark:shadow-2xl">
           <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-            <GraduationCap className="w-48 h-48 text-violet-400" />
+            <GraduationCap className="w-48 h-48 text-blue-500 dark:text-blue-400" />
           </div>
 
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-xs">
+                <Badge className="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30 text-xs">
                   {college.shortName} Placement & Training Cell
                 </Badge>
-                <span className="text-xs text-gray-400 flex items-center gap-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" /> Academic Year {college.contractPeriod}
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
                 {college.name}
               </h1>
-              <p className="text-sm text-gray-400">
-                Placement Admin: <strong className="text-gray-200">{college.adminName}</strong> ({college.adminEmail}) • Authorized Domains: <span className="font-mono text-violet-300 text-xs">{college.domains.map(d => `@${d}`).join(", ")}</span>
+              <p className="text-sm text-muted-foreground">
+                Placement Admin: <strong className="text-foreground">{college.adminName}</strong> ({college.adminEmail}) • Authorized Domains: <span className="font-mono text-blue-600 dark:text-blue-300 text-xs">{college.domains.map(d => `@${d}`).join(", ")}</span>
               </p>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-center min-w-[100px]">
-                <div className="text-2xl font-bold text-white">{students.length}</div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wider">Registered</div>
+              <div className="p-3 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border text-center min-w-[100px]">
+                <div className="text-2xl font-bold text-foreground">{students.length}</div>
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Registered</div>
               </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-center min-w-[100px]">
-                <div className="text-2xl font-bold text-emerald-400">
+              <div className="p-3 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border text-center min-w-[100px]">
+                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {analytics?.placementReadyPercentage || 0}%
                 </div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wider">Ready Rate</div>
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Ready Rate</div>
               </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-center min-w-[100px]">
-                <div className="text-2xl font-bold text-violet-400">{drives.length}</div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wider">Mock Drives</div>
+              <div className="p-3 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border text-center min-w-[100px]">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{drives.length}</div>
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Mock Drives</div>
               </div>
             </div>
           </div>
@@ -374,53 +377,53 @@ const CollegeAdminDashboard = () => {
 
         {/* Top KPI Metrics Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-[#0e0e18]/80 border-white/10 text-white backdrop-blur">
+          <Card className="bg-card border-border backdrop-blur">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between text-gray-400 mb-2">
+              <div className="flex items-center justify-between text-muted-foreground mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wider">Students Roster</span>
-                <Users className="w-4 h-4 text-violet-400" />
+                <Users className="w-4 h-4 text-blue-500" />
               </div>
-              <div className="text-2xl font-bold text-white">{students.length}</div>
-              <p className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
+              <div className="text-2xl font-bold text-foreground">{students.length}</div>
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" /> Auto-mapped via college domain
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#0e0e18]/80 border-white/10 text-white backdrop-blur">
+          <Card className="bg-card border-border backdrop-blur">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between text-gray-400 mb-2">
+              <div className="flex items-center justify-between text-muted-foreground mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wider">Mocks Conducted</span>
-                <Bot className="w-4 h-4 text-cyan-400" />
+                <Bot className="w-4 h-4 text-cyan-500" />
               </div>
-              <div className="text-2xl font-bold text-white">{analytics?.totalInterviewsTaken || 0}</div>
-              <p className="text-[11px] text-gray-400 mt-1">
+              <div className="text-2xl font-bold text-foreground">{analytics?.totalInterviewsTaken || 0}</div>
+              <p className="text-[11px] text-muted-foreground mt-1">
                 AI technical & coding sessions
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#0e0e18]/80 border-white/10 text-white backdrop-blur">
+          <Card className="bg-card border-border backdrop-blur">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between text-gray-400 mb-2">
+              <div className="flex items-center justify-between text-muted-foreground mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wider">Avg AI Score</span>
-                <Award className="w-4 h-4 text-amber-400" />
+                <Award className="w-4 h-4 text-amber-500" />
               </div>
-              <div className="text-2xl font-bold text-amber-400">{analytics?.averageScore || 0}%</div>
-              <p className="text-[11px] text-gray-400 mt-1">
+              <div className="text-2xl font-bold text-amber-500">{analytics?.averageScore || 0}%</div>
+              <p className="text-[11px] text-muted-foreground mt-1">
                 DSA, System Design & Articulation
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#0e0e18]/80 border-white/10 text-white backdrop-blur">
+          <Card className="bg-card border-border backdrop-blur">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between text-gray-400 mb-2">
+              <div className="flex items-center justify-between text-muted-foreground mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wider">Active Drives</span>
-                <Calendar className="w-4 h-4 text-pink-400" />
+                <Calendar className="w-4 h-4 text-pink-500" />
               </div>
-              <div className="text-2xl font-bold text-pink-400">{drives.filter(d => d.status === "active").length}</div>
-              <p className="text-[11px] text-gray-400 mt-1">
+              <div className="text-2xl font-bold text-pink-500">{drives.filter(d => d.status === "active").length}</div>
+              <p className="text-[11px] text-muted-foreground mt-1">
                 Scheduled placement rounds
               </p>
             </CardContent>
@@ -429,32 +432,32 @@ const CollegeAdminDashboard = () => {
 
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-white/10">
-            <TabsList className="bg-[#0e0e18] border border-white/10 p-1">
-              <TabsTrigger 
-                value="students" 
-                className="data-[state=active]:bg-violet-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
+          <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-border">
+            <TabsList className="bg-card border border-border p-1">
+              <TabsTrigger
+                value="students"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
               >
                 <Users className="w-4 h-4 mr-1.5" />
                 Registered Students ({students.length})
               </TabsTrigger>
-              <TabsTrigger 
-                value="drives" 
-                className="data-[state=active]:bg-violet-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
+              <TabsTrigger
+                value="drives"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
               >
                 <Calendar className="w-4 h-4 mr-1.5" />
                 Scheduled Drives ({drives.length})
               </TabsTrigger>
-              <TabsTrigger 
-                value="analytics" 
-                className="data-[state=active]:bg-violet-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
+              <TabsTrigger
+                value="analytics"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
               >
                 <BarChart3 className="w-4 h-4 mr-1.5" />
                 Placement Analytics
               </TabsTrigger>
-              <TabsTrigger 
-                value="settings" 
-                className="data-[state=active]:bg-violet-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
+              <TabsTrigger
+                value="settings"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-xs md:text-sm py-1.5"
               >
                 <ShieldCheck className="w-4 h-4 mr-1.5" />
                 College Config
@@ -466,21 +469,21 @@ const CollegeAdminDashboard = () => {
                 size="sm"
                 variant="outline"
                 onClick={() => setAddStudentOpen(true)}
-                className="border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs h-8"
+                className="border-border bg-muted/40 dark:bg-muted/30 hover:bg-muted/50 text-foreground text-xs h-8"
               >
-                <UserPlus className="w-3.5 h-3.5 mr-1 text-violet-400" />
+                <UserPlus className="w-3.5 h-3.5 mr-1 text-blue-400" />
                 Enroll Student
               </Button>
 
               {activeTab === "students" && selectedStudentEmails.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-violet-300 font-medium">
+                  <span className="text-xs text-blue-300 font-medium">
                     {selectedStudentEmails.length} selected
                   </span>
                   <Button
                     size="sm"
                     onClick={handleScheduleForSelectedStudents}
-                    className="bg-violet-600 hover:bg-violet-500 text-white text-xs h-8"
+                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" />
                     Schedule Drive
@@ -493,14 +496,14 @@ const CollegeAdminDashboard = () => {
           {/* TAB 1: Registered Students Directory */}
           <TabsContent value="students" className="space-y-4 mt-0">
             {/* Search & Filter Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#0e0e18] p-3 rounded-xl border border-white/10">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border">
               <div className="relative w-full sm:w-80">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/70" />
                 <Input
                   placeholder="Search student by name, email, role..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="bg-white/5 border-white/10 pl-9 text-xs text-white placeholder:text-gray-500 h-9"
+                  className="bg-muted/40 dark:bg-muted/30 border-border pl-9 text-xs text-white placeholder:text-gray-500 h-9"
                 />
               </div>
 
@@ -508,7 +511,7 @@ const CollegeAdminDashboard = () => {
                 <span className="text-xs text-gray-400 flex items-center gap-1">
                   <Filter className="w-3.5 h-3.5" /> Filter:
                 </span>
-                <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/10">
+                <div className="flex items-center gap-1 bg-muted/40 dark:bg-muted/30 p-1 rounded-lg border border-border">
                   {[
                     { id: "all", label: "All" },
                     { id: "ready", label: "Ready (80%+)" },
@@ -518,11 +521,10 @@ const CollegeAdminDashboard = () => {
                     <button
                       key={filter.id}
                       onClick={() => setStatusFilter(filter.id)}
-                      className={`text-xs px-2.5 py-1 rounded transition-colors ${
-                        statusFilter === filter.id
-                          ? "bg-violet-600 text-white font-medium"
-                          : "text-gray-400 hover:text-gray-200"
-                      }`}
+                      className={`text-xs px-2.5 py-1 rounded transition-colors ${statusFilter === filter.id
+                          ? "bg-blue-600 text-white font-medium"
+                          : "text-muted-foreground hover:text-foreground"
+                        }`}
                     >
                       {filter.label}
                     </button>
@@ -532,10 +534,10 @@ const CollegeAdminDashboard = () => {
             </div>
 
             {/* Students Table */}
-            <div className="rounded-xl border border-white/10 bg-[#0e0e18]/90 overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <Table>
-                <TableHeader className="bg-white/5">
-                  <TableRow className="border-white/10 hover:bg-transparent">
+                <TableHeader className="bg-muted/40 dark:bg-muted/30">
+                  <TableRow className="border-border hover:bg-transparent">
                     <TableHead className="w-10">
                       <Checkbox
                         checked={
@@ -545,20 +547,20 @@ const CollegeAdminDashboard = () => {
                         onCheckedChange={handleSelectAllFilteredStudents}
                       />
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-300">Student & College Email</TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-300">Branch & Batch</TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-300">Target Role</TableHead>
+                    <TableHead className="text-xs font-semibold text-foreground/80">Student & College Email</TableHead>
+                    <TableHead className="text-xs font-semibold text-foreground/80">Branch & Batch</TableHead>
+                    <TableHead className="text-xs font-semibold text-foreground/80">Target Role</TableHead>
                     <TableHead className="text-xs font-semibold text-gray-300 text-center">Mocks</TableHead>
                     <TableHead className="text-xs font-semibold text-gray-300 text-center">Avg AI Score</TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-300">Placement Readiness</TableHead>
+                    <TableHead className="text-xs font-semibold text-foreground/80">Placement Readiness</TableHead>
                     <TableHead className="text-xs font-semibold text-gray-300 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredStudents.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-16 text-gray-400">
-                        <Users className="w-10 h-10 mx-auto mb-3 text-gray-600" />
+                      <TableCell colSpan={8} className="text-center py-16 text-muted-foreground">
+                        <Users className="w-10 h-10 mx-auto mb-3 text-muted-foreground/60" />
                         <h4 className="font-semibold text-white text-sm mb-1">No Registered Students Yet</h4>
                         <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
                           Students with authorized college email domains will automatically appear here once they sign up, or you can enroll them directly.
@@ -566,7 +568,7 @@ const CollegeAdminDashboard = () => {
                         <Button
                           size="sm"
                           onClick={() => setAddStudentOpen(true)}
-                          className="bg-violet-600 hover:bg-violet-500 text-white text-xs h-8"
+                          className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
                         >
                           <UserPlus className="w-3.5 h-3.5 mr-1.5" />
                           Enroll Student
@@ -577,11 +579,10 @@ const CollegeAdminDashboard = () => {
                     filteredStudents.map(student => {
                       const isSelected = selectedStudentEmails.includes(student.email);
                       return (
-                        <TableRow 
+                        <TableRow
                           key={student.id}
-                          className={`border-white/5 transition-colors ${
-                            isSelected ? "bg-violet-600/10" : "hover:bg-white/5"
-                          }`}
+                          className={`border-border/50 transition-colors ${isSelected ? "bg-blue-600/10" : "hover:bg-muted/40 dark:bg-muted/30"
+                            }`}
                         >
                           <TableCell>
                             <Checkbox
@@ -591,7 +592,7 @@ const CollegeAdminDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-violet-600/30 border border-violet-500/30 flex items-center justify-center font-bold text-xs text-violet-200">
+                              <div className="w-8 h-8 rounded-full bg-blue-600/30 border border-blue-500/30 flex items-center justify-center font-bold text-xs text-blue-300 dark:text-blue-200">
                                 {student.fullName.slice(0, 2).toUpperCase()}
                               </div>
                               <div>
@@ -599,40 +600,38 @@ const CollegeAdminDashboard = () => {
                                   {student.fullName}
                                 </div>
                                 <div className="text-xs text-gray-400 font-mono flex items-center gap-1">
-                                  <Mail className="w-3 h-3 text-gray-500" />
+                                  <Mail className="w-3 h-3 text-muted-foreground/70" />
                                   {student.email}
                                 </div>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="text-xs text-gray-300">{student.branch}</div>
+                            <div className="text-xs text-foreground/80">{student.branch}</div>
                             <div className="text-[11px] text-gray-500 font-mono">{student.batch}</div>
                           </TableCell>
                           <TableCell>
-                            <span className="text-xs text-gray-300">{student.targetRole}</span>
+                            <span className="text-xs text-foreground/80">{student.targetRole}</span>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge variant="outline" className="border-white/10 text-gray-300 font-mono text-xs">
+                            <Badge variant="outline" className="border-border text-gray-300 font-mono text-xs">
                               {student.interviewsCompleted}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className={`font-bold text-sm font-mono ${
-                              student.averageScore >= 85 ? "text-emerald-400" :
-                              student.averageScore >= 70 ? "text-amber-400" : "text-rose-400"
-                            }`}>
+                            <span className={`font-bold text-sm font-mono ${student.averageScore >= 85 ? "text-emerald-400" :
+                                student.averageScore >= 70 ? "text-amber-400" : "text-rose-400"
+                              }`}>
                               {student.averageScore}%
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Badge className={`text-[11px] px-2.5 py-0.5 border ${
-                              student.readinessStatus === "Placement Ready"
+                            <Badge className={`text-[11px] px-2.5 py-0.5 border ${student.readinessStatus === "Placement Ready"
                                 ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
                                 : student.readinessStatus === "Intermediate"
-                                ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
-                                : "bg-rose-500/15 text-rose-300 border-rose-500/30"
-                            }`}>
+                                  ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                                  : "bg-rose-500/15 text-rose-300 border-rose-500/30"
+                              }`}>
                               {student.readinessStatus}
                             </Badge>
                           </TableCell>
@@ -642,14 +641,14 @@ const CollegeAdminDashboard = () => {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => setSelectedStudentForReport(student)}
-                                className="h-8 px-2 text-xs text-gray-400 hover:text-white hover:bg-white/10"
+                                className="h-8 px-2 text-xs text-gray-400 hover:text-white hover:bg-muted/50"
                               >
                                 Report
                               </Button>
                               <Button
                                 size="sm"
                                 onClick={() => handleScheduleForSingleStudent(student.email)}
-                                className="h-8 px-2.5 text-xs bg-violet-600/30 hover:bg-violet-600 text-violet-200 hover:text-white border border-violet-500/30"
+                                className="h-8 px-2.5 text-xs bg-blue-600/30 hover:bg-blue-600 text-blue-200 hover:text-white border border-blue-500/30"
                               >
                                 Schedule
                               </Button>
@@ -668,8 +667,8 @@ const CollegeAdminDashboard = () => {
           <TabsContent value="drives" className="space-y-4 mt-0">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-semibold text-white">Campus Mock Placement Drives</h3>
-                <p className="text-xs text-gray-400">
+                <h3 className="text-base font-semibold text-foreground">Campus Mock Placement Drives</h3>
+                <p className="text-xs text-muted-foreground">
                   Custom mock interview assessments assigned to students by your college training & placement cell.
                 </p>
               </div>
@@ -678,7 +677,7 @@ const CollegeAdminDashboard = () => {
                   setPreSelectedEmailsForSchedule([]);
                   setScheduleModalOpen(true);
                 }}
-                className="bg-violet-600 hover:bg-violet-500 text-white text-xs"
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs"
               >
                 <Plus className="w-3.5 h-3.5 mr-1" />
                 Schedule New Drive
@@ -686,8 +685,8 @@ const CollegeAdminDashboard = () => {
             </div>
 
             {drives.length === 0 ? (
-              <div className="text-center py-16 p-6 rounded-xl border border-white/10 bg-[#0e0e18]/80 text-gray-400">
-                <Calendar className="w-10 h-10 mx-auto mb-3 text-gray-600" />
+              <div className="text-center py-16 p-6 rounded-xl border border-border bg-card text-muted-foreground">
+                <Calendar className="w-10 h-10 mx-auto mb-3 text-muted-foreground/60" />
                 <h4 className="font-semibold text-white text-sm mb-1">No Placement Drives Scheduled Yet</h4>
                 <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
                   Schedule customized mock interviews and placement drives for your college students.
@@ -698,7 +697,7 @@ const CollegeAdminDashboard = () => {
                     setPreSelectedEmailsForSchedule([]);
                     setScheduleModalOpen(true);
                   }}
-                  className="bg-violet-600 hover:bg-violet-500 text-white text-xs h-8"
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
                 >
                   <Plus className="w-3.5 h-3.5 mr-1.5" />
                   Schedule First Placement Drive
@@ -707,45 +706,44 @@ const CollegeAdminDashboard = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {drives.map(drive => (
-                  <Card 
+                  <Card
                     key={drive.id}
-                    className="bg-[#0e0e18] border-white/10 text-white overflow-hidden hover:border-violet-500/40 transition-all cursor-pointer group"
+                    className="bg-card border-border text-white overflow-hidden hover:border-blue-500/40 transition-all cursor-pointer group"
                     onClick={() => setSelectedDriveForDetails(drive)}
                   >
                     <div className="p-5 space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <Badge className={`text-[10px] px-2 py-0.5 uppercase tracking-wider ${
-                              drive.status === "active" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" :
-                              drive.status === "scheduled" ? "bg-violet-500/20 text-violet-300 border-violet-500/30" :
-                              "bg-gray-500/20 text-gray-300 border-gray-500/30"
-                            }`}>
+                            <Badge className={`text-[10px] px-2 py-0.5 uppercase tracking-wider ${drive.status === "active" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" :
+                                drive.status === "scheduled" ? "bg-blue-500/20 text-blue-300 border-blue-500/30" :
+                                  "bg-gray-500/20 text-gray-300 border-gray-500/30"
+                              }`}>
                               {drive.status}
                             </Badge>
                             <span className="text-xs text-gray-400 font-mono">
                               {drive.durationMinutes} mins • Benchmark: {drive.passingScore}%
                             </span>
                           </div>
-                          <h4 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">
+                          <h4 className="text-base font-bold text-white group-hover:text-blue-300 transition-colors">
                             {drive.title}
                           </h4>
                           <p className="text-xs text-gray-400 flex items-center gap-1">
-                            <Building2 className="w-3.5 h-3.5 text-violet-400" /> Target Role: <span className="text-gray-200 font-medium">{drive.targetRole}</span>
+                            <Building2 className="w-3.5 h-3.5 text-blue-400" /> Target Role: <span className="text-gray-200 font-medium">{drive.targetRole}</span>
                           </p>
                         </div>
                       </div>
 
-                      <div className="bg-white/5 p-3 rounded-lg border border-white/5 space-y-2">
+                      <div className="bg-muted/40 dark:bg-muted/30 p-3 rounded-lg border border-border/50 space-y-2">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-400">Candidate Participation:</span>
-                          <span className="font-semibold text-white">
+                          <span className="text-muted-foreground">Candidate Participation:</span>
+                          <span className="font-semibold text-foreground">
                             {drive.completedCount} / {drive.candidatesCount} Completed
                           </span>
                         </div>
-                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-violet-500 to-emerald-500 rounded-full"
+                        <div className="w-full h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full"
                             style={{
                               width: `${drive.candidatesCount > 0 ? (drive.completedCount / drive.candidatesCount) * 100 : 0}%`
                             }}
@@ -761,16 +759,16 @@ const CollegeAdminDashboard = () => {
 
                       {drive.targetCompanies && drive.targetCompanies.length > 0 && (
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[11px] text-gray-500">Benchmarked against:</span>
+                          <span className="text-[11px] text-muted-foreground/70">Benchmarked against:</span>
                           {drive.targetCompanies.map(c => (
-                            <Badge key={c} variant="outline" className="text-[10px] border-white/10 text-gray-300">
+                            <Badge key={c} variant="outline" className="text-[10px] border-border text-foreground/80">
                               {c}
                             </Badge>
                           ))}
                         </div>
                       )}
 
-                      <div className="pt-2 flex items-center justify-between border-t border-white/5 text-xs text-violet-400 font-medium">
+                      <div className="pt-2 flex items-center justify-between border-t border-border/50 text-xs text-blue-400 font-medium">
                         <span>View Candidates & Results Leaderboard</span>
                         <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                       </div>
@@ -785,13 +783,13 @@ const CollegeAdminDashboard = () => {
           <TabsContent value="analytics" className="space-y-6 mt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Skill Competency Breakdown */}
-              <Card className="bg-[#0e0e18] border-white/10 text-white">
+              <Card className="bg-card border-border text-foreground">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-violet-400" />
+                    <Sparkles className="w-4 h-4 text-blue-400" />
                     Institutional Skill Competency Averages
                   </CardTitle>
-                  <CardDescription className="text-xs text-gray-400">
+                  <CardDescription className="text-xs text-muted-foreground">
                     Evaluated across all AI mock interviews taken by {college.shortName} students.
                   </CardDescription>
                 </CardHeader>
@@ -799,7 +797,7 @@ const CollegeAdminDashboard = () => {
                   {[
                     { label: "Data Structures & Algorithms", value: analytics?.skillAverages.dsa || 85, color: "bg-emerald-500" },
                     { label: "System Design & Architecture", value: analytics?.skillAverages.systemDesign || 80, color: "bg-cyan-500" },
-                    { label: "Technical Articulation & Communication", value: analytics?.skillAverages.communication || 88, color: "bg-violet-500" },
+                    { label: "Technical Articulation & Communication", value: analytics?.skillAverages.communication || 88, color: "bg-blue-500" },
                     { label: "Problem Solving & Complexity Analysis", value: analytics?.skillAverages.problemSolving || 86, color: "bg-amber-500" }
                   ].map(skill => (
                     <div key={skill.label} className="space-y-1.5">
@@ -807,8 +805,8 @@ const CollegeAdminDashboard = () => {
                         <span className="text-gray-300 font-medium">{skill.label}</span>
                         <span className="font-bold text-white font-mono">{skill.value}%</span>
                       </div>
-                      <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div 
+                      <div className="w-full h-2 bg-muted/50 rounded-full overflow-hidden">
+                        <div
                           className={`h-full ${skill.color} rounded-full`}
                           style={{ width: `${skill.value}%` }}
                         />
@@ -819,22 +817,22 @@ const CollegeAdminDashboard = () => {
               </Card>
 
               {/* Score Distribution */}
-              <Card className="bg-[#0e0e18] border-white/10 text-white">
+              <Card className="bg-card border-border text-foreground">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-indigo-400" />
                     Candidate Score Distribution
                   </CardTitle>
-                  <CardDescription className="text-xs text-gray-400">
+                  <CardDescription className="text-xs text-muted-foreground">
                     Placement readiness tier distribution across active candidates.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {(analytics?.scoreDistribution || []).map(dist => (
-                    <div key={dist.range} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
-                      <span className="text-xs font-semibold text-gray-300">{dist.range}</span>
+                    <div key={dist.range} className="flex items-center justify-between p-3 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50">
+                      <span className="text-xs font-semibold text-foreground/80">{dist.range}</span>
                       <div className="flex items-center gap-2">
-                        <Badge className="bg-violet-600/30 text-violet-300 border-violet-500/30 font-mono text-xs">
+                        <Badge className="bg-blue-600/30 text-blue-300 border-blue-500/30 font-mono text-xs">
                           {dist.count} student{dist.count !== 1 ? "s" : ""}
                         </Badge>
                       </div>
@@ -845,47 +843,46 @@ const CollegeAdminDashboard = () => {
             </div>
 
             {/* Top Placement Performers */}
-            <Card className="bg-[#0e0e18] border-white/10 text-white">
+            <Card className="bg-card border-border text-foreground">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-amber-400" />
                   Top Placement-Ready Candidates for Tier-1 Referrals
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-400">
+                <CardDescription className="text-xs text-muted-foreground">
                   Highest ranking candidates ready for direct corporate placement drives.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {(analytics?.topPerformers || []).map((student, idx) => (
-                    <div 
+                    <div
                       key={student.id}
-                      className="flex items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/5 hover:border-violet-500/30 transition-all"
+                      className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 dark:bg-muted/30 border border-border/50 hover:border-blue-500/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${
-                          idx === 0 ? "bg-amber-500/20 text-amber-300 border border-amber-500/40" :
-                          idx === 1 ? "bg-slate-300/20 text-slate-200 border border-slate-300/40" :
-                          "bg-amber-700/20 text-amber-500 border border-amber-700/40"
-                        }`}>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${idx === 0 ? "bg-amber-500/20 text-amber-300 border border-amber-500/40" :
+                            idx === 1 ? "bg-slate-300/20 text-slate-200 border border-slate-300/40" :
+                              "bg-amber-700/20 text-amber-500 border border-amber-700/40"
+                          }`}>
                           #{idx + 1}
                         </div>
                         <div>
-                          <div className="font-semibold text-sm text-white">{student.fullName}</div>
-                          <div className="text-xs text-gray-400">{student.email} • {student.targetRole}</div>
+                          <div className="font-semibold text-sm text-foreground">{student.fullName}</div>
+                          <div className="text-xs text-muted-foreground">{student.email} • {student.targetRole}</div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3">
                         <div className="text-right">
                           <div className="font-bold text-emerald-400 text-sm">{student.averageScore}%</div>
-                          <div className="text-[10px] text-gray-400">{student.interviewsCompleted} mocks</div>
+                          <div className="text-[10px] text-muted-foreground">{student.interviewsCompleted} mocks</div>
                         </div>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => setSelectedStudentForReport(student)}
-                          className="border-white/10 text-xs h-8 bg-transparent text-gray-300 hover:bg-white/10"
+                          className="border-border text-xs h-8 bg-transparent text-gray-300 hover:bg-muted/50"
                         >
                           View Profile
                         </Button>
@@ -899,36 +896,36 @@ const CollegeAdminDashboard = () => {
 
           {/* TAB 4: College Config & Domain Settings */}
           <TabsContent value="settings" className="space-y-4 mt-0">
-            <Card className="bg-[#0e0e18] border-white/10 text-white">
+            <Card className="bg-card border-border text-foreground">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-violet-400" />
+                  <Building2 className="w-4 h-4 text-blue-400" />
                   Institutional Partnership Details
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-white/5 border border-white/5 space-y-1">
+                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
                     <Label className="text-xs text-gray-400 uppercase">Institution Name</Label>
                     <div className="font-bold text-white text-base">{college.name}</div>
                   </div>
-                  <div className="p-4 rounded-lg bg-white/5 border border-white/5 space-y-1">
+                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
                     <Label className="text-xs text-gray-400 uppercase">Partnership Tier</Label>
                     <div className="font-bold text-emerald-400 text-base">{college.tier}</div>
                   </div>
-                  <div className="p-4 rounded-lg bg-white/5 border border-white/5 space-y-1">
+                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
                     <Label className="text-xs text-gray-400 uppercase">Authorized Email Domains</Label>
-                    <div className="font-mono text-violet-300 text-sm">
+                    <div className="font-mono text-blue-300 text-sm">
                       {college.domains.map(d => `@${d}`).join(", ")}
                     </div>
-                    <p className="text-[11px] text-gray-500">
+                    <p className="text-[11px] text-muted-foreground/70">
                       Students using these email addresses get instant college partner access.
                     </p>
                   </div>
-                  <div className="p-4 rounded-lg bg-white/5 border border-white/5 space-y-1">
+                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
                     <Label className="text-xs text-gray-400 uppercase">T&P Coordinator Contact</Label>
-                    <div className="font-semibold text-white">{college.adminName}</div>
-                    <div className="text-xs text-gray-400">{college.adminEmail} • {college.contactPhone}</div>
+                    <div className="font-semibold text-foreground">{college.adminName}</div>
+                    <div className="text-xs text-muted-foreground">{college.adminEmail} • {college.contactPhone}</div>
                   </div>
                 </div>
               </CardContent>
@@ -939,48 +936,48 @@ const CollegeAdminDashboard = () => {
 
       {/* Enroll / Add Student Modal */}
       <Dialog open={addStudentOpen} onOpenChange={setAddStudentOpen}>
-        <DialogContent className="max-w-md bg-[#0c0c14] border-white/10 text-white p-6">
-          <DialogHeader className="border-b border-white/10 pb-3">
+        <DialogContent className="max-w-md bg-card border-border text-white p-6">
+          <DialogHeader className="border-b border-border pb-3">
             <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-violet-400" />
+              <UserPlus className="w-5 h-5 text-blue-400" />
               Enroll Student to College Roster
             </DialogTitle>
-            <DialogDescription className="text-xs text-gray-400">
-              Add a student from <strong className="text-white">{college.name}</strong> to your directory.
+            <DialogDescription className="text-xs text-muted-foreground">
+              Add a student from <strong className="text-foreground">{college.name}</strong> to your directory.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleAddStudentSubmit} className="py-4 space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-gray-300">Official College Email</Label>
+              <Label className="text-xs text-foreground/80">Official College Email</Label>
               <Input
                 type="email"
                 placeholder="e.g. anurag.s25561@nst.rishihood.edu.in"
                 value={newStudentEmail}
                 onChange={e => setNewStudentEmail(e.target.value)}
-                className="bg-white/5 border-white/10 text-white text-xs"
+                className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-gray-300">Student Full Name</Label>
+              <Label className="text-xs text-foreground/80">Student Full Name</Label>
               <Input
                 placeholder="e.g. Anurag Sonawane"
                 value={newStudentName}
                 onChange={e => setNewStudentName(e.target.value)}
-                className="bg-white/5 border-white/10 text-white text-xs"
+                className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-300">Target Role</Label>
+                <Label className="text-xs text-foreground/80">Target Role</Label>
                 <Select value={newStudentRole} onValueChange={setNewStudentRole}>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-9">
+                  <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#12121a] border-white/10 text-white text-xs">
+                  <SelectContent className="bg-popover border-border text-foreground text-xs">
                     <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
                     <SelectItem value="Software Engineer / SDE-1">SDE-1 / SWE</SelectItem>
                     <SelectItem value="Frontend Engineer">Frontend Engineer</SelectItem>
@@ -991,12 +988,12 @@ const CollegeAdminDashboard = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-300">Batch</Label>
+                <Label className="text-xs text-foreground/80">Batch</Label>
                 <Select value={newStudentBatch} onValueChange={setNewStudentBatch}>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-9">
+                  <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#12121a] border-white/10 text-white text-xs">
+                  <SelectContent className="bg-popover border-border text-foreground text-xs">
                     <SelectItem value="2025">Batch 2025</SelectItem>
                     <SelectItem value="2026">Batch 2026</SelectItem>
                     <SelectItem value="2027">Batch 2027</SelectItem>
@@ -1005,18 +1002,18 @@ const CollegeAdminDashboard = () => {
               </div>
             </div>
 
-            <DialogFooter className="pt-3 border-t border-white/10">
+            <DialogFooter className="pt-3 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setAddStudentOpen(false)}
-                className="border-white/10 text-gray-300 text-xs"
+                className="border-border text-gray-300 text-xs"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold"
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
               >
                 Enroll Student
               </Button>
@@ -1038,10 +1035,10 @@ const CollegeAdminDashboard = () => {
       {/* Drive Details & Candidate Results Modal */}
       {selectedDriveForDetails && (
         <Dialog open={!!selectedDriveForDetails} onOpenChange={() => setSelectedDriveForDetails(null)}>
-          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto bg-[#0c0c14] border-white/10 text-white p-6">
-            <DialogHeader className="border-b border-white/10 pb-4">
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto bg-card border-border text-white p-6">
+            <DialogHeader className="border-b border-border pb-4">
               <div className="flex items-center gap-2">
-                <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-xs">
+                <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
                   {selectedDriveForDetails.status.toUpperCase()} DRIVE
                 </Badge>
               </div>
@@ -1049,16 +1046,16 @@ const CollegeAdminDashboard = () => {
                 {selectedDriveForDetails.title}
               </DialogTitle>
               <DialogDescription className="text-gray-400 text-xs">
-                Target Role: <strong className="text-gray-200">{selectedDriveForDetails.targetRole}</strong> • Passing Benchmark: <strong className="text-emerald-400">{selectedDriveForDetails.passingScore}%</strong> • Duration: {selectedDriveForDetails.durationMinutes} mins
+                Target Role: <strong className="text-foreground">{selectedDriveForDetails.targetRole}</strong> • Passing Benchmark: <strong className="text-emerald-400">{selectedDriveForDetails.passingScore}%</strong> • Duration: {selectedDriveForDetails.durationMinutes} mins
               </DialogDescription>
             </DialogHeader>
 
             <div className="py-4 space-y-4">
               {/* Direct Interview Room Link */}
-              <div className="p-3.5 rounded-xl bg-violet-950/25 border border-violet-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-3.5 rounded-xl bg-blue-950/25 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-0.5 min-w-0 flex-1">
-                  <div className="text-xs font-semibold text-violet-300 flex items-center gap-1.5">
-                    <Link className="w-3.5 h-3.5 text-violet-400" /> Direct Candidate Assessment Link
+                  <div className="text-xs font-semibold text-blue-300 flex items-center gap-1.5">
+                    <Link className="w-3.5 h-3.5 text-blue-400" /> Direct Candidate Assessment Link
                   </div>
                   <p className="text-[11px] font-mono text-gray-300 truncate">
                     {selectedDriveForDetails.interviewUrl || `${window.location.origin}/adaptive-interview?role=${encodeURIComponent(selectedDriveForDetails.targetRole)}&driveId=${selectedDriveForDetails.id}`}
@@ -1073,7 +1070,7 @@ const CollegeAdminDashboard = () => {
                       navigator.clipboard.writeText(url);
                       toast.success("Interview link copied to clipboard!");
                     }}
-                    className="border-violet-500/30 text-violet-200 hover:bg-violet-600 hover:text-white text-xs h-8 px-2.5"
+                    className="border-blue-500/30 text-blue-200 hover:bg-blue-600 hover:text-white text-xs h-8 px-2.5"
                   >
                     <Copy className="w-3.5 h-3.5 mr-1" /> Copy Link
                   </Button>
@@ -1083,7 +1080,7 @@ const CollegeAdminDashboard = () => {
                       const url = selectedDriveForDetails.interviewUrl || `${window.location.origin}/adaptive-interview?role=${encodeURIComponent(selectedDriveForDetails.targetRole)}&driveId=${selectedDriveForDetails.id}`;
                       window.open(url, "_blank");
                     }}
-                    className="bg-violet-600 hover:bg-violet-500 text-white text-xs h-8 px-2.5"
+                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8 px-2.5"
                   >
                     <Play className="w-3.5 h-3.5 mr-1" /> Test Link
                   </Button>
@@ -1091,10 +1088,10 @@ const CollegeAdminDashboard = () => {
               </div>
 
               {/* Uploaded Question Bank */}
-              <div className="p-4 rounded-xl bg-violet-950/20 border border-violet-500/30 space-y-3">
+              <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-500/30 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-violet-300 flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-violet-400" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-blue-300 flex items-center gap-1.5">
+                    <BookOpen className="w-4 h-4 text-blue-400" />
                     Uploaded Question Set ({selectedDriveForDetails.customQuestions?.length || 3} Questions)
                   </h4>
                   <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
@@ -1103,27 +1100,27 @@ const CollegeAdminDashboard = () => {
                 </div>
 
                 <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
-                  {(selectedDriveForDetails.customQuestions && selectedDriveForDetails.customQuestions.length > 0 
-                    ? selectedDriveForDetails.customQuestions 
+                  {(selectedDriveForDetails.customQuestions && selectedDriveForDetails.customQuestions.length > 0
+                    ? selectedDriveForDetails.customQuestions
                     : [
-                        { id: "q1", question: "Explain difference between process and thread, PCB/TCB switching.", difficulty: "Medium", expectedAnswerOrKeyPoints: "Memory isolation, virtual address space vs heap" },
-                        { id: "q2", question: "Implement LRU Cache with O(1) get and put operations.", difficulty: "Medium", expectedAnswerOrKeyPoints: "Doubly linked list + hash map" },
-                        { id: "q3", question: "QuickSort vs MergeSort complexity and real-world selection trade-offs.", difficulty: "Medium", expectedAnswerOrKeyPoints: "O(N log N) avg vs worst, memory auxiliary space" }
-                      ]
+                      { id: "q1", question: "Explain difference between process and thread, PCB/TCB switching.", difficulty: "Medium", expectedAnswerOrKeyPoints: "Memory isolation, virtual address space vs heap" },
+                      { id: "q2", question: "Implement LRU Cache with O(1) get and put operations.", difficulty: "Medium", expectedAnswerOrKeyPoints: "Doubly linked list + hash map" },
+                      { id: "q3", question: "QuickSort vs MergeSort complexity and real-world selection trade-offs.", difficulty: "Medium", expectedAnswerOrKeyPoints: "O(N log N) avg vs worst, memory auxiliary space" }
+                    ]
                   ).map((q, idx) => (
-                    <div key={idx} className="p-2.5 rounded-lg bg-black/40 border border-white/5 text-xs space-y-1">
+                    <div key={idx} className="p-2.5 rounded-lg bg-black/40 border border-border/50 text-xs space-y-1">
                       <div className="flex items-center gap-2">
-                        <Badge className="bg-white/10 text-gray-300 text-[9px] px-1.5 py-0 font-mono">
+                        <Badge className="bg-muted/50 text-gray-300 text-[9px] px-1.5 py-0 font-mono">
                           Q{idx + 1}
                         </Badge>
-                        <span className="text-[10px] text-violet-400 font-semibold uppercase">
+                        <span className="text-[10px] text-blue-400 font-semibold uppercase">
                           {q.difficulty || "Medium"}
                         </span>
                         <span className="text-gray-200 font-medium">{q.question}</span>
                       </div>
                       {q.expectedAnswerOrKeyPoints && (
                         <p className="text-[11px] text-gray-400 pl-6">
-                          <strong className="text-violet-300">Expected:</strong> {q.expectedAnswerOrKeyPoints}
+                          <strong className="text-blue-300">Expected:</strong> {q.expectedAnswerOrKeyPoints}
                         </p>
                       )}
                     </div>
@@ -1136,7 +1133,7 @@ const CollegeAdminDashboard = () => {
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
                   Drive Instructions:
                 </h4>
-                <p className="text-xs text-gray-300 p-3 rounded-lg bg-white/5 border border-white/5">
+                <p className="text-xs text-gray-300 p-3 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50">
                   {selectedDriveForDetails.instructions}
                 </p>
               </div>
@@ -1144,20 +1141,20 @@ const CollegeAdminDashboard = () => {
               {/* Candidate Evaluations & Selection Verdict Table */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Candidate Results & Selection Status:
                   </h4>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-muted-foreground">
                     Threshold: <span className="text-emerald-400 font-bold">{selectedDriveForDetails.passingScore || 75}%</span>
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-white/10 overflow-hidden">
+                <div className="rounded-lg border border-border overflow-hidden">
                   <Table>
-                    <TableHeader className="bg-white/5">
-                      <TableRow className="border-white/10">
-                        <TableHead className="text-xs text-gray-300">Candidate Email</TableHead>
-                        <TableHead className="text-xs text-gray-300">Status</TableHead>
+                    <TableHeader className="bg-muted/40 dark:bg-muted/30">
+                      <TableRow className="border-border">
+                        <TableHead className="text-xs text-foreground/80">Candidate Email</TableHead>
+                        <TableHead className="text-xs text-foreground/80">Status</TableHead>
                         <TableHead className="text-xs text-gray-300 text-center">Score</TableHead>
                         <TableHead className="text-xs text-gray-300 text-center">Selection Verdict</TableHead>
                         <TableHead className="text-xs text-gray-300 text-right">Actions</TableHead>
@@ -1168,22 +1165,21 @@ const CollegeAdminDashboard = () => {
                         selectedDriveForDetails.candidates.map(candidate => {
                           const hasAttempted = candidate.status === "Completed" && candidate.score !== undefined;
                           const isCandidatePassed = hasAttempted && (
-                            candidate.selectionVerdict === "SELECTED" || 
+                            candidate.selectionVerdict === "SELECTED" ||
                             (candidate.score !== undefined && candidate.score >= selectedDriveForDetails.passingScore)
                           );
 
                           return (
-                            <TableRow key={candidate.studentEmail} className="border-white/5 text-xs">
-                              <TableCell className="font-mono text-gray-200">
-                                <div className="font-semibold text-white">{candidate.studentName || candidate.studentEmail.split('@')[0]}</div>
-                                <div className="text-[11px] text-gray-400">{candidate.studentEmail}</div>
+                            <TableRow key={candidate.studentEmail} className="border-border/50 text-xs">
+                              <TableCell className="font-mono text-foreground">
+                                <div className="font-semibold text-foreground">{candidate.studentName || candidate.studentEmail.split('@')[0]}</div>
+                                <div className="text-[11px] text-muted-foreground">{candidate.studentEmail}</div>
                               </TableCell>
                               <TableCell>
-                                <Badge className={`text-[10px] ${
-                                  candidate.status === "Completed"
+                                <Badge className={`text-[10px] ${candidate.status === "Completed"
                                     ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                                     : "bg-amber-500/20 text-amber-300 border-amber-500/30"
-                                }`}>
+                                  }`}>
                                   {candidate.status}
                                 </Badge>
                               </TableCell>
@@ -1193,12 +1189,12 @@ const CollegeAdminDashboard = () => {
                                     {candidate.score}%
                                   </span>
                                 ) : (
-                                  <span className="text-gray-500">-</span>
+                                  <span className="text-muted-foreground/70">-</span>
                                 )}
                               </TableCell>
                               <TableCell className="text-center">
                                 {!hasAttempted ? (
-                                  <Badge variant="outline" className="text-[10px] border-white/10 text-gray-400">
+                                  <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
                                     Pending
                                   </Badge>
                                 ) : isCandidatePassed ? (
@@ -1220,7 +1216,7 @@ const CollegeAdminDashboard = () => {
                                       candidate,
                                       drive: selectedDriveForDetails
                                     })}
-                                    className="border-violet-500/30 text-violet-300 hover:bg-violet-600 hover:text-white text-xs h-7 px-2"
+                                    className="border-blue-500/30 text-blue-300 hover:bg-blue-600 hover:text-white text-xs h-7 px-2"
                                   >
                                     <FileText className="w-3 h-3 mr-1" /> AI Report
                                   </Button>
@@ -1233,7 +1229,7 @@ const CollegeAdminDashboard = () => {
                         })
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-6 text-gray-400">
+                          <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
                             No candidate records found for this drive.
                           </TableCell>
                         </TableRow>
@@ -1250,11 +1246,11 @@ const CollegeAdminDashboard = () => {
       {/* Candidate AI Evaluation Report Modal */}
       {selectedCandidateForReport && (
         <Dialog open={!!selectedCandidateForReport} onOpenChange={() => setSelectedCandidateForReport(null)}>
-          <DialogContent className="max-w-2xl max-h-[88vh] overflow-y-auto bg-[#0c0c14] border-white/10 text-white p-6 shadow-2xl">
-            <DialogHeader className="border-b border-white/10 pb-4">
+          <DialogContent className="max-w-2xl max-h-[88vh] overflow-y-auto bg-card border-border text-white p-6 shadow-2xl">
+            <DialogHeader className="border-b border-border pb-4">
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-violet-400" />
+                  <FileText className="w-5 h-5 text-blue-400" />
                   Candidate Assessment Report
                 </DialogTitle>
                 <Badge className={
@@ -1274,37 +1270,36 @@ const CollegeAdminDashboard = () => {
 
             <div className="py-4 space-y-4">
               {/* Candidate summary card */}
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-4">
+              <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/30 border border-border flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-bold text-base text-white">
+                  <h3 className="font-bold text-base text-foreground">
                     {selectedCandidateForReport.candidate.studentName || selectedCandidateForReport.candidate.studentEmail}
                   </h3>
                   <p className="text-xs text-gray-400 font-mono">
                     {selectedCandidateForReport.candidate.studentEmail}
                   </p>
-                  <p className="text-xs text-violet-300 mt-0.5">
+                  <p className="text-xs text-blue-300 mt-0.5">
                     Completed: {selectedCandidateForReport.candidate.completedAt ? new Date(selectedCandidateForReport.candidate.completedAt).toLocaleString() : "Recently"}
                   </p>
                 </div>
 
                 <div className="text-right">
                   <div className="text-[10px] text-gray-400 uppercase font-semibold">Overall AI Score</div>
-                  <div className={`text-2xl font-extrabold font-mono ${
-                    (selectedCandidateForReport.candidate.score || 0) >= (selectedCandidateForReport.drive.passingScore || 75)
+                  <div className={`text-2xl font-extrabold font-mono ${(selectedCandidateForReport.candidate.score || 0) >= (selectedCandidateForReport.drive.passingScore || 75)
                       ? "text-emerald-400"
                       : "text-rose-400"
-                  }`}>
+                    }`}>
                     {selectedCandidateForReport.candidate.score}%
                   </div>
-                  <div className="text-[10px] text-gray-400">
+                  <div className="text-[10px] text-muted-foreground">
                     Threshold: {selectedCandidateForReport.drive.passingScore || 75}%
                   </div>
                 </div>
               </div>
 
               {/* Feedback note */}
-              <div className="p-3.5 rounded-xl bg-violet-950/30 border border-violet-500/20 text-xs space-y-1">
-                <span className="font-bold text-violet-300 block">Placement Cell Assessment Summary:</span>
+              <div className="p-3.5 rounded-xl bg-blue-950/30 border border-blue-500/20 text-xs space-y-1">
+                <span className="font-bold text-blue-300 block">Placement Cell Assessment Summary:</span>
                 <p className="text-gray-300 leading-relaxed">
                   {selectedCandidateForReport.candidate.feedback}
                 </p>
@@ -1313,32 +1308,31 @@ const CollegeAdminDashboard = () => {
               {/* Question-by-Question breakdown */}
               {selectedCandidateForReport.candidate.answers && selectedCandidateForReport.candidate.answers.length > 0 && (
                 <div className="space-y-3 pt-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-foreground/80">
                     Question-by-Question Evaluation ({selectedCandidateForReport.candidate.answers.length} Questions):
                   </h4>
 
                   {selectedCandidateForReport.candidate.answers.map((ans, idx) => (
-                    <div key={idx} className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-2 text-xs">
+                    <div key={idx} className="p-3.5 rounded-xl bg-black/40 border border-border/50 space-y-2 text-xs">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-violet-300">
+                        <span className="font-bold text-blue-300">
                           Q{idx + 1}: {ans.question}
                         </span>
-                        <Badge className={`text-[10px] font-mono font-bold ${
-                          ans.score >= (selectedCandidateForReport.drive.passingScore || 75)
+                        <Badge className={`text-[10px] font-mono font-bold ${ans.score >= (selectedCandidateForReport.drive.passingScore || 75)
                             ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                             : "bg-rose-500/20 text-rose-300 border-rose-500/30"
-                        }`}>
+                          }`}>
                           Score: {ans.score}%
                         </Badge>
                       </div>
 
-                      <div className="bg-white/5 p-2.5 rounded-lg border border-white/5 text-gray-300">
+                      <div className="bg-muted/40 dark:bg-muted/30 p-2.5 rounded-lg border border-border/50 text-foreground/80">
                         <strong className="text-gray-400 block text-[10px] uppercase mb-0.5">Submitted Answer:</strong>
-                        <p className="italic text-gray-300">{ans.studentAnswer}</p>
+                        <p className="italic text-foreground/80">{ans.studentAnswer}</p>
                       </div>
 
-                      <div className="p-2.5 rounded-lg bg-violet-950/20 border border-violet-500/20 text-violet-200">
-                        <strong className="text-violet-400 block text-[10px] uppercase mb-0.5">AI Feedback:</strong>
+                      <div className="p-2.5 rounded-lg bg-blue-950/20 border border-blue-500/20 text-blue-300 dark:text-blue-200">
+                        <strong className="text-blue-400 block text-[10px] uppercase mb-0.5">AI Feedback:</strong>
                         <p>{ans.aiFeedback}</p>
                       </div>
                     </div>
@@ -1353,34 +1347,34 @@ const CollegeAdminDashboard = () => {
       {/* Student Report Dialog */}
       {selectedStudentForReport && (
         <Dialog open={!!selectedStudentForReport} onOpenChange={() => setSelectedStudentForReport(null)}>
-          <DialogContent className="max-w-xl bg-[#0c0c14] border-white/10 text-white p-6">
-            <DialogHeader className="border-b border-white/10 pb-4">
+          <DialogContent className="max-w-xl bg-card border-border text-white p-6">
+            <DialogHeader className="border-b border-border pb-4">
               <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
                 Student Placement Profile
               </DialogTitle>
             </DialogHeader>
 
             <div className="py-4 space-y-4">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                <div className="w-12 h-12 rounded-full bg-violet-600/30 border border-violet-500/40 flex items-center justify-center font-bold text-lg text-violet-200">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/40 dark:bg-muted/30 border border-border">
+                <div className="w-12 h-12 rounded-full bg-blue-600/30 border border-blue-500/40 flex items-center justify-center font-bold text-lg text-blue-300 dark:text-blue-200">
                   {selectedStudentForReport.fullName.slice(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-white">{selectedStudentForReport.fullName}</h3>
+                  <h3 className="font-bold text-base text-foreground">{selectedStudentForReport.fullName}</h3>
                   <p className="text-xs text-gray-400 font-mono">{selectedStudentForReport.email}</p>
-                  <p className="text-xs text-violet-300 mt-0.5">
+                  <p className="text-xs text-blue-300 mt-0.5">
                     {selectedStudentForReport.branch} • {selectedStudentForReport.batch}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-white/5 rounded-lg border border-white/5">
-                  <div className="text-xs text-gray-400">Target Role</div>
+                <div className="p-3 bg-muted/40 dark:bg-muted/30 rounded-lg border border-border/50">
+                  <div className="text-xs text-muted-foreground">Target Role</div>
                   <div className="font-semibold text-white text-sm">{selectedStudentForReport.targetRole}</div>
                 </div>
-                <div className="p-3 bg-white/5 rounded-lg border border-white/5">
-                  <div className="text-xs text-gray-400">AI Readiness Score</div>
+                <div className="p-3 bg-muted/40 dark:bg-muted/30 rounded-lg border border-border/50">
+                  <div className="text-xs text-muted-foreground">AI Readiness Score</div>
                   <div className="font-bold text-emerald-400 text-sm">{selectedStudentForReport.averageScore}%</div>
                 </div>
               </div>
@@ -1393,25 +1387,25 @@ const CollegeAdminDashboard = () => {
                   {Object.entries(selectedStudentForReport.skills || {}).map(([skill, val]) => (
                     <div key={skill} className="space-y-1">
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-300">{skill}</span>
-                        <span className="font-bold text-white">{val}%</span>
+                        <span className="text-foreground/80">{skill}</span>
+                        <span className="font-bold text-foreground">{val}%</span>
                       </div>
-                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-violet-500 rounded-full" style={{ width: `${val}%` }} />
+                      <div className="w-full h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${val}%` }} />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-end gap-2 border-t border-white/10">
+              <div className="pt-2 flex justify-end gap-2 border-t border-border">
                 <Button
                   size="sm"
                   onClick={() => {
                     handleScheduleForSingleStudent(selectedStudentForReport.email);
                     setSelectedStudentForReport(null);
                   }}
-                  className="bg-violet-600 hover:bg-violet-500 text-white text-xs"
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs"
                 >
                   <Plus className="w-3.5 h-3.5 mr-1" />
                   Schedule Mock Interview for Student

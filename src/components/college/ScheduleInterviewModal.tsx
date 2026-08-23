@@ -322,8 +322,8 @@ export const ScheduleInterviewModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto bg-[#0a0a0f] border-white/10 text-white shadow-2xl p-0">
-        <div className="p-6 border-b border-white/10 bg-gradient-to-r from-violet-950/50 via-purple-900/20 to-transparent">
+      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto bg-[#0a0a0f] border-border text-white shadow-2xl p-0">
+        <div className="p-6 border-b border-border bg-gradient-to-r from-violet-950/50 via-purple-900/20 to-transparent">
           <div className="flex items-center gap-2 mb-1">
             <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-xs px-2.5 py-0.5">
               <Sparkles className="w-3 h-3 mr-1" />
@@ -334,15 +334,15 @@ export const ScheduleInterviewModal = ({
             Schedule Institutional Placement Drive
           </DialogTitle>
           <DialogDescription className="text-gray-400 text-xs mt-1">
-            Upload custom question banks, configure passing criteria, and evaluate candidate responses in real-time for <strong className="text-white">{college.name}</strong>.
+            Upload custom question banks, configure passing criteria, and evaluate candidate responses in real-time for <strong className="text-foreground">{college.name}</strong>.
           </DialogDescription>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Section 1: Drive Title & Target Role */}
-          <div className="space-y-4 bg-white/5 p-4 rounded-xl border border-white/5">
+          <div className="space-y-4 bg-muted/40 dark:bg-muted/30 p-4 rounded-xl border border-border/50">
             <div className="space-y-1.5">
-              <Label htmlFor="title" className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+              <Label htmlFor="title" className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
                 Drive / Assessment Title
               </Label>
               <Input
@@ -350,14 +350,14 @@ export const ScheduleInterviewModal = ({
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="e.g. Campus Placement SDE-1 Technical Assessment 2025"
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-violet-500"
+                className="bg-muted/40 dark:bg-muted/30 border-border text-white placeholder:text-gray-500 focus:border-violet-500"
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
                   Target Role
                 </Label>
                 <Select value={targetRole} onValueChange={(val) => {
@@ -366,10 +366,10 @@ export const ScheduleInterviewModal = ({
                     setCustomQuestions(DEFAULT_PRESET_QUESTIONS[val]);
                   }
                 }}>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground">
                     <SelectValue placeholder="Select target role" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#12121a] border-white/10 text-white">
+                  <SelectContent className="bg-popover border-border text-foreground">
                     <SelectItem value="Software Development Engineer (SDE-1)">SDE-1 / Software Engineer</SelectItem>
                     <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
                     <SelectItem value="Frontend Engineer">Frontend Engineer (React / Next.js)</SelectItem>
@@ -381,17 +381,17 @@ export const ScheduleInterviewModal = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
                   Interview Format
                 </Label>
                 <Select 
                   value={interviewType} 
                   onValueChange={(val: any) => setInterviewType(val)}
                 >
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#12121a] border-white/10 text-white">
+                  <SelectContent className="bg-popover border-border text-foreground">
                     <SelectItem value="technical_ai">
                       <div className="flex items-center gap-2">
                         <Bot className="w-4 h-4 text-violet-400" />
@@ -442,7 +442,7 @@ export const ScheduleInterviewModal = ({
                       {customQuestions.length} Questions
                     </Badge>
                   </h4>
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-muted-foreground">
                     AI will strictly ask questions only from this uploaded question set.
                   </p>
                 </div>
@@ -511,7 +511,7 @@ export const ScheduleInterviewModal = ({
                       Q1: Introduction Included
                     </Badge>
                   </Label>
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-muted-foreground">
                     Total questions candidate will be asked in their pro voice & video interview round.
                   </p>
                 </div>
@@ -543,7 +543,7 @@ export const ScheduleInterviewModal = ({
 
             {/* Bulk Paste Box */}
             {isBulkMode && (
-              <div className="space-y-2 bg-black/40 p-3 rounded-lg border border-violet-500/20">
+              <div className="space-y-2 bg-muted/30 dark:bg-black/40 p-3 rounded-lg border border-violet-500/20">
                 <Label className="text-xs text-violet-300 font-semibold">
                   Paste Custom Questions (One question per line or JSON array)
                 </Label>
@@ -551,7 +551,7 @@ export const ScheduleInterviewModal = ({
                   value={bulkQuestionsInput}
                   onChange={e => setBulkQuestionsInput(e.target.value)}
                   placeholder={`1. Explain the difference between process and thread.\n2. Design an LRU Cache with O(1) get and put operations.\n3. How would you handle database connection pooling under heavy load?`}
-                  className="bg-white/5 border-white/10 text-white text-xs min-h-[100px] font-mono"
+                  className="bg-muted/40 dark:bg-muted/30 border-border text-white text-xs min-h-[100px] font-mono"
                 />
                 <div className="flex justify-end gap-2 pt-1">
                   <Button
@@ -559,7 +559,7 @@ export const ScheduleInterviewModal = ({
                     size="sm"
                     variant="ghost"
                     onClick={() => setIsBulkMode(false)}
-                    className="text-xs h-7 text-gray-400"
+                    className="text-xs h-7 text-muted-foreground"
                   >
                     Cancel
                   </Button>
@@ -577,33 +577,33 @@ export const ScheduleInterviewModal = ({
 
             {/* Add Individual Question Form */}
             {isAddingQuestion && !isBulkMode && (
-              <div className="space-y-3 bg-black/40 p-3 rounded-lg border border-violet-500/20">
+              <div className="space-y-3 bg-muted/30 dark:bg-black/40 p-3 rounded-lg border border-violet-500/20">
                 <div className="space-y-1">
                   <Label className="text-xs text-violet-300 font-semibold">Question Prompt *</Label>
                   <Input
                     value={newQuestionText}
                     onChange={e => setNewQuestionText(e.target.value)}
                     placeholder="e.g. Explain how B-Trees optimize database lookups and range scans."
-                    className="bg-white/5 border-white/10 text-white text-xs h-8"
+                    className="bg-muted/40 dark:bg-muted/30 border-border text-white text-xs h-8"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-gray-400">Expected Key Concepts / Rubric (Optional)</Label>
+                    <Label className="text-[11px] text-muted-foreground">Expected Key Concepts / Rubric (Optional)</Label>
                     <Input
                       value={newQuestionKeyPoints}
                       onChange={e => setNewQuestionKeyPoints(e.target.value)}
                       placeholder="e.g. Balanced search tree, leaf node pointers, O(log N)"
-                      className="bg-white/5 border-white/10 text-white text-xs h-8"
+                      className="bg-muted/40 dark:bg-muted/30 border-border text-white text-xs h-8"
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-gray-400">Difficulty</Label>
+                    <Label className="text-[11px] text-muted-foreground">Difficulty</Label>
                     <Select value={newQuestionDifficulty} onValueChange={(v: any) => setNewQuestionDifficulty(v)}>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white h-8 text-xs">
+                      <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-white h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#12121a] border-white/10 text-white text-xs">
+                      <SelectContent className="bg-popover border-border text-foreground text-xs">
                         <SelectItem value="Easy">Easy</SelectItem>
                         <SelectItem value="Medium">Medium</SelectItem>
                         <SelectItem value="Hard">Hard</SelectItem>
@@ -617,7 +617,7 @@ export const ScheduleInterviewModal = ({
                     size="sm"
                     variant="ghost"
                     onClick={() => setIsAddingQuestion(false)}
-                    className="text-xs h-7 text-gray-400"
+                    className="text-xs h-7 text-muted-foreground"
                   >
                     Cancel
                   </Button>
@@ -636,18 +636,18 @@ export const ScheduleInterviewModal = ({
             {/* List of Attached Questions */}
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
               {customQuestions.length === 0 ? (
-                <div className="text-center py-6 text-gray-400 border border-dashed border-white/10 rounded-lg text-xs">
+                <div className="text-center py-6 text-gray-400 border border-dashed border-border rounded-lg text-xs">
                   No questions uploaded yet. Click <strong>"Add Question"</strong> or <strong>"Load Preset"</strong> to attach questions.
                 </div>
               ) : (
                 customQuestions.map((q, idx) => (
                   <div
                     key={q.id || idx}
-                    className="p-3 rounded-lg bg-black/40 border border-white/5 flex items-start justify-between gap-3 text-xs group hover:border-violet-500/40 transition-all"
+                    className="p-3 rounded-lg bg-muted/30 dark:bg-black/40 border border-border/50 flex items-start justify-between gap-3 text-xs group hover:border-violet-500/40 transition-all"
                   >
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <Badge className="bg-white/10 text-gray-300 text-[9px] px-1.5 py-0 font-mono">
+                        <Badge className="bg-muted/50 text-gray-300 text-[9px] px-1.5 py-0 font-mono">
                           Q{idx + 1}
                         </Badge>
                         <span className="text-[10px] text-violet-400 font-semibold uppercase">
@@ -658,7 +658,7 @@ export const ScheduleInterviewModal = ({
                         {q.question}
                       </p>
                       {q.expectedAnswerOrKeyPoints && (
-                        <p className="text-[11px] text-gray-400 bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                        <p className="text-[11px] text-gray-400 bg-muted/40 dark:bg-muted/30 px-2 py-0.5 rounded border border-border/50">
                           <strong className="text-violet-300">Key Points:</strong> {q.expectedAnswerOrKeyPoints}
                         </p>
                       )}
@@ -688,7 +688,7 @@ export const ScheduleInterviewModal = ({
                 <h4 className="text-sm font-bold text-white flex items-center gap-2">
                   Passing Criteria & Selection Threshold
                 </h4>
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-muted-foreground">
                   Students achieving this benchmark will be automatically marked as <strong>SELECTED</strong>.
                 </p>
               </div>
@@ -704,7 +704,7 @@ export const ScheduleInterviewModal = ({
                     max="100"
                     value={passingScore}
                     onChange={e => setPassingScore(Number(e.target.value))}
-                    className="bg-white/5 border-emerald-500/30 text-white font-bold h-9 text-xs"
+                    className="bg-muted/40 dark:bg-muted/30 border-emerald-500/30 text-white font-bold h-9 text-xs"
                     required
                   />
                   <span className="text-xs text-emerald-400 font-bold">%</span>
@@ -712,19 +712,19 @@ export const ScheduleInterviewModal = ({
               </div>
 
               <div className="md:col-span-2 space-y-1">
-                <Label className="text-xs text-gray-300">Passing Criteria Description</Label>
+                <Label className="text-xs text-foreground/80">Passing Criteria Description</Label>
                 <Input
                   value={passingCriteriaDescription}
                   onChange={e => setPassingCriteriaDescription(e.target.value)}
                   placeholder="e.g. Candidate must score >= 75% across custom questions to qualify."
-                  className="bg-white/5 border-white/10 text-white text-xs h-9"
+                  className="bg-muted/40 dark:bg-muted/30 border-border text-white text-xs h-9"
                 />
               </div>
             </div>
           </div>
 
           {/* Section 4: Target Candidates & Scheduling Dates */}
-          <div className="space-y-4 bg-white/5 p-4 rounded-xl border border-white/5">
+          <div className="space-y-4 bg-muted/40 dark:bg-muted/30 p-4 rounded-xl border border-border/50">
             <div className="space-y-2">
               <Label className="text-xs font-semibold uppercase tracking-wider text-gray-300 flex items-center justify-between">
                 <span>Target Candidates</span>
@@ -743,10 +743,10 @@ export const ScheduleInterviewModal = ({
                     className={`p-3 rounded-lg border text-left transition-all ${
                       audienceType === opt.id
                         ? "bg-violet-600/20 border-violet-500 text-white shadow-lg shadow-violet-950/50"
-                        : "bg-white/5 border-white/10 text-gray-400 hover:text-gray-200 hover:bg-white/10"
+                        : "bg-muted/40 dark:bg-muted/30 border-border text-gray-400 hover:text-gray-200 hover:bg-muted/50"
                     }`}
                   >
-                    <div className="font-semibold text-xs text-white">{opt.label}</div>
+                    <div className="font-semibold text-xs text-foreground">{opt.label}</div>
                     <div className="text-[11px] text-gray-400 mt-0.5">{opt.desc}</div>
                   </button>
                 ))}
@@ -754,9 +754,9 @@ export const ScheduleInterviewModal = ({
 
               {/* Student Checklist */}
               {audienceType === "selected_emails" && (
-                <div className="mt-3 p-3 rounded-lg border border-white/10 bg-black/40 space-y-2">
-                  <div className="flex items-center justify-between pb-2 border-b border-white/10 text-xs">
-                    <span className="text-gray-400">Select candidate email IDs:</span>
+                <div className="mt-3 p-3 rounded-lg border border-border bg-muted/30 dark:bg-black/40 space-y-2">
+                  <div className="flex items-center justify-between pb-2 border-b border-border text-xs">
+                    <span className="text-muted-foreground">Select candidate email IDs:</span>
                     <button
                       type="button"
                       onClick={handleSelectAllEmails}
@@ -773,7 +773,7 @@ export const ScheduleInterviewModal = ({
                           key={s.id}
                           onClick={() => toggleEmail(s.email)}
                           className={`flex items-center justify-between p-2 rounded cursor-pointer text-xs transition-colors ${
-                            isChecked ? "bg-violet-600/20 text-white" : "hover:bg-white/5 text-gray-400"
+                            isChecked ? "bg-violet-600/20 text-foreground" : "hover:bg-muted/40 dark:bg-muted/30 text-muted-foreground"
                           }`}
                         >
                           <div className="flex items-center gap-2 truncate">
@@ -781,7 +781,7 @@ export const ScheduleInterviewModal = ({
                             <span className="font-medium text-white truncate">{s.fullName}</span>
                             <span className="text-gray-400 text-[11px] truncate font-mono">({s.email})</span>
                           </div>
-                          <Badge variant="outline" className="text-[10px] border-white/10 text-gray-400 shrink-0">
+                          <Badge variant="outline" className="text-[10px] border-border text-gray-400 shrink-0">
                             Score: {s.averageScore}%
                           </Badge>
                         </div>
@@ -795,30 +795,30 @@ export const ScheduleInterviewModal = ({
             {/* Dates & Duration */}
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs text-gray-300">Start Date</Label>
+                <Label className="text-xs text-foreground/80">Start Date</Label>
                 <Input
                   type="date"
                   value={scheduledDate}
                   onChange={e => setScheduledDate(e.target.value)}
-                  className="bg-white/5 border-white/10 text-white h-9 text-xs"
+                  className="bg-muted/40 dark:bg-muted/30 border-border text-white h-9 text-xs"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-gray-300">Deadline</Label>
+                <Label className="text-xs text-foreground/80">Deadline</Label>
                 <Input
                   type="date"
                   value={deadlineDate}
                   onChange={e => setDeadlineDate(e.target.value)}
-                  className="bg-white/5 border-white/10 text-white h-9 text-xs"
+                  className="bg-muted/40 dark:bg-muted/30 border-border text-white h-9 text-xs"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-gray-300">Duration</Label>
+                <Label className="text-xs text-foreground/80">Duration</Label>
                 <Select value={String(durationMinutes)} onValueChange={v => setDurationMinutes(Number(v))}>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white h-9 text-xs">
+                  <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-white h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#12121a] border-white/10 text-white text-xs">
+                  <SelectContent className="bg-popover border-border text-foreground text-xs">
                     <SelectItem value="30">30 minutes</SelectItem>
                     <SelectItem value="45">45 minutes</SelectItem>
                     <SelectItem value="60">60 minutes</SelectItem>
@@ -829,12 +829,12 @@ export const ScheduleInterviewModal = ({
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+          <DialogFooter className="pt-4 border-t border-border flex items-center justify-between gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="border-white/10 text-gray-300 hover:bg-white/5"
+              className="border-border text-gray-300 hover:bg-muted/40 dark:bg-muted/30"
             >
               Cancel
             </Button>

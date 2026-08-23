@@ -46,23 +46,23 @@ export const CollegeStudentBanner = ({ userEmail, userCollegeName }: CollegeStud
   return (
     <div className="mb-4">
       {/* Compact Institutional Status Pill */}
-      <div className="flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-violet-950/20 border border-violet-500/20 backdrop-blur-md text-xs">
+      <div className="flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-violet-100/60 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-500/20 backdrop-blur-md text-xs">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-6 h-6 rounded-lg bg-violet-600/20 border border-violet-500/30 flex items-center justify-center shrink-0">
-            <GraduationCap className="w-3.5 h-3.5 text-violet-400" />
+          <div className="w-6 h-6 rounded-lg bg-violet-100 dark:bg-violet-600/20 border border-violet-300 dark:border-violet-500/30 flex items-center justify-center shrink-0">
+            <GraduationCap className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
           </div>
-          <span className="font-semibold text-white truncate text-xs">
+          <span className="font-semibold text-foreground truncate text-xs">
             {matchedCollege.name}
           </span>
-          <span className="text-gray-500 text-xs hidden sm:inline">•</span>
-          <span className="text-gray-400 text-[11px] truncate hidden md:inline">
+          <span className="text-muted-foreground/50 text-xs hidden sm:inline">•</span>
+          <span className="text-muted-foreground text-[11px] truncate hidden md:inline">
             Placement Portal ({userEmail})
           </span>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-300 border-emerald-500/30 text-[10px] py-0 px-2 h-5 font-normal">
-            <ShieldCheck className="w-3 h-3 mr-1 text-emerald-400" /> Campus License
+          <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30 text-[10px] py-0 px-2 h-5 font-normal">
+            <ShieldCheck className="w-3 h-3 mr-1 text-emerald-600 dark:text-emerald-400" />Campus License
           </Badge>
         </div>
       </div>

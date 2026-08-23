@@ -234,7 +234,7 @@ export default function CollegeAssessmentSession() {
     setIsExecutingCode(true);
     try {
       const res = await executeCode(codeSnippet, codeLanguage);
-      setCodeOutput(res.output || res.error || "Execution completed with 0 errors.");
+      setCodeOutput(res.logs.join('\\n') || res.error || "Execution completed with 0 errors.");
       toast.success("Code executed successfully!");
     } catch (e: any) {
       setCodeOutput(`Execution Error: ${e?.message || e}`);
@@ -378,8 +378,8 @@ export default function CollegeAssessmentSession() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a14] flex flex-col items-center justify-center p-4 text-white">
-        <Loader2 className="w-8 h-8 animate-spin text-violet-400 mb-3" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-foreground">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-400 mb-3" />
         <p className="text-sm text-gray-300 font-medium">Initializing Pro Voice & Video AI Assessment Studio...</p>
       </div>
     );
@@ -388,11 +388,11 @@ export default function CollegeAssessmentSession() {
   const progressPercent = Math.round(((currentQuestionIndex) / questions.length) * 100);
 
   return (
-    <div className="min-h-screen bg-[#07070e] text-white flex flex-col font-sans selection:bg-violet-500/30">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-blue-500/30">
       {/* Top Pro Header Bar */}
-      <header className="bg-[#0f0f1c]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-3 sticky top-0 z-50 flex items-center justify-between">
+      <header className="bg-background/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-border px-4 sm:px-6 py-3 sticky top-0 z-50 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+          <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
             <Building2 className="w-5 h-5" />
           </div>
           <div>
@@ -400,12 +400,12 @@ export default function CollegeAssessmentSession() {
               <h1 className="text-sm sm:text-base font-bold text-white tracking-tight">
                 {drive?.collegeName || "Newton School of Technology"}
               </h1>
-              <Badge className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-[10px] uppercase font-mono tracking-wider border-0 shadow-xs">
+              <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] uppercase font-mono tracking-wider border-0 shadow-xs">
                 Pro AI Interview
               </Badge>
             </div>
             <p className="text-[11px] text-gray-400 truncate max-w-xs sm:max-w-md">
-              {drive?.title} • <span className="text-violet-300 font-medium">Target: {drive?.targetRole}</span>
+              {drive?.title} • <span className="text-blue-300 font-medium">Target: {drive?.targetRole}</span>
             </p>
           </div>
         </div>
@@ -418,7 +418,7 @@ export default function CollegeAssessmentSession() {
           </div>
 
           {/* Countdown Clock */}
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono font-bold text-violet-300">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/40 dark:bg-muted/30 border border-border text-xs font-mono font-bold text-blue-300">
             <Clock className="w-3.5 h-3.5" />
             <span>{formatTimer(timeLeftSeconds)}</span>
           </div>
@@ -427,7 +427,7 @@ export default function CollegeAssessmentSession() {
             size="sm"
             variant="ghost"
             onClick={() => navigate("/dashboard")}
-            className="text-xs text-gray-400 hover:text-white hover:bg-white/5 h-8 px-2.5"
+            className="text-xs text-gray-400 hover:text-white hover:bg-muted/40 dark:bg-muted/30 h-8 px-2.5"
           >
             Exit
           </Button>
@@ -439,9 +439,9 @@ export default function CollegeAssessmentSession() {
         {!isCompleted ? (
           <div className="space-y-4">
             {/* Progress status */}
-            <div className="flex items-center justify-between text-xs text-gray-400">
-              <span className="font-semibold text-violet-300 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span className="font-semibold text-blue-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                 Question {currentQuestionIndex + 1} of {questions.length} 
                 {currentQuestionIndex === 0 && (
                   <Badge className="ml-1.5 bg-blue-500/20 text-blue-300 border-blue-500/30 text-[9px]">
@@ -449,17 +449,17 @@ export default function CollegeAssessmentSession() {
                   </Badge>
                 )}
               </span>
-              <span className="font-mono text-gray-400">{progressPercent}% Completed</span>
+              <span className="font-mono text-muted-foreground">{progressPercent}% Completed</span>
             </div>
-            <Progress value={progressPercent} className="h-1.5 bg-white/5" />
+            <Progress value={progressPercent} className="h-1.5 bg-muted/40 dark:bg-muted/30" />
 
             {/* Video & AI Avatar Pro Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Tile 1: AI Interviewer Interactive Avatar */}
-              <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#131325] to-[#0d0d1a] border border-violet-500/20 p-5 flex flex-col items-center justify-center min-h-[220px] sm:min-h-[260px] text-center shadow-xl">
+              <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#131325] to-card dark:to-gray-950 border border-blue-500/20 p-5 flex flex-col items-center justify-center min-h-[220px] sm:min-h-[260px] text-center shadow-xl">
                 <div className="absolute top-3 left-3 flex items-center gap-2">
-                  <Badge className="bg-black/50 backdrop-blur-md border-white/10 text-white text-[10px] flex items-center gap-1.5">
-                    <Bot className="w-3 h-3 text-violet-400" /> AI Interviewer
+                  <Badge className="bg-background/80 dark:bg-black/50 backdrop-blur-md border-border text-white text-[10px] flex items-center gap-1.5">
+                    <Bot className="w-3 h-3 text-blue-400" /> AI Interviewer
                   </Badge>
                   {isAiSpeaking && (
                     <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px] animate-pulse">
@@ -474,19 +474,19 @@ export default function CollegeAssessmentSession() {
                     <motion.div 
                       animate={{ scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }}
                       transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute inset-0 rounded-full bg-violet-500/30 blur-lg"
+                      className="absolute inset-0 rounded-full bg-blue-500/30 blur-lg will-change-transform"
                     />
                   )}
-                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-800 p-1 shadow-lg shadow-violet-600/30 transition-transform ${isAiSpeaking ? "scale-105" : ""}`}>
-                    <div className="w-full h-full rounded-full bg-[#0d0d1a] flex items-center justify-center">
-                      <Bot className={`w-10 h-10 sm:w-12 sm:h-12 ${isAiSpeaking ? "text-violet-300 animate-bounce" : "text-violet-400"}`} />
+                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-800 p-1 shadow-lg shadow-blue-600/30 transition-transform ${isAiSpeaking ? "scale-105" : ""}`}>
+                    <div className="w-full h-full rounded-full bg-card dark:bg-gray-950 flex items-center justify-center">
+                      <Bot className={`w-10 h-10 sm:w-12 sm:h-12 ${isAiSpeaking ? "text-blue-300 animate-bounce" : "text-blue-400"}`} />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-white">Voke AI Evaluator</h3>
-                  <p className="text-[11px] text-gray-400">Institutional Placement Assessor</p>
+                  <h3 className="text-sm font-bold text-foreground">Voke AI Evaluator</h3>
+                  <p className="text-[11px] text-muted-foreground">Institutional Placement Assessor</p>
                 </div>
 
                 <div className="mt-3 flex items-center gap-2">
@@ -494,7 +494,7 @@ export default function CollegeAssessmentSession() {
                     size="sm"
                     variant="outline"
                     onClick={speakCurrentQuestion}
-                    className="border-white/10 hover:bg-white/10 text-violet-300 text-xs h-7 px-2.5 rounded-full"
+                    className="border-border hover:bg-muted/50 text-blue-300 text-xs h-7 px-2.5 rounded-full"
                   >
                     <Volume2 className="w-3 h-3 mr-1" /> Replay Voice
                   </Button>
@@ -502,9 +502,9 @@ export default function CollegeAssessmentSession() {
               </div>
 
               {/* Tile 2: Student Live Camera Feed */}
-              <div className="relative rounded-2xl overflow-hidden bg-black/80 border border-white/10 flex flex-col items-center justify-center min-h-[220px] sm:min-h-[260px] shadow-xl">
+              <div className="relative rounded-2xl overflow-hidden bg-black/80 border border-border flex flex-col items-center justify-center min-h-[220px] sm:min-h-[260px] shadow-xl">
                 <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-                  <Badge className="bg-black/60 backdrop-blur-md border-white/10 text-white text-[10px] flex items-center gap-1.5">
+                  <Badge className="bg-black/60 backdrop-blur-md border-border text-white text-[10px] flex items-center gap-1.5">
                     <User className="w-3 h-3 text-emerald-400" /> {studentName}
                   </Badge>
                   {isListening && (
@@ -525,7 +525,7 @@ export default function CollegeAssessmentSession() {
 
                 {!isCameraOn && (
                   <div className="flex flex-col items-center justify-center text-gray-500 space-y-2">
-                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-gray-400">
+                    <div className="w-16 h-16 rounded-full bg-muted/40 dark:bg-muted/30 flex items-center justify-center text-muted-foreground">
                       <VideoOff className="w-7 h-7" />
                     </div>
                     <p className="text-xs">Camera Feed Paused</p>
@@ -533,7 +533,7 @@ export default function CollegeAssessmentSession() {
                 )}
 
                 {/* Media Controls Bar */}
-                <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-md p-1 rounded-full border border-white/10">
+                <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-md p-1 rounded-full border border-border">
                   <Button
                     size="icon"
                     variant="ghost"
@@ -548,7 +548,7 @@ export default function CollegeAssessmentSession() {
                     size="icon"
                     variant="ghost"
                     onClick={isListening ? stopListening : startListening}
-                    className={`w-8 h-8 rounded-full ${isListening ? "bg-rose-500 text-white animate-pulse" : "text-gray-300 hover:bg-white/10"}`}
+                    className={`w-8 h-8 rounded-full ${isListening ? "bg-rose-500 text-white animate-pulse" : "text-gray-300 hover:bg-muted/50"}`}
                     title={isListening ? "Stop Speaking" : "Start Speaking (Mic)"}
                   >
                     {isListening ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
@@ -558,7 +558,7 @@ export default function CollegeAssessmentSession() {
                     size="icon"
                     variant="ghost"
                     onClick={() => setIsCodeEditorOpen(!isCodeEditorOpen)}
-                    className={`w-8 h-8 rounded-full ${isCodeEditorOpen ? "bg-violet-600 text-white" : "text-gray-300 hover:bg-white/10"}`}
+                    className={`w-8 h-8 rounded-full ${isCodeEditorOpen ? "bg-blue-600 text-foreground" : "text-gray-300 hover:bg-muted/50"}`}
                     title="Toggle Live Code Editor Studio"
                   >
                     <Code2 className="w-4 h-4" />
@@ -568,19 +568,19 @@ export default function CollegeAssessmentSession() {
             </div>
 
             {/* Current Active Question Card */}
-            <Card className="bg-[#0e0e1a] border-violet-500/30 text-white shadow-2xl">
+            <Card className="bg-[#0e0e1a] border-blue-500/30 text-white shadow-2xl">
               <CardHeader className="p-4 sm:p-5 pb-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-violet-600 text-white font-mono text-[10px] px-2 py-0.5">
+                    <Badge className="bg-blue-600 text-white font-mono text-[10px] px-2 py-0.5">
                       Question {currentQuestionIndex + 1}
                     </Badge>
-                    <Badge className="bg-white/10 text-gray-300 text-[10px] uppercase font-mono">
+                    <Badge className="bg-muted/50 text-gray-300 text-[10px] uppercase font-mono">
                       {currentQ.difficulty || "Medium"} • {currentQ.type || "Technical"}
                     </Badge>
                   </div>
 
-                  <span className="text-[11px] text-violet-300/80 font-mono">
+                  <span className="text-[11px] text-blue-300/80 font-mono">
                     Institutional Strict Round
                   </span>
                 </div>
@@ -596,10 +596,10 @@ export default function CollegeAssessmentSession() {
               <CardContent className="p-4 sm:p-5 pt-0 space-y-4">
                 {/* Optional Split Coding Studio */}
                 {isCodeEditorOpen && (
-                  <div className="rounded-xl overflow-hidden border border-violet-500/30 bg-black/60 p-3 space-y-2">
-                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                      <div className="flex items-center gap-2 text-xs text-violet-300 font-semibold">
-                        <Terminal className="w-4 h-4 text-violet-400" />
+                  <div className="rounded-xl overflow-hidden border border-blue-500/30 bg-black/60 p-3 space-y-2">
+                    <div className="flex items-center justify-between border-b border-border pb-2">
+                      <div className="flex items-center gap-2 text-xs text-blue-300 font-semibold">
+                        <Terminal className="w-4 h-4 text-blue-400" />
                         <span>Live Code Workspace</span>
                       </div>
                       
@@ -607,7 +607,7 @@ export default function CollegeAssessmentSession() {
                         <select
                           value={codeLanguage}
                           onChange={e => setCodeLanguage(e.target.value as any)}
-                          className="bg-black/60 border border-white/10 text-xs text-white rounded px-2 py-1 focus:outline-none"
+                          className="bg-black/60 border border-border text-xs text-white rounded px-2 py-1 focus:outline-none"
                         >
                           <option value="python">Python 3</option>
                           <option value="javascript">JavaScript</option>
@@ -633,7 +633,7 @@ export default function CollegeAssessmentSession() {
                     />
 
                     {codeOutput && (
-                      <div className="p-2 rounded bg-black/80 border border-white/10 font-mono text-[11px] text-gray-300">
+                      <div className="p-2 rounded bg-black/80 border border-border font-mono text-[11px] text-foreground/80">
                         <span className="text-gray-500 block text-[10px] uppercase">Output:</span>
                         <pre className="whitespace-pre-wrap">{codeOutput}</pre>
                       </div>
@@ -662,7 +662,7 @@ export default function CollegeAssessmentSession() {
                       value={currentAnswer}
                       onChange={e => setCurrentAnswer(e.target.value)}
                       placeholder="Speak using the microphone above or type your technical answer, approach, and code explanation here..."
-                      className="bg-black/50 border-white/15 text-white text-xs sm:text-sm min-h-[100px] sm:min-h-[120px] rounded-xl focus:border-violet-400 resize-y p-3.5 leading-relaxed"
+                      className="bg-background/80 dark:bg-black/50 border-white/15 text-white text-xs sm:text-sm min-h-[100px] sm:min-h-[120px] rounded-xl focus:border-blue-400 resize-y p-3.5 leading-relaxed"
                     />
 
                     {/* Quick Speak Toggle Button inside box */}
@@ -673,7 +673,7 @@ export default function CollegeAssessmentSession() {
                       className={`absolute bottom-3 right-3 text-xs h-7 px-2.5 rounded-lg ${
                         isListening 
                           ? "bg-rose-600 hover:bg-rose-500 text-white animate-pulse" 
-                          : "bg-violet-600/80 hover:bg-violet-500 text-white"
+                          : "bg-blue-600/80 hover:bg-blue-500 text-foreground"
                       }`}
                     >
                       {isListening ? (
@@ -690,7 +690,7 @@ export default function CollegeAssessmentSession() {
                 </div>
 
                 {/* Submit Action */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                <div className="flex items-center justify-between pt-2 border-t border-border/50">
                   <div className="text-[11px] text-gray-400 hidden sm:block">
                     {currentQuestionIndex + 1 < questions.length ? "Next question will load immediately upon evaluation." : "Final question of placement round."}
                   </div>
@@ -698,7 +698,7 @@ export default function CollegeAssessmentSession() {
                   <Button
                     onClick={handleSubmitAnswer}
                     disabled={isSubmittingTurn}
-                    className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-xs h-9 px-6 rounded-xl shadow-lg shadow-violet-600/30 ml-auto"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs h-9 px-6 rounded-xl shadow-lg shadow-blue-600/30 ml-auto"
                   >
                     {isSubmittingTurn ? (
                       <>
@@ -763,21 +763,21 @@ export default function CollegeAssessmentSession() {
 
               {/* Score breakdown metrics */}
               <div className="grid grid-cols-3 gap-3 max-w-md mx-auto pt-2">
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5 space-y-0.5">
+                <div className="p-3.5 rounded-2xl bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-0.5">
                   <div className="text-[10px] text-gray-400 uppercase font-semibold">Your Score</div>
                   <div className={`text-2xl font-extrabold font-mono ${isPassed ? "text-emerald-400" : "text-rose-400"}`}>
                     {finalScore}%
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5 space-y-0.5">
+                <div className="p-3.5 rounded-2xl bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-0.5">
                   <div className="text-[10px] text-gray-400 uppercase font-semibold">Benchmark</div>
-                  <div className="text-2xl font-extrabold font-mono text-gray-200">
+                  <div className="text-2xl font-extrabold font-mono text-foreground">
                     {drive?.passingScore || 75}%
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5 space-y-0.5">
+                <div className="p-3.5 rounded-2xl bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-0.5">
                   <div className="text-[10px] text-gray-400 uppercase font-semibold">Verdict</div>
                   <div className={`text-xs font-bold uppercase mt-2 ${isPassed ? "text-emerald-400" : "text-rose-400"}`}>
                     {isPassed ? "SELECTED" : "NOT SELECTED"}
@@ -787,22 +787,22 @@ export default function CollegeAssessmentSession() {
             </div>
 
             {/* Answer-by-Answer AI Breakdown */}
-            <Card className="bg-[#0f0f1c] border-white/10 text-white shadow-xl">
-              <CardHeader className="p-5 pb-3 border-b border-white/10">
+            <Card className="bg-[#0f0f1c] border-border text-white shadow-xl">
+              <CardHeader className="p-5 pb-3 border-b border-border">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-violet-400" />
+                  <FileText className="w-4 h-4 text-blue-400" />
                   Institutional Round Performance Review ({turnAnswers.length} Questions)
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-400">
+                <CardDescription className="text-xs text-muted-foreground">
                   Detailed question evaluation including introduction and technical responses.
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="p-5 space-y-4">
                 {turnAnswers.map((item, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-2 text-xs">
+                  <div key={idx} className="p-4 rounded-xl bg-muted/30 dark:bg-black/40 border border-border/50 space-y-2 text-xs">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-bold text-violet-300">
+                      <span className="font-bold text-blue-300">
                         Q{idx + 1}: {item.question}
                       </span>
                       <Badge className={`text-[10px] font-mono font-bold ${
@@ -814,13 +814,13 @@ export default function CollegeAssessmentSession() {
                       </Badge>
                     </div>
 
-                    <div className="bg-white/5 p-2.5 rounded-lg border border-white/5 text-gray-300">
+                    <div className="bg-muted/40 dark:bg-muted/30 p-2.5 rounded-lg border border-border/50 text-foreground/80">
                       <strong className="text-gray-400 block text-[10px] uppercase mb-0.5">Your Response:</strong>
                       <p className="italic text-gray-300 line-clamp-3">{item.studentAnswer}</p>
                     </div>
 
-                    <div className="p-2.5 rounded-lg bg-violet-950/30 border border-violet-500/20 text-violet-200">
-                      <strong className="text-violet-400 block text-[10px] uppercase mb-0.5">AI Feedback:</strong>
+                    <div className="p-2.5 rounded-lg bg-blue-950/30 border border-blue-500/20 text-blue-200">
+                      <strong className="text-blue-400 block text-[10px] uppercase mb-0.5">AI Feedback:</strong>
                       <p>{item.aiFeedback}</p>
                     </div>
                   </div>
@@ -832,7 +832,7 @@ export default function CollegeAssessmentSession() {
             <div className="flex items-center justify-center gap-3 pt-2">
               <Button
                 onClick={() => navigate("/dashboard")}
-                className="bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs h-9 px-6 shadow-lg shadow-violet-600/30"
+                className="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs h-9 px-6 shadow-lg shadow-blue-600/30"
               >
                 <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Dashboard
               </Button>
