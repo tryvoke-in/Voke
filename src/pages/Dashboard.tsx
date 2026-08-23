@@ -704,7 +704,7 @@ const Dashboard = () => {
                       <div className="flex-1 min-w-0">
                         <h2 className="text-xl sm:text-3xl font-bold mb-1 leading-tight">Ready to ace your next interview?</h2>
                         <p className="text-white/80 text-xs sm:text-sm">
-                          "Success is where preparation and opportunity meet."
+                          Success is where preparation and opportunity meet.
                         </p>
                       </div>
                       <div className="flex flex-row sm:flex-col gap-2 shrink-0">

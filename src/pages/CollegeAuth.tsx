@@ -149,17 +149,35 @@ const CollegeAuth = () => {
               <TabsList className="grid grid-cols-2 bg-muted/50 dark:bg-muted/30 border border-border p-1 rounded-full h-auto">
                 <TabsTrigger
                   value="signin"
-                  className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium text-xs md:text-sm py-2"
+                  className="relative rounded-full data-[state=active]:text-white font-medium text-xs md:text-sm py-2"
                 >
-                  <GraduationCap className="w-4 h-4 mr-2" />
-                  College Admin Login
+                  {activeTab === "signin" && (
+                    <motion.div
+                      layoutId="active-auth-tab"
+                      className="absolute inset-0 bg-blue-600 rounded-full"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center justify-center">
+                    <GraduationCap className="w-4 h-4 mr-2" />
+                    College Admin Login
+                  </span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="register"
-                  className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium text-xs md:text-sm py-2"
+                  className="relative rounded-full data-[state=active]:text-white font-medium text-xs md:text-sm py-2"
                 >
-                  <Building2 className="w-4 h-4 mr-2" />
-                  New Partnership
+                  {activeTab === "register" && (
+                    <motion.div
+                      layoutId="active-auth-tab"
+                      className="absolute inset-0 bg-blue-600 rounded-full"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center justify-center">
+                    <Building2 className="w-4 h-4 mr-2" />
+                    New Partnership
+                  </span>
                 </TabsTrigger>
               </TabsList>
 

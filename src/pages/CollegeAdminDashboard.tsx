@@ -326,7 +326,7 @@ const CollegeAdminDashboard = () => {
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-xs md:text-sm px-3.5 md:px-4 py-2 shadow-lg shadow-blue-600/15 dark:shadow-blue-600/25 h-9"
             >
               <Plus className="w-4 h-4 mr-1.5" />
-              Schedule Drive
+              Schedule Interview
             </Button>
 
             <Button
@@ -460,24 +460,51 @@ const CollegeAdminDashboard = () => {
             <TabsList className="bg-card border border-border p-1 gap-2 rounded-full shadow-sm">
               <TabsTrigger
                 value="students"
-                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5 px-4 font-medium transition-all"
+                className="relative rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5 px-4 font-medium transition-all"
               >
-                <Users className="w-4 h-4 mr-1.5" />
-                Registered Students ({students.length})
+                {activeTab === "students" && (
+                  <motion.div
+                    layoutId="active-dashboard-tab"
+                    className="absolute inset-0 bg-blue-600 rounded-full"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center">
+                  <Users className="w-4 h-4 mr-1.5" />
+                  Registered Students ({students.length})
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="drives"
-                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5 px-4 font-medium transition-all"
+                className="relative rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5 px-4 font-medium transition-all"
               >
-                <Calendar className="w-4 h-4 mr-1.5" />
-                Scheduled Drives ({drives.length})
+                {activeTab === "drives" && (
+                  <motion.div
+                    layoutId="active-dashboard-tab"
+                    className="absolute inset-0 bg-blue-600 rounded-full"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center">
+                  <Calendar className="w-4 h-4 mr-1.5" />
+                  Scheduled Drives ({drives.length})
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="analytics"
-                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5 px-4 font-medium transition-all"
+                className="relative rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5 px-4 font-medium transition-all"
               >
-                <BarChart3 className="w-4 h-4 mr-1.5" />
-                Placement Analytics
+                {activeTab === "analytics" && (
+                  <motion.div
+                    layoutId="active-dashboard-tab"
+                    className="absolute inset-0 bg-blue-600 rounded-full"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center">
+                  <BarChart3 className="w-4 h-4 mr-1.5" />
+                  Placement Analytics
+                </span>
               </TabsTrigger>
 
             </TabsList>
@@ -494,7 +521,7 @@ const CollegeAdminDashboard = () => {
                     className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" />
-                    Schedule Drive
+                    Schedule Interview
                   </Button>
                 </div>
               )}
@@ -539,12 +566,19 @@ const CollegeAdminDashboard = () => {
                     <button
                       key={filter.id}
                       onClick={() => setStatusFilter(filter.id)}
-                      className={`text-xs px-2.5 py-1 rounded-full transition-colors ${statusFilter === filter.id
-                          ? "bg-blue-600 text-white font-medium"
+                      className={`relative text-xs px-2.5 py-1 rounded-full transition-colors ${statusFilter === filter.id
+                          ? "text-white font-medium"
                           : "text-muted-foreground hover:text-foreground"
                         }`}
                     >
-                      {filter.label}
+                      {statusFilter === filter.id && (
+                        <motion.div
+                          layoutId="active-filter-tab"
+                          className="absolute inset-0 bg-blue-600 rounded-full"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      <span className="relative z-10">{filter.label}</span>
                     </button>
                   ))}
                 </div>
@@ -579,7 +613,7 @@ const CollegeAdminDashboard = () => {
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-16 text-muted-foreground">
                         <Users className="w-10 h-10 mx-auto mb-3 text-blue-600 dark:text-blue-300" />
-                        <h4 className="font-semibold text-white text-sm mb-1">No Registered Students Yet</h4>
+                        <h4 className="font-semibold text-black dark:text-white text-sm mb-1">No Registered Students Yet</h4>
                         <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
                           Students with authorized college email domains will automatically appear here once they sign up, or you can enroll them directly.
                         </p>

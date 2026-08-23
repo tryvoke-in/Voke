@@ -466,7 +466,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                   <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
                     Scheduled Interviews
                   </h4>
-                  <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0 rounded-md">
+                  <Badge className="text-[10px] bg-blue-600/40 dark:bg-blue-600/40 text-black dark:text-gray-100 font-bold px-1.5 py-0 rounded-md">
                     {interviewEvents.length}
                   </Badge>
                 </div>
