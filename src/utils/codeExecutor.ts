@@ -23,7 +23,8 @@ let tsModule: any = null;
 export async function stripTypeScript(code: string): Promise<string> {
   try {
     if (!tsModule) {
-      tsModule = await import('https://esm.sh/typescript@5.3.3');
+      // @ts-ignore
+      tsModule = await import(/* @vite-ignore */ 'https://esm.sh/typescript@5.3.3');
     }
     return tsModule.transpile(code, { 
       target: tsModule.ScriptTarget.ES2022,

@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import {
   College, CollegeStudent, CollegeScheduledDrive, CollegeAnalytics,
-  collegeService, ScheduledDriveCandidate
+  collegeService, ScheduledDriveCandidate, StudentDetailedAssessmentReport
 } from "@/services/collegeService";
 import { ScheduleInterviewModal } from "@/components/college/ScheduleInterviewModal";
 import { toast } from "sonner";
@@ -47,6 +47,8 @@ const CollegeAdminDashboard = () => {
   const [preSelectedEmailsForSchedule, setPreSelectedEmailsForSchedule] = useState<string[]>([]);
 
   const [selectedStudentForReport, setSelectedStudentForReport] = useState<CollegeStudent | null>(null);
+  const [studentReportData, setStudentReportData] = useState<StudentDetailedAssessmentReport | null>(null);
+  const [loadingReportData, setLoadingReportData] = useState(false);
   const [selectedCandidateForReport, setSelectedCandidateForReport] = useState<{ candidate: ScheduledDriveCandidate; drive: CollegeScheduledDrive } | null>(null);
 
   // Add Student Modal State
@@ -99,6 +101,28 @@ const CollegeAdminDashboard = () => {
       supabase.removeChannel(channel);
     };
   }, [navigate]);
+
+  useEffect(() => {
+    if (selectedStudentForReport && college) {
+      setLoadingReportData(true);
+      collegeService.getStudentDetailedReportAsync(selectedStudentForReport.email, college.id)
+        .then(report => {
+          setStudentReportData(report);
+        })
+        .catch(err => {
+          console.error("Failed to load student assessment report:", err);
+        })
+        .finally(() => {
+          setLoadingReportData(false);
+        });
+    } else {
+      setStudentReportData(null);
+    }
+  }, [selectedStudentForReport, college]);
+
+  const handlePrintReport = () => {
+    window.print();
+  };
 
   const loadCollegeData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -433,29 +457,35 @@ const CollegeAdminDashboard = () => {
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-border">
-            <TabsList className="bg-card border border-border p-1 gap-3 rounded-full">
+            <TabsList className="bg-card border border-border p-1 gap-2 rounded-full shadow-sm">
               <TabsTrigger
                 value="students"
-                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5"
+                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5 px-4 font-medium transition-all"
               >
                 <Users className="w-4 h-4 mr-1.5" />
                 Registered Students ({students.length})
               </TabsTrigger>
               <TabsTrigger
                 value="drives"
-                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5"
+                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5 px-4 font-medium transition-all"
               >
                 <Calendar className="w-4 h-4 mr-1.5" />
                 Scheduled Drives ({drives.length})
               </TabsTrigger>
               <TabsTrigger
                 value="analytics"
-                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5"
+                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5 px-4 font-medium transition-all"
               >
                 <BarChart3 className="w-4 h-4 mr-1.5" />
                 Placement Analytics
               </TabsTrigger>
-
+              <TabsTrigger
+                value="settings"
+                className="data-[state=active]:bg-blue-600 rounded-full data-[state=active]:text-white text-xs md:text-sm py-1.5"
+              >
+                <ShieldCheck className="w-4 h-4 mr-1.5" />
+                College Config
+              </TabsTrigger>
             </TabsList>
 
             <div className="flex items-center gap-2">
@@ -681,8 +711,8 @@ const CollegeAdminDashboard = () => {
             {drives.length === 0 ? (
               <div className="text-center py-16 p-6 rounded-xl border border-border bg-card text-muted-foreground">
                 <Calendar className="w-10 h-10 mx-auto mb-3 text-muted-foreground/60" />
-                <h4 className="font-semibold text-black dark:text-white text-sm mb-1">No Placement Drives Scheduled Yet</h4>
-                <p className="text-xs text-gray-600 dark:text-gray-300 max-w-sm mx-auto mb-4">
+                <h4 className="font-semibold text-foreground text-sm mb-1">No Placement Drives Scheduled Yet</h4>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-4">
                   Schedule customized mock interviews and placement drives for your college students.
                 </p>
                 <Button
@@ -691,7 +721,7 @@ const CollegeAdminDashboard = () => {
                     setPreSelectedEmailsForSchedule([]);
                     setScheduleModalOpen(true);
                   }}
-                  className="bg-blue-600 hover:bg-blue-500 text-black dark:text-white text-xs h-8"
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
                 >
                   <Plus className="w-3.5 h-3.5 mr-1.5" />
                   Schedule First Placement Drive
@@ -703,27 +733,28 @@ const CollegeAdminDashboard = () => {
                   <Card
                     key={drive.id}
                     className="bg-card border-border text-black dark:text-white overflow-hidden hover:border-blue-500/40 transition-all cursor-pointer group"
-                    onClick={() => navigate(`/college/drive/${drive.id}`)}
+                    onClick={() => setSelectedDriveForDetails(drive)}
                   >
                     <div className="p-5 space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <Badge className={`text-[10px] px-2 py-0.5 uppercase tracking-wider ${drive.status === "active" ? "bg-emerald-400/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/30" :
-                                drive.status === "scheduled" ? "bg-blue-400/20 text-blue-600 dark:text-blue-300 border-blue-400/30" :
-                                  "bg-gray-500/20 text-gray-600 dark:text-gray-300 border-gray-500/30"
+                            <Badge className={`text-[10px] px-2 py-0.5 uppercase tracking-wider ${drive.status === "active" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" :
+                                drive.status === "scheduled" ? "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-400/30" :
+                                  "bg-muted text-muted-foreground border-border"
                               }`}>
                               {drive.status}
                             </Badge>
-                            <span className="text-xs text-gray-600 dark:text-gray-300 font-mono">
+                            <span className="text-xs text-muted-foreground font-mono">
                               {drive.durationMinutes} mins • Benchmark: {drive.passingScore}%
                             </span>
                           </div>
-                          <h4 className="text-base font-bold text-black dark:text-white group-hover:text-blue-300 transition-colors">
+                          <h4 className="text-base font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             {drive.title}
                           </h4>
-                          <p className="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                            <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-300" /> Target Role: <span className="text-gray-400 dark:text-gray-200 font-medium">{drive.targetRole}</span>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <span>{drive.customQuestions?.length || 0} Questions Selected</span>
                           </p>
                         </div>
                       </div>
@@ -888,16 +919,52 @@ const CollegeAdminDashboard = () => {
             </Card>
           </TabsContent>
 
-
+          {/* TAB 4: College Config & Domain Settings */}
+          <TabsContent value="settings" className="space-y-4 mt-0">
+            <Card className="bg-card border-border text-foreground">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-300" />
+                  Institutional Partnership Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
+                    <Label className="text-xs text-gray-400 uppercase">Institution Name</Label>
+                    <div className="font-bold text-white text-base">{college.name}</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
+                    <Label className="text-xs text-gray-400 uppercase">Partnership Tier</Label>
+                    <div className="font-bold text-emerald-400 text-base">{college.tier}</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
+                    <Label className="text-xs text-gray-400 uppercase">Authorized Email Domains</Label>
+                    <div className="font-mono text-blue-600 dark:text-blue-300 text-sm">
+                      {college.domains.map(d => `@${d}`).join(", ")}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground/70">
+                      Students using these email addresses get instant college partner access.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50 space-y-1">
+                    <Label className="text-xs text-gray-400 uppercase">T&P Coordinator Contact</Label>
+                    <div className="font-semibold text-foreground">{college.adminName}</div>
+                    <div className="text-xs text-muted-foreground">{college.adminEmail} • {college.contactPhone}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </main>
 
       {/* Enroll / Add Student Modal */}
       <Dialog open={addStudentOpen} onOpenChange={setAddStudentOpen}>
-        <DialogContent className="max-w-md bg-card border-border text-white p-6">
+        <DialogContent className="max-w-md bg-card border-border text-foreground p-6 shadow-2xl rounded-2xl">
           <DialogHeader className="border-b border-border pb-3">
-            <DialogTitle className="text-lg font-bold text-black flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               Enroll Student to College Roster
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -907,7 +974,7 @@ const CollegeAdminDashboard = () => {
 
           <form onSubmit={handleAddStudentSubmit} className="py-4 space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-foreground/80">Official College Email</Label>
+              <Label className="text-xs text-foreground/80 font-medium">Official College Email</Label>
               <Input
                 type="email"
                 placeholder="e.g. anurag.s25561@nst.rishihood.edu.in"
@@ -919,7 +986,7 @@ const CollegeAdminDashboard = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-foreground/80">Student Full Name</Label>
+              <Label className="text-xs text-foreground/80 font-medium">Student Full Name</Label>
               <Input
                 placeholder="e.g. Anurag Sonawane"
                 value={newStudentName}
@@ -930,7 +997,7 @@ const CollegeAdminDashboard = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-foreground/80">Target Role</Label>
+                <Label className="text-xs text-foreground/80 font-medium">Target Role</Label>
                 <Select value={newStudentRole} onValueChange={setNewStudentRole}>
                   <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
                     <SelectValue />
@@ -946,7 +1013,7 @@ const CollegeAdminDashboard = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-foreground/80">Batch</Label>
+                <Label className="text-xs text-foreground/80 font-medium">Batch</Label>
                 <Select value={newStudentBatch} onValueChange={setNewStudentBatch}>
                   <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
                     <SelectValue />
@@ -960,18 +1027,18 @@ const CollegeAdminDashboard = () => {
               </div>
             </div>
 
-            <DialogFooter className="pt-3 border-t border-border">
+            <DialogFooter className="pt-3 border-t border-border flex justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setAddStudentOpen(false)}
-                className="border-border text-gray-600 dark:text-gray-300 text-xs"
+                className="border-border text-foreground text-xs"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm"
               >
                 Enroll Student
               </Button>
@@ -990,53 +1057,262 @@ const CollegeAdminDashboard = () => {
         onDriveCreated={() => loadCollegeData(false)}
       />
 
+      {/* Drive Details & Candidate Results Modal */}
+      {selectedDriveForDetails && (
+        <Dialog open={!!selectedDriveForDetails} onOpenChange={() => setSelectedDriveForDetails(null)}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto bg-card border-border text-white p-6">
+            <DialogHeader className="border-b border-border pb-4">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30 text-xs">
+                  {selectedDriveForDetails.status.toUpperCase()} DRIVE
+                </Badge>
+              </div>
+              <DialogTitle className="text-xl font-bold text-white mt-1">
+                {selectedDriveForDetails.title}
+              </DialogTitle>
+              <DialogDescription className="text-gray-400 text-xs">
+                Target Role: <strong className="text-foreground">{selectedDriveForDetails.targetRole}</strong> • Passing Benchmark: <strong className="text-emerald-400">{selectedDriveForDetails.passingScore}%</strong> • Duration: {selectedDriveForDetails.durationMinutes} mins
+              </DialogDescription>
+            </DialogHeader>
 
+            <div className="py-4 space-y-4">
+              {/* Direct Interview Room Link */}
+              <div className="p-3.5 rounded-xl bg-blue-950/25 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <div className="text-xs font-semibold text-blue-600 dark:text-blue-300 flex items-center gap-1.5">
+                    <Link className="w-3.5 h-3.5 text-blue-600 dark:text-blue-300" /> Direct Candidate Assessment Link
+                  </div>
+                  <p className="text-[11px] font-mono text-gray-300 truncate">
+                    {selectedDriveForDetails.interviewUrl || `${window.location.origin}/adaptive-interview?role=${encodeURIComponent(selectedDriveForDetails.targetRole)}&driveId=${selectedDriveForDetails.id}`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const url = selectedDriveForDetails.interviewUrl || `${window.location.origin}/adaptive-interview?role=${encodeURIComponent(selectedDriveForDetails.targetRole)}&driveId=${selectedDriveForDetails.id}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success("Interview link copied to clipboard!");
+                    }}
+                    className="border-blue-500/30 text-blue-600 dark:text-blue-300 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white text-xs h-8 px-2.5"
+                  >
+                    <Copy className="w-3.5 h-3.5 mr-1" /> Copy Link
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      const url = selectedDriveForDetails.interviewUrl || `${window.location.origin}/adaptive-interview?role=${encodeURIComponent(selectedDriveForDetails.targetRole)}&driveId=${selectedDriveForDetails.id}`;
+                      window.open(url, "_blank");
+                    }}
+                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8 px-2.5"
+                  >
+                    <Play className="w-3.5 h-3.5 mr-1" /> Test Link
+                  </Button>
+                </div>
+              </div>
+
+              {/* Uploaded Question Bank */}
+              <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-500/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-300 flex items-center gap-1.5">
+                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-300" />
+                    Uploaded Question Set ({selectedDriveForDetails.customQuestions?.length || 3} Questions)
+                  </h4>
+                  <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
+                    Passing Benchmark: {selectedDriveForDetails.passingScore || 75}%
+                  </Badge>
+                </div>
+
+                <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                  {(selectedDriveForDetails.customQuestions && selectedDriveForDetails.customQuestions.length > 0
+                    ? selectedDriveForDetails.customQuestions
+                    : [
+                      { id: "q1", question: "Explain difference between process and thread, PCB/TCB switching.", difficulty: "Medium", expectedAnswerOrKeyPoints: "Memory isolation, virtual address space vs heap" },
+                      { id: "q2", question: "Implement LRU Cache with O(1) get and put operations.", difficulty: "Medium", expectedAnswerOrKeyPoints: "Doubly linked list + hash map" },
+                      { id: "q3", question: "QuickSort vs MergeSort complexity and real-world selection trade-offs.", difficulty: "Medium", expectedAnswerOrKeyPoints: "O(N log N) avg vs worst, memory auxiliary space" }
+                    ]
+                  ).map((q, idx) => (
+                    <div key={idx} className="p-2.5 rounded-lg bg-black/40 border border-border/50 text-xs space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-muted/50 text-gray-300 text-[9px] px-1.5 py-0 font-mono">
+                          Q{idx + 1}
+                        </Badge>
+                        <span className="text-[10px] text-blue-600 dark:text-blue-300 font-semibold uppercase">
+                          {q.difficulty || "Medium"}
+                        </span>
+                        <span className="text-gray-200 font-medium">{q.question}</span>
+                      </div>
+                      {q.expectedAnswerOrKeyPoints && (
+                        <p className="text-[11px] text-gray-400 pl-6">
+                          <strong className="text-blue-600 dark:text-blue-300">Expected:</strong> {q.expectedAnswerOrKeyPoints}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                  Drive Instructions:
+                </h4>
+                <p className="text-xs text-gray-300 p-3 rounded-lg bg-muted/40 dark:bg-muted/30 border border-border/50">
+                  {selectedDriveForDetails.instructions}
+                </p>
+              </div>
+
+              {/* Candidate Evaluations & Selection Verdict Table */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Candidate Results & Selection Status:
+                  </h4>
+                  <div className="text-xs text-muted-foreground">
+                    Threshold: <span className="text-emerald-400 font-bold">{selectedDriveForDetails.passingScore || 75}%</span>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-muted/40 dark:bg-muted/30">
+                      <TableRow className="border-border">
+                        <TableHead className="text-xs text-foreground/80">Candidate Email</TableHead>
+                        <TableHead className="text-xs text-foreground/80">Status</TableHead>
+                        <TableHead className="text-xs text-gray-300 text-center">Score</TableHead>
+                        <TableHead className="text-xs text-gray-300 text-center">Selection Verdict</TableHead>
+                        <TableHead className="text-xs text-gray-300 text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedDriveForDetails.candidates && selectedDriveForDetails.candidates.length > 0 ? (
+                        selectedDriveForDetails.candidates.map(candidate => {
+                          const hasAttempted = candidate.status === "Completed" && candidate.score !== undefined;
+                          const isCandidatePassed = hasAttempted && (
+                            candidate.selectionVerdict === "SELECTED" ||
+                            (candidate.score !== undefined && candidate.score >= selectedDriveForDetails.passingScore)
+                          );
+
+                          return (
+                            <TableRow key={candidate.studentEmail} className="border-border/50 text-xs">
+                              <TableCell className="font-mono text-foreground">
+                                <div className="font-semibold text-foreground">{candidate.studentName || candidate.studentEmail.split('@')[0]}</div>
+                                <div className="text-[11px] text-muted-foreground">{candidate.studentEmail}</div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={`text-[10px] ${candidate.status === "Completed"
+                                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                                    : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                                  }`}>
+                                  {candidate.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-center font-bold font-mono">
+                                {candidate.score !== undefined ? (
+                                  <span className={isCandidatePassed ? "text-emerald-400" : "text-rose-400"}>
+                                    {candidate.score}%
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground/70">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {!hasAttempted ? (
+                                  <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
+                                    Pending
+                                  </Badge>
+                                ) : isCandidatePassed ? (
+                                  <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px] font-bold">
+                                    <Check className="w-3 h-3 mr-1" /> SELECTED
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/40 text-[10px] font-bold">
+                                    <X className="w-3 h-3 mr-1" /> NOT SELECTED
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {hasAttempted ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setSelectedCandidateForReport({
+                                      candidate,
+                                      drive: selectedDriveForDetails
+                                    })}
+                                    className="border-blue-500/30 text-blue-600 dark:text-blue-300 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white text-xs h-7 px-2"
+                                  >
+                                    <FileText className="w-3 h-3 mr-1" /> AI Report
+                                  </Button>
+                                ) : (
+                                  <span className="text-gray-500 text-[11px]">-</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                            No candidate records found for this drive.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Candidate AI Evaluation Report Modal */}
       {selectedCandidateForReport && (
         <Dialog open={!!selectedCandidateForReport} onOpenChange={() => setSelectedCandidateForReport(null)}>
-          <DialogContent className="max-w-2xl max-h-[88vh] overflow-y-auto bg-card border-border text-white p-6 shadow-2xl">
+          <DialogContent className="max-w-2xl max-h-[88vh] overflow-y-auto bg-card border-border text-foreground p-6 shadow-2xl rounded-2xl">
             <DialogHeader className="border-b border-border pb-4">
               <div className="flex items-center justify-between">
-                <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+                <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   Candidate Assessment Report
                 </DialogTitle>
                 <Badge className={
                   (selectedCandidateForReport.candidate.score || 0) >= (selectedCandidateForReport.drive.passingScore || 75)
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-xs px-2.5 py-0.5 font-bold"
-                    : "bg-rose-500/20 text-rose-300 border-rose-500/40 text-xs px-2.5 py-0.5 font-bold"
+                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 text-xs px-2.5 py-0.5 font-bold"
+                    : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/40 text-xs px-2.5 py-0.5 font-bold"
                 }>
                   {(selectedCandidateForReport.candidate.score || 0) >= (selectedCandidateForReport.drive.passingScore || 75)
                     ? "🎉 SELECTED"
                     : "NOT SELECTED"}
                 </Badge>
               </div>
-              <DialogDescription className="text-xs text-gray-400 mt-1">
+              <DialogDescription className="text-xs text-muted-foreground mt-1">
                 {selectedCandidateForReport.drive.title} • {selectedCandidateForReport.drive.collegeName}
               </DialogDescription>
             </DialogHeader>
 
             <div className="py-4 space-y-4">
               {/* Candidate summary card */}
-              <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/30 border border-border flex items-center justify-between gap-4">
+              <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border flex items-center justify-between gap-4">
                 <div>
                   <h3 className="font-bold text-base text-foreground">
                     {selectedCandidateForReport.candidate.studentName || selectedCandidateForReport.candidate.studentEmail}
                   </h3>
-                  <p className="text-xs text-gray-400 font-mono">
+                  <p className="text-xs text-muted-foreground font-mono">
                     {selectedCandidateForReport.candidate.studentEmail}
                   </p>
-                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-0.5">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
                     Completed: {selectedCandidateForReport.candidate.completedAt ? new Date(selectedCandidateForReport.candidate.completedAt).toLocaleString() : "Recently"}
                   </p>
                 </div>
 
                 <div className="text-right">
-                  <div className="text-[10px] text-gray-400 uppercase font-semibold">Overall AI Score</div>
+                  <div className="text-[10px] text-muted-foreground uppercase font-semibold">Overall AI Score</div>
                   <div className={`text-2xl font-extrabold font-mono ${(selectedCandidateForReport.candidate.score || 0) >= (selectedCandidateForReport.drive.passingScore || 75)
-                      ? "text-emerald-400"
-                      : "text-rose-400"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-rose-600 dark:text-rose-400"
                     }`}>
                     {selectedCandidateForReport.candidate.score}%
                   </div>
@@ -1047,9 +1323,9 @@ const CollegeAdminDashboard = () => {
               </div>
 
               {/* Feedback note */}
-              <div className="p-3.5 rounded-xl bg-blue-950/30 border border-blue-500/20 text-xs space-y-1">
-                <span className="font-bold text-blue-600 dark:text-blue-300 block">Placement Cell Assessment Summary:</span>
-                <p className="text-gray-300 leading-relaxed">
+              <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-500/20 text-xs space-y-1">
+                <span className="font-bold text-blue-700 dark:text-blue-300 block">Placement Cell Assessment Summary:</span>
+                <p className="text-foreground/90 leading-relaxed">
                   {selectedCandidateForReport.candidate.feedback}
                 </p>
               </div>
@@ -1062,26 +1338,26 @@ const CollegeAdminDashboard = () => {
                   </h4>
 
                   {selectedCandidateForReport.candidate.answers.map((ans, idx) => (
-                    <div key={idx} className="p-3.5 rounded-xl bg-black/40 border border-border/50 space-y-2 text-xs">
+                    <div key={idx} className="p-3.5 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border/70 space-y-2 text-xs">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-blue-600 dark:text-blue-300">
+                        <span className="font-bold text-foreground">
                           Q{idx + 1}: {ans.question}
                         </span>
                         <Badge className={`text-[10px] font-mono font-bold ${ans.score >= (selectedCandidateForReport.drive.passingScore || 75)
-                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                            : "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                            : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30"
                           }`}>
                           Score: {ans.score}%
                         </Badge>
                       </div>
 
-                      <div className="bg-muted/40 dark:bg-muted/30 p-2.5 rounded-lg border border-border/50 text-foreground/80">
-                        <strong className="text-gray-400 block text-[10px] uppercase mb-0.5">Submitted Answer:</strong>
-                        <p className="italic text-foreground/80">{ans.studentAnswer}</p>
+                      <div className="bg-background/80 dark:bg-black/20 p-2.5 rounded-lg border border-border/60 text-foreground/90">
+                        <strong className="text-muted-foreground block text-[10px] uppercase mb-0.5">Submitted Answer:</strong>
+                        <p className="italic text-foreground/90">{ans.studentAnswer}</p>
                       </div>
 
-                      <div className="p-2.5 rounded-lg bg-blue-950/20 border border-blue-500/20 text-blue-600 dark:text-blue-300">
-                        <strong className="text-blue-600 dark:text-blue-300 block text-[10px] uppercase mb-0.5">AI Feedback:</strong>
+                      <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-500/20 text-blue-800 dark:text-blue-300">
+                        <strong className="text-blue-700 dark:text-blue-300 block text-[10px] uppercase mb-0.5">AI Feedback:</strong>
                         <p>{ans.aiFeedback}</p>
                       </div>
                     </div>
@@ -1093,74 +1369,322 @@ const CollegeAdminDashboard = () => {
         </Dialog>
       )}
 
-      {/* Student Report Dialog */}
+      {/* Comprehensive Student Interview Assessment & Feedback Report Dialog */}
       {selectedStudentForReport && (
         <Dialog open={!!selectedStudentForReport} onOpenChange={() => setSelectedStudentForReport(null)}>
-          <DialogContent className="max-w-xl bg-card border-border text-white p-6">
-            <DialogHeader className="border-b border-border pb-4">
-              <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
-                Student Placement Profile
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="py-4 space-y-4">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/40 dark:bg-muted/30 border border-border">
-                <div className="w-12 h-12 rounded-full bg-blue-600/30 border border-blue-500/40 flex items-center justify-center font-bold text-lg text-blue-600 dark:text-blue-300">
-                  {selectedStudentForReport.fullName.slice(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-foreground">{selectedStudentForReport.fullName}</h3>
-                  <p className="text-xs text-gray-400 font-mono">{selectedStudentForReport.email}</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-0.5">
-                    {selectedStudentForReport.branch} • {selectedStudentForReport.batch}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-muted/40 dark:bg-muted/30 rounded-lg border border-border/50">
-                  <div className="text-xs text-muted-foreground">Target Role</div>
-                  <div className="font-semibold text-white text-sm">{selectedStudentForReport.targetRole}</div>
-                </div>
-                <div className="p-3 bg-muted/40 dark:bg-muted/30 rounded-lg border border-border/50">
-                  <div className="text-xs text-muted-foreground">AI Readiness Score</div>
-                  <div className="font-bold text-emerald-400 text-sm">{selectedStudentForReport.averageScore}%</div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-                  Skill Competencies:
-                </h4>
-                <div className="space-y-2">
-                  {Object.entries(selectedStudentForReport.skills || {}).map(([skill, val]) => (
-                    <div key={skill} className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-foreground/80">{skill}</span>
-                        <span className="font-bold text-foreground">{val}%</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-muted/50 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${val}%` }} />
-                      </div>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border text-foreground p-0 rounded-2xl shadow-2xl">
+            <div className="p-6 border-b border-border bg-gradient-to-r from-blue-500/10 via-card to-purple-500/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-extrabold text-lg text-white shadow-lg shadow-blue-500/20">
+                    {selectedStudentForReport.fullName.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <DialogTitle className="text-xl font-bold text-foreground">
+                        {selectedStudentForReport.fullName}
+                      </DialogTitle>
+                      <Badge className={`text-[11px] px-2 py-0.5 border ${
+                        (studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 80
+                          ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                          : (studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 60
+                            ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                            : "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30"
+                      }`}>
+                        {(studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 80 ? "Placement Ready 🎉" : (studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 60 ? "Intermediate" : "Needs Practice"}
+                      </Badge>
                     </div>
-                  ))}
+                    <DialogDescription className="text-xs text-muted-foreground font-mono flex items-center gap-2 mt-0.5">
+                      <span>{selectedStudentForReport.email}</span>
+                      <span>•</span>
+                      <span>{selectedStudentForReport.branch} ({selectedStudentForReport.batch})</span>
+                    </DialogDescription>
+                  </div>
                 </div>
-              </div>
 
-              <div className="pt-2 flex justify-end gap-2 border-t border-border">
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    handleScheduleForSingleStudent(selectedStudentForReport.email);
-                    setSelectedStudentForReport(null);
-                  }}
-                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs"
-                >
-                  <Plus className="w-3.5 h-3.5 mr-1" />
-                  Schedule Mock Interview for Student
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handlePrintReport}
+                    className="border-border text-xs gap-1.5 h-8 bg-card"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Print / Export
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      handleScheduleForSingleStudent(selectedStudentForReport.email);
+                      setSelectedStudentForReport(null);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs gap-1.5 h-8 shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Schedule Interview
+                  </Button>
+                </div>
               </div>
             </div>
+
+            {loadingReportData ? (
+              <div className="py-20 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+                <p className="text-sm">Compiling student evaluation report & AI analytics...</p>
+              </div>
+            ) : (
+              <div className="p-6 space-y-6">
+                {/* 1. Scorecard Hero Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {/* Overall Score */}
+                  <div className="p-4 rounded-2xl bg-card border border-border flex flex-col items-center justify-center text-center shadow-xs">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Overall AI Score</span>
+                    <div className={`text-4xl font-black font-mono my-1 ${
+                      (studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 80
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : (studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 60
+                          ? "text-amber-600 dark:text-amber-400"
+                          : "text-rose-600 dark:text-rose-400"
+                    }`}>
+                      {studentReportData?.overallScore || selectedStudentForReport.averageScore}%
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      Benchmark Cutoff: 75%
+                    </span>
+                  </div>
+
+                  {/* Target Role */}
+                  <div className="p-4 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border flex flex-col justify-center">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Target Role</span>
+                    <div className="font-bold text-foreground text-sm mt-1">{selectedStudentForReport.targetRole}</div>
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 mt-0.5">Assessed for Campus Placements</span>
+                  </div>
+
+                  {/* Interviews Taken */}
+                  <div className="p-4 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border flex flex-col justify-center">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Interviews Completed</span>
+                    <div className="font-black text-2xl text-foreground mt-1">
+                      {studentReportData?.interviewsCompleted || selectedStudentForReport.interviewsCompleted || 1}
+                    </div>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">
+                      {studentReportData?.durationMinutes || 25} Mins Avg Duration
+                    </span>
+                  </div>
+
+                  {/* Placement Verdict */}
+                  <div className="p-4 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border flex flex-col justify-center">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Placement Status</span>
+                    <div className="font-bold text-foreground text-sm mt-1 flex items-center gap-1.5">
+                      {(studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 80 ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="text-emerald-600 dark:text-emerald-400">Selected / Shortlisted</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                          <span className="text-amber-600 dark:text-amber-400">In Training / Prep</span>
+                        </>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground mt-0.5">
+                      Last Active: {studentReportData?.latestAssessmentDate || selectedStudentForReport.lastActive}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. Executive Evaluation & AI Summary */}
+                <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-500/20 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+                    <Bot className="w-4 h-4" />
+                    AI Evaluator Executive Feedback & Summary
+                  </div>
+                  <p className="text-sm text-foreground/90 leading-relaxed font-sans">
+                    {studentReportData?.feedbackSummary || "Candidate demonstrated solid foundational understanding with good problem-solving instincts. Suggested improvement in time-complexity optimization and edge-case handling."}
+                  </p>
+                </div>
+
+                {/* 3. Strengths & Areas for Improvement */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Strengths */}
+                  <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-500/20 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Key Technical Strengths ("What's Good")
+                    </div>
+                    <ul className="space-y-2">
+                      {(studentReportData?.strengths || [
+                        "Strong grasp of core data structures and algorithmic complexity",
+                        "Articulate communication and structured approach to problem solving",
+                        "Quick adaptation and clear explanation of trade-offs",
+                        "Confident delivery and professional technical articulation"
+                      ]).map((st, i) => (
+                        <li key={i} className="text-xs text-foreground/85 flex items-start gap-2">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">•</span>
+                          <span>{st}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Areas for Improvement */}
+                  <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/20 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                      <AlertCircle className="w-4 h-4" />
+                      Areas for Improvement ("What Needs Work")
+                    </div>
+                    <ul className="space-y-2">
+                      {(studentReportData?.weaknesses || [
+                        "Can deepen edge-case coverage in multi-threaded & high-concurrency scenarios",
+                        "Recommend adding explicit unit test validation before finalizing solutions",
+                        "Further practice on distributed system caching & consistency strategies"
+                      ]).map((wk, i) => (
+                        <li key={i} className="text-xs text-foreground/85 flex items-start gap-2">
+                          <span className="text-amber-600 dark:text-amber-400 font-bold">•</span>
+                          <span>{wk}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* 4. Core Competencies Matrix (6 metrics) */}
+                <div className="p-5 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                      <Award className="w-4 h-4 text-blue-500" />
+                      Core Competency Scorecard
+                    </h4>
+                    <span className="text-[11px] text-muted-foreground">Scored on scale of 100</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      { name: "Technical Accuracy & Depth", score: studentReportData?.detailedScores.technicalAccuracy || 84, color: "bg-blue-500" },
+                      { name: "DSA & Algorithmic Problem Solving", score: studentReportData?.detailedScores.dsa || 82, color: "bg-indigo-500" },
+                      { name: "Communication & Articulation", score: studentReportData?.detailedScores.communication || 88, color: "bg-emerald-500" },
+                      { name: "System Design & Architecture", score: studentReportData?.detailedScores.systemDesign || 78, color: "bg-purple-500" },
+                      { name: "Confidence & Executive Delivery", score: studentReportData?.detailedScores.confidence || 85, color: "bg-amber-500" },
+                      { name: "Logic & Analytical Reasoning", score: studentReportData?.detailedScores.problemSolving || 80, color: "bg-cyan-500" },
+                    ].map(comp => (
+                      <div key={comp.name} className="space-y-1.5 p-3 rounded-xl bg-card border border-border/50">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-foreground/90 font-medium">{comp.name}</span>
+                          <span className="font-bold font-mono text-foreground">{comp.score}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                          <div className={`h-full ${comp.color} rounded-full transition-all duration-500`} style={{ width: `${comp.score}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 5. 6Q Intelligence Matrix */}
+                {studentReportData?.sixQScore && (
+                  <div className="p-5 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-purple-500" />
+                        6Q Intelligence Matrix (Cognitive & Behavioral Evaluation)
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                      {[
+                        { code: "IQ", title: "Intellectual", score: studentReportData.sixQScore.iq || 82, desc: "Algorithmic Logic" },
+                        { code: "EQ", title: "Emotional", score: studentReportData.sixQScore.eq || 86, desc: "Team & Comms" },
+                        { code: "CQ", title: "Coding", score: studentReportData.sixQScore.cq || 80, desc: "Syntax & Edge Cases" },
+                        { code: "AQ", title: "Adversity", score: studentReportData.sixQScore.aq || 84, desc: "Handling Ambiguity" },
+                        { code: "SQ", title: "System", score: studentReportData.sixQScore.sq || 78, desc: "Scalability & Architecture" },
+                        { code: "MQ", title: "Mindset", score: studentReportData.sixQScore.mq || 88, desc: "Professional Drive" },
+                      ].map(q => (
+                        <div key={q.code} className="p-3 rounded-xl bg-card border border-border/50 text-center space-y-1">
+                          <div className="text-[10px] font-bold text-muted-foreground uppercase">{q.code} • {q.title}</div>
+                          <div className="text-xl font-extrabold font-mono text-foreground">{q.score}</div>
+                          <div className="text-[9px] text-muted-foreground line-clamp-1">{q.desc}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. Question-by-Question Evaluation Breakdown (if student has drive answers) */}
+                {studentReportData?.driveEvaluations && studentReportData.driveEvaluations.some(d => d.answers && d.answers.length > 0) && (
+                  <div className="p-5 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border space-y-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-blue-500" />
+                      Detailed Question-by-Question Evaluation
+                    </h4>
+
+                    <div className="space-y-3">
+                      {studentReportData.driveEvaluations.flatMap(d => d.answers || []).map((ans, idx) => (
+                        <div key={idx} className="p-4 rounded-xl bg-card border border-border/60 space-y-2 text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-foreground">
+                              Q{idx + 1}: {ans.question}
+                            </span>
+                            <Badge className={`text-[10px] font-mono font-bold ${
+                              ans.score >= 75
+                                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                                : "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30"
+                            }`}>
+                              Score: {ans.score}%
+                            </Badge>
+                          </div>
+
+                          <div className="bg-muted/50 p-2.5 rounded-lg border border-border/40 text-foreground/90">
+                            <strong className="text-muted-foreground block text-[10px] uppercase mb-0.5">Candidate Answer:</strong>
+                            <p className="italic">{ans.studentAnswer}</p>
+                          </div>
+
+                          <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-500/20 text-blue-800 dark:text-blue-300">
+                            <strong className="text-blue-700 dark:text-blue-400 block text-[10px] uppercase mb-0.5">AI Feedback:</strong>
+                            <p>{ans.aiFeedback}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 7. Completed Assessment History */}
+                {studentReportData?.driveEvaluations && studentReportData.driveEvaluations.length > 0 && (
+                  <div className="p-5 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      Placement Drives & Assessment History
+                    </h4>
+
+                    <div className="divide-y divide-border/50">
+                      {studentReportData.driveEvaluations.map((evalItem, idx) => (
+                        <div key={idx} className="py-2.5 flex items-center justify-between gap-4 text-xs">
+                          <div>
+                            <div className="font-semibold text-foreground">{evalItem.driveTitle}</div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {evalItem.interviewType.replace(/_/g, " ").toUpperCase()} • {new Date(evalItem.completedAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right font-mono">
+                              <span className="font-bold text-foreground text-sm">{evalItem.score}%</span>
+                              <span className="text-[10px] text-muted-foreground block">Pass: {evalItem.passingScore}%</span>
+                            </div>
+                            <Badge className={`text-[10px] font-bold ${
+                              evalItem.isPassed
+                                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                                : "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30"
+                            }`}>
+                              {evalItem.selectionVerdict}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       )}

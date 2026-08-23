@@ -227,7 +227,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
   }
 
   return (
-    <Card className="border border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl p-5 flex flex-col justify-between space-y-3.5">
+    <Card className="border border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-card backdrop-blur-xl text-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl p-5 flex flex-col justify-between space-y-3.5">
       {/* Overall Score Progression */}
       <div id="tour-overall-score" className="space-y-1.5 pt-0.5">
         <div className="flex items-center justify-between">
