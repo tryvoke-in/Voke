@@ -402,12 +402,11 @@ export const collegeService = {
     // Persist to Supabase for cross-device college discovery
     try {
       supabase.from('waitlist').upsert({
-        id: newCollege.id,
         email: newCollege.adminEmail,
         college_name: newCollege.name,
         phone_number: JSON.stringify(newCollege),
         status: 'college_registration'
-      }, { onConflict: 'email' }).then().catch(() => {});
+      }, { onConflict: 'email' }).then(({ error }) => { if (error) console.warn('College reg upsert error:', error); }).catch(e => console.warn('College reg upsert failed:', e));
     } catch (dbe) {}
 
     this.setCollegeSession(newCollege);
@@ -461,7 +460,7 @@ export const collegeService = {
         email: cleanEmail,
         college_name: collegeName,
         status: 'registered_student'
-      }, { onConflict: 'email' }).then().catch(() => {});
+      }, { onConflict: 'email' }).then(({ error }) => { if (error) console.warn('Student reg upsert error:', error); }).catch(e => console.warn('Student reg upsert failed:', e));
 
       // Broadcast update dynamically via Supabase Realtime channel
       const channel = getCollegeRealtimeChannel();
@@ -867,12 +866,11 @@ export const collegeService = {
       // Persist globally into Supabase for 100% cross-device availability
       try {
         supabase.from('waitlist').upsert({
-          id: `drv-${newDrive.id.replace(/[^a-z0-9]/gi, "-").substring(0, 36)}`,
           email: `${newDrive.id}@drives.voke.internal`,
           college_name: newDrive.collegeName,
           phone_number: JSON.stringify(newDrive),
           status: 'college_drive_record'
-        }, { onConflict: 'email' }).then().catch(() => {});
+        }, { onConflict: 'email' }).then(({ error }) => { if (error) console.warn('Drive upsert error:', error); }).catch(e => console.warn('Drive upsert failed:', e));
       } catch (dbe) {}
 
       // Broadcast reliably to all active tabs and browsers
@@ -1160,55 +1158,79 @@ export const collegeService = {
   async getStudentDrivesAsync(studentEmail: string): Promise<CollegeScheduledDrive[]> {
     if (!studentEmail) return [];
     const cleanEmail = studentEmail.toLowerCase().trim();
+    const emailDomain = cleanEmail.split("@")[1];
 
     // Ensure colleges from Supabase are loaded first (cross-device discovery)
     await ensureCollegesFromDb();
 
     const college = this.getCollegeByEmail(cleanEmail);
-    if (!college) {
-      // Even if no college matched, check ALL drives from Supabase in case the college was registered on another device
-      try {
-        const { data: dbDrives } = await supabase
-          .from('waitlist')
-          .select('*')
-          .eq('status', 'college_drive_record');
 
-        if (dbDrives && dbDrives.length > 0) {
-          const emailDomain = cleanEmail.split("@")[1];
-          const matchingDrives: CollegeScheduledDrive[] = [];
-          for (const row of dbDrives) {
-            if (!row.phone_number) continue;
-            try {
-              const drive: CollegeScheduledDrive = JSON.parse(row.phone_number);
-              if (!drive || !drive.id) continue;
-              // Check if this drive's college domains match student email
-              if (drive.targetAudience === "all" || 
-                  (drive.targetEmails && drive.targetEmails.some(e => e.toLowerCase() === cleanEmail))) {
-                const cand = drive.candidates?.find(c => c.studentEmail.toLowerCase() === cleanEmail);
-                if (cand && (cand.status === "Completed" || cand.selectionVerdict !== undefined || cand.score !== undefined)) {
-                  continue;
-                }
-                matchingDrives.push(drive);
-              }
-            } catch (pe) {}
-          }
-          return matchingDrives;
+    // Collect ALL drives from every source: Supabase DB + localStorage
+    const allDrivesMap = new Map<string, CollegeScheduledDrive>();
+
+    // 1. Fetch from Supabase (cross-device source of truth)
+    try {
+      const { data: dbDrives } = await supabase
+        .from('waitlist')
+        .select('*')
+        .eq('status', 'college_drive_record');
+
+      if (dbDrives && dbDrives.length > 0) {
+        for (const row of dbDrives) {
+          if (!row.phone_number) continue;
+          try {
+            const drive: CollegeScheduledDrive = JSON.parse(row.phone_number);
+            if (drive && drive.id) {
+              allDrivesMap.set(drive.id, drive);
+            }
+          } catch (pe) {}
         }
-      } catch (e) {}
-      return [];
-    }
+      }
+    } catch (e) {}
 
-    const allCollegeDrives = await this.getCollegeDrivesAsync(college.id);
-    return allCollegeDrives.filter(drive => {
-      // Check if student has already completed this drive
+    // 2. Merge from localStorage
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
+      const existing: CollegeScheduledDrive[] = stored ? JSON.parse(stored) : [];
+      existing.forEach(d => {
+        if (d && d.id && !allDrivesMap.has(d.id)) {
+          allDrivesMap.set(d.id, d);
+        }
+      });
+    } catch (e) {}
+
+    // 3. Filter: only drives that target this student
+    const matchingDrives: CollegeScheduledDrive[] = [];
+    for (const drive of allDrivesMap.values()) {
+      // Check if student already completed this drive
       const cand = drive.candidates?.find(c => c.studentEmail.toLowerCase() === cleanEmail);
       if (cand && (cand.status === "Completed" || cand.selectionVerdict !== undefined || cand.score !== undefined)) {
-        return false; // Once completed/given, hide from upcoming calendar
+        continue; // Skip completed drives
       }
-      if (drive.targetAudience === "all") return true;
-      if (drive.targetEmails && drive.targetEmails.some(e => e.toLowerCase() === cleanEmail)) return true;
-      return false;
-    });
+
+      // Match: student is explicitly in targetEmails
+      const inTargetEmails = drive.targetEmails && drive.targetEmails.some(e => e.toLowerCase() === cleanEmail);
+      
+      // Match: drive targets "all" AND student's domain matches the college that created the drive
+      let domainMatchesCollege = false;
+      if (drive.targetAudience === "all" && emailDomain) {
+        // Check if this drive's college has the same domain
+        const driveCollege = this.getCollegeById(drive.collegeId);
+        if (driveCollege && driveCollege.domains.some(d => d.toLowerCase() === emailDomain)) {
+          domainMatchesCollege = true;
+        }
+        // Also check if drive's targetEmails contain same-domain emails (partial match)
+        if (!domainMatchesCollege && drive.targetEmails) {
+          domainMatchesCollege = drive.targetEmails.some(e => e.toLowerCase().endsWith("@" + emailDomain));
+        }
+      }
+
+      if (inTargetEmails || domainMatchesCollege) {
+        matchingDrives.push(drive);
+      }
+    }
+
+    return matchingDrives;
   },
 
   // Analytics Computation on Real Students
