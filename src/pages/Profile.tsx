@@ -68,7 +68,7 @@ interface ResumeDataState {
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(location.state?.tab || "overview");
+  const [activeTab, setActiveTab] = useState(location.state?.tab === "overview" ? "analytics" : (location.state?.tab || "analytics"));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingResume, setSavingResume] = useState(false);
@@ -418,7 +418,8 @@ const Profile = () => {
 
   useEffect(() => {
     if (location.state?.tab) {
-      setActiveTab(location.state.tab);
+      const tab = location.state.tab;
+      setActiveTab(tab === "overview" ? "analytics" : tab);
     }
   }, [location.state]);
 
@@ -907,7 +908,7 @@ const Profile = () => {
                 className="relative group"
               >
                 <Card className="bg-card/50 backdrop-blur-xl border-border/50 overflow-hidden relative">
-                  <div className="h-32 bg-secondary/50 border-b border-border/40 relative overflow-hidden" />
+                  <div className="h-32 bg-gradient-to-b from-blue-600 to-white-600 border-border/40 relative overflow-hidden" />
                   <div className="px-6 pb-6 relative">
                     <div className="relative -mt-16 mb-4 flex justify-center lg:justify-start">
                       <div className="relative w-32 h-32 group/avatar">
@@ -1090,7 +1091,6 @@ const Profile = () => {
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="bg-card/50 border border-border/50 p-1 rounded-xl w-full flex overflow-x-auto">
                   {[
-                    { id: "overview", label: "Overview", icon: Activity },
                     { id: "analytics", label: "Analytics", icon: BarChart3 },
                     { id: "resume", label: "Resume", icon: FileText },
                     { id: "skills", label: "Skills", icon: Brain },
@@ -1108,8 +1108,13 @@ const Profile = () => {
                 </TabsList>
 
                 <AnimatePresence mode="wait">
-                  {/* OVERVIEW TAB */}
-                  <TabsContent value="overview" className="space-y-6 outline-none">
+                  {/* ANALYTICS TAB */}
+                  <TabsContent value="analytics" className="outline-none">
+                    <InterviewAnalytics userId={profile?.id || ""} />
+                  </TabsContent>
+
+                  {/* RESUME TAB */}
+                  <TabsContent value="resume" className="space-y-6 outline-none">
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
 
                       {/* RESUME PROFILE READINESS BANNER */}
@@ -1194,96 +1199,196 @@ const Profile = () => {
                         );
                       })()}
 
-                      {/* 1. PERSONAL & CONTACT DETAILS */}
-                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                      {/* RESUME DOCUMENT UPLOAD & VERIFICATION */}
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50 shadow-sm">
                         <CardHeader className="pb-4">
-                          <CardTitle className="text-base font-bold flex items-center gap-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                              <Upload className="w-4 h-4 text-blue-400" />
+                              Resume Document Upload & Verification
+                            </CardTitle>
+                            {profile?.resume_url && (
+                              <Badge variant="outline" className="border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/15 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs px-2.5 py-0.5 font-bold flex items-center gap-1.5 shadow-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
+                                Resume Verified
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="text-xs text-muted-foreground dark:text-zinc-300">
+                            Upload your latest resume (PDF, DOC, DOCX) to keep your profile updated and enable AI personalized interviews.
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="border-2 border-dashed border-border/60 dark:border-zinc-800 hover:border-blue-500/50 rounded-2xl p-6 transition-all bg-secondary/5 hover:bg-secondary/15 dark:bg-zinc-900/40 text-center relative group">
+                            <input
+                              type="file"
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                              accept=".pdf,.doc,.docx"
+                              onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+                            />
+                            <div className="mx-auto w-12 h-12 bg-secondary/30 dark:bg-zinc-800 border border-border/50 dark:border-zinc-700 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                              {resumeFile ? (
+                                <FileText className="w-6 h-6 text-blue-400" />
+                              ) : (
+                                <Upload className="w-6 h-6 text-muted-foreground dark:text-zinc-300" />
+                              )}
+                            </div>
+                            <h3 className="text-sm font-semibold text-foreground mb-1">
+                              {resumeFile ? resumeFile.name : "Drop your resume file here or click to browse"}
+                            </h3>
+                            <p className="text-muted-foreground dark:text-zinc-300 text-xs max-w-sm mx-auto">
+                              Supports PDF, DOC, DOCX (Max file size: 5MB)
+                            </p>
+                            {resumeFile && (
+                              <div className="mt-4 flex items-center justify-center gap-3 relative z-30">
+                                <Button
+                                  size="sm"
+                                  className="bg-blue-600 hover:bg-blue-500 text-white shadow-sm h-8 px-3.5 text-xs font-medium"
+                                  onClick={handleResumeUpload}
+                                  disabled={saving}
+                                >
+                                  {saving ? (
+                                    <>
+                                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                      Uploading...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Upload className="w-3.5 h-3.5 mr-1.5" />
+                                      Confirm Upload
+                                    </>
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setResumeFile(null);
+                                  }}
+                                  className="text-xs text-muted-foreground hover:text-foreground h-8"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+
+                          {profile?.resume_url && (
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-emerald-500/10 dark:bg-emerald-500/10 border border-emerald-600/30 dark:border-emerald-500/20 rounded-xl">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-emerald-500/20 rounded-lg">
+                                  <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div>
+                                  <div className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Resume Document Verified & Active</div>
+                                  <div className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">Linked to your AI interview assistant & profile</div>
+                                </div>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs border-emerald-600/30 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 h-8 gap-1.5 shrink-0"
+                                onClick={() => window.open(profile.resume_url, '_blank')}
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                View Uploaded Resume
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* 1. PERSONAL & CONTACT DETAILS */}
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50 dark:border-zinc-800">
+                        <CardHeader className="pb-4">
+                          <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
                             <User className="w-4 h-4 text-blue-400" />
                             1. Personal & Contact Information
                           </CardTitle>
-                          <CardDescription className="text-xs">
+                          <CardDescription className="text-xs text-muted-foreground dark:text-zinc-300">
                             Your full name, target role headline, and primary contact methods.
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                              <Label className="text-xs font-medium">Full Name *</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Full Name *</Label>
                               <Input
                                 placeholder="e.g. Alex Morgan"
                                 value={resumeData.fullName}
                                 onChange={(e) => setResumeData({ ...resumeData, fullName: e.target.value })}
-                                className="bg-background/50 border-input h-10 text-sm"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-10 text-sm"
                               />
                             </div>
 
                             <div className="space-y-1.5">
-                              <Label className="text-xs font-medium">Target Job Role / Headline *</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Target Job Role / Headline *</Label>
                               <Input
                                 placeholder="e.g. Full Stack Software Engineer"
                                 value={resumeData.targetRole}
                                 onChange={(e) => setResumeData({ ...resumeData, targetRole: e.target.value })}
-                                className="bg-background/50 border-input h-10 text-sm"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-10 text-sm"
                               />
                             </div>
 
                             <div className="space-y-1.5">
-                              <Label className="text-xs font-medium">Email Address *</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Email Address *</Label>
                               <Input
                                 placeholder="e.g. alex.morgan@example.com"
                                 value={resumeData.email}
                                 onChange={(e) => setResumeData({ ...resumeData, email: e.target.value })}
-                                className="bg-background/50 border-input h-10 text-sm"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-10 text-sm"
                               />
                             </div>
 
                             <div className="space-y-1.5">
-                              <Label className="text-xs font-medium">Phone Number</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Phone Number</Label>
                               <Input
                                 placeholder="e.g. +1 (555) 234-5678"
                                 value={resumeData.phone}
                                 onChange={(e) => setResumeData({ ...resumeData, phone: e.target.value })}
-                                className="bg-background/50 border-input h-10 text-sm"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-10 text-sm"
                               />
                             </div>
 
                             <div className="space-y-1.5">
-                              <Label className="text-xs font-medium">Location</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Location</Label>
                               <Input
                                 placeholder="e.g. San Francisco, CA / Remote"
                                 value={resumeData.location}
                                 onChange={(e) => setResumeData({ ...resumeData, location: e.target.value })}
-                                className="bg-background/50 border-input h-10 text-sm"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-10 text-sm"
                               />
                             </div>
 
                             <div className="space-y-1.5">
-                              <Label className="text-xs font-medium">LinkedIn Profile URL</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">LinkedIn Profile URL</Label>
                               <Input
                                 placeholder="e.g. https://linkedin.com/in/alexmorgan"
                                 value={resumeData.linkedin}
                                 onChange={(e) => setResumeData({ ...resumeData, linkedin: e.target.value })}
-                                className="bg-background/50 border-input h-10 text-sm"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-10 text-sm"
                               />
                             </div>
 
                             <div className="space-y-1.5">
-                              <Label className="text-xs font-medium">GitHub Profile URL</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">GitHub Profile URL</Label>
                               <Input
                                 placeholder="e.g. https://github.com/alexmorgan"
                                 value={resumeData.github}
                                 onChange={(e) => setResumeData({ ...resumeData, github: e.target.value })}
-                                className="bg-background/50 border-input h-10 text-sm"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-10 text-sm"
                               />
                             </div>
 
                             <div className="space-y-1.5">
-                              <Label className="text-xs font-medium">Personal Portfolio / Website</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Personal Portfolio / Website</Label>
                               <Input
                                 placeholder="e.g. https://alexmorgan.dev"
                                 value={resumeData.website}
                                 onChange={(e) => setResumeData({ ...resumeData, website: e.target.value })}
-                                className="bg-background/50 border-input h-10 text-sm"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-10 text-sm"
                               />
                             </div>
                           </div>
@@ -1291,42 +1396,42 @@ const Profile = () => {
                       </Card>
 
                       {/* 2. PROFESSIONAL SUMMARY */}
-                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50 dark:border-zinc-800">
                         <CardHeader className="pb-4">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                            <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
                               <BookOpen className="w-4 h-4 text-blue-400" />
                               2. Professional Summary
                             </CardTitle>
-                            <span className="text-xs text-muted-foreground font-mono">
+                            <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-secondary/50 dark:bg-zinc-800 text-muted-foreground dark:text-zinc-300 border border-border/50 dark:border-zinc-700">
                               {resumeData.summary?.length || 0} chars
                             </span>
                           </div>
-                          <CardDescription className="text-xs">
+                          <CardDescription className="text-xs text-muted-foreground dark:text-zinc-300">
                             A brief 2–4 sentence overview highlighting your background, core strengths, and career impact.
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-2">
+                        <CardContent className="space-y-2.5">
                           <Textarea
                             placeholder="e.g. Product-focused Software Engineer with 3+ years of experience in distributed systems and React architecture. Led the development of high-scale APIs supporting 100k+ daily requests, optimizing performance by 35%."
                             value={resumeData.summary}
                             onChange={(e) => setResumeData({ ...resumeData, summary: e.target.value })}
-                            className="bg-background/50 border-input min-h-[90px] text-sm leading-relaxed"
+                            className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 min-h-[95px] text-sm leading-relaxed focus:border-blue-500 transition-colors"
                           />
-                          <p className="text-[11px] text-muted-foreground">
-                            Tip: Include years of experience, primary technologies, and one notable accomplishment.
+                          <p className="text-xs text-muted-foreground dark:text-zinc-300 flex items-center gap-1.5">
+                            <span className="text-blue-500 dark:text-blue-400 font-semibold">Tip:</span> Include years of experience, primary technologies, and one notable accomplishment.
                           </p>
                         </CardContent>
                       </Card>
 
                       {/* 3. CORE SKILLS & TECH STACK */}
-                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50 dark:border-zinc-800">
                         <CardHeader className="pb-4">
-                          <CardTitle className="text-base font-bold flex items-center gap-2">
+                          <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
                             <Code className="w-4 h-4 text-blue-400" />
                             3. Core Skills & Technologies
                           </CardTitle>
-                          <CardDescription className="text-xs">
+                          <CardDescription className="text-xs text-muted-foreground dark:text-zinc-300">
                             List your technical and domain skills (comma-separated or click tags below to add).
                           </CardDescription>
                         </CardHeader>
@@ -1335,12 +1440,12 @@ const Profile = () => {
                             placeholder="e.g. JavaScript, TypeScript, React, Node.js, Python, PostgreSQL, Docker, AWS, System Design"
                             value={resumeData.skills}
                             onChange={(e) => setResumeData({ ...resumeData, skills: e.target.value })}
-                            className="bg-background/50 border-input h-10 text-sm"
+                            className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 h-10 text-sm focus:border-blue-500 transition-colors"
                           />
 
                           {/* Quick Suggested Tags */}
-                          <div className="space-y-1.5">
-                            <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          <div className="space-y-2">
+                            <div className="text-[11px] font-bold text-muted-foreground dark:text-zinc-300 uppercase tracking-wider">
                               Click to quick-add common skills:
                             </div>
                             <div className="flex flex-wrap gap-1.5">
@@ -1356,8 +1461,8 @@ const Profile = () => {
                                     onClick={() => isAdded ? handleRemoveSkillTag(skill) : handleAddSkillTag(skill)}
                                     className={`text-xs px-2.5 py-1 rounded-lg border transition-all ${
                                       isAdded
-                                        ? 'bg-blue-500/20 text-blue-300 border-blue-500/40 font-semibold'
-                                        : 'bg-secondary/20 hover:bg-secondary/40 text-muted-foreground border-border/50 hover:text-foreground'
+                                        ? 'bg-blue-600/20 dark:bg-blue-500/25 text-blue-600 dark:text-blue-300 border-blue-500/50 font-semibold shadow-2xs'
+                                        : 'bg-gray/40 dark:bg-zinc-800/80 hover:bg-gray/70 dark:hover:bg-zinc-700 text-foreground/80 dark:text-zinc-200 border-border/70 dark:border-zinc-700 hover:border-blue-500/50 hover:text-foreground font-medium shadow-2xs'
                                     }`}
                                   >
                                     {isAdded ? '✓ ' : '+ '}{skill}
@@ -1370,15 +1475,15 @@ const Profile = () => {
                       </Card>
 
                       {/* 4. WORK & INTERNSHIP EXPERIENCE */}
-                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50 dark:border-zinc-800">
                         <CardHeader className="pb-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <CardTitle className="text-base font-bold flex items-center gap-2">
+                              <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
                                 <Briefcase className="w-4 h-4 text-blue-400" />
                                 4. Work & Internship Experience
                               </CardTitle>
-                              <CardDescription className="text-xs">
+                              <CardDescription className="text-xs text-muted-foreground dark:text-zinc-300">
                                 Your past employment, internships, and professional roles.
                               </CardDescription>
                             </div>
@@ -1387,7 +1492,7 @@ const Profile = () => {
                               variant="outline"
                               size="sm"
                               onClick={handleAddExperience}
-                              className="h-8 text-xs rounded-xl gap-1 border-border/80"
+                              className="h-8 text-xs rounded-xl gap-1 border-border/80 dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-foreground"
                             >
                               <Plus className="w-3.5 h-3.5" /> Add Role
                             </Button>
@@ -1395,14 +1500,14 @@ const Profile = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           {resumeData.experience.length === 0 ? (
-                            <div className="text-center py-6 border border-dashed border-border/60 rounded-xl bg-secondary/10">
-                              <p className="text-xs text-muted-foreground mb-3">No work experience added yet.</p>
+                            <div className="text-center py-6 border border-dashed border-zinc/60 dark:-zinc-800 rounded-xl bg-zinc/10 dark:bg-zinc-900/30">
+                              <p className="text-xs text-muted-foreground dark:text-zinc-300 mb-3">No work experience added yet.</p>
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={handleAddExperience}
-                                className="h-8 text-xs rounded-xl gap-1"
+                                className="h-8 text-xs rounded-xl gap-1 border-border/80 dark:border-zinc-700 dark:bg-zinc-800 text-foreground"
                               >
                                 <Plus className="w-3.5 h-3.5" /> Add Experience
                               </Button>
@@ -1411,7 +1516,7 @@ const Profile = () => {
                             resumeData.experience.map((exp, index) => (
                               <div
                                 key={exp.id}
-                                className="p-4 rounded-xl border border-border/60 bg-secondary/15 space-y-3 relative group"
+                                className="p-4 rounded-xl border border-border/60 dark:border-zinc-800 dark:bg-zinc-900/50 space-y-3 relative group"
                               >
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs font-bold text-foreground flex items-center gap-2">
@@ -1425,7 +1530,7 @@ const Profile = () => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleRemoveExperience(exp.id)}
-                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                                    className="h-7 w-7 p-0 text-muted-foreground dark:text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </Button>
@@ -1433,41 +1538,41 @@ const Profile = () => {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                   <div className="space-y-1">
-                                    <Label className="text-[11px] text-muted-foreground">Job Title / Role *</Label>
+                                    <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Job Title / Role *</Label>
                                     <Input
                                       placeholder="e.g. Software Engineer"
                                       value={exp.role}
                                       onChange={(e) => handleUpdateExperience(exp.id, 'role', e.target.value)}
-                                      className="bg-background/50 border-input h-9 text-xs"
+                                      className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-9 text-xs"
                                     />
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-[11px] text-muted-foreground">Company Name *</Label>
+                                    <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Company Name *</Label>
                                     <Input
                                       placeholder="e.g. Google / Microsoft"
                                       value={exp.company}
                                       onChange={(e) => handleUpdateExperience(exp.id, 'company', e.target.value)}
-                                      className="bg-background/50 border-input h-9 text-xs"
+                                      className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-9 text-xs"
                                     />
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-[11px] text-muted-foreground">Duration / Dates</Label>
+                                    <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Duration / Dates</Label>
                                     <Input
                                       placeholder="e.g. Jun 2023 - Present"
                                       value={exp.duration}
                                       onChange={(e) => handleUpdateExperience(exp.id, 'duration', e.target.value)}
-                                      className="bg-background/50 border-input h-9 text-xs"
+                                      className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-9 text-xs"
                                     />
                                   </div>
                                 </div>
 
                                 <div className="space-y-1">
-                                  <Label className="text-[11px] text-muted-foreground">Key Achievements & Impact (Bullet Points)</Label>
+                                  <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Key Achievements & Impact (Bullet Points)</Label>
                                   <Textarea
                                     placeholder="• Designed and deployed scalable REST/GraphQL APIs serving 50k+ daily users&#10;• Reduced latency by 40% through Redis caching and query indexing&#10;• Collaborated with product designers to ship 4 major feature sets"
                                     value={exp.description}
                                     onChange={(e) => handleUpdateExperience(exp.id, 'description', e.target.value)}
-                                    className="bg-background/50 border-input min-h-[75px] text-xs leading-relaxed"
+                                    className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors min-h-[75px] text-xs leading-relaxed"
                                   />
                                 </div>
                               </div>
@@ -1477,15 +1582,15 @@ const Profile = () => {
                       </Card>
 
                       {/* 5. EDUCATION */}
-                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50 dark:border-zinc-800">
                         <CardHeader className="pb-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <CardTitle className="text-base font-bold flex items-center gap-2">
+                              <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
                                 <GraduationCap className="w-4 h-4 text-blue-400" />
                                 5. Education
                               </CardTitle>
-                              <CardDescription className="text-xs">
+                              <CardDescription className="text-xs text-muted-foreground dark:text-zinc-300">
                                 Degrees, universities, graduation years, and relevant coursework.
                               </CardDescription>
                             </div>
@@ -1494,7 +1599,7 @@ const Profile = () => {
                               variant="outline"
                               size="sm"
                               onClick={handleAddEducation}
-                              className="h-8 text-xs rounded-xl gap-1 border-border/80"
+                              className="h-8 text-xs rounded-xl gap-1 border-border/80 dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-foreground"
                             >
                               <Plus className="w-3.5 h-3.5" /> Add Degree
                             </Button>
@@ -1502,14 +1607,14 @@ const Profile = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           {resumeData.education.length === 0 ? (
-                            <div className="text-center py-6 border border-dashed border-border/60 rounded-xl bg-secondary/10">
-                              <p className="text-xs text-muted-foreground mb-3">No education details added yet.</p>
+                            <div className="text-center py-6 border border-dashed border-border/60 dark:border-zinc-800 rounded-xl bg-secondary/10 dark:bg-zinc-900/30">
+                              <p className="text-xs text-muted-foreground dark:text-zinc-300 mb-3">No education details added yet.</p>
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={handleAddEducation}
-                                className="h-8 text-xs rounded-xl gap-1"
+                                className="h-8 text-xs rounded-xl gap-1 border-border/80 dark:border-zinc-700 dark:bg-zinc-800 text-foreground"
                               >
                                 <Plus className="w-3.5 h-3.5" /> Add Education
                               </Button>
@@ -1518,7 +1623,7 @@ const Profile = () => {
                             resumeData.education.map((edu, index) => (
                               <div
                                 key={edu.id}
-                                className="p-4 rounded-xl border border-border/60 bg-secondary/15 space-y-3 relative group"
+                                className="p-4 rounded-xl border border-border/60 dark:border-zinc-800 dark:bg-zinc-900/50 space-y-3 relative group"
                               >
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs font-bold text-foreground flex items-center gap-2">
@@ -1532,7 +1637,7 @@ const Profile = () => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleRemoveEducation(edu.id)}
-                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                                    className="h-7 w-7 p-0 text-muted-foreground dark:text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </Button>
@@ -1540,41 +1645,41 @@ const Profile = () => {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                   <div className="space-y-1">
-                                    <Label className="text-[11px] text-muted-foreground">Degree / Major *</Label>
+                                    <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Degree / Major *</Label>
                                     <Input
                                       placeholder="e.g. B.Tech in Computer Science"
                                       value={edu.degree}
                                       onChange={(e) => handleUpdateEducation(edu.id, 'degree', e.target.value)}
-                                      className="bg-background/50 border-input h-9 text-xs"
+                                      className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-9 text-xs"
                                     />
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-[11px] text-muted-foreground">School / University *</Label>
+                                    <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">School / University *</Label>
                                     <Input
                                       placeholder="e.g. Stanford University"
                                       value={edu.school}
                                       onChange={(e) => handleUpdateEducation(edu.id, 'school', e.target.value)}
-                                      className="bg-background/50 border-input h-9 text-xs"
+                                      className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-9 text-xs"
                                     />
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-[11px] text-muted-foreground">Graduation Year</Label>
+                                    <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Graduation Year</Label>
                                     <Input
                                       placeholder="e.g. 2020 - 2024"
                                       value={edu.year}
                                       onChange={(e) => handleUpdateEducation(edu.id, 'year', e.target.value)}
-                                      className="bg-background/50 border-input h-9 text-xs"
+                                      className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-9 text-xs"
                                     />
                                   </div>
                                 </div>
 
                                 <div className="space-y-1">
-                                  <Label className="text-[11px] text-muted-foreground">GPA / Relevant Coursework</Label>
+                                  <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">GPA / Relevant Coursework</Label>
                                   <Input
                                     placeholder="e.g. GPA: 3.9/4.0 • Data Structures, Algorithms, Operating Systems, Computer Networks"
                                     value={edu.coursework || ''}
                                     onChange={(e) => handleUpdateEducation(edu.id, 'coursework', e.target.value)}
-                                    className="bg-background/50 border-input h-9 text-xs"
+                                    className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-9 text-xs"
                                   />
                                 </div>
                               </div>
@@ -1584,15 +1689,15 @@ const Profile = () => {
                       </Card>
 
                       {/* 6. FEATURED PROJECTS */}
-                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50">
+                      <Card className="bg-card/50 backdrop-blur-xl border border-border/50 dark:border-zinc-800">
                         <CardHeader className="pb-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <CardTitle className="text-base font-bold flex items-center gap-2">
+                              <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
                                 <Layers className="w-4 h-4 text-blue-400" />
                                 6. Featured Projects
                               </CardTitle>
-                              <CardDescription className="text-xs">
+                              <CardDescription className="text-xs text-muted-foreground dark:text-zinc-300">
                                 Key software and technical projects demonstrating your hands-on engineering skills.
                               </CardDescription>
                             </div>
@@ -1601,7 +1706,7 @@ const Profile = () => {
                               variant="outline"
                               size="sm"
                               onClick={handleAddProject}
-                              className="h-8 text-xs rounded-xl gap-1 border-border/80"
+                              className="h-8 text-xs rounded-xl gap-1 border-border/80 dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-foreground"
                             >
                               <Plus className="w-3.5 h-3.5" /> Add Project
                             </Button>
@@ -1609,14 +1714,14 @@ const Profile = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           {resumeData.projects.length === 0 ? (
-                            <div className="text-center py-6 border border-dashed border-border/60 rounded-xl bg-secondary/10">
-                              <p className="text-xs text-muted-foreground mb-3">No projects added yet.</p>
+                            <div className="text-center py-6 border border-dashed border-border/60 dark:border-zinc-800 rounded-xl bg-secondary/10 dark:bg-zinc-900/30">
+                              <p className="text-xs text-muted-foreground dark:text-zinc-300 mb-3">No projects added yet.</p>
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={handleAddProject}
-                                className="h-8 text-xs rounded-xl gap-1"
+                                className="h-8 text-xs rounded-xl gap-1 border-border/80 dark:border-zinc-700 dark:bg-zinc-800 text-foreground"
                               >
                                 <Plus className="w-3.5 h-3.5" /> Add Project
                               </Button>
@@ -1625,7 +1730,7 @@ const Profile = () => {
                             resumeData.projects.map((proj, index) => (
                               <div
                                 key={proj.id}
-                                className="p-4 rounded-xl border border-border/60 bg-secondary/15 space-y-3 relative group"
+                                className="p-4 rounded-xl border border-border/60 dark:border-zinc-800 dark:bg-zinc-900/50 space-y-3 relative group"
                               >
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs font-bold text-foreground flex items-center gap-2">
@@ -1639,7 +1744,7 @@ const Profile = () => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleRemoveProject(proj.id)}
-                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                                    className="h-7 w-7 p-0 text-muted-foreground dark:text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </Button>
@@ -1647,32 +1752,32 @@ const Profile = () => {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div className="space-y-1">
-                                    <Label className="text-[11px] text-muted-foreground">Project Name *</Label>
+                                    <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Project Name *</Label>
                                     <Input
                                       placeholder="e.g. AI Code Assistant"
                                       value={proj.name}
                                       onChange={(e) => handleUpdateProject(proj.id, 'name', e.target.value)}
-                                      className="bg-background/50 border-input h-9 text-xs"
+                                      className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-9 text-xs"
                                     />
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-[11px] text-muted-foreground">Live URL or GitHub Link</Label>
+                                    <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Live URL or GitHub Link</Label>
                                     <Input
                                       placeholder="e.g. https://github.com/username/project"
                                       value={proj.link}
                                       onChange={(e) => handleUpdateProject(proj.id, 'link', e.target.value)}
-                                      className="bg-background/50 border-input h-9 text-xs"
+                                      className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-9 text-xs"
                                     />
                                   </div>
                                 </div>
 
                                 <div className="space-y-1">
-                                  <Label className="text-[11px] text-muted-foreground">Tech Stack & Description</Label>
+                                  <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Tech Stack & Description</Label>
                                   <Textarea
                                     placeholder="e.g. Built with React, Next.js, Node.js, and Supabase. Implemented real-time synchronization, reducing state latency by 50% and supporting 1,000+ active users."
                                     value={proj.description}
                                     onChange={(e) => handleUpdateProject(proj.id, 'description', e.target.value)}
-                                    className="bg-background/50 border-input min-h-[65px] text-xs leading-relaxed"
+                                    className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors min-h-[65px] text-xs leading-relaxed"
                                   />
                                 </div>
                               </div>
@@ -1689,35 +1794,35 @@ const Profile = () => {
                   {/* SETTINGS TAB */}
                   <TabsContent value="settings" className="space-y-6 outline-none">
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                      <Card className="bg-card/50 backdrop-blur-xl border-border/50">
+                      <Card className="bg-card/50 backdrop-blur-xl border-border/50 dark:border-zinc-800">
                         <CardHeader>
-                          <CardTitle>Profile Details</CardTitle>
-                          <CardDescription>Manage your personal information and connections.</CardDescription>
+                          <CardTitle className="text-foreground">Profile Details</CardTitle>
+                          <CardDescription className="text-xs text-muted-foreground dark:text-zinc-300">Manage your personal information and connections.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                              <Label>Full Name</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Full Name</Label>
                               <Input
                                 value={formData.full_name}
                                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                className="bg-background/50 border-input focus:border-blue-500 transition-colors h-11"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-11"
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label>Email</Label>
-                              <Input value={profile?.email} disabled className="bg-background/30 border-input text-muted-foreground h-11" />
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Email</Label>
+                              <Input value={profile?.email} disabled className="bg-background/30 dark:bg-zinc-900/30 border-input dark:border-zinc-800 text-muted-foreground dark:text-zinc-400 h-11" />
                             </div>
                             <div className="space-y-2">
-                              <Label>GitHub Integration</Label>
-                              <div className="p-3.5 rounded-xl border border-border/50 bg-secondary/20 flex items-center justify-between">
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">GitHub Integration</Label>
+                              <div className="p-3.5 rounded-xl border border-green-400/50 dark:border-green-400/30 dark:bg-green-400/10 bg-green-400/10 dark:bg-zinc-900/50 flex items-center justify-between">
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                                     <Github className="w-4 h-4" />
                                   </div>
                                   <div>
                                     <div className="text-xs font-bold text-foreground">GitHub Account</div>
-                                    <div className="text-[11px] text-muted-foreground">
+                                    <div className="text-[11px] text-muted-foreground dark:text-zinc-300">
                                       {formData.github_url || profile?.github_url
                                         ? `@${(formData.github_url || profile?.github_url || '').replace(/\/$/, '').split('/').pop()} linked`
                                         : '1-Click Direct Connect'}
@@ -1726,10 +1831,10 @@ const Profile = () => {
                                 </div>
                                 {formData.github_url || profile?.github_url ? (
                                   <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 font-extrabold flex items-center gap-1.5 shadow-sm">
-                                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                    {/* <Badge variant="outline" className="border-emerald-600/30 dark:border-emerald-500/40 bg-emerald-500/15 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs px-2.5 py-1 font-extrabold flex items-center gap-1.5 shadow-xs">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
                                       Connected
-                                    </Badge>
+                                    </Badge> */}
                                     <button
                                       type="button"
                                       onClick={async () => {
@@ -1742,7 +1847,7 @@ const Profile = () => {
                                         });
                                         if (error) toast.error(error.message);
                                       }}
-                                      className="text-[11px] font-bold text-blue-400 hover:text-blue-300 underline cursor-pointer ml-1"
+                                      className="text-[11px] font-bold text-blue-800 dark:text-blue-300 dark:hover:text-blue-600 hover:text-blue-600 underline cursor-pointer ml-1"
                                     >
                                       Re-connect
                                     </button>
@@ -1768,24 +1873,24 @@ const Profile = () => {
                               </div>
                             </div>
                             <div className="space-y-2">
-                              <Label>LeetCode Username</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">LeetCode Username</Label>
                               <Input
                                 value={formData.leetcode_id}
                                 onChange={(e) => setFormData({ ...formData, leetcode_id: e.target.value })}
-                                className="bg-background/50 border-input focus:border-blue-500 transition-colors h-11"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-11"
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label>Codeforces Handle</Label>
+                              <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">Codeforces Handle</Label>
                               <Input
                                 value={formData.codeforces_id}
                                 onChange={(e) => setFormData({ ...formData, codeforces_id: e.target.value })}
-                                className="bg-background/50 border-input focus:border-blue-500 transition-colors h-11"
+                                className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground placeholder:text-muted-foreground/60 dark:placeholder:text-zinc-400 focus:border-blue-500 transition-colors h-11"
                               />
                             </div>
                           </div>
 
-                          <div className="pt-6 border-t border-border/50 flex flex-col sm:flex-row gap-4 justify-between items-center">
+                          <div className="pt-6 border-t border-border/50 dark:border-zinc-800 flex flex-col sm:flex-row gap-4 justify-between items-center">
                             <Button
                               variant="destructive"
                               onClick={handleDeleteAccount}
@@ -1798,7 +1903,7 @@ const Profile = () => {
                                 variant="outline"
                                 onClick={handleSyncStats}
                                 disabled={syncing}
-                                className="border-input bg-secondary/20 hover:bg-secondary/40 flex-1 sm:flex-none"
+                                className="border-input dark:border-zinc-700 bg-secondary/20 dark:bg-zinc-800/60 hover:bg-secondary/40 text-foreground flex-1 sm:flex-none"
                               >
                                 {syncing ? "Syncing..." : "Sync Stats"}
                               </Button>
@@ -1815,8 +1920,8 @@ const Profile = () => {
                       </Card>
 
                       {/* CONNECTED GITHUB REPOSITORIES GRID CARD */}
-                      <Card className="bg-card/50 backdrop-blur-xl border-border/50 shadow-xl overflow-hidden mt-6">
-                        <CardHeader className="border-b border-border/50 bg-secondary/10 pb-4">
+                      <Card className="bg-card/50 backdrop-blur-xl border-border/50 dark:border-zinc-800 shadow-xl overflow-hidden mt-6">
+                        <CardHeader className="border-b border-border/50 dark:border-zinc-800 dark:bg-zinc-900/30 pb-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold">
@@ -1826,19 +1931,19 @@ const Profile = () => {
                                 <CardTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
                                   Connected GitHub Repositories
                                 </CardTitle>
-                                <CardDescription className="text-xs text-muted-foreground">
+                                <CardDescription className="text-xs text-muted-foreground dark:text-zinc-300">
                                   All public repositories linked to your account for AI technical evaluation
                                 </CardDescription>
                               </div>
                             </div>
-                            <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-300 text-xs px-3 py-1 font-bold">
+                            <Badge variant="outline" className="border-blue-500/30 dark:text-blue-300 bg-white-500/20 text-blue-800 text-xs px-3 py-1 font-bold">
                               {userRepos.length} Repositories
                             </Badge>
                           </div>
                         </CardHeader>
                         <CardContent className="p-6">
                           {loadingRepos ? (
-                            <div className="py-8 text-center text-xs text-muted-foreground font-mono flex items-center justify-center gap-2">
+                            <div className="py-8 text-center text-xs text-muted-foreground dark:text-zinc-300 font-mono flex items-center justify-center gap-2">
                               <Loader2 className="w-4 h-4 text-primary animate-spin" />
                               Fetching public repositories from GitHub...
                             </div>
@@ -1850,30 +1955,30 @@ const Profile = () => {
                                 return (
                                   <div
                                     key={repo.name}
-                                    className="p-4 rounded-2xl border border-border/50 bg-secondary/20 hover:border-blue-500/40 hover:bg-secondary/40 transition-all flex flex-col justify-between group"
+                                    className="p-4 rounded-2xl border border-border/50 bg-[#f5f1e9] hover:bg-white/20 dark:border-zinc-800 dark:bg-zinc-900/50 hover:border-blue-500/40 transition-all flex flex-col justify-between group"
                                   >
                                     <div>
                                       <div className="flex items-start justify-between gap-2 mb-2">
-                                        <h4 className="text-xs font-bold text-foreground group-hover:text-blue-400 transition-colors tracking-wide truncate">
+                                        <h4 className="text-xs font-bold text-foreground transition-colors tracking-wide truncate">
                                           {repo.name}
                                         </h4>
-                                        <Badge variant="outline" className="text-[9px] font-mono border-blue-500/20 bg-blue-500/10 text-blue-300 px-1.5 py-0">
+                                        <Badge variant="outline" className="text-[9px] font-mono border-blue-500/20 dark:text-blue-300 text-blue-900 px-1.5 py-0">
                                           {repo.language || 'Code'}
                                         </Badge>
                                       </div>
-                                      <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                                      <p className="text-xs text-muted-foreground dark:text-zinc-300 line-clamp-2 leading-relaxed">
                                         {repo.description || 'GitHub repository project'}
                                       </p>
                                     </div>
-                                    <div className="pt-3 mt-3 border-t border-border/30 flex items-center justify-between text-[10px]">
-                                      <span className="text-emerald-400 font-bold flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Active Target
+                                    <div className="pt-3 mt-3 border-t border-border/30 dark:border-zinc-800 flex items-center justify-between text-[10px]">
+                                      <span className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" /> Active Target
                                       </span>
                                       <a
                                         href={repoUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"
+                                        className="text-blue-800 dark:text-blue-300 dark:hover:text-blue-600 hover:text-blue-600 font-bold flex items-center gap-1"
                                       >
                                         View on GitHub <ChevronRight className="w-3 h-3" />
                                       </a>
@@ -1883,7 +1988,7 @@ const Profile = () => {
                               })}
                             </div>
                           ) : (
-                            <div className="py-8 text-center text-xs text-muted-foreground">
+                            <div className="py-8 text-center text-xs text-muted-foreground dark:text-zinc-300">
                               No public repositories found for @{(formData.github_url || profile?.github_url || '').split('/').pop()}.
                             </div>
                           )}
@@ -1892,102 +1997,34 @@ const Profile = () => {
                     </motion.div>
                   </TabsContent>
 
-                  {/* RESUME TAB */}
-                  <TabsContent value="resume" className="space-y-6 outline-none">
-                    <Card className="bg-card/50 backdrop-blur-xl border-border/50">
-                      <CardHeader>
-                        <CardTitle>Resume Verification</CardTitle>
-                        <CardDescription>Upload your latest resume to keep your profile updated.</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="border-2 border-dashed border-border/50 rounded-2xl p-8 hover:border-blue-500/50 transition-colors bg-secondary/5 text-center relative group">
-                          <input
-                            type="file"
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                            accept=".pdf,.doc,.docx"
-                            onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-                          />
-                          <div className="mx-auto w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                            {resumeFile ? (
-                              <FileText className="w-8 h-8 text-blue-500" />
-                            ) : (
-                              <Upload className="w-8 h-8 text-muted-foreground" />
-                            )}
-                          </div>
-                          <h3 className="text-lg font-medium text-foreground mb-2">
-                            {resumeFile ? resumeFile.name : "Drop your resume here"}
-                          </h3>
-                          <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                            Supports PDF, DOC, DOCX. Max file size 5MB.
-                          </p>
-                          {resumeFile && (
-                            <Button
-                              className="mt-6 bg-blue-600 hover:bg-blue-500 text-white relative z-30"
-                              onClick={handleResumeUpload}
-                              disabled={saving}
-                            >
-                              {saving ? "Uploading..." : "Confirm Upload"}
-                            </Button>
-                          )}
-                        </div>
-
-                        {profile?.resume_url && (
-                          <div className="mt-6 flex items-center justify-between p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-green-500/20 rounded-lg">
-                                <Shield className="w-5 h-5 text-green-500" />
-                              </div>
-                              <div>
-                                <div className="font-medium text-green-500">Resume Verified</div>
-                                <div className="text-xs text-green-500/80">Last updated recently</div>
-                              </div>
-                            </div>
-                            <Button
-                              variant="link"
-                              className="text-green-500 hover:text-green-600"
-                              onClick={() => window.open(profile.resume_url, '_blank')}
-                            >
-                              View
-                            </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  {/* ANALYTICS TAB */}
-                  <TabsContent value="analytics" className="outline-none">
-                    <InterviewAnalytics userId={profile?.id || ""} />
-                  </TabsContent>
-
                   {/* SKILLS TAB */}
                   <TabsContent value="skills" className="outline-none">
-                    <Card className="bg-card/50 backdrop-blur-xl border-border/50">
+                    <Card className="bg-card/50 backdrop-blur-xl border-border/50 dark:border-zinc-800">
                       <CardHeader>
-                        <CardTitle>Skill Gap Analysis</CardTitle>
-                        <CardDescription>Areas for improvement based on your interview performance.</CardDescription>
+                        <CardTitle className="text-foreground">Skill Gap Analysis</CardTitle>
+                        <CardDescription className="text-xs text-muted-foreground dark:text-zinc-300">Areas for improvement based on your interview performance.</CardDescription>
                       </CardHeader>
                       <CardContent>
                         {skillGaps.length === 0 ? (
                           <div className="text-center py-12">
-                            <div className="inline-block p-4 rounded-full bg-secondary/20 mb-4">
-                              <Target className="w-8 h-8 text-muted-foreground" />
+                            <div className="inline-block p-4 rounded-full bg-secondary/20 dark:bg-zinc-800 mb-4">
+                              <Target className="w-8 h-8 text-muted-foreground dark:text-zinc-300" />
                             </div>
                             <h3 className="text-xl font-bold text-foreground mb-2">No Gaps Detected Yet</h3>
-                            <p className="text-muted-foreground">Complete more interviews to generate a skill analysis.</p>
+                            <p className="text-muted-foreground dark:text-zinc-300 text-sm">Complete more interviews to generate a skill analysis.</p>
                           </div>
                         ) : (
                           <div className="space-y-4">
                             {skillGaps.map((gap: any, i) => (
-                              <div key={i} className="p-4 rounded-xl bg-secondary/10 border border-border/50 hover:bg-secondary/20 transition-colors">
+                              <div key={i} className="p-4 rounded-xl bg-secondary/10 dark:bg-zinc-900/40 border border-border/50 dark:border-zinc-800 hover:bg-secondary/20 transition-colors">
                                 <div className="flex justify-between items-start mb-2">
                                   <h4 className="font-bold text-foreground text-lg">{gap.skill}</h4>
                                   <Badge variant={gap.importance === 'High' ? 'destructive' : 'default'}>{gap.importance}</Badge>
                                 </div>
-                                <p className="text-muted-foreground text-sm mb-4">{gap.learning_resource}</p>
+                                <p className="text-muted-foreground dark:text-zinc-300 text-sm mb-4">{gap.learning_resource}</p>
                                 <div className="flex items-center gap-3 text-sm">
                                   <Progress value={Math.random() * 60 + 20} className="h-1.5" />
-                                  <span className="text-muted-foreground font-mono">In Progress</span>
+                                  <span className="text-muted-foreground dark:text-zinc-300 font-mono">In Progress</span>
                                 </div>
                               </div>
                             ))}

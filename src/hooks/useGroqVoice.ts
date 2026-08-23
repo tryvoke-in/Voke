@@ -48,6 +48,7 @@ interface UseGroqVoiceReturn {
     apiLabel: string;
     isSilentMode: boolean;
     setIsSilentMode: (silent: boolean) => void;
+    submitCurrentSpeech: () => void;
 }
 
 interface UseGroqVoiceProps {

@@ -25,7 +25,7 @@ export const AudioVisualizerSimple: React.FC<AudioVisualizerSimpleProps> = ({ is
 
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-        const baseRadius = 60;
+        const baseRadius = 55;
 
         let phase = 0;
 
@@ -33,49 +33,60 @@ export const AudioVisualizerSimple: React.FC<AudioVisualizerSimpleProps> = ({ is
             ctx.clearRect(0, 0, rect.width, rect.height);
 
             // Determine color and activity level
-            let activeColor = '#64748b'; // Slate 500 (Idle)
+            let activeColor = '#6366f1'; // Indigo 500 (Idle vibrant)
+            let outerColor = '#818cf8';
             let radiusMultiplier = 1;
-            let pulseSpeed = 0.05;
+            let pulseSpeed = 0.04;
 
             if (isUserSpeaking) {
-                activeColor = '#3b82f6'; // Blue 500 (User)
-                radiusMultiplier = 1 + Math.min(volume, 1) * 0.5;
+                activeColor = '#2563eb'; // Blue 600 (User)
+                outerColor = '#60a5fa';
+                radiusMultiplier = 1 + Math.min(volume, 1) * 0.6;
                 pulseSpeed = 0.2;
             } else if (isAiSpeaking) {
-                activeColor = '#a855f7'; // Purple 500 (AI)
-                radiusMultiplier = 1.2 + Math.sin(phase) * 0.1; // Auto pulse for AI
+                activeColor = '#9333ea'; // Purple 600 (AI)
+                outerColor = '#c084fc';
+                radiusMultiplier = 1.25 + Math.sin(phase) * 0.15; // Auto pulse for AI
                 pulseSpeed = 0.15;
             }
 
             phase += pulseSpeed;
 
-            // Draw Main Orb
-            const gradient = ctx.createRadialGradient(centerX, centerY, baseRadius * 0.2, centerX, centerY, baseRadius * radiusMultiplier);
-            gradient.addColorStop(0, activeColor);
-            gradient.addColorStop(1, 'transparent');
-
+            // Ambient background glow circle
             ctx.beginPath();
-            ctx.arc(centerX, centerY, baseRadius * radiusMultiplier, 0, Math.PI * 2);
-            ctx.fillStyle = activeColor;
-            ctx.globalAlpha = 0.8;
+            ctx.arc(centerX, centerY, baseRadius * radiusMultiplier * 1.8, 0, Math.PI * 2);
+            ctx.fillStyle = outerColor;
+            ctx.globalAlpha = 0.12;
             ctx.fill();
 
-            // Outer Glow
+            // Outer Glow ring
             ctx.beginPath();
-            ctx.arc(centerX, centerY, baseRadius * radiusMultiplier * 1.5, 0, Math.PI * 2);
+            ctx.arc(centerX, centerY, baseRadius * radiusMultiplier * 1.35, 0, Math.PI * 2);
             ctx.fillStyle = activeColor;
-            ctx.globalAlpha = 0.2;
+            ctx.globalAlpha = 0.25;
             ctx.fill();
 
             // Ripples (if active)
             if (isUserSpeaking || isAiSpeaking) {
                 ctx.beginPath();
-                ctx.arc(centerX, centerY, baseRadius * radiusMultiplier * 2 + Math.sin(phase) * 10, 0, Math.PI * 2);
-                ctx.strokeStyle = activeColor;
-                ctx.lineWidth = 2;
-                ctx.globalAlpha = 0.1;
+                ctx.arc(centerX, centerY, baseRadius * radiusMultiplier * 2.1 + Math.sin(phase) * 12, 0, Math.PI * 2);
+                ctx.strokeStyle = outerColor;
+                ctx.lineWidth = 2.5;
+                ctx.globalAlpha = 0.35;
                 ctx.stroke();
             }
+
+            // Draw Main Gradient Orb
+            const gradient = ctx.createRadialGradient(centerX, centerY, baseRadius * 0.1, centerX, centerY, baseRadius * radiusMultiplier);
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.35, activeColor);
+            gradient.addColorStop(1, outerColor);
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, baseRadius * radiusMultiplier, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.globalAlpha = 0.95;
+            ctx.fill();
 
             animationRef.current = requestAnimationFrame(render);
         };
@@ -88,16 +99,11 @@ export const AudioVisualizerSimple: React.FC<AudioVisualizerSimpleProps> = ({ is
     }, [isUserSpeaking, isAiSpeaking, volume]);
 
     return (
-        <div className="w-full h-80 flex items-center justify-center relative">
+        <div className="w-full h-64 sm:h-72 flex items-center justify-center relative">
             <canvas
                 ref={canvasRef}
                 className="w-full h-full"
             />
-
-            {/* Status Label Overlay */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-sm font-medium tracking-wide text-slate-400 uppercase">
-                {isUserSpeaking ? 'Listening...' : isAiSpeaking ? 'Speaking...' : 'Ready'}
-            </div>
         </div>
     );
 };

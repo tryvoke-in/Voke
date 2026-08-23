@@ -486,17 +486,33 @@ CRITICAL INTERVIEW GUIDELINES:
     <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
 
       {/* Header / Nav */}
-      <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
-        <Button variant="ghost" className="text-white hover:text-white/80 hover:bg-white/10" onClick={() => navigate('/dashboard')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
+      <header className="sticky top-0 z-50 w-full px-4 sm:px-6 py-3 flex items-center justify-between backdrop-blur-xl bg-background/80 dark:bg-background/60 border-b border-border/60">
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-card hover:bg-secondary/60 text-foreground border-border/80 shadow-xs rounded-xl px-3.5 py-2 font-semibold text-xs sm:text-sm flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+          onClick={() => navigate('/dashboard')}
+        >
+          <ArrowLeft className="w-4 h-4 text-foreground" />
           Back to Dashboard
         </Button>
-      </div>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          
+
+          {status === LiveStatus.CONNECTED && (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-xs font-mono font-bold text-red-600 dark:text-red-400 shadow-xs">
+              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span>LIVE {formatTime(duration)}</span>
+            </div>
+          )}
+        </div>
+      </header>
 
       {/* Background Decoration */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl mix-blend-screen animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl mix-blend-screen animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-violet-500/10 dark:bg-violet-500/15 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-fuchsia-500/10 dark:bg-purple-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }}></div>
       </div>
 
       {/* MAIN CONTENT AREA */}
@@ -519,23 +535,22 @@ CRITICAL INTERVIEW GUIDELINES:
         ) : !isConfigured ? (
           // === PRE-INTERVIEW SETUP CONFIGURATION SCREEN ===
           <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-4xl mx-auto w-full my-10">
-            <div className="w-full bg-card/60 backdrop-blur-xl border border-border/80 rounded-3xl p-6 md:p-10 shadow-2xl space-y-8 animate-in fade-in zoom-in-95">
+            <div className="w-full bg-card dark:bg-card/60 backdrop-blur-xl border border-border/80 rounded-3xl p-6 md:p-10 shadow-2xl space-y-8 animate-in fade-in zoom-in-95">
 
               {/* Header */}
               <div className="text-center space-y-3">
-
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-400 via-purple-300 to-fuchsia-400 bg-clip-text text-transparent">
+                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 dark:from-violet-400 dark:via-purple-300 dark:to-fuchsia-400 bg-clip-text text-transparent">
                   Pro Interview
                 </h1>
-                <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
+                <p className="text-muted-foreground dark:text-zinc-300 text-sm max-w-lg mx-auto leading-relaxed">
                   Click below to start your AI-powered Pro Interview session.
                 </p>
               </div>
 
               {/* Action Submit Button */}
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/50">
-                <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <Video className="w-4 h-4 text-green-400" />
+                <div className="text-xs text-muted-foreground dark:text-zinc-300 flex items-center gap-2">
+                  <Video className="w-4 h-4 text-emerald-500" />
                   Webcam video and audio recording enabled.
                 </div>
                 <Button
@@ -554,23 +569,15 @@ CRITICAL INTERVIEW GUIDELINES:
           <>
             {interviewMode === 'voice' ? (
               // === VOICE & VIDEO MODE LAYOUT ===
-              <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-6xl mx-auto w-full">
-                <div className="w-full flex flex-col gap-6">
+              <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full">
+                <div className="w-full flex flex-col gap-5">
                   {/* Header Info */}
-                  <div className="text-center space-y-2">
-                    <div className="flex items-center justify-center gap-3">
-                      {status === LiveStatus.CONNECTED && (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground font-mono shadow-sm">
-                          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                          <span>REC {formatTime(duration)}</span>
-                        </div>
-                      )}
-                    </div>
-                    <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-400 via-purple-300 to-fuchsia-400 bg-clip-text text-transparent">
+                  <div className="text-center space-y-1.5">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 dark:from-violet-400 dark:via-purple-300 dark:to-fuchsia-400 bg-clip-text text-transparent">
                       Pro Interview
                     </h1>
-                    <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                      {customRole.trim() || targetRole} • {selectedDomain}
+                    <p className="text-foreground/90 dark:text-zinc-200 text-xs sm:text-sm font-semibold max-w-md mx-auto">
+                      {customRole.trim() || targetRole} • <span className="text-muted-foreground dark:text-zinc-400 font-normal">{selectedDomain}</span>
                     </p>
                   </div>
 
@@ -578,17 +585,17 @@ CRITICAL INTERVIEW GUIDELINES:
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl mx-auto">
 
                     {/* Card 1: AI Interviewer */}
-                    <div className="relative bg-card/60 border border-border/80 rounded-3xl overflow-hidden backdrop-blur-md shadow-2xl flex flex-col items-center justify-center min-h-[340px] p-6 border-violet-500/20 group hover:border-violet-500/40 transition-all duration-300">
-                      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs font-medium text-white">
-                        <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                    <div className="relative bg-card dark:bg-card/60 border-2 border-violet-500/30 dark:border-violet-500/30 rounded-3xl overflow-hidden backdrop-blur-xl shadow-xl dark:shadow-2xl flex flex-col items-center justify-center min-h-[360px] p-6 group hover:border-violet-500/60 transition-all duration-300">
+                      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-border/80 dark:border-zinc-700 text-xs font-bold text-foreground shadow-sm">
+                        
                         <span>AI Interviewer</span>
                       </div>
 
                       {status === LiveStatus.CONNECTING && (
                         <div className="absolute inset-0 flex items-center justify-center z-30 bg-background/80 backdrop-blur-sm">
                           <div className="flex flex-col items-center gap-3">
-                            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                            <span className="text-sm font-medium text-muted-foreground">Connecting AI agent...</span>
+                            <div className="w-9 h-9 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-xs sm:text-sm font-bold text-foreground">Connecting AI agent...</span>
                           </div>
                         </div>
                       )}
@@ -599,21 +606,33 @@ CRITICAL INTERVIEW GUIDELINES:
                         volume={volume}
                       />
 
-                      <div className="mt-4 text-xs text-muted-foreground font-medium flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${isAiSpeaking ? 'bg-green-400 animate-ping' : 'bg-muted'}`} />
-                        {isAiSpeaking ? "Interviewer Speaking..." : isUserSpeaking ? "Listening to you..." : "Ready"}
+                      <div className={`mt-3 text-xs font-bold px-3.5 py-1 rounded-full border flex items-center gap-2 transition-all ${
+                        isAiSpeaking
+                          ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/40 shadow-xs'
+                          : isUserSpeaking
+                          ? 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/40 shadow-xs'
+                          : 'bg-secondary/70 dark:bg-zinc-800/80 text-foreground/80 dark:text-zinc-200 border-border/70 dark:border-zinc-700'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full ${
+                          isAiSpeaking
+                            ? 'bg-purple-500 animate-ping'
+                            : isUserSpeaking
+                            ? 'bg-blue-500 animate-ping'
+                            : 'bg-emerald-500'
+                        }`} />
+                        {isAiSpeaking ? "AI Interviewer Speaking..." : isUserSpeaking ? "Listening to you..." : "Ready & Active"}
                       </div>
                     </div>
 
                     {/* Card 2: Candidate Video Feed (Webcam) */}
-                    <div className="relative bg-card/60 border border-border/80 rounded-3xl overflow-hidden backdrop-blur-md shadow-2xl flex flex-col items-center justify-center min-h-[340px] border-fuchsia-500/20 group hover:border-fuchsia-500/40 transition-all duration-300">
-                      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs font-medium text-white">
-                        <User className="w-3.5 h-3.5 text-fuchsia-400" />
+                    <div className="relative bg-card dark:bg-card/60 border-2 border-fuchsia-500/30 dark:border-fuchsia-500/30 rounded-3xl overflow-hidden backdrop-blur-xl shadow-xl dark:shadow-2xl flex flex-col items-center justify-center min-h-[360px] group hover:border-fuchsia-500/60 transition-all duration-300">
+                      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-border/80 dark:border-zinc-700 text-xs font-bold text-foreground shadow-sm">
+                        <User className="w-3.5 h-3.5 text-fuchsia-500 dark:text-fuchsia-400" />
                         <span>Candidate (You)</span>
                       </div>
 
                       {isConnected && (
-                        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-red-500/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider animate-pulse">
+                        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-red-600 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md animate-pulse">
                           REC
                         </div>
                       )}
@@ -624,100 +643,139 @@ CRITICAL INTERVIEW GUIDELINES:
                           autoPlay
                           playsInline
                           muted
-                          className="w-full h-full object-cover min-h-[340px] rounded-3xl transform -scale-x-100"
+                          className="w-full h-full object-cover min-h-[360px] rounded-3xl transform -scale-x-100"
                         />
                       ) : (
-                        <div className="flex flex-col items-center justify-center gap-3 p-8 text-center min-h-[340px]">
-                          <div className="w-16 h-16 rounded-full bg-muted/60 border border-border flex items-center justify-center text-muted-foreground">
-                            <VideoOff className="w-8 h-8" />
+                        <div className="flex flex-col items-center justify-center gap-3 p-8 text-center min-h-[360px]">
+                          <div className="w-16 h-16 rounded-2xl bg-secondary/80 dark:bg-zinc-800 border border-border/80 dark:border-zinc-700 flex items-center justify-center text-foreground">
+                            <VideoOff className="w-7 h-7 text-muted-foreground dark:text-zinc-400" />
                           </div>
-                          <p className="text-sm font-medium text-muted-foreground">
+                          <p className="text-xs sm:text-sm font-semibold text-foreground/80 dark:text-zinc-300">
                             Camera disabled or permission needed
                           </p>
-                          <Button size="sm" variant="outline" onClick={startCamera} className="text-xs rounded-xl gap-2">
-                            <Camera className="w-3.5 h-3.5" /> Enable Camera
+                          <Button size="sm" variant="outline" onClick={startCamera} className="text-xs rounded-xl gap-2 font-semibold border-border/80 bg-card hover:bg-secondary/60 text-foreground">
+                            <Camera className="w-3.5 h-3.5 text-blue-500" /> Enable Camera
                           </Button>
                         </div>
                       )}
 
                       {/* Video Controls Overlay */}
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-white/10">
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md p-1.5 px-2.5 rounded-full border border-border/80 dark:border-zinc-700 shadow-md">
                         <Button
                           size="icon"
                           variant="ghost"
                           onClick={toggleCamera}
-                          className="h-8 w-8 rounded-full text-white hover:bg-white/20"
+                          className="h-8 w-8 rounded-full text-foreground hover:bg-secondary/80 dark:hover:bg-zinc-800"
                           title={isCameraOn ? "Turn Camera Off" : "Turn Camera On"}
                         >
-                          {isCameraOn ? <Video className="w-4 h-4 text-green-400" /> : <VideoOff className="w-4 h-4 text-red-400" />}
+                          {isCameraOn ? <Video className="w-4 h-4 text-emerald-500" /> : <VideoOff className="w-4 h-4 text-red-500" />}
                         </Button>
                       </div>
                     </div>
                   </div>
 
                   {/* Controls */}
-                  <div className="flex items-center justify-center gap-6 my-2">
+                  <div className="flex flex-col items-center justify-center gap-3 my-2">
                     {!isConnected ? (
-                      <button
-                        onClick={handleStartConfiguredInterview}
-                        disabled={status === LiveStatus.CONNECTING || loadingContext}
-                        className="group relative flex items-center justify-center w-20 h-20 bg-primary hover:bg-primary/90 rounded-full shadow-lg hover:shadow-primary/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <div className="absolute inset-0 rounded-full border-2 border-white/20 group-hover:scale-110 transition-transform duration-300"></div>
-                        <Mic className="w-8 h-8 text-primary-foreground" />
-                      </button>
+                      <div className="flex flex-col items-center gap-2">
+                        <Button
+                          onClick={handleStartConfiguredInterview}
+                          disabled={status === LiveStatus.CONNECTING || loadingContext}
+                          size="lg"
+                          className="h-14 px-8 rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-bold text-sm shadow-xl shadow-purple-500/25 transition-all hover:scale-105 active:scale-95 flex items-center gap-2.5"
+                        >
+                          <Mic className="w-5 h-5 fill-white/20" />
+                          <span>Start Voice Interview Session</span>
+                        </Button>
+                        <span className="text-[11px] font-semibold text-muted-foreground dark:text-zinc-400">
+                          Click to connect with the AI Interviewer
+                        </span>
+                      </div>
                     ) : (
-                      <div className="flex items-center gap-6">
-                        <button
+                      <div className="p-2 px-4 rounded-2xl bg-card/90 dark:bg-card/60 backdrop-blur-xl border border-border/80 dark:border-zinc-800 shadow-xl flex items-center gap-3">
+                        <Button
+                          onClick={submitCurrentSpeech}
+                          variant="outline"
+                          size="sm"
+                          className="h-10 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-600 dark:text-violet-400 border-violet-500/30 font-semibold text-xs gap-1.5 transition-all"
+                          title="Submit answer immediately (or press Enter)"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Send Speech (Enter ↵)</span>
+                        </Button>
+
+                        <div className="h-6 w-[1px] bg-border/80" />
+
+                        <Button
                           onClick={disconnect}
-                          className="group relative flex items-center justify-center w-16 h-16 bg-muted hover:bg-muted/80 rounded-full shadow-lg transition-all duration-300 hover:scale-105 active:scale-95"
+                          variant="outline"
+                          size="sm"
+                          className="h-10 rounded-xl bg-secondary/80 dark:bg-zinc-800 hover:bg-secondary text-foreground border-border font-semibold text-xs gap-1.5 transition-all"
                           title="Cancel Interview"
                         >
-                          <X className="w-6 h-6 text-foreground" />
-                        </button>
+                          <X className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>Cancel</span>
+                        </Button>
 
-                        <button
+                        <Button
                           onClick={handleEndInterview}
-                          className="group relative flex items-center justify-center w-20 h-20 bg-destructive hover:bg-destructive/90 rounded-full shadow-lg hover:shadow-destructive/25 transition-all duration-300 hover:scale-105 active:scale-95"
+                          size="sm"
+                          className="h-10 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs gap-1.5 shadow-md shadow-red-500/25 transition-all hover:scale-105 active:scale-95"
                           title="Finish & Get Evaluation Scorecard"
                         >
-                          <MessageSquare className="w-8 h-8 text-destructive-foreground" />
-                        </button>
+                          <MessageSquare className="w-3.5 h-3.5 fill-white/20" />
+                          <span>Finish & Score</span>
+                        </Button>
                       </div>
                     )}
                   </div>
 
                   {/* Transcript Display */}
-                  <div className="w-full max-w-5xl mx-auto max-h-48 overflow-y-auto p-4 rounded-2xl bg-background/50 backdrop-blur border border-white/10 shadow-inner">
-                    <div className="space-y-3">
-                      {logs.map((log) => (
-                        <div
-                          key={log.id}
-                          className={`flex ${log.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div className={`
-                                                max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm
-                                                ${log.role === 'user'
-                              ? 'bg-primary text-primary-foreground rounded-br-sm'
-                              : 'bg-muted text-muted-foreground rounded-bl-sm'
-                            }
-                                            `}>
-                            {log.text.replace('[START_CODING]', '').replace('[END_CODING]', '').split('[DETAILED_FEEDBACK]')[0]}
-                          </div>
+                  <div className="w-full max-w-5xl mx-auto max-h-52 overflow-y-auto p-4 rounded-3xl bg-card/90 dark:bg-card/40 backdrop-blur-xl border border-border/80 dark:border-zinc-800 shadow-xl">
+                    <div className="text-[11px] font-bold text-muted-foreground dark:text-zinc-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-violet-500" /> Live Interview Transcript
+                      </span>
+                      <span className="text-[10px] font-normal lowercase">auto-scrolls with live dialogue</span>
+                    </div>
+                    <div className="space-y-2.5">
+                      {logs.length === 0 ? (
+                        <div className="py-6 text-center text-xs text-muted-foreground dark:text-zinc-400">
+                          Interview transcript will appear here in real-time as you and the AI speak.
                         </div>
-                      ))}
+                      ) : (
+                        logs.map((log) => (
+                          <div
+                            key={log.id}
+                            className={`flex ${log.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div className={`
+                              max-w-[82%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm shadow-xs font-medium leading-relaxed
+                              ${log.role === 'user'
+                                ? 'bg-violet-600 text-white rounded-br-xs'
+                                : 'bg-secondary/70 dark:bg-zinc-800/90 text-foreground dark:text-zinc-100 border border-border/60 dark:border-zinc-700 rounded-bl-xs'
+                              }
+                            `}>
+                              <span className="text-[10px] font-bold opacity-75 block mb-0.5">
+                                {log.role === 'user' ? 'You' : 'AI Interviewer'}
+                              </span>
+                              {log.text.replace('[START_CODING]', '').replace('[END_CODING]', '').split('[DETAILED_FEEDBACK]')[0]}
+                            </div>
+                          </div>
+                        ))
+                      )}
                       <div ref={messagesEndRef} />
                     </div>
                   </div>
 
                   {/* Feedback Display (Voice Mode) */}
                   {feedback && (
-                    <div className="mt-4 w-full max-w-5xl mx-auto bg-card/80 border border-green-500/30 rounded-xl p-4 animate-in slide-in-from-bottom-5">
-                      <h3 className="text-green-400 font-semibold mb-2 flex items-center gap-2">
+                    <div className="mt-4 w-full max-w-5xl mx-auto bg-card/90 dark:bg-card/60 border border-green-500/30 rounded-2xl p-4 shadow-xl animate-in slide-in-from-bottom-5">
+                      <h3 className="text-green-600 dark:text-green-400 font-bold mb-2 flex items-center gap-2 text-sm">
                         <FileText className="w-4 h-4" /> Feedback from Last Challenge
                       </h3>
-                      <ScrollArea className="h-32 rounded bg-black/20 p-2">
-                        <div className="prose prose-invert prose-sm">
+                      <ScrollArea className="h-32 rounded-xl bg-secondary/30 dark:bg-black/20 p-3">
+                        <div className="prose dark:prose-invert prose-sm text-foreground">
                           <ReactMarkdown>{feedback}</ReactMarkdown>
                         </div>
                       </ScrollArea>
