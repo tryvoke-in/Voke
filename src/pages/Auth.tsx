@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ADMIN_EMAIL, isAdminEmail } from "@/config/admin";
 import { useToast } from "@/components/ui/use-toast";
-import { Mail, Lock, User, ArrowRight, Sparkles, Github, Loader2, Eye, EyeOff, GraduationCap } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Sparkles, Github, Loader2, Eye, EyeOff, GraduationCap, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isDisposableEmail } from "@/utils/emailValidation";
 import { collegeService } from "@/services/collegeService";
@@ -589,6 +589,15 @@ const Auth = () => {
                   } 
                   className="space-y-5"
                 >
+                  {authMode === "signup" && (
+                    <div className="bg-violet-950/40 border border-violet-500/30 rounded-xl p-3 flex items-start gap-2.5">
+                      <GraduationCap className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                      <div className="text-xs text-gray-300">
+                        <span className="font-semibold text-violet-300">College / University Student?</span> Sign up with your official campus email (e.g. <code className="text-white font-mono bg-white/10 px-1 py-0.5 rounded text-[11px]">@nst.rishihood.edu.in</code>) to automatically link your institutional placement drives!
+                      </div>
+                    </div>
+                  )}
+
                   {authMode === "signup" && (
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-gray-300">Full Name</Label>
