@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { collegeService } from '@/services/collegeService';
 
 interface OnlineUser {
   user_id: string;
@@ -31,11 +32,23 @@ export const OnlinePresenceProvider = ({ children }: { children: React.ReactNode
       },
     });
 
+    const syncUser = (user: any) => {
+      if (user?.email && user.email.includes('@')) {
+        collegeService.recordStudentRegistrationAsync({
+          email: user.email,
+          fullName: user.user_metadata?.full_name || user.email.split('@')[0].replace(/[._]/g, ' ')
+        }).catch(() => {});
+      }
+    };
+
     const initPresence = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!active) return;
         const user = session?.user;
+        if (user) {
+          syncUser(user);
+        }
 
         channel
           .on('presence', { event: 'sync' }, () => {
@@ -73,8 +86,15 @@ export const OnlinePresenceProvider = ({ children }: { children: React.ReactNode
 
     initPresence();
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        syncUser(session.user);
+      }
+    });
+
     return () => {
       active = false;
+      subscription.unsubscribe();
       supabase.removeChannel(channel);
     };
   }, []);

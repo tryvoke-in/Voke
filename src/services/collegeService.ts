@@ -456,11 +456,18 @@ export const collegeService = {
       localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(updated));
 
       // Persist across devices/browsers via waitlist table
-      supabase.from('waitlist').upsert({
-        email: cleanEmail,
-        college_name: collegeName,
-        status: 'registered_student'
-      }, { onConflict: 'email' }).then(({ error }) => { if (error) console.warn('Student reg upsert error:', error); }).catch(e => console.warn('Student reg upsert failed:', e));
+      ensureCollegesFromDb().then(() => {
+        const resolvedCollege = this.getCollegeByEmail(cleanEmail);
+        const finalCollegeName = resolvedCollege?.name || collegeName;
+        supabase.from('waitlist').upsert({
+          email: cleanEmail,
+          college_name: finalCollegeName,
+          phone_number: JSON.stringify(newStudent),
+          status: 'registered_student'
+        }, { onConflict: 'email' }).then(({ error }) => {
+          if (error) console.warn('Student reg upsert error:', error);
+        }).catch(e => console.warn('Student reg upsert failed:', e));
+      });
 
       // Broadcast update dynamically via Supabase Realtime channel
       const channel = getCollegeRealtimeChannel();
@@ -474,6 +481,37 @@ export const collegeService = {
     }
 
     return newStudent;
+  },
+
+  async recordStudentRegistrationAsync(studentInfo: {
+    email: string;
+    fullName?: string;
+    targetRole?: string;
+    branch?: string;
+    batch?: string;
+    interviewsCompleted?: number;
+    averageScore?: number;
+  }): Promise<CollegeStudent | null> {
+    await ensureCollegesFromDb();
+    const student = this.recordStudentRegistration(studentInfo);
+    if (!student) return null;
+
+    const cleanEmail = student.email.toLowerCase().trim();
+    const resolvedCollege = this.getCollegeByEmail(cleanEmail);
+    const finalCollegeName = resolvedCollege?.name || student.collegeName;
+
+    try {
+      await supabase.from('waitlist').upsert({
+        email: cleanEmail,
+        college_name: finalCollegeName,
+        phone_number: JSON.stringify(student),
+        status: 'registered_student'
+      }, { onConflict: 'email' });
+    } catch (e) {
+      console.warn("recordStudentRegistrationAsync upsert failed:", e);
+    }
+
+    return student;
   },
 
   // Add student directly to college roster (from College Admin Dashboard)
@@ -505,6 +543,13 @@ export const collegeService = {
       const filtered = existing.filter(s => s.email.toLowerCase() !== cleanEmail);
       const updated = [newStudent, ...filtered];
       localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(updated));
+
+      supabase.from('waitlist').upsert({
+        email: cleanEmail,
+        college_name: college?.name || "Partner College",
+        phone_number: JSON.stringify(newStudent),
+        status: 'registered_student'
+      }, { onConflict: 'email' }).then().catch(() => {});
 
       const channel = getCollegeRealtimeChannel();
       channel.send({
@@ -556,13 +601,23 @@ export const collegeService = {
     try {
       const { data: waitlistRows } = await supabase
         .from('waitlist')
-        .select('*')
-        .eq('status', 'registered_student');
+        .select('*');
 
       if (waitlistRows && waitlistRows.length > 0) {
         for (const row of waitlistRows) {
           if (!row.email) continue;
+          // Skip college drive internal records and college registration records
+          if (row.status === 'college_drive_record' || row.status === 'college_registration') continue;
           const cleanEmail = row.email.toLowerCase().trim();
+          if (cleanEmail.includes('@drives.voke.internal')) continue;
+
+          let parsedStudent: Partial<CollegeStudent> | null = null;
+          if (row.phone_number) {
+            try {
+              parsedStudent = JSON.parse(row.phone_number);
+            } catch {}
+          }
+
           const emailDomain = cleanEmail.split("@")[1];
           const matchesDomain = emailDomain && college.domains.some(d => {
             const cd = d.toLowerCase().trim().replace(/^@/, "");
@@ -570,9 +625,10 @@ export const collegeService = {
           });
           const matchesCollege = row.college_name && (
             row.college_name.toLowerCase().includes(college.shortName.toLowerCase()) ||
-            college.name.toLowerCase().includes(row.college_name.toLowerCase())
+            college.name.toLowerCase().includes(row.college_name.toLowerCase()) ||
+            row.college_name.toLowerCase() === college.name.toLowerCase()
           );
-          const isNST = college.id === "college-nst" && (
+          const isNST = (college.id === "college-nst" || college.domains.some(d => d.includes("nst") || d.includes("rishihood"))) && (
             cleanEmail.includes("nst") || 
             cleanEmail.includes("rishihood") || 
             cleanEmail.includes("newton") || 
@@ -580,22 +636,22 @@ export const collegeService = {
           );
 
           if (matchesDomain || matchesCollege || isNST) {
-            const studentName = cleanEmail.split("@")[0].replace(/[._]/g, " ");
+            const studentName = parsedStudent?.fullName || cleanEmail.split("@")[0].replace(/[._]/g, " ");
             registeredList.push({
-              id: `std-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
+              id: parsedStudent?.id || `std-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
               collegeId: college.id,
               collegeName: college.name,
               fullName: studentName,
               email: cleanEmail,
-              branch: "Computer Science & AI",
-              batch: "2025",
-              targetRole: "Software Development Engineer (SDE-1)",
-              interviewsCompleted: 0,
-              averageScore: 0,
-              readinessStatus: "Needs Practice",
-              lastActive: "Enrolled",
-              registeredAt: row.created_at ? row.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
-              skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
+              branch: parsedStudent?.branch || "Computer Science & AI",
+              batch: parsedStudent?.batch || "2025",
+              targetRole: parsedStudent?.targetRole || "Software Development Engineer (SDE-1)",
+              interviewsCompleted: parsedStudent?.interviewsCompleted ?? 0,
+              averageScore: parsedStudent?.averageScore ?? 0,
+              readinessStatus: parsedStudent?.readinessStatus || ((parsedStudent?.averageScore ?? 0) >= 80 ? "Placement Ready" : "Needs Practice"),
+              lastActive: parsedStudent?.lastActive || "Enrolled",
+              registeredAt: parsedStudent?.registeredAt || (row.created_at ? row.created_at.split("T")[0] : new Date().toISOString().split("T")[0]),
+              skills: parsedStudent?.skills || { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
             });
           }
         }
