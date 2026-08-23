@@ -115,6 +115,7 @@ export default function InterviewSession() {
   const [input, setInput] = useState("");
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userContext, setUserContext] = useState("");
   const [pastSessions, setPastSessions] = useState<any[]>([]);
@@ -152,6 +153,27 @@ export default function InterviewSession() {
         setUserId(user.id);
         setLoading(false);
         setSending(true);
+
+        // Fetch current session if ID is not a mock ID to recover configuration on reload
+        if (id && !id.startsWith("mock-session-")) {
+          try {
+            const { data: currentS, error: currentSErr } = await supabase
+              .from("interview_sessions")
+              .select("*")
+              .eq("id", id)
+              .single();
+            if (currentS && !currentSErr) {
+              setConfig({
+                topic: currentS.interview_type || "General",
+                difficulty: "Intermediate",
+                mode: "text",
+                role: currentS.role || "Software Engineer"
+              });
+            }
+          } catch (err) {
+            console.error("Error loading current session metadata:", err);
+          }
+        }
 
         // Load profile context and fetch past sessions in parallel
         let currentContext = "";
@@ -773,19 +795,72 @@ Tell me about a time you had to learn something quickly in order to deliver on a
             <Button
               variant="outline"
               onClick={() => navigate("/dashboard")}
+              disabled={isCompleting}
               className="border-border/50 bg-secondary/20 text-foreground hover:bg-secondary/40 rounded-xl text-xs h-10 flex-1 order-2 sm:order-1"
             >
               Back to Dashboard
             </Button>
             <Button
-              onClick={() => {
-                toast.success("Interview completed! Generating scorecard...");
-                setShowResults(false);
-                navigate("/dashboard");
+              onClick={async () => {
+                setIsCompleting(true);
+                const toastId = "eval-toast-" + Date.now();
+                try {
+                  toast.loading("Evaluating interview and generating scorecard...", { id: toastId });
+                  
+                  // Call evaluate-interview Edge Function
+                  const { data: evaluation, error: aiError } = await supabase.functions.invoke('evaluate-interview', {
+                    body: {
+                      messages: messages,
+                      interview_type: config.topic || "General"
+                    }
+                  });
+
+                  if (aiError) throw aiError;
+
+                  const finalScore = evaluation?.score || 0;
+
+                  // Update session in database if it is not a mock ID
+                  if (id && !id.startsWith("mock-session-")) {
+                    const { error: updateErr } = await supabase
+                      .from("interview_sessions")
+                      .update({
+                        status: 'completed',
+                        overall_score: finalScore,
+                        total_duration_seconds: elapsedTime,
+                        feedback_summary: evaluation?.feedback || null,
+                        whats_good: evaluation?.strengths || null,
+                        whats_wrong: evaluation?.weaknesses || null,
+                        completed_at: new Date().toISOString()
+                      })
+                      .eq("id", id);
+
+                    if (updateErr) throw updateErr;
+                  }
+
+                  toast.success("Scorecard generated successfully!", { id: toastId });
+                  setShowResults(false);
+                  navigate(`/interview/results/${id}`, { state: { score: finalScore, evaluation } });
+                } catch (err: any) {
+                  console.error("Error completing session:", err);
+                  toast.error(`Failed to generate scorecard: ${err.message || err}`, { id: toastId });
+                  // Fallback
+                  setShowResults(false);
+                  navigate("/dashboard");
+                } finally {
+                  setIsCompleting(false);
+                }
               }}
-              className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold h-10 flex-1 order-1 sm:order-2 shadow-sm"
+              disabled={isCompleting}
+              className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold h-10 flex-1 order-1 sm:order-2 shadow-sm flex items-center justify-center gap-1.5"
             >
-              Confirm and Exit
+              {isCompleting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Confirm and Exit"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

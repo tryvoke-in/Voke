@@ -69,10 +69,10 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ questi
         if (user) {
           const { data: solvedQuestions } = await supabase
             .from("solved_questions" as any)
-            .select("solved_at, created_at")
+            .select("solved_at")
             .eq("user_id", user.id);
 
-          const dates = (solvedQuestions || []).map((sq: any) => sq.solved_at || sq.created_at);
+          const dates = (solvedQuestions || []).map((sq: any) => sq.solved_at);
           setInternalStreak(calculateStreak(dates));
         }
       } catch {

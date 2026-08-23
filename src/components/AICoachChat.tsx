@@ -44,7 +44,7 @@ const AICoachChat = ({ userId }: AICoachChatProps) => {
                 .eq("user_id", userId)
                 .order("updated_at", { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             if (data?.messages) {
                 setMessages(data.messages);

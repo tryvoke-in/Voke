@@ -66,6 +66,19 @@ interface ResumeDataState {
   projects: ProjectItem[];
 }
 
+const formatInterviewType = (type: string) => {
+  if (!type) return "Mock";
+  const t = type.toLowerCase().trim();
+  if (t === 'pro_interview') return "Voice";
+  if (t === 'elite_interview') return "Elite";
+  if (t === 'general') return "Technical";
+  return type
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -592,14 +605,30 @@ const Profile = () => {
 
   const loadRecentActivity = async (userId: string) => {
     try {
-      const { data: sessions } = await supabase
-        .from("interview_sessions")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(5);
+      const [textRes, videoRes] = await Promise.all([
+        supabase
+          .from("interview_sessions")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("video_interview_sessions")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(5)
+      ]);
 
-      setRecentActivity(sessions || []);
+      const textSessions = textRes.data || [];
+      const videoSessions = videoRes.data || [];
+
+      const combined = [
+        ...textSessions.map(s => ({ ...s, type: 'Text' })),
+        ...videoSessions.map(s => ({ ...s, type: 'Video', total_duration_seconds: s.duration_seconds }))
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setRecentActivity(combined.slice(0, 5));
     } catch (error) {
       console.error("Error loading recent activity:", error);
     }
@@ -611,7 +640,7 @@ const Profile = () => {
         .from("user_career_recommendations")
         .select("skill_gaps")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (recommendations?.skill_gaps) {
         setSkillGaps(recommendations.skill_gaps as any[] || []);
@@ -1127,8 +1156,80 @@ const Profile = () => {
 
                 <AnimatePresence mode="wait">
                   {/* ANALYTICS TAB */}
-                  <TabsContent value="analytics" className="outline-none">
+                  <TabsContent value="analytics" className="space-y-6 outline-none">
                     <InterviewAnalytics userId={profile?.id || ""} />
+                    
+                    {/* Recent Activity Card */}
+                    <Card className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm">
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
+                          <Activity className="w-5 h-5 text-blue-500" />
+                          Recent Activity
+                        </CardTitle>
+                        <CardDescription className="text-xs text-muted-foreground">
+                          Your most recent practice sessions and mock interviews.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {recentActivity.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground text-sm">
+                            No recent activity found.
+                          </div>
+                        ) : (
+                          recentActivity.map((activity) => {
+                            const isCompleted = activity.status === 'completed';
+                            const title = formatInterviewType(activity.interview_type || activity.type || 'Mock');
+                            
+                            return (
+                              <div 
+                                key={activity.id} 
+                                className="flex items-center justify-between p-4 rounded-xl bg-secondary/10 hover:bg-secondary/20 transition-colors border border-border/40"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className={`p-2.5 rounded-xl ${isCompleted ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
+                                    <Target className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-sm text-foreground">{title} Interview</h4>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                      {new Date(activity.created_at || activity.date).toLocaleDateString()} • {activity.total_duration_seconds ? Math.max(1, Math.round(activity.total_duration_seconds / 60)) + ' mins' : (isCompleted ? 'Completed' : 'Incomplete')}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Badge 
+                                    className={`text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider ${isCompleted ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30' : 'bg-amber-500/10 text-amber-600 border border-amber-500/30'}`}
+                                    variant="outline"
+                                  >
+                                    {activity.status === 'recording' ? 'in_progress' : activity.status}
+                                  </Badge>
+                                  
+                                  {isCompleted && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        const type = (activity.interview_type || '').toLowerCase();
+                                        if (type === 'timed_video' || activity.type === 'Video') {
+                                          navigate(`/timed-interview/results/${activity.id}`);
+                                        } else if (type === 'peer' || activity.type === 'Peer') {
+                                          navigate(`/peer-interviews/rate/${activity.id}`);
+                                        } else {
+                                          navigate(`/interview/results/${activity.id}`);
+                                        }
+                                      }}
+                                      className="h-8 text-xs text-blue-500 hover:text-blue-600 hover:bg-blue-500/10 rounded-lg font-semibold cursor-pointer"
+                                    >
+                                      View Results
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </CardContent>
+                    </Card>
                   </TabsContent>
 
                   {/* RESUME TAB */}

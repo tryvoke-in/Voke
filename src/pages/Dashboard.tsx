@@ -91,44 +91,50 @@ const Dashboard = () => {
   }, [isPremium, creditsElite, creditsVoice, creditsVideo]);
 
   useEffect(() => {
+    let active = true;
+    let channel: any = null;
+
     // Safety fallback to release loading screen after 1.5 seconds if query or auth hangs
     const timer = setTimeout(() => {
-      setLoading(false);
+      if (active) setLoading(false);
     }, 1500);
 
-    checkAuth();
-    loadData();
-    setupNotifications();
+    const initDashboard = async () => {
+      await checkAuth();
+      await loadData();
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user || !active) return;
 
-    return () => clearTimeout(timer);
-  }, []);
+      fetchNotifications(user.id);
 
-  const setupNotifications = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user) return;
-
-    fetchNotifications(user.id);
-
-    // Subscribe to realtime notifications
-    const channel = supabase
-      .channel('dashboard_notifications')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications' },
-        (payload: any) => {
-          if (payload.new.user_id === user.id) {
-            fetchNotifications(user.id);
-            toast.info("New notification: " + payload.new.title);
+      // Subscribe to realtime notifications
+      channel = supabase
+        .channel('dashboard_notifications')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'notifications' },
+          (payload: any) => {
+            if (payload.new.user_id === user.id && active) {
+              fetchNotifications(user.id);
+              toast.info("New notification: " + payload.new.title);
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    };
+
+    initDashboard();
 
     return () => {
-      supabase.removeChannel(channel);
+      active = false;
+      clearTimeout(timer);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
-  };
+  }, []);
 
   const fetchNotifications = async (userId: string) => {
     const { data } = await supabase
@@ -268,7 +274,7 @@ const Dashboard = () => {
         .from("solved_questions" as any)
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("solved_at", { ascending: false });
 
       // 6. Fetch Community Pulse Posts
       const { data: postsData } = await supabase

@@ -84,14 +84,23 @@ export default function AdaptiveInterview() {
     const sessionConfig = presetConfig || config;
 
     try {
-      // In a real app, we would create a session in Supabase here
-      // const { data, error } = await supabase.from('interview_sessions').insert({...}).select();
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
-      // For now, we'll generate a random ID or use a mock ID
-      const mockSessionId = "mock-session-" + Date.now();
+      const { data, error } = await supabase
+        .from('interview_sessions')
+        .insert({
+          user_id: user.id,
+          interview_type: sessionConfig.focus || 'technical',
+          status: 'in_progress',
+          role: sessionConfig.role || 'Software Engineer',
+          interview_mode: 'text',
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
       
       toast({
         title: "Session Created",
@@ -99,9 +108,7 @@ export default function AdaptiveInterview() {
       });
 
       // Navigate to the active session page
-      // We pass the config via state or URL params in a real app, 
-      // but here we'll just navigate to the ID.
-      navigate(`/interview/${mockSessionId}`, { state: { config: sessionConfig } });
+      navigate(`/interview/${data.id}`, { state: { config: sessionConfig } });
 
     } catch (error) {
       console.error("Error starting session:", error);

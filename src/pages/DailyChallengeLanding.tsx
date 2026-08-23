@@ -93,10 +93,10 @@ const DailyChallengeLanding = () => {
       // Fetch solved questions specifically for daily challenge question streak
       const { data: solvedQuestions } = await supabase
         .from("solved_questions" as any)
-        .select("solved_at, created_at")
+        .select("solved_at")
         .eq("user_id", user.id);
 
-      const questionDates = (solvedQuestions || []).map((sq: any) => sq.solved_at || sq.created_at);
+      const questionDates = (solvedQuestions || []).map((sq: any) => sq.solved_at);
       setStreak(calculateStreak(questionDates));
     } catch (error) {
       console.error("Error fetching user data", error);
