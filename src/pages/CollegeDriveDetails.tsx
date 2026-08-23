@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { collegeService } from "@/services/collegeService";
-import { CollegeScheduledDrive, CandidateProgress } from "@/types/college";
+import { CollegeScheduledDrive, ScheduledDriveCandidate as CandidateProgress } from "@/services/collegeService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
