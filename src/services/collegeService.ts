@@ -403,6 +403,13 @@ export const collegeService = {
       const updated = [newStudent, ...filtered];
       localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(updated));
 
+      // Persist across devices/browsers via waitlist table
+      supabase.from('waitlist').upsert({
+        email: cleanEmail,
+        college_name: collegeName,
+        status: 'registered_student'
+      }, { onConflict: 'email' }).then().catch(() => {});
+
       // Broadcast update dynamically via Supabase Realtime channel
       const channel = getCollegeRealtimeChannel();
       channel.send({
@@ -491,7 +498,58 @@ export const collegeService = {
       console.warn("Failed to load registered students from storage:", e);
     }
 
-    // 2. Query Supabase database profiles & public profiles dynamically
+    // 2. Query Supabase database waitlist (publicly readable cross-device student registry)
+    try {
+      const { data: waitlistRows } = await supabase
+        .from('waitlist')
+        .select('*');
+
+      if (waitlistRows && waitlistRows.length > 0) {
+        for (const row of waitlistRows) {
+          if (!row.email) continue;
+          const cleanEmail = row.email.toLowerCase().trim();
+          const emailDomain = cleanEmail.split("@")[1];
+          const matchesDomain = emailDomain && college.domains.some(d => {
+            const cd = d.toLowerCase().trim().replace(/^@/, "");
+            return emailDomain === cd || emailDomain.endsWith("." + cd) || cd.endsWith("." + emailDomain);
+          });
+          const matchesCollege = row.college_name && (
+            row.college_name.toLowerCase().includes(college.shortName.toLowerCase()) ||
+            college.name.toLowerCase().includes(row.college_name.toLowerCase())
+          );
+          const isNST = college.id === "college-nst" && (
+            cleanEmail.includes("nst") || 
+            cleanEmail.includes("rishihood") || 
+            cleanEmail.includes("newton") || 
+            matchesDomain
+          );
+
+          if (matchesDomain || matchesCollege || isNST) {
+            const studentName = cleanEmail.split("@")[0].replace(/[._]/g, " ");
+            registeredList.push({
+              id: `std-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
+              collegeId: college.id,
+              collegeName: college.name,
+              fullName: studentName,
+              email: cleanEmail,
+              branch: "Computer Science & AI",
+              batch: "2025",
+              targetRole: "Software Development Engineer (SDE-1)",
+              interviewsCompleted: 0,
+              averageScore: 0,
+              readinessStatus: "Needs Practice",
+              lastActive: "Enrolled",
+              registeredAt: row.created_at ? row.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
+              skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Error querying waitlist for students:", e);
+    }
+
+    // 3. Query Supabase database profiles & public profiles dynamically
     try {
       const { data: dbProfiles } = await supabase
         .from('profiles')
@@ -541,7 +599,7 @@ export const collegeService = {
       console.warn("Error querying database profiles:", e);
     }
 
-    // 3. Include all candidates from college drives (so anyone invited or evaluated is in the directory)
+    // 4. Include all candidates from college drives (so anyone invited or evaluated is in the directory)
     try {
       const allDrives = await this.getCollegeDrivesAsync(college.id);
       for (const drive of allDrives) {
