@@ -288,14 +288,14 @@ const CollegeAuth = () => {
                       Official Student Email Domain(s)
                     </Label>
                     <Input
-                      placeholder="e.g. nst.edu.in, university.ac.in (comma separated)"
+                      placeholder="nst.rishihood.edu.in, university.ac.in (no @ needed)"
                       value={regDomain}
                       onChange={e => setRegDomain(e.target.value)}
                       className="bg-white/5 border-white/10 text-white text-sm"
                       required
                     />
                     <p className="text-[11px] text-gray-500">
-                      Students registering with these domains will automatically appear in your roster.
+                      Enter without the <code className="text-violet-400 font-mono">@</code> symbol. Students registering with these domains will automatically appear in your roster.
                     </p>
                   </div>
 

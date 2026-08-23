@@ -218,6 +218,42 @@ export const getCollegeRealtimeChannel = () => {
   return sharedRosterChannel;
 };
 
+// Fetch college registrations from Supabase and merge into localStorage
+let _collegesLoadedFromDb = false;
+async function ensureCollegesFromDb(): Promise<void> {
+  if (_collegesLoadedFromDb) return;
+  _collegesLoadedFromDb = true;
+  try {
+    const { data: dbColleges } = await supabase
+      .from('waitlist')
+      .select('*')
+      .eq('status', 'college_registration');
+
+    if (dbColleges && dbColleges.length > 0) {
+      const stored = localStorage.getItem(STORAGE_KEYS.COLLEGES);
+      const existing: College[] = stored ? JSON.parse(stored) : [];
+      const allIds = new Set(existing.map(c => c.id));
+      const allSlugs = new Set(existing.map(c => c.slug));
+
+      for (const row of dbColleges) {
+        if (row.phone_number) {
+          try {
+            const college: College = JSON.parse(row.phone_number);
+            if (college && college.id && !allIds.has(college.id) && !allSlugs.has(college.slug)) {
+              existing.push(college);
+              allIds.add(college.id);
+              allSlugs.add(college.slug);
+            }
+          } catch (pe) {}
+        }
+      }
+      localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(existing));
+    }
+  } catch (e) {
+    console.warn("Failed to load colleges from Supabase:", e);
+  }
+}
+
 export const collegeService = {
   // Retrieve all colleges (defaults merged with custom registrations)
   getColleges(): College[] {
@@ -234,6 +270,12 @@ export const collegeService = {
       console.warn("Failed to load colleges from localStorage", e);
     }
     return DEFAULT_COLLEGES;
+  },
+
+  // Async version that also loads from Supabase first
+  async getCollegesAsync(): Promise<College[]> {
+    await ensureCollegesFromDb();
+    return this.getColleges();
   },
 
   getCollegeById(id: string): College | undefined {
@@ -357,6 +399,17 @@ export const collegeService = {
       console.warn("Failed to persist new college", e);
     }
 
+    // Persist to Supabase for cross-device college discovery
+    try {
+      supabase.from('waitlist').upsert({
+        id: newCollege.id,
+        email: newCollege.adminEmail,
+        college_name: newCollege.name,
+        phone_number: JSON.stringify(newCollege),
+        status: 'college_registration'
+      }, { onConflict: 'email' }).then().catch(() => {});
+    } catch (dbe) {}
+
     this.setCollegeSession(newCollege);
     return newCollege;
   },
@@ -469,6 +522,8 @@ export const collegeService = {
 
   // Get ALL REAL registered students dynamically belonging to a college
   async getCollegeStudents(collegeId: string): Promise<CollegeStudent[]> {
+    // Ensure we have all colleges from Supabase (cross-device)
+    await ensureCollegesFromDb();
     const college = this.getCollegeById(collegeId);
     if (!college) return [];
 
@@ -1105,8 +1160,43 @@ export const collegeService = {
   async getStudentDrivesAsync(studentEmail: string): Promise<CollegeScheduledDrive[]> {
     if (!studentEmail) return [];
     const cleanEmail = studentEmail.toLowerCase().trim();
+
+    // Ensure colleges from Supabase are loaded first (cross-device discovery)
+    await ensureCollegesFromDb();
+
     const college = this.getCollegeByEmail(cleanEmail);
-    if (!college) return [];
+    if (!college) {
+      // Even if no college matched, check ALL drives from Supabase in case the college was registered on another device
+      try {
+        const { data: dbDrives } = await supabase
+          .from('waitlist')
+          .select('*')
+          .eq('status', 'college_drive_record');
+
+        if (dbDrives && dbDrives.length > 0) {
+          const emailDomain = cleanEmail.split("@")[1];
+          const matchingDrives: CollegeScheduledDrive[] = [];
+          for (const row of dbDrives) {
+            if (!row.phone_number) continue;
+            try {
+              const drive: CollegeScheduledDrive = JSON.parse(row.phone_number);
+              if (!drive || !drive.id) continue;
+              // Check if this drive's college domains match student email
+              if (drive.targetAudience === "all" || 
+                  (drive.targetEmails && drive.targetEmails.some(e => e.toLowerCase() === cleanEmail))) {
+                const cand = drive.candidates?.find(c => c.studentEmail.toLowerCase() === cleanEmail);
+                if (cand && (cand.status === "Completed" || cand.selectionVerdict !== undefined || cand.score !== undefined)) {
+                  continue;
+                }
+                matchingDrives.push(drive);
+              }
+            } catch (pe) {}
+          }
+          return matchingDrives;
+        }
+      } catch (e) {}
+      return [];
+    }
 
     const allCollegeDrives = await this.getCollegeDrivesAsync(college.id);
     return allCollegeDrives.filter(drive => {
