@@ -465,6 +465,8 @@ CRITICAL INTERVIEW GUIDELINES:
 
     try {
       let sessionId = `session-${Date.now()}`;
+      let evaluation: any = null;
+
       if (user) {
         const { data, error } = await supabase
           .from('interview_sessions')
@@ -482,10 +484,9 @@ CRITICAL INTERVIEW GUIDELINES:
           .select()
           .single();
 
+        if (error) throw error;
         if (data) sessionId = data.id;
       }
-
-      if (error) throw error;
 
       toast.loading("Analyzing session performance...", { id: toastId });
 
@@ -493,8 +494,6 @@ CRITICAL INTERVIEW GUIDELINES:
       try {
         const userLogs = logs.filter(log => log.role === 'user');
         const userSpeechLength = userLogs.reduce((sum, log) => sum + (log.text || '').trim().length, 0);
-
-        let evaluation;
 
         if (userLogs.length === 0 || userSpeechLength === 0) {
           console.log('[VoiceAssistant] No candidate speech detected, returning default invalid attempt metrics.');
@@ -543,7 +542,7 @@ CRITICAL INTERVIEW GUIDELINES:
               personality_cluster: evaluation.personality_cluster || null,
               analysis_result: evaluation
             } as any)
-            .eq('id', data.id);
+            .eq('id', sessionId);
 
           }
       } catch (evalError) {
@@ -559,8 +558,8 @@ CRITICAL INTERVIEW GUIDELINES:
 
           collegeService.recordStudentDriveResult({
             driveId: collegeDrive.id,
-            studentEmail: user.email || "anurag.s25561@nst.rishihood.edu.in",
-            studentName: candidateProfileName,
+            studentEmail: activeEmail,
+            studentName: candidateName,
             score: finalScore,
             durationMinutes: Math.ceil(duration / 60) || 1,
             feedback: (evaluation && evaluation.feedback) || (isPassed ? "Candidate exceeded institutional passing benchmark." : "Below benchmark threshold."),
@@ -590,7 +589,7 @@ CRITICAL INTERVIEW GUIDELINES:
       toast.dismiss(toastId);
       toast.success("Pro Interview session saved successfully!");
 
-      navigate(`/voice-interview/results/${data.id}`);
+      navigate(`/voice-interview/results/${sessionId}`);
       if (!collegeDrive && !driveId) {
         await consumeCredit();
       }
