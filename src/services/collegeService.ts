@@ -556,7 +556,8 @@ export const collegeService = {
     try {
       const { data: waitlistRows } = await supabase
         .from('waitlist')
-        .select('*');
+        .select('*')
+        .eq('status', 'registered_student');
 
       if (waitlistRows && waitlistRows.length > 0) {
         for (const row of waitlistRows) {
@@ -661,6 +662,13 @@ export const collegeService = {
           for (const cand of drive.candidates) {
             if (cand.studentEmail) {
               const cleanEmail = cand.studentEmail.toLowerCase().trim();
+              // Only include candidates whose email domain matches the college
+              const candDomain = cleanEmail.split("@")[1];
+              const domainMatchesCollege = candDomain && college.domains.some(d => {
+                const cd = d.toLowerCase().trim().replace(/^@/, "");
+                return candDomain === cd || candDomain.endsWith("." + cd) || cd.endsWith("." + candDomain);
+              });
+              if (!domainMatchesCollege) continue;
               registeredList.push({
                 id: `cand-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
                 collegeId: college.id,
