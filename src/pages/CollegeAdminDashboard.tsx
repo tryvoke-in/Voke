@@ -271,7 +271,7 @@ const CollegeAdminDashboard = () => {
       <div className="fixed bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/5 dark:bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none -z-10 transform-gpu" />
 
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-background/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-border/50 px-4 md:px-8 py-3.5 transition-colors">
+      <header className="sticky top-0 z-40 bg-white/40 dark:bg-gray-950/40 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 px-4 md:px-8 py-3.5 transition-colors duration-300">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
@@ -487,7 +487,7 @@ const CollegeAdminDashboard = () => {
                 )}
                 <span className="relative z-10 flex items-center">
                   <Calendar className="w-4 h-4 mr-1.5" />
-                  Scheduled Drives ({drives.length})
+                  Scheduled Interviews ({drives.length})
                 </span>
               </TabsTrigger>
               <TabsTrigger
@@ -545,7 +545,7 @@ const CollegeAdminDashboard = () => {
               <div className="relative w-full sm:w-80">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/70" />
                 <Input
-                  placeholder="Search student by name, email, role..."
+                  placeholder="Search students"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="bg-muted/40 dark:bg-muted/30 border-border pl-9 text-xs text-white placeholder:text-gray-500 h-9"
@@ -678,7 +678,7 @@ const CollegeAdminDashboard = () => {
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Badge className={`text-[11px] px-2.5 py-0.5 border ${student.readinessStatus === "Placement Ready"
+                            <Badge className={`text-[11px] px-2.5 py-1 whitespace-nowrap border ${student.readinessStatus === "Placement Ready"
                                 ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                                 : student.readinessStatus === "Intermediate"
                                   ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"

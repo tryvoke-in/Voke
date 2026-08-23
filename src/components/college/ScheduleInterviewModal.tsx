@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Calendar, Clock, Sparkles, Users, Award, Briefcase, Bot, Video, Code, Layers, 
-  CheckCircle2, Plus, Trash2, BookOpen, ShieldCheck, FileText, UploadCloud, Check, HelpCircle
+  CheckCircle2, Plus, Trash2, BookOpen, ShieldCheck, FileText, UploadCloud, Check, HelpCircle, ChevronDown, ChevronUp
 } from "lucide-react";
-import { College, CollegeStudent, CollegeCustomQuestion, collegeService } from "@/services/collegeService";
+import { College, CollegeStudent, CollegeCustomQuestion, CollegeScheduledDrive, collegeService } from "@/services/collegeService";
 import { toast } from "sonner";
 
 interface ScheduleInterviewModalProps {
@@ -21,6 +21,7 @@ interface ScheduleInterviewModalProps {
   students: CollegeStudent[];
   preSelectedStudentEmails?: string[];
   onDriveCreated: () => void;
+  existingDrive?: CollegeScheduledDrive;
 }
 
 const ALL_PRESET_QUESTIONS: CollegeCustomQuestion[] = [
@@ -81,11 +82,12 @@ export const ScheduleInterviewModal = ({
   college,
   students,
   preSelectedStudentEmails = [],
-  onDriveCreated
+  onDriveCreated,
+  existingDrive
 }: ScheduleInterviewModalProps) => {
   const [title, setTitle] = useState("Campus Placement Mock Drive 2025");
   const targetRole = "Software Development Engineer (SDE-1)";
-  const interviewType = "technical_ai";
+  const interviewType: "system_design" | "technical_ai" | "video_interview" | "dsa_coding" | "behavioral_hr" = "technical_ai";
   const [audienceType, setAudienceType] = useState<"all" | "branch" | "selected_emails">(
     preSelectedStudentEmails.length > 0 ? "selected_emails" : "all"
   );
@@ -120,9 +122,39 @@ export const ScheduleInterviewModal = ({
   const [newQuestionText, setNewQuestionText] = useState("");
   const [newQuestionDifficulty, setNewQuestionDifficulty] = useState<"Easy" | "Medium" | "Hard">("Medium");
   const [isAddingCustomQuestion, setIsAddingCustomQuestion] = useState(false);
+  const [isQuestionsExpanded, setIsQuestionsExpanded] = useState(false);
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [bulkQuestionsInput, setBulkQuestionsInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && existingDrive) {
+      setTitle(existingDrive.title);
+      if (existingDrive.scheduledDate) setScheduledDate(existingDrive.scheduledDate.split("T")[0]);
+      if (existingDrive.deadlineDate) setDeadlineDate(existingDrive.deadlineDate.split("T")[0]);
+      if (existingDrive.durationMinutes) setDurationMinutes(existingDrive.durationMinutes);
+      if (existingDrive.passingScore) setPassingScore(existingDrive.passingScore);
+      if (existingDrive.instructions) setInstructions(existingDrive.instructions);
+      
+      if (existingDrive.customQuestions && existingDrive.customQuestions.length > 0) {
+        setAvailableQuestions(prev => {
+          const newQs = existingDrive.customQuestions.filter(dq => !prev.some(pq => pq.id === dq.id));
+          return [...newQs, ...prev];
+        });
+        setSelectedQuestionIds(existingDrive.customQuestions.map(q => q.id));
+      }
+      
+      if (existingDrive.targetAudience) {
+        setAudienceType(existingDrive.targetAudience);
+      }
+      if (existingDrive.targetBranch) {
+        setSelectedBranch(existingDrive.targetBranch);
+      }
+      if (existingDrive.targetEmails && existingDrive.targetEmails.length > 0) {
+        setSelectedEmails(existingDrive.targetEmails);
+      }
+    }
+  }, [isOpen, existingDrive]);
 
   const toggleQuestionSelection = (id: string) => {
     setSelectedQuestionIds(prev => 
@@ -267,7 +299,7 @@ export const ScheduleInterviewModal = ({
         .map(c => c.trim())
         .filter(Boolean);
 
-      const createdDrive = collegeService.scheduleCollegeDrive({
+      const driveData = {
         collegeId: college.id,
         collegeName: college.name,
         title: title.trim(),
@@ -287,24 +319,34 @@ export const ScheduleInterviewModal = ({
         questionCountLimit: finalQuestions.length,
         instructions: instructions.trim(),
         targetCompanies: companies,
-        status: "active",
-        candidatesCount: finalEmails.length,
-        completedCount: 0,
-        avgScore: 0
-      });
+        status: "active" as const
+      };
 
-      toast.success(`Mock Interview Drive scheduled! Dispatched to ${finalEmails.length} candidate(s).`, {
-        description: `Direct Link generated with ${finalQuestions.length} selected questions.`,
-        action: {
-          label: "Copy Link",
-          onClick: () => {
-            if (createdDrive.interviewUrl) {
-              navigator.clipboard.writeText(createdDrive.interviewUrl);
-              toast.info("Interview link copied to clipboard!");
+      let resultDrive;
+      if (existingDrive) {
+        resultDrive = collegeService.updateCollegeDrive(existingDrive.id, driveData);
+        toast.success(`Drive updated successfully!`);
+      } else {
+        resultDrive = collegeService.scheduleCollegeDrive({
+          ...driveData,
+          candidatesCount: finalEmails.length,
+          completedCount: 0,
+          avgScore: 0
+        });
+        toast.success(`Mock Interview Drive scheduled! Dispatched to ${finalEmails.length} candidate(s).`, {
+          description: `Direct Link generated with ${finalQuestions.length} selected questions.`,
+          action: {
+            label: "Copy Link",
+            onClick: () => {
+              if (resultDrive?.interviewUrl) {
+                navigator.clipboard.writeText(resultDrive.interviewUrl);
+                toast.info("Interview link copied to clipboard!");
+              }
             }
           }
-        }
-      });
+        });
+      }
+
       onDriveCreated();
       onClose();
     } catch (err: any) {
@@ -319,7 +361,7 @@ export const ScheduleInterviewModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto bg-card border-border text-foreground shadow-2xl p-0 rounded-2xl">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[92vh] overflow-y-auto bg-card border-border text-foreground shadow-2xl p-0 rounded-2xl">
         <div className="p-6 border-b border-border bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent">
           <div className="flex items-center gap-2 mb-1.5">
             <Badge className="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30 text-xs px-2.5 py-0.5 font-semibold">
@@ -328,7 +370,7 @@ export const ScheduleInterviewModal = ({
             </Badge>
           </div>
           <DialogTitle className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-            Schedule Institutional Placement Drive
+            {existingDrive ? "Update Institutional Placement Drive" : "Schedule Institutional Placement Drive"}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground text-xs mt-1">
             Configure passing criteria and select questions for <strong className="text-foreground">{college.name}</strong>.
@@ -358,14 +400,23 @@ export const ScheduleInterviewModal = ({
                 <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-300">
                   <BookOpen className="w-4 h-4" />
                 </div>
-                <div className="flex items-center gap-2">
+                <button 
+                  type="button"
+                  onClick={() => setIsQuestionsExpanded(!isQuestionsExpanded)}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                >
                   <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
                     Select Questions
                   </h4>
                   <Badge className="bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30 text-[10px] font-mono font-medium">
                     {selectedQuestionsCount} of {availableQuestions.length} Selected
                   </Badge>
-                </div>
+                  {isQuestionsExpanded ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground ml-1" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground ml-1" />
+                  )}
+                </button>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
@@ -405,8 +456,10 @@ export const ScheduleInterviewModal = ({
               </div>
             </div>
 
-            {/* Bulk Paste Form */}
-            {isBulkMode && (
+            {isQuestionsExpanded && (
+              <div className="space-y-3.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                {/* Bulk Paste Form */}
+                {isBulkMode && (
               <div className="p-3.5 bg-muted/40 dark:bg-muted/20 rounded-xl border border-border space-y-2.5 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-semibold text-foreground">
@@ -489,7 +542,7 @@ export const ScheduleInterviewModal = ({
             )}
 
             {/* Questions Checklist */}
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+            <div className="space-y-2">
               {availableQuestions.map((q, idx) => {
                 const isSelected = selectedQuestionIds.includes(q.id);
                 return (
@@ -527,6 +580,8 @@ export const ScheduleInterviewModal = ({
                 );
               })}
             </div>
+            </div>
+            )}
           </div>
 
           {/* Section 3: Passing Criteria & Benchmark */}
@@ -695,11 +750,11 @@ export const ScheduleInterviewModal = ({
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold shadow-lg shadow-blue-600/20 px-6"
             >
               {isSubmitting ? (
-                "Scheduling Assessment..."
+                existingDrive ? "Updating Assessment..." : "Scheduling Assessment..."
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Dispatch Assessment ({selectedQuestionsCount} Question{selectedQuestionsCount !== 1 ? "s" : ""}) to {targetEmailsCount} Student{targetEmailsCount !== 1 ? "s" : ""}
+                  {existingDrive ? "Update" : "Dispatch"} Assessment ({selectedQuestionsCount} Question{selectedQuestionsCount !== 1 ? "s" : ""}) {existingDrive ? "" : `to ${targetEmailsCount} Student${targetEmailsCount !== 1 ? "s" : ""}`}
                 </>
               )}
             </Button>
