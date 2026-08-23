@@ -1826,6 +1826,7 @@ const Profile = () => {
                                       {formData.github_url || profile?.github_url
                                         ? `@${(formData.github_url || profile?.github_url || '').replace(/\/$/, '').split('/').pop()} linked`
                                         : '1-Click Direct Connect'}
+                                        
                                     </div>
                                   </div>
                                 </div>
@@ -1833,7 +1834,7 @@ const Profile = () => {
                                   <div className="flex items-center gap-2">
                                     {/* <Badge variant="outline" className="border-emerald-600/30 dark:border-emerald-500/40 bg-emerald-500/15 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs px-2.5 py-1 font-extrabold flex items-center gap-1.5 shadow-xs">
                                       <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
-                                      Connected
+                                      Connected kaali
                                     </Badge> */}
                                     <button
                                       type="button"
