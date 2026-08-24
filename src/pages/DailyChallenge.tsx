@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
+import { Navbar } from "@/components/Navbar";
+import { useTokenCounter } from "@/contexts/TokenContext";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -59,6 +61,7 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 
 const DailyChallenge = () => {
+  const { addTokens } = useTokenCounter();
   const navigate = useNavigate();
   const [language, setLanguage] = useState<Language>('javascript');
   const [code, setCode] = useState(TEMPLATES.javascript);

@@ -38,7 +38,7 @@ import { AUTHORIZED_EMAILS, isLocalhost } from "@/utils/devTools";
 
 export const DevResetWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'elite' | 'credits' | 'mascot'>('elite');
+  const [activeTab, setActiveTab] = useState<'elite' | 'credits' | 'mascot' | 'pro'>('elite');
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -170,12 +170,12 @@ export const DevResetWidget = () => {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="grid grid-cols-3 gap-1 bg-muted/50 p-1 rounded-xl mb-3 border border-border/40">
+            <div className="grid grid-cols-4 gap-1 bg-muted/50 p-1 rounded-xl mb-3 border border-border/40 overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setActiveTab('elite')}
                 className={cn(
-                  "text-[10px] font-semibold py-1.5 px-1 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer",
+                  "text-[9px] font-semibold py-1.5 px-0.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer",
                   activeTab === 'elite'
                     ? "bg-background text-foreground shadow-2xs font-bold"
                     : "text-muted-foreground hover:text-foreground"
@@ -188,7 +188,7 @@ export const DevResetWidget = () => {
                 type="button"
                 onClick={() => setActiveTab('credits')}
                 className={cn(
-                  "text-[10px] font-semibold py-1.5 px-1 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer",
+                  "text-[9px] font-semibold py-1.5 px-0.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer",
                   activeTab === 'credits'
                     ? "bg-background text-foreground shadow-2xs font-bold"
                     : "text-muted-foreground hover:text-foreground"
@@ -200,7 +200,7 @@ export const DevResetWidget = () => {
                 type="button"
                 onClick={() => setActiveTab('mascot')}
                 className={cn(
-                  "text-[10px] font-semibold py-1.5 px-1 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer",
+                  "text-[9px] font-semibold py-1.5 px-0.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer",
                   activeTab === 'mascot'
                     ? "bg-background text-foreground shadow-2xs font-bold"
                     : "text-muted-foreground hover:text-foreground"
@@ -208,6 +208,19 @@ export const DevResetWidget = () => {
               >
                 <Sparkles className="w-3 h-3 text-amber-400" />
                 <span>Mascot</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('pro')}
+                className={cn(
+                  "text-[9px] font-semibold py-1.5 px-0.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer",
+                  activeTab === 'pro'
+                    ? "bg-background text-foreground shadow-2xs font-bold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Play className="w-3 h-3 text-emerald-500" />
+                <span>Pro</span>
               </button>
             </div>
 
@@ -444,6 +457,32 @@ export const DevResetWidget = () => {
                   >
                     <RotateCcw className="w-3 h-3 mr-1.5 text-muted-foreground" />
                     Reset Score State
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* TAB 4: PRO INTERVIEW CONTROLS */}
+            {activeTab === 'pro' && (
+              <div className="space-y-2">
+                <div className="p-2.5 rounded-xl bg-muted/30 border border-border/50 space-y-1">
+                  <span className="text-[11px] font-bold text-foreground block">Pro Voice Interview overrides</span>
+                  <span className="text-[10px] text-muted-foreground block">
+                    Bypass AI constraints directly from Dev Tools.
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <Button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('dev:force-open-editor'));
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-8 px-2.5 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 rounded-xl text-[11px] font-bold cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+                    Force Open Code Editor
                   </Button>
                 </div>
               </div>

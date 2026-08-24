@@ -55,6 +55,17 @@ export const TokenProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }));
   };
 
+  useEffect(() => {
+    const handleAddTokens = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        addTokens(customEvent.detail.input || 0, customEvent.detail.output || 0);
+      }
+    };
+    window.addEventListener('voke:add-tokens', handleAddTokens);
+    return () => window.removeEventListener('voke:add-tokens', handleAddTokens);
+  }, [isTracking]);
+
   return (
     <TokenContext.Provider value={{ isTracking, tokenData, startTracking, stopTracking, resetCounter, addTokens }}>
       {children}

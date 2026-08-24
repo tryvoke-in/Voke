@@ -9,6 +9,7 @@ export type GroqVoiceConnectOptions = string | {
     initialGreeting?: string;
     mode?: 'conversational' | 'coding_silent';
     fixedQuestions?: string[];
+    enableAutoCodingTransition?: boolean;
 };
 
 const SYSTEM_INSTRUCTION = `YOU ARE:
@@ -78,6 +79,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const conversationHistoryRef = useRef<{ role: 'user' | 'assistant' | 'system'; content: string }[]>([]);
     const fixedQuestionsRef = useRef<string[] | null>(null);
     const fixedQuestionIndexRef = useRef<number>(0);
+    const autoCodingRef = useRef<boolean>(false);
     const statusRef = useRef(status);
     const isAiSpeakingRef = useRef(isAiSpeaking);
     const isListeningRef = useRef(false);
@@ -611,10 +613,12 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             const aiQuestionCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
             
             let turnDirective = "";
-            if (aiQuestionCount >= 8 && aiQuestionCount < 11) {
-                turnDirective = "\n\n[SYSTEM NOTE: You have asked enough theoretical questions. In your next response, you MUST say '[START_CODING]' and give a coding problem.]";
-            } else if (aiQuestionCount >= 11) {
-                turnDirective = "\n\n[SYSTEM NOTE: The interview is over. You MUST end the interview NOW by saying '[VERDICT:PASS]' or '[VERDICT:FAIL]'. Do not ask any more questions.]";
+            if (autoCodingRef.current) {
+                if (aiQuestionCount >= 8 && aiQuestionCount < 11) {
+                    turnDirective = "\n\n[SYSTEM NOTE: You have asked enough theoretical questions. In your next response, you MUST say '[START_CODING]' and give a coding problem.]";
+                } else if (aiQuestionCount >= 11) {
+                    turnDirective = "\n\n[SYSTEM NOTE: The interview is over. You MUST end the interview NOW by saying '[VERDICT:PASS]' or '[VERDICT:FAIL]'. Do not ask any more questions.]";
+                }
             }
 
             // Create a copy of the history to inject the directive into the last message
@@ -974,9 +978,12 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             systemPromptText = context || '';
             fixedQuestionsRef.current = null;
             fixedQuestionIndexRef.current = 0;
+            autoCodingRef.current = false;
         } else if (context && typeof context === 'object') {
             systemPromptText = context.systemPrompt || '';
             initialGreetingText = context.initialGreeting || '';
+            autoCodingRef.current = !!context.enableAutoCodingTransition;
+            
             if (context.mode === 'coding_silent') {
                 setIsSilentMode(true);
             }
@@ -991,6 +998,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         } else {
             fixedQuestionsRef.current = null;
             fixedQuestionIndexRef.current = 0;
+            autoCodingRef.current = false;
         }
 
         contextRef.current = systemPromptText;

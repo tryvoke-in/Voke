@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useTokenCounter } from "@/contexts/TokenContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -324,6 +325,7 @@ const generateIntelligentFallbackResponse = (
 };
 
 const GlobalAIChatbot = () => {
+  const { addTokens } = useTokenCounter();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -560,6 +562,9 @@ const GlobalAIChatbot = () => {
 
           if (res.ok) {
             const data = await res.json();
+            if (data?.usageMetadata) {
+              addTokens(data.usageMetadata.promptTokenCount || 0, data.usageMetadata.candidatesTokenCount || 0);
+            }
             const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
             if (reply && reply.trim()) {
               assistantText = reply.trim();
