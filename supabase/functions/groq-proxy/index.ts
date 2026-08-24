@@ -34,30 +34,21 @@ serve(async (req) => {
             });
         }
 
-        const groqApiKey = Deno.env.get("GROQ_API_KEY");
-        if (!groqApiKey) throw new Error("GROQ_API_KEY not configured on server");
+        const apiKey = Deno.env.get("GEMINI_API_KEY_FALLBACK");
+        if (!apiKey) throw new Error("GEMINI_API_KEY_FALLBACK not configured on server");
 
         const contentType = req.headers.get("content-type") || "";
         let response;
 
         if (contentType.includes("multipart/form-data")) {
-            // Audio Transcription proxy
-            const formData = await req.formData();
-            
-            response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${groqApiKey}`,
-                },
-                body: formData
-            });
+            throw new Error("Audio transcription not supported on this endpoint anymore.");
         } else {
-            // Chat Completions proxy
+            // Chat Completions proxy using direct Gemini OpenAI compatibility endpoint
             const body = await req.json();
-            response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${groqApiKey}`,
+                    "Authorization": `Bearer ${apiKey}`,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(body)
@@ -71,7 +62,7 @@ serve(async (req) => {
         });
 
     } catch (error: any) {
-        console.error("Groq Proxy Error:", error);
+        console.error("AI Proxy Error:", error);
         return new Response(JSON.stringify({ error: error.message }), { 
             status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } 
         });

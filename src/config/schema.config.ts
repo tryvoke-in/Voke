@@ -42,7 +42,7 @@ export function createWebSiteSchema() {
     "@id": `${SITE_URL}/#website`,
     "url": SITE_URL,
     "name": SITE_NAME,
-    "description": "AI-Powered Technical & Behavioral Interview Practice Platform for Tech Students & Engineers",
+    "description": "AI Mock Interview & Technical Practice Platform for Software Engineers & Tech Students",
     "publisher": {
       "@id": `${SITE_URL}/#organization`
     },
@@ -64,7 +64,7 @@ export function createSoftwareApplicationSchema(canonicalUrl: string = SITE_URL)
   return {
     "@type": ["WebApplication", "SoftwareApplication"],
     "@id": `${SITE_URL}/#softwareapplication`,
-    "name": "Voke AI Interview Preparation Platform",
+    "name": "Voke AI Mock Interview Platform",
     "url": canonicalUrl,
     "applicationCategory": "EducationalApplication",
     "operatingSystem": "Web Browser",

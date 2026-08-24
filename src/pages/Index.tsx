@@ -280,9 +280,9 @@ const Index = () => {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.1]"
               >
-                Master the Interview.<br />
+                Realistic AI Mock Interviews.<br />
                 <span className="bg-gradient-to-r from-white via-sky-300 to-blue-400 bg-clip-text text-transparent">
-                  Secure the Offer.
+                  Master Tech Rounds & Secure the Offer.
                 </span>
               </motion.h1>
 
@@ -292,8 +292,8 @@ const Index = () => {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-base md:text-lg text-gray-400 leading-relaxed max-w-xl"
               >
-                Simulate realistic technical and behavioral rounds with audio-video tracking, 
-                ATS resume analyses, and repo integrations. Get verified and get matched with top tech jobs.
+                Practice realistic technical, coding, and behavioral AI mock interviews with real-time audio-video feedback, 
+                ATS resume analyses, and GitHub repo integrations. Get verified and matched with top tech jobs.
               </motion.p>
 
               <motion.div
@@ -889,8 +889,8 @@ const Index = () => {
             {[
               {
                 step: "01",
-                title: "Practice Rounds",
-                desc: "Conduct video or voice mock interviews. Respond to resume-based prompts and coding algorithm challenges."
+                title: "AI Mock Interviews",
+                desc: "Conduct live video or voice AI mock interviews. Respond to resume-tailored prompts, DSA problems, and real-time coding challenges."
               },
               {
                 step: "02",

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,7 +15,9 @@ import {
   MapPin, TrendingUp, RefreshCw,
   ExternalLink, CheckCircle2, Briefcase, Search, X,
   Target, Bookmark, Clock, ArrowRight, Globe,
-  Building2, HelpCircle, ChevronRight, Loader2, Sparkles
+  Building2, HelpCircle, ChevronRight, Loader2, Sparkles,
+  Check, Filter, ArrowUpRight, DollarSign, Layers,
+  Compass, Zap, Award
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -91,7 +93,7 @@ function getCompanyDomain(companyName: string): string {
   return known[name] || `${name}.com`;
 }
 
-// Reliable clean multi-tier Company Logo component
+// Reliable clean Company Logo component
 function CompanyLogo({ company, size = "md" }: { company: string; size?: "sm" | "md" | "lg" }) {
   const name = decode(company || "Company");
   const initial = name.charAt(0).toUpperCase();
@@ -103,7 +105,11 @@ function CompanyLogo({ company, size = "md" }: { company: string; size?: "sm" | 
     `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
   ];
 
-  const dims = size === "lg" ? "w-14 h-14 text-lg rounded-xl" : size === "md" ? "w-11 h-11 text-base rounded-lg" : "w-9 h-9 text-xs rounded-md";
+  const dims = size === "lg" 
+    ? "w-12 h-12 text-base rounded-xl" 
+    : size === "md" 
+      ? "w-10 h-10 text-sm rounded-lg" 
+      : "w-8 h-8 text-xs rounded-md";
 
   if (imgIndex >= sources.length) {
     return (
@@ -126,8 +132,8 @@ function CompanyLogo({ company, size = "md" }: { company: string; size?: "sm" | 
 }
 
 // Minimal Clean Radial Score Gauge
-function MatchRing({ score, size = 64 }: { score: number; size?: number }) {
-  const strokeWidth = 4;
+function MatchRing({ score, size = 52 }: { score: number; size?: number }) {
+  const strokeWidth = 3.5;
   const r = (size - strokeWidth * 2) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
@@ -161,7 +167,7 @@ function MatchRing({ score, size = 64 }: { score: number; size?: number }) {
           )}
         />
       </svg>
-      <span className={cn("text-xs font-bold", isHigh ? "text-emerald-600 dark:text-emerald-400" : "text-foreground")}>
+      <span className={cn("text-xs font-bold font-mono", isHigh ? "text-emerald-600 dark:text-emerald-400" : "text-foreground")}>
         {score}%
       </span>
     </div>
@@ -320,7 +326,7 @@ export default function JobRecommendations() {
   const dynamicTopSkills = useMemo(() => {
     const resResult = resumeAnalysis?.analysis_result;
     if (resResult?.skills && Array.isArray(resResult.skills) && resResult.skills.length > 0) {
-      return resResult.skills.slice(0, 5);
+      return resResult.skills.slice(0, 6);
     }
     const skillCounts: Record<string, number> = {};
     recommendations.forEach((r) => {
@@ -330,8 +336,8 @@ export default function JobRecommendations() {
       });
     });
     const sorted = Object.keys(skillCounts).sort((a, b) => skillCounts[b] - skillCounts[a]);
-    if (sorted.length > 0) return sorted.slice(0, 5);
-    return ["React", "TypeScript", "Node.js", "System Design", "SQL"];
+    if (sorted.length > 0) return sorted.slice(0, 6);
+    return ["React", "TypeScript", "Node.js", "System Design", "SQL", "Next.js"];
   }, [recommendations, resumeAnalysis]);
 
   const dynamicSkillGaps = useMemo(() => {
@@ -343,8 +349,8 @@ export default function JobRecommendations() {
       });
     });
     const sorted = Object.keys(gapsMap).sort((a, b) => gapsMap[b] - gapsMap[a]);
-    if (sorted.length > 0) return sorted.slice(0, 4);
-    return ["Next.js", "AWS", "TypeScript", "Docker"];
+    if (sorted.length > 0) return sorted.slice(0, 5);
+    return ["Next.js", "AWS", "GraphQL", "Docker", "PostgreSQL"];
   }, [recommendations]);
 
   const counts = useMemo(() => {
@@ -365,10 +371,12 @@ export default function JobRecommendations() {
     const role = targetRoleTitle;
     const topSkill = dynamicTopSkills[0] || "Frontend";
     return [
-      { query: `${role} Roles`, count: `${counts.all} jobs` },
-      { query: `Remote ${topSkill} Engineer`, count: `${counts.remote} jobs` },
+      { query: `${role} Roles`, tag: role },
+      { query: `Remote ${topSkill} Engineer`, tag: `Remote ${topSkill}` },
+      { query: `Senior Full Stack`, tag: `Full Stack` },
+      { query: `High Match (80%+)`, tab: "high" as const },
     ];
-  }, [targetRoleTitle, dynamicTopSkills, counts]);
+  }, [targetRoleTitle, dynamicTopSkills]);
 
   const filteredRecs = useMemo(() => {
     let list = recommendations.filter((r) => r.status !== "rejected");
@@ -398,12 +406,22 @@ export default function JobRecommendations() {
     return list;
   }, [recommendations, activeTab, search, filterLocation, filterLevel, filterType, sortBy]);
 
+  const hasActiveFilters = search || filterLocation !== "all" || filterLevel !== "all" || activeTab !== "all";
+
+  const clearAllFilters = () => {
+    setSearch("");
+    setFilterLocation("all");
+    setFilterLevel("all");
+    setFilterType("all");
+    setActiveTab("all");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-        <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-          Loading recommendations...
+        <Loader2 className="w-7 h-7 text-primary animate-spin" />
+        <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+          Loading vetted opportunities...
         </p>
       </div>
     );
@@ -418,16 +436,18 @@ export default function JobRecommendations() {
         <Sidebar />
 
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="container mx-auto px-4 sm:px-6 pt-24 pb-12 max-w-7xl">
+          <main className="container mx-auto px-4 sm:px-6 pt-20 pb-16 max-w-7xl">
 
-            {/* ──── Header ──── */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            {/* ══════════════════════════════════════════════════════════════════
+                1. TOP HEADER & PRIMARY ACTIONS
+            ══════════════════════════════════════════════════════════════════ */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-6 border-b border-border/60">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
                   Job Recommendations
                 </h1>
-                <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-                  Role matches and hiring opportunities based on your skills and profile.
+                <p className="text-muted-foreground text-xs sm:text-sm mt-1 max-w-2xl">
+                  Real-time opportunities filtered and ranked by your verified skills and target role criteria.
                 </p>
               </div>
 
@@ -437,7 +457,7 @@ export default function JobRecommendations() {
                   variant="outline"
                   size="sm"
                   onClick={() => setHowItWorksOpen(true)}
-                  className="rounded-lg text-xs font-medium h-9 px-3.5 gap-1.5 border-border/80 bg-card hover:bg-muted shadow-2xs"
+                  className="rounded-xl text-xs font-semibold h-9 px-3.5 gap-1.5 border-border/80 bg-card hover:bg-muted shadow-2xs"
                 >
                   <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
                   How it works
@@ -447,7 +467,7 @@ export default function JobRecommendations() {
                   onClick={() => generateRecommendations(undefined, true)}
                   disabled={generating}
                   size="sm"
-                  className="rounded-lg text-xs font-medium h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs"
+                  className="rounded-xl text-xs font-semibold h-9 px-4 bg-sky-600 hover:bg-sky-700 text-white shadow-xs transition-all border-0"
                 >
                   {generating ? (
                     <>
@@ -464,206 +484,306 @@ export default function JobRecommendations() {
               </div>
             </div>
 
-            {/* ──── Search & Filter Bar (Minimal Clean Horizontal Toolbar) ──── */}
-            <div className="bg-card border border-border/80 rounded-xl px-3.5 py-2 shadow-2xs mb-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-2.5">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search roles, companies or skills..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 pr-7 h-8 border-0 bg-transparent text-xs sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
-                />
-                {search && (
-                  <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              <div className="h-5 w-px bg-border/80 hidden md:block" />
-
-              <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                <Select value={filterLocation} onValueChange={setFilterLocation}>
-                  <SelectTrigger className="h-8 w-[115px] text-xs font-medium rounded-md bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
-                    <SelectValue placeholder="Location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Locations</SelectItem>
-                    <SelectItem value="remote">Remote Only</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={filterLevel} onValueChange={setFilterLevel}>
-                  <SelectTrigger className="h-8 w-[120px] text-xs font-medium rounded-md bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
-                    <SelectValue placeholder="Experience" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Any Experience</SelectItem>
-                    <SelectItem value="entry">Entry Level</SelectItem>
-                    <SelectItem value="mid">Mid Level</SelectItem>
-                    <SelectItem value="senior">Senior Level</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className="h-8 w-[105px] text-xs font-medium rounded-md bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
-                    <SelectValue placeholder="Job Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="fulltime">Full-time</SelectItem>
-                    <SelectItem value="contract">Contract</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <div className="h-4 w-px bg-border hidden sm:block mx-0.5" />
-
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-8 w-[120px] text-xs font-medium rounded-md bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
-                    <span className="text-muted-foreground mr-1">Sort:</span>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="match">Best Match</SelectItem>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="company">Company A-Z</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* ──── Match & Overview Card (Clean Minimal No-Gradient Look) ──── */}
-            <div className="rounded-xl bg-card border border-border/80 p-5 mb-6 shadow-2xs">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                
-                {/* Score Ring & Metric */}
-                <div className="flex items-center gap-4 lg:pr-6 lg:border-r border-border/70 shrink-0">
-                  <MatchRing score={dynamicMatchScore} size={64} />
-                  <div>
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block">
-                      Profile Match Score
+            {/* ══════════════════════════════════════════════════════════════════
+                2. COMPACT STATS & INTELLIGENCE SUMMARY BAR (4 Cards)
+            ══════════════════════════════════════════════════════════════════ */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
+              
+              {/* Stat 1: Match Score */}
+              <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3 transition-transform hover:scale-[1.01]">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
+                      Average Fit
                     </span>
-                    <p className="text-sm font-bold text-foreground mt-0.5">
-                      {dynamicMatchScore >= 80 ? "Strong profile alignment" : "Moderate profile alignment"}
-                    </p>
-                    <button
-                      onClick={() => navigate("/profile")}
-                      className="text-xs font-medium text-primary hover:underline mt-0.5 inline-flex items-center gap-1"
-                    >
-                      Update profile skills <ArrowRight className="w-3 h-3" />
-                    </button>
                   </div>
-                </div>
-
-                {/* Top Matched Skills */}
-                <div className="flex-1 min-w-0">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block mb-2">
-                    Top Matched Skills
+                  <div className="text-2xl font-black text-foreground">
+                    {dynamicMatchScore}%
+                  </div>
+                  <span className="text-[11px] font-medium text-sky-600 dark:text-sky-400 truncate block mt-0.5">
+                    {dynamicMatchScore >= 80 ? "Strong alignment" : "Moderate alignment"}
                   </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {dynamicTopSkills.map((skill, i) => (
-                      <span
-                        key={i}
-                        className="px-2.5 py-1 rounded-md text-xs font-medium bg-muted/60 text-foreground border border-border/60"
-                      >
-                        {skill}
-                      </span>
-                    ))}
+                </div>
+                <div className="p-1 rounded-xl bg-sky-500/10 border border-sky-500/20 shrink-0">
+                  <MatchRing score={dynamicMatchScore} size={44} />
+                </div>
+              </div>
+
+              {/* Stat 2: Total Opportunities */}
+              <div 
+                onClick={() => setActiveTab("all")}
+                className={cn(
+                  "bg-card border border-border/80 rounded-2xl p-4 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-blue-500/40",
+                  activeTab === "all" && "border-blue-500/60 ring-2 ring-blue-500/15"
+                )}
+              >
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      Total Scouted
+                    </span>
+                  </div>
+                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20">
+                    <Briefcase className="w-3.5 h-3.5" />
                   </div>
                 </div>
+                <div className="text-2xl font-black text-foreground">
+                  {counts.all}
+                </div>
+                <span className="text-[11px] font-medium text-muted-foreground block mt-0.5">
+                  Active role matches
+                </span>
+              </div>
 
-                {/* Quick Summary Counts */}
-                <div className="hidden sm:flex items-center gap-6 lg:pl-6 lg:border-l border-border/70 shrink-0">
-                  <div>
-                    <span className="text-xs text-muted-foreground block">Total Matches</span>
-                    <span className="text-lg font-bold text-foreground">{counts.all}</span>
+              {/* Stat 3: High Fit (80%+) */}
+              <div 
+                onClick={() => setActiveTab("high")}
+                className={cn(
+                  "bg-card border border-border/80 rounded-2xl p-4 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-emerald-500/40",
+                  activeTab === "high" && "border-emerald-500/60 ring-2 ring-emerald-500/15"
+                )}
+              >
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      High Fit (80%+)
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block">High Fit</span>
-                    <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{counts.high}</span>
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                    <Award className="w-3.5 h-3.5" />
                   </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block">Remote</span>
-                    <span className="text-lg font-bold text-foreground">{counts.remote}</span>
+                </div>
+                <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                  {counts.high}
+                </div>
+                <span className="text-[11px] font-medium text-emerald-700/80 dark:text-emerald-300/80 block mt-0.5">
+                  Top resume matches
+                </span>
+              </div>
+
+              {/* Stat 4: Remote Openings */}
+              <div 
+                onClick={() => setActiveTab("remote")}
+                className={cn(
+                  "bg-card border border-border/80 rounded-2xl p-4 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-purple-500/40",
+                  activeTab === "remote" && "border-purple-500/60 ring-2 ring-purple-500/15"
+                )}
+              >
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      Remote Openings
+                    </span>
                   </div>
+                  <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20">
+                    <Globe className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <div className="text-2xl font-black text-foreground">
+                  {counts.remote}
+                </div>
+                <span className="text-[11px] font-medium text-muted-foreground block mt-0.5">
+                  Flexible work location
+                </span>
+              </div>
+
+            </div>
+
+            {/* ══════════════════════════════════════════════════════════════════
+                3. INTEGRATED SEARCH & SMART FILTER TOOLBAR
+            ══════════════════════════════════════════════════════════════════ */}
+            <div className="bg-card border border-border/80 rounded-2xl p-3 sm:p-3.5 shadow-xs mb-6 space-y-3">
+              
+              {/* Row 1: Search Box & Dropdown Selects */}
+              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
+                
+                {/* Search Input */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by job title, company name, or technology..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9 pr-8 h-9 border-border/70 bg-muted/40 text-xs sm:text-sm rounded-xl focus:border-sky-500 focus:bg-background focus:ring-2 focus:ring-sky-500/15 transition-all font-medium placeholder:text-muted-foreground/70"
+                  />
+                  {search && (
+                    <button
+                      onClick={() => setSearch("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-md"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Dropdowns */}
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  
+                  {/* Location Filter */}
+                  <Select value={filterLocation} onValueChange={setFilterLocation}>
+                    <SelectTrigger className="h-9 w-[125px] text-xs font-semibold rounded-xl bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
+                      <MapPin className="w-3 h-3 text-sky-500 mr-1" />
+                      <SelectValue placeholder="Location" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="all">All Locations</SelectItem>
+                      <SelectItem value="remote">Remote Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Experience Level Filter */}
+                  <Select value={filterLevel} onValueChange={setFilterLevel}>
+                    <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
+                      <Layers className="w-3 h-3 text-indigo-500 mr-1" />
+                      <SelectValue placeholder="Experience" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="all">All Levels</SelectItem>
+                      <SelectItem value="entry">Entry Level</SelectItem>
+                      <SelectItem value="mid">Mid Level</SelectItem>
+                      <SelectItem value="senior">Senior Level</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Sort By Select */}
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
+                      <span className="text-muted-foreground mr-1">Sort:</span>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="match">Best Match</SelectItem>
+                      <SelectItem value="newest">Newest Roles</SelectItem>
+                      <SelectItem value="company">Company A-Z</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {hasActiveFilters && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearAllFilters}
+                      className="h-9 px-2.5 text-xs text-muted-foreground hover:text-foreground font-semibold rounded-xl"
+                    >
+                      Reset
+                    </Button>
+                  )}
                 </div>
 
               </div>
+
+              {/* Row 2: Segmented Tabs Filter */}
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50 overflow-x-auto no-scrollbar">
+                <div className="flex items-center gap-1.5">
+                  {[
+                    { id: "all" as const, label: "All Opportunities", count: counts.all, color: "sky" },
+                    { id: "high" as const, label: "High Fit (80%+)", count: counts.high, color: "emerald" },
+                    { id: "remote" as const, label: "Remote Only", count: counts.remote, color: "purple" },
+                    { id: "saved" as const, label: "Saved Roles", count: counts.saved, color: "amber" },
+                  ].map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer border",
+                          isActive
+                            ? tab.color === "emerald"
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                              : tab.color === "purple"
+                                ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                                : tab.color === "amber"
+                                  ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                                  : "bg-sky-600 text-white border-sky-600 shadow-xs"
+                            : "bg-muted/40 text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted/80"
+                        )}
+                      >
+                        <span>{tab.label}</span>
+                        <span className={cn(
+                          "text-[10px] px-1.5 py-0.2 rounded-md font-mono font-bold",
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          {tab.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="text-[11px] text-muted-foreground font-medium shrink-0 hidden sm:block pr-1">
+                  Showing <span className="font-bold text-foreground">{filteredRecs.length}</span> positions
+                </div>
+              </div>
+
             </div>
 
-            {/* ──── Main Grid Layout (8 cols left, 4 cols right) ──── */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* ══════════════════════════════════════════════════════════════════
+                4. MAIN 2-COLUMN WORKSPACE (8 cols Left / 4 cols Right)
+            ══════════════════════════════════════════════════════════════════ */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-              {/* ──── Left Column: Job Cards List (8 cols) ──── */}
-              <div className="lg:col-span-8 space-y-4">
-
-                {/* Filter Tabs */}
-                <div className="flex items-center gap-6 border-b border-border/80 pb-0.5 overflow-x-auto no-scrollbar">
-                  {[
-                    { id: "all" as const, label: `All Matches (${counts.all})` },
-                    { id: "high" as const, label: `High Match (${counts.high})` },
-                    { id: "remote" as const, label: `Remote (${counts.remote})` },
-                    { id: "saved" as const, label: `Saved Jobs (${counts.saved})` },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={cn(
-                        "text-xs sm:text-sm font-medium pb-2.5 transition-all relative whitespace-nowrap",
-                        activeTab === tab.id
-                          ? "text-foreground font-semibold"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {tab.label}
-                      {activeTab === tab.id && (
-                        <motion.div
-                          layoutId="activeTabUnderline"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"
-                        />
-                      )}
-                    </button>
-                  ))}
-                </div>
+              {/* ──────────────────────────────────────────────────────────────
+                  LEFT COLUMN: JOB POSTINGS LIST (8 Cols)
+              ────────────────────────────────────────────────────────────── */}
+              <div className="lg:col-span-8 space-y-3.5">
 
                 {/* Empty State */}
                 {filteredRecs.length === 0 && (
-                  <div className="bg-card border border-border/80 rounded-xl p-10 text-center shadow-2xs">
-                    <div className="w-12 h-12 rounded-xl bg-muted/60 flex items-center justify-center mx-auto mb-3">
+                  <div className="bg-card border border-border/80 rounded-2xl p-12 text-center shadow-xs">
+                    <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-3 border border-border/60">
                       {generating ? (
-                        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                        <Loader2 className="w-6 h-6 text-sky-600 animate-spin" />
                       ) : (
                         <Briefcase className="w-6 h-6 text-muted-foreground" />
                       )}
                     </div>
                     <h3 className="text-base font-bold text-foreground mb-1">
-                      {generating ? "Scouting Opportunities..." : "No Jobs Found"}
+                      {generating ? "Scouting Matches in Background..." : "No Opportunities Match Your Filter"}
                     </h3>
                     <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-5 leading-relaxed">
                       {generating
-                        ? "Analyzing verified job postings against your skill profile..."
-                        : "Click 'Fetch Live Jobs' to discover real-time tailored role recommendations."}
+                        ? "Scanning partner databases against your skills and resume graph..."
+                        : "Try adjusting your search query, location filter, or click below to scout fresh openings."}
                     </p>
-                    <Button
-                      onClick={() => generateRecommendations(undefined, true)}
-                      disabled={generating}
-                      size="sm"
-                      className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs px-5"
-                    >
-                      {generating ? "Scouting..." : "Fetch Live Jobs"}
-                    </Button>
+                    <div className="flex items-center justify-center gap-2">
+                      {hasActiveFilters && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={clearAllFilters}
+                          className="rounded-xl text-xs font-semibold h-9 px-4 border-border/80"
+                        >
+                          Clear Filters
+                        </Button>
+                      )}
+                      <Button
+                        onClick={() => generateRecommendations(undefined, true)}
+                        disabled={generating}
+                        size="sm"
+                        className="rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs h-9 px-4"
+                      >
+                        {generating ? "Scouting..." : "Fetch Live Jobs"}
+                      </Button>
+                    </div>
                   </div>
                 )}
 
-                {/* Job Cards List */}
-                <div className="space-y-3">
+                {/* Job Cards */}
+                <div className="space-y-3.5">
                   <AnimatePresence mode="popLayout">
                     {filteredRecs.map((rec, i) => {
                       const job = rec.job_postings;
                       const company = decode(job?.company || "");
                       const title = decode(job?.title || "");
                       const isHighFit = rec.match_score >= 80;
+                      const isSaved = rec.status === "saved";
 
                       return (
                         <motion.div
@@ -671,104 +791,132 @@ export default function JobRecommendations() {
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.98 }}
-                          transition={{ delay: i * 0.02 }}
+                          transition={{ delay: Math.min(i * 0.02, 0.2) }}
                           layout
                         >
-                          <Card className="group bg-card hover:bg-card/90 border border-border/80 hover:border-border transition-all duration-150 rounded-xl shadow-2xs">
-                            <CardContent className="p-4 sm:p-5">
-                              {/* Top Bar: Match Badge & Meta */}
-                              <div className="flex items-center justify-between gap-2 mb-3">
-                                <div className="flex items-center gap-2">
+                          <Card className="group bg-card hover:bg-card/90 border border-border/80 hover:border-sky-500/40 transition-all duration-150 rounded-2xl shadow-xs hover:shadow-md overflow-hidden">
+                            <CardContent className="p-4 sm:p-5 space-y-3.5">
+                              
+                              {/* Card Header Row: Logo, Title, Meta, Match Badge & Bookmark */}
+                              <div className="flex items-start justify-between gap-3">
+                                
+                                <div className="flex items-start gap-3.5 min-w-0">
+                                  <CompanyLogo company={company} size="md" />
+
+                                  <div className="min-w-0">
+                                    <h3
+                                      onClick={() => setSelectedRec(rec)}
+                                      className="text-sm sm:text-base font-bold text-foreground group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors cursor-pointer leading-snug truncate"
+                                      title={title}
+                                    >
+                                      {title}
+                                    </h3>
+
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap font-medium">
+                                      <span className="font-bold text-foreground">{company}</span>
+                                      <span>•</span>
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="w-3 h-3 text-sky-500 shrink-0" />
+                                        {job?.location || "Remote"}
+                                      </span>
+                                      {job?.experience_level && (
+                                        <>
+                                          <span>•</span>
+                                          <span className="capitalize font-semibold text-foreground/80">{job.experience_level}</span>
+                                        </>
+                                      )}
+                                      <span>•</span>
+                                      <span className="text-[11px] text-muted-foreground">{timeAgo(job?.posted_date)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Match Score Badge & Bookmark */}
+                                <div className="flex items-center gap-2 shrink-0">
                                   <span
                                     className={cn(
-                                      "px-2.5 py-0.5 rounded-md text-[11px] font-semibold border",
+                                      "px-2.5 py-1 rounded-xl text-xs font-bold border flex items-center gap-1 shadow-2xs",
                                       isHighFit
-                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                        : "bg-muted/70 text-muted-foreground border-border/60"
+                                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                                        : "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/30"
                                     )}
                                   >
+                                    <Zap className={cn("w-3.5 h-3.5", isHighFit ? "text-emerald-600 dark:text-emerald-400" : "text-sky-600 dark:text-sky-400")} />
                                     {rec.match_score}% Match
                                   </span>
 
-                                  {job?.remote_ok && (
-                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border/50">
-                                      Remote
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[11px] text-muted-foreground font-medium">
-                                    {timeAgo(job?.posted_date)}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Card Body: Logo + Title + Details */}
-                              <div className="flex items-start gap-3.5">
-                                <CompanyLogo company={company} size="md" />
-
-                                <div className="flex-1 min-w-0">
-                                  <h3
-                                    onClick={() => setSelectedRec(rec)}
-                                    className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors cursor-pointer leading-snug truncate"
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => updateStatus(rec.id, isSaved ? "active" : "saved")}
+                                    className={cn(
+                                      "w-8 h-8 rounded-xl border border-border/70 hover:bg-muted text-muted-foreground transition-colors",
+                                      isSaved && "text-amber-500 bg-amber-500/10 border-amber-500/20"
+                                    )}
+                                    title={isSaved ? "Remove from saved" : "Save for later"}
                                   >
-                                    {title}
-                                  </h3>
-
-                                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                    <span className="font-medium text-foreground">{company}</span>
-                                    <span>•</span>
-                                    <span>{job?.location || "Remote"}</span>
-                                    <span>•</span>
-                                    <span className="capitalize">{job?.experience_level || "Full-time"}</span>
-                                  </p>
-
-                                  {/* Skill Pills */}
-                                  {job?.skills_required && job.skills_required.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                      {job.skills_required.slice(0, 5).map((s, idx) => (
-                                        <span
-                                          key={idx}
-                                          className="px-2 py-0.5 rounded text-[11px] font-medium bg-muted/50 text-muted-foreground border border-border/40"
-                                        >
-                                          {decode(s)}
-                                        </span>
-                                      ))}
-                                      {job.skills_required.length > 5 && (
-                                        <span className="text-[11px] text-muted-foreground font-medium self-center pl-0.5">
-                                          +{job.skills_required.length - 5}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
+                                    <Bookmark className={cn("w-3.5 h-3.5", isSaved && "fill-current")} />
+                                  </Button>
                                 </div>
+
                               </div>
 
-                              {/* Match Rationale Callout */}
-                              {rec.match_reasons && rec.match_reasons.length > 0 && (
-                                <div className="mt-3.5 pt-3 border-t border-border/50">
-                                  <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/25 rounded-lg p-2.5 border border-border/40">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
-                                    <span className="line-clamp-1">
-                                      <strong className="text-foreground font-medium">Match reason:</strong> {decode(rec.match_reasons[0])}
+                              {/* Skills Badges Row */}
+                              {job?.skills_required && job.skills_required.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {job.skills_required.slice(0, 6).map((s, idx) => {
+                                    const skillName = decode(s);
+                                    const isUserSkill = dynamicTopSkills.includes(skillName);
+                                    return (
+                                      <span
+                                        key={idx}
+                                        onClick={() => setSearch(skillName)}
+                                        className={cn(
+                                          "px-2.5 py-0.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer",
+                                          isUserSkill
+                                            ? "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25 hover:bg-sky-500/20"
+                                            : "bg-muted/60 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground"
+                                        )}
+                                        title={`Filter by ${skillName}`}
+                                      >
+                                        {skillName}
+                                      </span>
+                                    );
+                                  })}
+                                  {job.skills_required.length > 6 && (
+                                    <span 
+                                      onClick={() => setSelectedRec(rec)}
+                                      className="text-[11px] text-muted-foreground font-semibold cursor-pointer hover:text-foreground pl-1"
+                                    >
+                                      +{job.skills_required.length - 6} more
                                     </span>
-                                  </div>
+                                  )}
                                 </div>
                               )}
 
-                              {/* Action Buttons Row */}
-                              <div className="pt-3.5 mt-3.5 border-t border-border/50 flex flex-wrap items-center justify-between gap-2.5">
-                                <div className="flex items-center gap-2 flex-1">
-                                  {/* Career Path Button */}
+                              {/* AI Match Rationale Strip */}
+                              {rec.match_reasons && rec.match_reasons.length > 0 && (
+                                <div className="p-2.5 rounded-xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 flex items-start gap-2 text-xs text-muted-foreground">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                                  <span className="line-clamp-1">
+                                    <strong className="text-emerald-900 dark:text-emerald-300 font-bold">Match Rationale:</strong> {decode(rec.match_reasons[0])}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Card Action Controls Footer */}
+                              <div className="pt-2 border-t border-border/50 flex flex-wrap items-center justify-between gap-2.5">
+                                
+                                <div className="flex items-center gap-2">
+                                  {/* Generate 30-Day Career Path */}
                                   <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={() => createCareerPlan(rec)}
-                                    className="rounded-lg text-xs font-medium h-8 px-3 border-border/80 hover:bg-muted gap-1.5"
+                                    className="rounded-xl text-xs font-bold h-8 px-3 border-sky-500/30 text-sky-700 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 gap-1.5"
                                   >
-                                    <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-                                    Career Path
+                                    <TrendingUp className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                                    30-Day Prep Roadmap
                                   </Button>
 
                                   {/* Direct Apply Button */}
@@ -776,7 +924,7 @@ export default function JobRecommendations() {
                                     <Button
                                       size="sm"
                                       asChild
-                                      className="rounded-lg text-xs font-medium h-8 px-3 bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-2xs"
+                                      className="rounded-xl text-xs font-bold h-8 px-3.5 bg-sky-600 hover:bg-sky-700 text-white gap-1.5 shadow-2xs"
                                     >
                                       <a href={job.application_url} target="_blank" rel="noopener noreferrer">
                                         Apply <ExternalLink className="w-3 h-3" />
@@ -785,25 +933,15 @@ export default function JobRecommendations() {
                                   )}
                                 </div>
 
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => updateStatus(rec.id, rec.status === "saved" ? "active" : "saved")}
-                                    className={cn("w-8 h-8 rounded-lg border border-border/70", rec.status === "saved" && "text-amber-500 bg-amber-500/10 border-amber-500/20")}
-                                  >
-                                    <Bookmark className={cn("w-3.5 h-3.5", rec.status === "saved" && "fill-current")} />
-                                  </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setSelectedRec(rec)}
+                                  className="rounded-xl text-xs font-semibold h-8 px-2.5 text-muted-foreground hover:text-foreground gap-1"
+                                >
+                                  View Details <ArrowRight className="w-3.5 h-3.5" />
+                                </Button>
 
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setSelectedRec(rec)}
-                                    className="rounded-lg text-xs font-medium h-8 px-2.5 text-muted-foreground hover:text-foreground gap-1"
-                                  >
-                                    Details <ArrowRight className="w-3.5 h-3.5" />
-                                  </Button>
-                                </div>
                               </div>
 
                             </CardContent>
@@ -813,77 +951,95 @@ export default function JobRecommendations() {
                     })}
                   </AnimatePresence>
                 </div>
+
               </div>
 
-              {/* ──── Right Column: Sidebar Widgets (4 cols) ──── */}
-              <div className="lg:col-span-4 space-y-4">
+              {/* ──────────────────────────────────────────────────────────────
+                  RIGHT COLUMN: STICKY INTELLIGENCE SIDEBAR (4 Cols)
+              ────────────────────────────────────────────────────────────── */}
+              <div className="lg:col-span-4 space-y-4 sticky top-24">
 
-                {/* Widget 1: Career Insights */}
-                <Card className="bg-card border border-border/80 shadow-2xs rounded-xl overflow-hidden">
+                {/* Widget 1: Your Target Skill Graph */}
+                <Card className="bg-card border border-border/80 shadow-xs rounded-2xl overflow-hidden">
                   <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-xs sm:text-sm font-bold flex items-center gap-2 text-foreground">
-                      <TrendingUp className="w-4 h-4 text-primary" />
-                      Role Alignment Insights
+                    <CardTitle className="text-xs sm:text-sm font-bold flex items-center justify-between text-foreground">
+                      <span className="flex items-center gap-2">
+                        <Target className="w-4 h-4 text-sky-500" />
+                        Target Role Profile
+                      </span>
+                      <button
+                        onClick={() => navigate("/profile")}
+                        className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline"
+                      >
+                        Edit
+                      </button>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 pt-1 space-y-3">
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      {targetRoleTitle} opportunities analyzed from verified job providers.
-                    </p>
+                    <div className="p-3 rounded-xl bg-sky-500/5 dark:bg-sky-950/20 border border-sky-500/20">
+                      <span className="text-[10px] uppercase font-bold text-sky-700/80 dark:text-sky-400/80 tracking-wider block">Target Role</span>
+                      <p className="text-xs font-black text-foreground mt-0.5 truncate">{targetRoleTitle}</p>
+                    </div>
 
-                    <div className="p-3 rounded-lg bg-muted/40 border border-border/60 flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-bold text-foreground block">
-                          {counts.all > 0 ? Math.round((counts.high / counts.all) * 100) : 0}% High Fit Rate
-                        </span>
-                        <span className="text-[11px] text-muted-foreground">matching your current skills</span>
-                      </div>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        {counts.high} roles
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-2">
+                        Your Parsed Key Skills
                       </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {dynamicTopSkills.map((sk, i) => (
+                          <span
+                            key={i}
+                            onClick={() => setSearch(sk)}
+                            className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-500/20 hover:bg-sky-500/20 transition-colors cursor-pointer"
+                            title={`Filter roles by ${sk}`}
+                          >
+                            {sk}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Widget 2: Skill Gaps & Optimization */}
-                <Card className="bg-card border border-border/80 shadow-2xs rounded-xl overflow-hidden">
+                {/* Widget 2: High Demand Skill Gaps */}
+                <Card className="bg-card border border-border/80 shadow-xs rounded-2xl overflow-hidden">
                   <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-xs sm:text-sm font-bold flex items-center gap-2 text-foreground">
-                      <Target className="w-4 h-4 text-primary" />
-                      Skills in Demand
+                      <TrendingUp className="w-4 h-4 text-emerald-500" />
+                      In-Demand Market Skills
                     </CardTitle>
+                    <CardDescription className="text-muted-foreground text-[11px]">
+                      Frequently required by recruiters for {targetRoleTitle}.
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="p-4 pt-1 space-y-3">
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Frequently requested in role descriptions that can boost your match score:
-                    </p>
-
                     <div className="flex flex-wrap gap-1.5">
                       {dynamicSkillGaps.map((sk, i) => (
-                        <span key={i} className="px-2.5 py-1 rounded-md text-xs font-medium bg-muted/60 text-foreground border border-border/60">
-                          {sk}
+                        <span
+                          key={i}
+                          onClick={() => setSearch(sk)}
+                          className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                          title={`Click to filter jobs for ${sk}`}
+                        >
+                          + {sk}
                         </span>
                       ))}
                     </div>
-
-                    <button
-                      onClick={() => navigate("/profile")}
-                      className="text-xs font-medium text-primary hover:underline flex items-center gap-1 pt-1"
-                    >
-                      Update Profile Skills <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Adding these skills to your resume or projects can increase your match score up to <strong className="text-emerald-600 dark:text-emerald-400">+25%</strong>.
+                    </p>
                   </CardContent>
                 </Card>
 
-                {/* Widget 3: Suggested Searches */}
-                <Card className="bg-card border border-border/80 shadow-2xs rounded-xl overflow-hidden">
+                {/* Widget 3: Quick Filter Presets */}
+                <Card className="bg-card border border-border/80 shadow-xs rounded-2xl overflow-hidden">
                   <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
                     <CardTitle className="text-xs sm:text-sm font-bold flex items-center gap-2 text-foreground">
-                      <Bookmark className="w-4 h-4 text-primary" />
-                      Suggested Searches
+                      <Bookmark className="w-4 h-4 text-indigo-500" />
+                      Quick Role Presets
                     </CardTitle>
-                    {search && (
-                      <button onClick={() => setSearch("")} className="text-xs text-muted-foreground hover:text-foreground">
+                    {hasActiveFilters && (
+                      <button onClick={clearAllFilters} className="text-xs text-sky-600 dark:text-sky-400 hover:underline font-bold">
                         Clear
                       </button>
                     )}
@@ -892,19 +1048,31 @@ export default function JobRecommendations() {
                     {dynamicSavedSearches.map((s, i) => (
                       <div
                         key={i}
-                        onClick={() => setSearch(s.query.split(" ")[0])}
-                        className="p-2.5 rounded-lg border border-border/50 hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer group"
+                        onClick={() => {
+                          if (s.tab) setActiveTab(s.tab);
+                          else if (s.tag) setSearch(s.tag);
+                        }}
+                        className="p-2.5 rounded-xl border border-border/60 hover:border-sky-500/40 hover:bg-muted/40 transition-all flex items-center justify-between cursor-pointer group"
                       >
-                        <p className="text-xs font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                        <p className="text-xs font-semibold text-foreground group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors truncate">
                           {s.query}
                         </p>
-                        <span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded border border-border/50 shrink-0 ml-2">
-                          {s.count}
-                        </span>
+                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
                       </div>
                     ))}
                   </CardContent>
                 </Card>
+
+                {/* Widget 4: Career Plan Promo Card */}
+                <div className="p-4 rounded-2xl bg-indigo-500/5 dark:bg-indigo-950/20 border border-indigo-500/20 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-indigo-950 dark:text-indigo-200">
+                    <Sparkles className="w-4 h-4 text-indigo-500" />
+                    Interview Roadmap Generator
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Click <strong className="text-foreground">30-Day Prep Roadmap</strong> on any role to generate personalized DSA, System Design, and behavioral study milestones.
+                  </p>
+                </div>
 
               </div>
 
@@ -914,52 +1082,77 @@ export default function JobRecommendations() {
         </div>
       </div>
 
-      {/* ──── Job Detail Dialog Modal ──── */}
+      {/* ══════════════════════════════════════════════════════════════════
+          5. JOB DETAIL DIALOG MODAL
+      ══════════════════════════════════════════════════════════════════ */}
       <Dialog open={!!selectedRec} onOpenChange={(open) => !open && setSelectedRec(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-card border border-border shadow-md">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl p-6 bg-card border border-border shadow-xl">
           {selectedRec && (() => {
             const job = selectedRec.job_postings;
+            const company = decode(job?.company || "");
+            const title = decode(job?.title || "");
+            const isHighFit = selectedRec.match_score >= 80;
+
             return (
               <div className="space-y-5">
+                
+                {/* Modal Header */}
                 <DialogHeader>
-                  <div className="flex items-start gap-3.5 pr-6">
-                    <CompanyLogo company={job?.company} size="lg" />
-                    <div>
-                      <DialogTitle className="text-lg font-bold text-foreground">
-                        {decode(job?.title || "")}
-                      </DialogTitle>
-                      <DialogDescription className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5 flex-wrap">
-                        <span className="font-medium text-foreground">{decode(job?.company || "")}</span>
-                        <span>•</span>
-                        <span>{job?.location || "Remote"}</span>
-                        <span>•</span>
-                        <span>{timeAgo(job?.posted_date)}</span>
-                      </DialogDescription>
+                  <div className="flex items-start justify-between gap-4 pr-6">
+                    <div className="flex items-start gap-3.5 min-w-0">
+                      <CompanyLogo company={company} size="lg" />
+                      <div className="min-w-0">
+                        <DialogTitle className="text-lg sm:text-xl font-bold text-foreground leading-snug">
+                          {title}
+                        </DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-foreground">{company}</span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-sky-500" />
+                            {job?.location || "Remote"}
+                          </span>
+                          <span>•</span>
+                          <span>{timeAgo(job?.posted_date)}</span>
+                        </DialogDescription>
+                      </div>
+                    </div>
+
+                    <div className={cn(
+                      "px-3 py-1 rounded-xl text-xs font-bold border shrink-0 shadow-2xs",
+                      isHighFit
+                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                        : "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/30"
+                    )}>
+                      {selectedRec.match_score}% Fit
                     </div>
                   </div>
                 </DialogHeader>
 
-                {/* Match reasons */}
+                {/* Match Rationale Breakdown */}
                 {selectedRec.match_reasons && selectedRec.match_reasons.length > 0 && (
-                  <div className="p-3.5 rounded-xl bg-muted/40 border border-border/60 space-y-2">
-                    <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Match Rationale ({selectedRec.match_score}%)
+                  <div className="p-4 rounded-2xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 space-y-2">
+                    <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> 
+                      AI Match Assessment
                     </h4>
-                    <ul className="space-y-1 pl-5 list-disc text-xs text-muted-foreground">
+                    <ul className="space-y-1.5 pl-5 list-disc text-xs text-muted-foreground">
                       {selectedRec.match_reasons.map((r, idx) => (
-                        <li key={idx}>{decode(r)}</li>
+                        <li key={idx} className="leading-relaxed">{decode(r)}</li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {/* Skills required */}
+                {/* Required Skills Cloud */}
                 {job?.skills_required && job.skills_required.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Required Skills</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                      Required Skills & Technologies
+                    </h4>
                     <div className="flex flex-wrap gap-1.5">
                       {job.skills_required.map((s, idx) => (
-                        <span key={idx} className="px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground border border-border/60">
+                        <span key={idx} className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-500/20">
                           {decode(s)}
                         </span>
                       ))}
@@ -967,41 +1160,47 @@ export default function JobRecommendations() {
                   </div>
                 )}
 
-                {/* Description */}
+                {/* Job Description Container */}
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Job Description</h4>
-                  <div className="p-3.5 rounded-xl bg-muted/20 border border-border/50 text-xs leading-relaxed text-muted-foreground whitespace-pre-line max-h-56 overflow-y-auto">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                    Role Description
+                  </h4>
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-border/60 text-xs leading-relaxed text-muted-foreground whitespace-pre-line max-h-60 overflow-y-auto custom-scrollbar font-normal">
                     {decode(job?.description || "Full job description available on the application page.")}
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2.5 pt-2 border-t border-border/60">
+                {/* Modal Footer Actions */}
+                <div className="flex items-center gap-2.5 pt-3 border-t border-border/60">
                   <Button
                     onClick={() => createCareerPlan(selectedRec)}
                     variant="outline"
-                    className="flex-1 rounded-lg text-xs font-medium h-9 gap-1.5 border-border/80 hover:bg-muted"
+                    className="flex-1 rounded-xl text-xs font-bold h-9 gap-1.5 border-sky-500/30 text-sky-700 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20"
                   >
-                    <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-                    Generate Career Path
+                    <TrendingUp className="w-3.5 h-3.5 text-sky-600" />
+                    Generate 30-Day Roadmap
                   </Button>
+
                   {job?.application_url && (
-                    <Button asChild className="flex-1 rounded-lg text-xs font-medium h-9 bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-2xs">
+                    <Button asChild className="flex-1 rounded-xl text-xs font-bold h-9 bg-sky-600 hover:bg-sky-700 text-white gap-1.5 shadow-xs border-0">
                       <a href={job.application_url} target="_blank" rel="noopener noreferrer">
-                        Apply Directly <ExternalLink className="w-3.5 h-3.5" />
+                        Apply on Partner Portal <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     </Button>
                   )}
                 </div>
+
               </div>
             );
           })()}
         </DialogContent>
       </Dialog>
 
-      {/* ──── How It Works Dialog Modal ──── */}
+      {/* ══════════════════════════════════════════════════════════════════
+          6. HOW IT WORKS MODAL
+      ══════════════════════════════════════════════════════════════════ */}
       <Dialog open={howItWorksOpen} onOpenChange={setHowItWorksOpen}>
-        <DialogContent className="max-w-md rounded-2xl p-6 bg-card border border-border shadow-md">
+        <DialogContent className="max-w-md rounded-3xl p-6 bg-card border border-border shadow-xl">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-foreground">
               How Job Recommendations Work
@@ -1009,24 +1208,30 @@ export default function JobRecommendations() {
           </DialogHeader>
           <div className="space-y-4 text-xs text-muted-foreground leading-relaxed pt-2">
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-md bg-muted text-foreground font-semibold flex items-center justify-center shrink-0 text-xs border border-border/60">1</div>
+              <div className="w-6 h-6 rounded-lg bg-sky-500/10 text-sky-700 dark:text-sky-400 font-bold flex items-center justify-center shrink-0 text-xs border border-sky-500/20">
+                1
+              </div>
               <div>
-                <p className="font-semibold text-foreground mb-0.5">Resume & Skill Parsing</p>
-                We analyze your uploaded resume and interview performance across Voke to build your real-time skill graph.
+                <p className="font-bold text-foreground mb-0.5">Resume & Profile Parsing</p>
+                We continuously parse your uploaded resume, target role, and technical practice history to create your live skill graph.
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-md bg-muted text-foreground font-semibold flex items-center justify-center shrink-0 text-xs border border-border/60">2</div>
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 text-xs border border-emerald-500/20">
+                2
+              </div>
               <div>
-                <p className="font-semibold text-foreground mb-0.5">Daily Job Scouting</p>
-                Our engine aggregates live openings from verified tech role providers and matches them with your target profile.
+                <p className="font-bold text-foreground mb-0.5">Live Job Scouting</p>
+                Our system aggregates active openings from vetted global providers, filtering out duplicates and expired roles.
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-md bg-muted text-foreground font-semibold flex items-center justify-center shrink-0 text-xs border border-border/60">3</div>
+              <div className="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-400 font-bold flex items-center justify-center shrink-0 text-xs border border-purple-500/20">
+                3
+              </div>
               <div>
-                <p className="font-semibold text-foreground mb-0.5">Match Scoring & Career Plans</p>
-                Each role receives a match score and offers 1-click tailored Career Path generation to prepare for technical interviews.
+                <p className="font-bold text-foreground mb-0.5">Match Scoring & Prep Roadmaps</p>
+                Every opportunity receives an AI match score and lets you generate an instant 30-day interview prep plan with DSA & system design milestones.
               </div>
             </div>
           </div>

@@ -144,15 +144,22 @@ export function createSEOData(input: Partial<SEOData> & { title: string; descrip
 export const PUBLIC_ROUTES_REGISTRY: Record<string, RouteSEOInput> = {
   "/": {
     path: "/",
-    title: "Voke – AI Powered Interview Practice for Tech Students & Engineers",
+    title: "Voke – AI Mock Interview Platform for Software Engineers & Tech Students",
     description:
-      "Practice tech interviews with AI-powered feedback, resume-based questions, real-time mock sessions, and coding practice. Built for B.Tech CSE students preparing for placements and software engineering roles.",
+      "Practice realistic AI mock interviews with instant voice and video feedback, resume-tailored technical questions, coding rounds, and system design. Built for B.Tech CSE students, campus placements, and software developers.",
     keywords: [
-      "Voke",
-      "AI interview practice",
-      "technical mock interview",
-      "behavioral interview AI",
-      "resume analysis interview",
+      "AI mock interview",
+      "AI mock interview platform",
+      "technical mock interview online",
+      "AI coding mock interview",
+      "AI mock interview for BTech CSE students",
+      "campus placement mock interview preparation",
+      "technical interview practice for freshers",
+      "Google coding mock interview practice",
+      "Amazon SDE mock interview AI",
+      "voice and video AI interview practice",
+      "resume based mock interview AI",
+      "system design mock interview practice",
       "B.Tech placement preparation",
       "coding interview prep"
     ],
@@ -161,18 +168,18 @@ export const PUBLIC_ROUTES_REGISTRY: Record<string, RouteSEOInput> = {
     structuredData: (canonicalUrl) =>
       createPageSchemaGraph({
         canonicalUrl,
-        pageName: "Voke – AI Powered Interview Practice Platform",
-        pageDescription: "AI-powered technical and behavioral mock interview platform for college students and developers.",
+        pageName: "Voke – AI Mock Interview & Technical Practice Platform",
+        pageDescription: "AI-powered technical, coding, and behavioral mock interview platform for college students and developers.",
         includeSoftwareApp: true,
         breadcrumbs: [{ name: "Home", url: SITE_URL }]
       })
   },
   "/pricing": {
     path: "/pricing",
-    title: "Pricing Plans & Subscriptions – Voke AI",
+    title: "AI Mock Interview Plans & Pricing – Voke",
     description:
-      "Explore affordable Voke AI pricing plans for Tech Students and Engineers. Get unlimited AI mock interviews, resume feedback, and company-specific question prep.",
-    keywords: ["Voke pricing", "AI interview cost", "mock interview subscription", "tech interview prep plans"],
+      "Explore affordable Voke AI pricing plans for students and software engineers. Get free AI mock interviews, unlimited resume feedback, and company-specific interview prep.",
+    keywords: ["AI mock interview pricing", "free AI mock interview", "mock interview subscription", "tech interview prep plans", "coding interview cost"],
     changefreq: "weekly",
     priority: 0.9,
     structuredData: (canonicalUrl) =>
@@ -188,7 +195,7 @@ export const PUBLIC_ROUTES_REGISTRY: Record<string, RouteSEOInput> = {
           {
             "@type": "Product",
             "@id": `${canonicalUrl}#product`,
-            "name": "Voke AI Interview Preparation",
+            "name": "Voke AI Mock Interview Preparation",
             "description": "AI-powered mock interview subscription with resume reviews and company problem sets.",
             "brand": { "@type": "Brand", "name": "Voke" },
             "offers": {
@@ -205,16 +212,24 @@ export const PUBLIC_ROUTES_REGISTRY: Record<string, RouteSEOInput> = {
   },
   "/companies": {
     path: "/companies",
-    title: "Top Tech Companies Interview Questions & AI Practice – Voke",
+    title: "Company Mock Interviews & Real Coding Questions – Voke",
     description:
-      "Practice real interview questions asked by Google, Meta, Amazon, Microsoft, Apple, Uber, and top tech companies. Filter by question frequency, difficulty, and practice live.",
-    keywords: ["company interview questions", "Google interview questions", "Amazon tech questions", "coding interview questions by company"],
+      "Practice company-specific AI mock interviews with real interview questions from Google, Meta, Amazon, Microsoft, Apple, Uber, and top tech companies.",
+    keywords: [
+      "company mock interview",
+      "Google AI mock interview",
+      "Amazon SDE mock interview",
+      "coding interview questions by company",
+      "tech company interview prep",
+      "Google interview questions",
+      "Amazon tech questions"
+    ],
     changefreq: "daily",
     priority: 0.9,
     structuredData: (canonicalUrl) =>
       createPageSchemaGraph({
         canonicalUrl,
-        pageName: "Top Tech Companies Interview Questions",
+        pageName: "Top Tech Companies Interview Questions & Mock Practice",
         pageDescription: "Practice real technical interview questions asked by top tech companies.",
         breadcrumbs: [
           { name: "Home", url: SITE_URL },
@@ -239,10 +254,16 @@ export const PUBLIC_ROUTES_REGISTRY: Record<string, RouteSEOInput> = {
   },
   "/dsa-sheet": {
     path: "/dsa-sheet",
-    title: "Curated Data Structures & Algorithms (DSA) Sheet – Voke",
+    title: "Curated DSA Sheet for Coding Mock Interviews – Voke",
     description:
       "Master Data Structures and Algorithms with Voke's handpicked DSA problem sheet. From Arrays and Trees to Dynamic Programming, practice with instant AI guidance.",
-    keywords: ["DSA sheet", "Data Structures Algorithms practice", "coding interview roadmap", "SDE prep sheet"],
+    keywords: [
+      "DSA mock interview practice",
+      "coding interview roadmap",
+      "DSA sheet for placement",
+      "SDE coding interview prep",
+      "Data Structures Algorithms practice"
+    ],
     changefreq: "weekly",
     priority: 0.8,
     structuredData: (canonicalUrl) =>
@@ -258,10 +279,16 @@ export const PUBLIC_ROUTES_REGISTRY: Record<string, RouteSEOInput> = {
   },
   "/question-practice": {
     path: "/question-practice",
-    title: "Technical & Behavioral Question Practice Bank – Voke",
+    title: "AI Technical & Behavioral Mock Interview Question Bank – Voke",
     description:
       "Browse and practice thousands of technical, system design, and behavioral interview questions with instant AI solution feedback.",
-    keywords: ["interview question bank", "behavioral interview practice", "system design questions", "coding practice"],
+    keywords: [
+      "mock interview question bank",
+      "behavioral mock interview AI",
+      "system design mock interview",
+      "technical mock questions",
+      "coding practice"
+    ],
     changefreq: "weekly",
     priority: 0.8,
     structuredData: (canonicalUrl) =>
@@ -296,10 +323,10 @@ export const PUBLIC_ROUTES_REGISTRY: Record<string, RouteSEOInput> = {
   },
   "/elite-prep": {
     path: "/elite-prep",
-    title: "Elite Interview Preparation Program – Voke",
+    title: "Elite Tech Mock Interview Coaching & MAANG Prep – Voke",
     description:
       "Accelerated 1-on-1 style AI coaching for tier-1 tech company placement. High-intensity mock interviews, system design drills, and resume optimization.",
-    keywords: ["elite prep program", "MAANG interview coaching", "tier 1 placement prep", "system design mock interview"],
+    keywords: ["elite mock interview", "MAANG interview coaching", "tier 1 placement prep", "system design mock interview", "AI interview coaching"],
     changefreq: "weekly",
     priority: 0.8,
     structuredData: (canonicalUrl) =>
