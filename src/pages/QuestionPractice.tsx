@@ -263,8 +263,8 @@ const QuestionPractice = () => {
 
                     <div className="flex items-center gap-3 text-sm text-zinc-500 font-medium tracking-widest">
                         <span className="relative flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-violet-500"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
                         </span>
                         CONNECTING_TO_DATABASE...
                     </div>
@@ -274,7 +274,7 @@ const QuestionPractice = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-violet-500/30">
+        <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-sky-500/30">
             <Navbar />
 
             {/* Sidebar + Main Content Layout */}
@@ -291,11 +291,11 @@ const QuestionPractice = () => {
                 >
                     {/* Main Welcome */}
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 text-violet-500 text-sm font-medium border border-violet-500/20">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 text-sky-500 text-sm font-medium border border-sky-500/20">
                             <Code2 className="w-4 h-4" />
                             Interview Arena
                         </div>
-                        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
                             Master the Code. <br /> Crack the Interview.
                         </h1>
                         <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
@@ -304,7 +304,7 @@ const QuestionPractice = () => {
                         </p>
 
                         <div className="flex items-center gap-4 pt-2">
-                            <Button size="lg" className="rounded-full px-8 bg-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-500/20">
+                            <Button size="lg" className="rounded-full px-8 bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-500/20">
                                 Start Practicing
                             </Button>
                             <div className="flex -space-x-3">
@@ -313,7 +313,7 @@ const QuestionPractice = () => {
                                         <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 20}`} alt="User" />
                                     </div>
                                 ))}
-                                <div className="w-10 h-10 rounded-full border-2 border-background bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center text-xs font-medium text-violet-600">
+                                <div className="w-10 h-10 rounded-full border-2 border-background bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center text-xs font-medium text-sky-600">
                                     +2k
                                 </div>
                             </div>
@@ -327,8 +327,8 @@ const QuestionPractice = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.2 }}
                     >
-                        <Card className="h-full border-primary/10 bg-gradient-to-br from-violet-50/50 to-fuchsia-50/50 dark:from-violet-950/10 dark:to-fuchsia-950/10 backdrop-blur-sm relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                        <Card className="h-full border-primary/10 bg-gradient-to-br from-sky-50/50 to-blue-50/50 dark:from-sky-950/10 dark:to-blue-950/10 backdrop-blur-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="flex items-center gap-2">
@@ -398,10 +398,10 @@ const QuestionPractice = () => {
 
                         {/* Search */}
                         <div className="relative w-full md:max-w-md group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-violet-500 transition-colors" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-sky-500 transition-colors" />
                             <Input
                                 placeholder="Search by title, tag or topic..."
-                                className="pl-10 bg-background/50 border-transparent focus:border-violet-500/50 focus:bg-background transition-all"
+                                className="pl-10 bg-background/50 border-transparent focus:border-sky-500/50 focus:bg-background transition-all"
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                             />
@@ -715,7 +715,7 @@ const QuestionPractice = () => {
                                                     "text-[10px] px-2 py-0.5 rounded-full border",
                                                     solvedQuestionIds.has(question.id)
                                                         ? "text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 border-emerald-500/20"
-                                                        : "text-violet-600/80 dark:text-violet-300 bg-violet-50 dark:bg-violet-900/20 border-violet-100 dark:border-violet-800"
+                                                        : "text-sky-600/80 dark:text-sky-300 bg-sky-50 dark:bg-sky-900/20 border-sky-100 dark:border-sky-800"
                                                 )}>
                                                     {tag}
                                                 </span>

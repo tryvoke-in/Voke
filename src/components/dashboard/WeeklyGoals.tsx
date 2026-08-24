@@ -121,7 +121,7 @@ export const WeeklyGoals = () => {
       case "peer":
         return { icon: Users, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" };
       case "resume":
-        return { icon: FileText, color: "text-violet-500 bg-violet-500/10 border-violet-500/20" };
+        return { icon: FileText, color: "text-sky-500 bg-sky-500/10 border-sky-500/20" };
       default:
         return { icon: Target, color: "text-gray-500 bg-gray-500/10 border-gray-500/20" };
     }
@@ -133,7 +133,7 @@ export const WeeklyGoals = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
     >
-      <Card className="border-0 shadow-xl bg-white dark:bg-slate-900/50 dark:bg-gradient-to-br dark:from-indigo-950/50 dark:to-purple-950/20 backdrop-blur-xl border-gray-100 dark:border-white/5 overflow-hidden relative group">
+      <Card className="border-0 shadow-xl bg-white dark:bg-slate-900/50 dark:bg-gradient-to-br dark:from-indigo-950/50 dark:to-blue-950/20 backdrop-blur-xl border-gray-100 dark:border-white/5 overflow-hidden relative group">
         
         {/* Background Decor */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
@@ -142,7 +142,7 @@ export const WeeklyGoals = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <CardTitle className="text-lg flex items-center gap-2 text-gray-900 dark:text-white">
-                <Target className="w-5 h-5 text-violet-500 dark:text-violet-400" />
+                <Target className="w-5 h-5 text-sky-500 dark:text-sky-400" />
                 Weekly Target Tracker
               </CardTitle>
               <CardDescription className="text-gray-500 dark:text-gray-400">
@@ -170,7 +170,7 @@ export const WeeklyGoals = () => {
                   <Sparkles className="w-4 h-4 text-amber-500" />
                   Weekly Progress
                 </span>
-                <span className="text-violet-600 dark:text-violet-400">
+                <span className="text-sky-600 dark:text-sky-400">
                   {completedCount} / {totalCount} completed ({progressPercent}%)
                 </span>
               </div>
@@ -202,7 +202,7 @@ export const WeeklyGoals = () => {
                     className={`p-3.5 rounded-xl border transition-all duration-300 flex items-center justify-between cursor-pointer group ${
                       goal.completed
                         ? "bg-emerald-500/5 border-emerald-500/20 text-gray-500 dark:text-gray-400 line-through"
-                        : "bg-white dark:bg-[#0f111a]/45 border-gray-100 dark:border-white/5 hover:border-violet-500/30 hover:bg-gray-50/50 dark:hover:bg-white/5 text-gray-900 dark:text-white"
+                        : "bg-white dark:bg-[#0f111a]/45 border-gray-100 dark:border-white/5 hover:border-sky-500/30 hover:bg-gray-50/50 dark:hover:bg-white/5 text-gray-900 dark:text-white"
                     }`}
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
@@ -211,7 +211,7 @@ export const WeeklyGoals = () => {
                         {goal.completed ? (
                           <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                         ) : (
-                          <Circle className="w-5 h-5 text-muted-foreground group-hover:text-violet-500" />
+                          <Circle className="w-5 h-5 text-muted-foreground group-hover:text-sky-500" />
                         )}
                       </div>
 
@@ -233,7 +233,7 @@ export const WeeklyGoals = () => {
                           size="icon"
                           variant="ghost"
                           onClick={(e) => incrementGoal(goal.id, e)}
-                          className="h-7 w-7 text-[10px] font-bold border border-violet-500/20 text-violet-500 hover:bg-violet-500/10 hover:text-violet-600 rounded-md"
+                          className="h-7 w-7 text-[10px] font-bold border border-sky-500/20 text-sky-500 hover:bg-sky-500/10 hover:text-sky-600 rounded-md"
                           title="Increment Progress"
                         >
                           {goal.current}/{goal.target}
@@ -269,14 +269,14 @@ export const WeeklyGoals = () => {
               placeholder="Add a custom target..."
               value={newGoalText}
               onChange={(e) => setNewGoalText(e.target.value)}
-              className="flex-1 h-9 px-3 text-sm bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-violet-500/50"
+              className="flex-1 h-9 px-3 text-sm bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500/50"
             />
             
             <div className="flex gap-2">
               <select
                 value={newGoalCategory}
                 onChange={(e) => setNewGoalCategory(e.target.value as any)}
-                className="h-9 px-2 text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:border-violet-500/50 cursor-pointer"
+                className="h-9 px-2 text-xs bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
               >
                 <option value="coding" className="dark:bg-[#1a1a23]">Coding</option>
                 <option value="voice" className="dark:bg-[#1a1a23]">AI Voice</option>
@@ -284,7 +284,7 @@ export const WeeklyGoals = () => {
                 <option value="resume" className="dark:bg-[#1a1a23]">Resume</option>
               </select>
 
-              <Button type="submit" size="sm" className="h-9 px-4 bg-violet-600 hover:bg-violet-700 text-white font-medium gap-1 rounded-lg">
+              <Button type="submit" size="sm" className="h-9 px-4 bg-sky-600 hover:bg-sky-700 text-white font-medium gap-1 rounded-lg">
                 <Plus className="w-4 h-4" />
                 Add
               </Button>

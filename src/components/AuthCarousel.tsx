@@ -34,15 +34,15 @@ export const AuthCarousel = () => {
             icon: Brain,
             title: "AI-Powered Interviews",
             description: "Practice with advanced AI that adapts to your skill level and provides instant, personalized feedback.",
-            color: "text-violet-500",
-            bg: "bg-violet-500/10",
+            color: "text-sky-500",
+            bg: "bg-sky-500/10",
         },
         {
             icon: Sparkles,
             title: "Real-time Feedback",
             description: "Get detailed insights on your answers, body language, and tone to improve your interview presence.",
-            color: "text-fuchsia-500",
-            bg: "bg-fuchsia-500/10",
+            color: "text-blue-500",
+            bg: "bg-blue-500/10",
         },
         {
             icon: TrendingUp,
@@ -92,8 +92,8 @@ export const AuthCarousel = () => {
                             key={index}
                             onClick={() => api?.scrollTo(index)}
                             className={`h-2 rounded-full transition-all duration-300 ${index === current
-                                ? "bg-violet-600 w-8"
-                                : "bg-gray-300 dark:bg-gray-700 w-2 hover:bg-violet-400"
+                                ? "bg-sky-600 w-8"
+                                : "bg-gray-300 dark:bg-gray-700 w-2 hover:bg-sky-400"
                                 }`}
                             aria-label={`Go to slide ${index + 1}`}
                         />

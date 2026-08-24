@@ -110,7 +110,7 @@ const TimedVideoInterviewResults = () => {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
                     <p className="text-muted-foreground animate-pulse">Loading your results...</p>
                 </div>
             </div>
@@ -160,14 +160,14 @@ const TimedVideoInterviewResults = () => {
             </header>
 
             <main className="container mx-auto px-4 py-8 max-w-5xl">
-                <Button variant="ghost" onClick={() => navigate("/video-interview")} className="mb-8 hover:bg-violet-500/10 hover:text-violet-500 transition-colors">
+                <Button variant="ghost" onClick={() => navigate("/video-interview")} className="mb-8 hover:bg-sky-500/10 hover:text-sky-500 transition-colors">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to Practice
                 </Button>
 
                 {/* Overall Score Card */}
                 <Card className="bg-card/30 backdrop-blur-xl border-border/50 overflow-hidden relative mb-8">
-                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-purple-500/5"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-blue-500/5"></div>
                     <CardContent className="pt-8 pb-8 relative z-10">
                         <div className="grid md:grid-cols-3 gap-8">
                             {/* Score Circle */}
@@ -225,10 +225,10 @@ const TimedVideoInterviewResults = () => {
                                     <p className="text-lg font-semibold">{answers.length} questions</p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Badge variant="outline" className="border-violet-500/30 text-violet-500 bg-violet-500/5">
+                                    <Badge variant="outline" className="border-sky-500/30 text-sky-500 bg-sky-500/5">
                                         AI Analyzed
                                     </Badge>
-                                    <Badge variant="outline" className="border-purple-500/30 text-purple-500 bg-purple-500/5">
+                                    <Badge variant="outline" className="border-blue-500/30 text-blue-500 bg-blue-500/5">
                                         {new Date(session.created_at).toLocaleDateString()}
                                     </Badge>
                                 </div>
@@ -241,7 +241,7 @@ const TimedVideoInterviewResults = () => {
                 <Card className="bg-card/30 backdrop-blur-xl border-border/50">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Play className="w-5 h-5 text-violet-500" />
+                            <Play className="w-5 h-5 text-sky-500" />
                             Interview Questions & Feedback
                         </CardTitle>
                     </CardHeader>
@@ -393,7 +393,7 @@ const TimedVideoInterviewResults = () => {
                     <Button variant="outline" onClick={() => navigate("/dashboard")} className="flex-1">
                         Back to Dashboard
                     </Button>
-                    <Button onClick={() => navigate("/video-interview")} className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 text-white">
+                    <Button onClick={() => navigate("/video-interview")} className="flex-1 bg-gradient-to-r from-sky-600 to-blue-600 text-white">
                         Practice Again
                     </Button>
                 </div>

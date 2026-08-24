@@ -206,7 +206,7 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
                   onSelect={() => handleNavigate(item.path)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/5 cursor-pointer text-muted-foreground hover:text-foreground transition-all duration-150"
                 >
-                  <item.icon className="w-4 h-4 text-violet-500" />
+                  <item.icon className="w-4 h-4 text-sky-500" />
                   <span className="text-sm font-medium">{item.label}</span>
                   <ArrowRight className="w-3.5 h-3.5 ml-auto opacity-0 group-data-[selected=true]:opacity-100 transition-opacity" />
                 </CommandItem>

@@ -47,7 +47,7 @@ export const EliteRoleSelect: React.FC<EliteRoleSelectProps> = ({
           <ArrowLeft className="w-3.5 h-3.5 mr-1.5" /> Back to Company Selection
         </Button>
         {companyName && (
-          <Badge variant="outline" className="border-violet-500/40 bg-violet-500/10 text-violet-300 text-xs py-1 font-bold">
+          <Badge variant="outline" className="border-sky-500/40 bg-sky-500/10 text-sky-300 text-xs py-1 font-bold">
             Target Company: {companyName}
           </Badge>
         )}

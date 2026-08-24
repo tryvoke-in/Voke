@@ -1614,7 +1614,7 @@ IMPORTANT:
   };
 
   return (
-    <div className="min-h-screen bg-[#030303] text-foreground flex flex-col font-sans selection:bg-violet-500/30 overflow-hidden relative">
+    <div className="min-h-screen bg-[#030303] text-foreground flex flex-col font-sans selection:bg-sky-500/30 overflow-hidden relative">
       <style>
         {`
           @media print {
@@ -1683,10 +1683,10 @@ IMPORTANT:
         `}
       </style>
 
-      {/* Decorative Background Pulsing Glows - Violet/Fuchsia Voke Signature theme */}
+      {/* Decorative Background Pulsing Glows - Sky/Blue Voke Signature theme */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden no-print z-0 bg-[#030303]">
-        <div className="absolute top-[-30%] left-[-20%] w-[80%] h-[80%] bg-gradient-to-br from-violet-600/15 via-purple-600/5 to-transparent rounded-full blur-[140px] animate-pulse duration-[8000ms]" />
-        <div className="absolute bottom-[-30%] right-[-20%] w-[80%] h-[80%] bg-gradient-to-tl from-fuchsia-600/10 via-pink-600/5 to-transparent rounded-full blur-[140px] animate-pulse duration-[10000ms]" />
+        <div className="absolute top-[-30%] left-[-20%] w-[80%] h-[80%] bg-gradient-to-br from-sky-600/15 via-blue-600/5 to-transparent rounded-full blur-[140px] animate-pulse duration-[8000ms]" />
+        <div className="absolute bottom-[-30%] right-[-20%] w-[80%] h-[80%] bg-gradient-to-tl from-blue-600/10 via-pink-600/5 to-transparent rounded-full blur-[140px] animate-pulse duration-[10000ms]" />
         <div className="absolute top-[35%] left-[20%] w-[450px] h-[450px] bg-indigo-600/5 rounded-full blur-[130px]" />
       </div>
 
@@ -1702,8 +1702,8 @@ IMPORTANT:
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div className="flex items-center gap-2.5">
-            <div className="bg-gradient-to-tr from-violet-500/20 to-fuchsia-500/20 p-2 rounded-xl border border-violet-500/20 shadow-md shadow-violet-500/5">
-              <FileText className="w-4 h-4 text-violet-400" />
+            <div className="bg-gradient-to-tr from-sky-500/20 to-blue-500/20 p-2 rounded-xl border border-sky-500/20 shadow-md shadow-sky-500/5">
+              <FileText className="w-4 h-4 text-sky-400" />
             </div>
             <div>
               <h1 className="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
@@ -1714,16 +1714,16 @@ IMPORTANT:
           </div>
         </div>
 
-        {/* Strength Progress Area - Violet/Fuchsia Gradient */}
+        {/* Strength Progress Area - Sky/Blue Gradient */}
         <div className="hidden md:flex items-center gap-4 w-1/4">
           <div className="flex-1">
             <div className="flex justify-between text-[11px] mb-1 font-semibold text-zinc-400">
               <span>Builder Progress</span>
-              <span className={progress === 100 ? "text-emerald-400" : "text-violet-400"}>{progress}%</span>
+              <span className={progress === 100 ? "text-emerald-400" : "text-sky-400"}>{progress}%</span>
             </div>
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 p-[1px]">
               <div
-                className="h-full bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-500 transition-all duration-1000 ease-out rounded-full"
+                className="h-full bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-500 transition-all duration-1000 ease-out rounded-full"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -1751,7 +1751,7 @@ IMPORTANT:
           <Button
             onClick={handleAnalyzeResume}
             disabled={analyzing}
-            className="bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 hover:text-violet-200 border border-violet-500/20 transition-all text-xs h-9 rounded-xl font-semibold"
+            className="bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 hover:text-sky-200 border border-sky-500/20 transition-all text-xs h-9 rounded-xl font-semibold"
           >
             <Sparkles className={`w-3.5 h-3.5 mr-1.5 ${analyzing ? 'animate-spin' : ''}`} />
             ATS Audit
@@ -1768,7 +1768,7 @@ IMPORTANT:
 
           <Button
             onClick={handlePrint}
-            className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold text-xs h-9 rounded-xl shadow-lg shadow-violet-500/10 transition-all hover:scale-[1.02] border-0"
+            className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs h-9 rounded-xl shadow-lg shadow-sky-500/10 transition-all hover:scale-[1.02] border-0"
           >
             <Download className="w-3.5 h-3.5 mr-1.5" />
             Export PDF
@@ -1785,7 +1785,7 @@ IMPORTANT:
 
         {/* LEFT PANEL: Sidebar Tab workflow and Editor Content */}
         <div className="w-[45%] border-r border-white/5 bg-zinc-950/20 backdrop-blur-md flex no-print">
-          {/* Vertical Form Sections Sidebar - Violet active accents */}
+          {/* Vertical Form Sections Sidebar - Sky active accents */}
           <div className="w-52 border-r border-white/5 bg-zinc-950/40 flex flex-col p-3 gap-1.5 shrink-0 justify-between">
             <div className="flex flex-col gap-1">
               <span className="text-[10px] uppercase font-bold text-zinc-500 px-3.5 py-2 tracking-wider">Sections</span>
@@ -1797,12 +1797,12 @@ IMPORTANT:
                     key={sec.id}
                     onClick={() => setActiveTab(sec.id)}
                     className={`w-full text-left px-3.5 py-3 rounded-xl flex items-center justify-between gap-3 group transition-all duration-300 ${active
-                        ? 'bg-gradient-to-r from-violet-500/10 to-fuchsia-500/5 border-l-2 border-violet-500 text-white bg-zinc-900/60'
+                        ? 'bg-gradient-to-r from-sky-500/10 to-blue-500/5 border-l-2 border-sky-500 text-white bg-zinc-900/60'
                         : 'text-zinc-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
                       }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-violet-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+                      <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-sky-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
                       <div className="min-w-0">
                         <div className="text-xs font-bold truncate leading-tight">{sec.label}</div>
                         <div className="text-[9px] text-zinc-500 truncate leading-tight group-hover:text-zinc-400 transition-colors mt-0.5">{sec.desc}</div>
@@ -1823,14 +1823,14 @@ IMPORTANT:
             {/* Quick Status / Developer Card */}
             <div className="p-3 bg-white/5 rounded-2xl border border-white/5 flex flex-col gap-2">
               <div className="flex items-center gap-2 text-zinc-400 text-xs font-semibold">
-                <BadgeAlert className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                <BadgeAlert className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                 <span>ATS Quality Standard</span>
               </div>
               <p className="text-[9px] text-zinc-500 leading-normal">Your draft complies with single-page layout standards.</p>
             </div>
           </div>
 
-          {/* Form Content Scroll Pane - Violet focus accents */}
+          {/* Form Content Scroll Pane - Sky focus accents */}
           <ScrollArea className="flex-1 custom-scrollbar bg-black/10">
             <div className="p-6 max-w-xl mx-auto space-y-6 pb-24">
 
@@ -1839,7 +1839,7 @@ IMPORTANT:
                 <Card className="bg-zinc-900/40 border border-white/10 text-white backdrop-blur-xl shadow-[0_8px_32px_0_rgba(124,58,237,0.02)] rounded-2xl">
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center gap-2 text-base font-bold text-white">
-                      <User className="w-4 h-4 text-violet-400" />
+                      <User className="w-4 h-4 text-sky-400" />
                       Personal Information
                     </CardTitle>
                     <CardDescription className="text-zinc-400 text-xs">Manage your brand info and contact channels.</CardDescription>
@@ -1852,7 +1852,7 @@ IMPORTANT:
                           placeholder="e.g. John Doe"
                           value={data.fullName}
                           onChange={(e) => handleChange('fullName', e.target.value)}
-                          className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                          className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -1863,7 +1863,7 @@ IMPORTANT:
                             type="file"
                             accept="image/*"
                             onChange={handlePhotoUpload}
-                            className="bg-white/5 border border-white/10 text-xs file:text-white file:bg-white/10 file:border-0 file:rounded-lg file:px-2 file:py-1 file:mr-2 text-zinc-500 h-9 p-1 rounded-xl focus:border-violet-500/40 transition-all duration-300"
+                            className="bg-white/5 border border-white/10 text-xs file:text-white file:bg-white/10 file:border-0 file:rounded-lg file:px-2 file:py-1 file:mr-2 text-zinc-500 h-9 p-1 rounded-xl focus:border-sky-500/40 transition-all duration-300"
                           />
                         </div>
                       </div>
@@ -1876,7 +1876,7 @@ IMPORTANT:
                           placeholder="john@example.com"
                           value={data.email}
                           onChange={(e) => handleChange('email', e.target.value)}
-                          className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                          className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -1885,7 +1885,7 @@ IMPORTANT:
                           placeholder="+1 234 567 890"
                           value={data.phone}
                           onChange={(e) => handleChange('phone', e.target.value)}
-                          className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                          className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                         />
                       </div>
                     </div>
@@ -1896,7 +1896,7 @@ IMPORTANT:
                         placeholder="e.g. San Francisco, CA"
                         value={data.location}
                         onChange={(e) => handleChange('location', e.target.value)}
-                        className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                        className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                       />
                     </div>
 
@@ -1909,7 +1909,7 @@ IMPORTANT:
                             placeholder="LinkedIn URL"
                             value={data.linkedin}
                             onChange={(e) => handleChange('linkedin', e.target.value)}
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                            className="pl-9 bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                           />
                         </div>
                         <div className="relative">
@@ -1918,7 +1918,7 @@ IMPORTANT:
                             placeholder="GitHub URL"
                             value={data.github}
                             onChange={(e) => handleChange('github', e.target.value)}
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                            className="pl-9 bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                           />
                         </div>
                         <div className="relative">
@@ -1927,7 +1927,7 @@ IMPORTANT:
                             placeholder="Portfolio URL"
                             value={data.website}
                             onChange={(e) => handleChange('website', e.target.value)}
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                            className="pl-9 bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                           />
                         </div>
                         <div className="relative">
@@ -1936,7 +1936,7 @@ IMPORTANT:
                             placeholder="LeetCode URL"
                             value={data.leetcode}
                             onChange={(e) => handleChange('leetcode', e.target.value)}
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                            className="pl-9 bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
                           />
                         </div>
                       </div>
@@ -1948,7 +1948,7 @@ IMPORTANT:
                         <Button
                           variant="ghost"
                           size="sm"
-                          className={`h-7 px-2.5 text-[10px] font-bold transition-all rounded-lg ${isAiEnhancing ? 'bg-violet-500/20 text-violet-400' : 'text-violet-400 hover:bg-violet-500/10'}`}
+                          className={`h-7 px-2.5 text-[10px] font-bold transition-all rounded-lg ${isAiEnhancing ? 'bg-sky-500/20 text-sky-400' : 'text-sky-400 hover:bg-sky-500/10'}`}
                           onClick={handleAiEnhance}
                           disabled={isAiEnhancing}
                         >
@@ -1958,7 +1958,7 @@ IMPORTANT:
                       </div>
                       <Textarea
                         placeholder="Briefly state your core background accomplishments..."
-                        className="h-28 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl placeholder:text-white/10 leading-relaxed custom-scrollbar transition-all duration-300"
+                        className="h-28 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl placeholder:text-white/10 leading-relaxed custom-scrollbar transition-all duration-300"
                         value={data.summary}
                         onChange={(e) => handleChange('summary', e.target.value)}
                       />
@@ -2005,7 +2005,7 @@ IMPORTANT:
                                 placeholder="e.g. Microsoft"
                                 value={exp.company}
                                 onChange={(e) => updateExperience(exp.id, 'company', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                             <div className="space-y-1">
@@ -2014,7 +2014,7 @@ IMPORTANT:
                                 placeholder="e.g. Software Engineer"
                                 value={exp.role}
                                 onChange={(e) => updateExperience(exp.id, 'role', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
@@ -2024,7 +2024,7 @@ IMPORTANT:
                               placeholder="e.g. Jun 2021 - Present"
                               value={exp.duration}
                               onChange={(e) => updateExperience(exp.id, 'duration', e.target.value)}
-                              className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                              className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                             />
                           </div>
                           <div className="space-y-1">
@@ -2035,7 +2035,7 @@ IMPORTANT:
                                 size="sm"
                                 onClick={() => handleAiEnhanceExperience(exp.id, exp.description)}
                                 disabled={enhancingExpId === exp.id}
-                                className="h-5 px-1.5 text-[9px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 rounded-md transition-all font-semibold"
+                                className="h-5 px-1.5 text-[9px] text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 gap-1 rounded-md transition-all font-semibold"
                               >
                                 <Sparkles className={`w-2.5 h-2.5 ${enhancingExpId === exp.id ? 'animate-spin' : ''}`} />
                                 {enhancingExpId === exp.id ? 'Enhancing...' : 'AI Enhance'}
@@ -2043,7 +2043,7 @@ IMPORTANT:
                             </div>
                             <Textarea
                               placeholder="Describe your achievements (each starting on a new line)..."
-                              className="h-24 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
+                              className="h-24 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
                               value={exp.description}
                               onChange={(e) => updateExperience(exp.id, 'description', e.target.value)}
                             />
@@ -2100,7 +2100,7 @@ IMPORTANT:
                                 placeholder="e.g. Stanford University"
                                 value={edu.school}
                                 onChange={(e) => updateEducation(edu.id, 'school', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                             <div className="space-y-1">
@@ -2109,7 +2109,7 @@ IMPORTANT:
                                 placeholder="e.g. BS Computer Science"
                                 value={edu.degree}
                                 onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
@@ -2120,7 +2120,7 @@ IMPORTANT:
                                 placeholder="e.g. 2018 - 2022"
                                 value={edu.year}
                                 onChange={(e) => updateEducation(edu.id, 'year', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                             <div className="space-y-1">
@@ -2129,7 +2129,7 @@ IMPORTANT:
                                 placeholder="e.g. Stanford, CA"
                                 value={edu.location}
                                 onChange={(e) => updateEducation(edu.id, 'location', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
@@ -2137,7 +2137,7 @@ IMPORTANT:
                             <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Coursework (Optional)</Label>
                             <Textarea
                               placeholder="Describe relevant study areas..."
-                              className="h-16 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
+                              className="h-16 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
                               value={edu.coursework || ""}
                               onChange={(e) => updateEducation(edu.id, 'coursework', e.target.value)}
                             />
@@ -2194,7 +2194,7 @@ IMPORTANT:
                                 placeholder="e.g. AI Portfolio Suite"
                                 value={proj.name}
                                 onChange={(e) => updateProject(proj.id, 'name', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                             <div className="space-y-1">
@@ -2217,7 +2217,7 @@ IMPORTANT:
                                 placeholder="e.g. github.com/owner/repo"
                                 value={proj.link}
                                 onChange={(e) => updateProject(proj.id, 'link', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
@@ -2229,7 +2229,7 @@ IMPORTANT:
                                 size="sm"
                                 onClick={() => handleAiEnhanceProject(proj.id, proj.description)}
                                 disabled={enhancingProjId === proj.id}
-                                className="h-5 px-1.5 text-[9px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 rounded-md transition-all font-semibold"
+                                className="h-5 px-1.5 text-[9px] text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 gap-1 rounded-md transition-all font-semibold"
                               >
                                 <Sparkles className={`w-2.5 h-2.5 ${enhancingProjId === proj.id ? 'animate-spin' : ''}`} />
                                 {enhancingProjId === proj.id ? 'Enhancing...' : 'AI Enhance'}
@@ -2237,7 +2237,7 @@ IMPORTANT:
                             </div>
                             <Textarea
                               placeholder="Describe implementation details & key results..."
-                              className="h-20 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
+                              className="h-20 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
                               value={proj.description}
                               onChange={(e) => updateProject(proj.id, 'description', e.target.value)}
                             />
@@ -2261,7 +2261,7 @@ IMPORTANT:
                 <Card className="bg-zinc-900/40 border border-white/10 text-white backdrop-blur-xl shadow-[0_8px_32px_0_rgba(124,58,237,0.02)] rounded-2xl">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base font-bold">
-                      <Code className="w-4 h-4 text-violet-400" />
+                      <Code className="w-4 h-4 text-sky-400" />
                       Skills & Tech Stack
                     </CardTitle>
                     <CardDescription className="text-zinc-400 text-xs">Separate skills with commas to create tag badges.</CardDescription>
@@ -2271,7 +2271,7 @@ IMPORTANT:
                       <Label className="text-zinc-400 text-xs font-semibold">Technical / Professional Skills</Label>
                       <Textarea
                         placeholder="e.g. React, Node.js, Python, PostgreSQL, AWS, Docker, Kubernetes..."
-                        className="h-32 bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl placeholder:text-white/10 custom-scrollbar leading-relaxed transition-all duration-300"
+                        className="h-32 bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl placeholder:text-white/10 custom-scrollbar leading-relaxed transition-all duration-300"
                         value={data.skills}
                         onChange={(e) => handleChange('skills', e.target.value)}
                       />
@@ -2280,7 +2280,7 @@ IMPORTANT:
                       <Label className="mb-2 block text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Live Badges Preview</Label>
                       <div className="flex flex-wrap gap-1.5 p-3.5 bg-zinc-950/40 rounded-xl border border-white/5 min-h-[4rem]">
                         {data.skills.split(',').filter(s => s.trim()).map((skill, i) => (
-                          <Badge key={i} variant="secondary" className="bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 border-violet-500/10 text-xs px-2.5 py-0.5 rounded-lg">
+                          <Badge key={i} variant="secondary" className="bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border-sky-500/10 text-xs px-2.5 py-0.5 rounded-lg">
                             {skill.trim()}
                           </Badge>
                         ))}
@@ -2327,7 +2327,7 @@ IMPORTANT:
                           <div className="space-y-1.5">
                             <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Item Type</Label>
                             <Select value={item.type} onValueChange={(value: any) => updateLeadership(item.id, 'type', value)}>
-                              <SelectTrigger className="bg-white/5 border border-white/10 text-white text-xs h-9 rounded-xl focus:border-violet-500/40 focus:ring-violet-500/10 transition-all duration-300">
+                              <SelectTrigger className="bg-white/5 border border-white/10 text-white text-xs h-9 rounded-xl focus:border-sky-500/40 focus:ring-sky-500/10 transition-all duration-300">
                                 <SelectValue placeholder="Select type" />
                               </SelectTrigger>
                               <SelectContent className="bg-zinc-900 border border-white/10 text-white text-xs">
@@ -2351,7 +2351,7 @@ IMPORTANT:
                                 }
                                 value={item.role}
                                 onChange={(e) => updateLeadership(item.id, 'role', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                             <div className="space-y-1">
@@ -2366,7 +2366,7 @@ IMPORTANT:
                                 }
                                 value={item.organization}
                                 onChange={(e) => updateLeadership(item.id, 'organization', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
@@ -2378,7 +2378,7 @@ IMPORTANT:
                                 placeholder="e.g. 2021 - 2022"
                                 value={item.duration}
                                 onChange={(e) => updateLeadership(item.id, 'duration', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
                               />
                             </div>
                           </div>
@@ -2387,7 +2387,7 @@ IMPORTANT:
                             <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Short Details (Optional)</Label>
                             <Textarea
                               placeholder="Brief description..."
-                              className="h-16 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
+                              className="h-16 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
                               value={item.description}
                               onChange={(e) => updateLeadership(item.id, 'description', e.target.value)}
                             />
@@ -2427,7 +2427,7 @@ IMPORTANT:
                 key={t.id}
                 onClick={() => setSelectedTemplate(t.id)}
                 className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${selectedTemplate === t.id
-                    ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-md shadow-violet-500/20 scale-105'
+                    ? 'bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-md shadow-sky-500/20 scale-105'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
                   }`}
               >
@@ -2436,7 +2436,7 @@ IMPORTANT:
             ))}
           </div>
 
-          {/* Document container inside scroll view - with glowing Violet drop shadow around the paper */}
+          {/* Document container inside scroll view - with glowing Sky drop shadow around the paper */}
           <ScrollArea className="flex-1 custom-scrollbar relative z-10 w-full print:overflow-visible print:h-auto">
             <div
               className="w-full flex justify-center py-10 md:py-20 transition-all duration-300 print:py-0 print:block print:h-auto print:!min-h-0"
@@ -2501,7 +2501,7 @@ IMPORTANT:
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-zinc-950 border border-white/10 text-white rounded-3xl custom-scrollbar no-print">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-violet-400 animate-pulse" />
+              <Sparkles className="w-4 h-4 text-sky-400 animate-pulse" />
               Resume ATS Score &amp; Audit
             </DialogTitle>
           </DialogHeader>
@@ -2521,7 +2521,7 @@ IMPORTANT:
             </div>
             <Textarea
               placeholder="Paste full job description here (LinkedIn, Naukri, etc.)..."
-              className="h-24 resize-none bg-white/5 border border-white/10 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/10 text-xs rounded-xl custom-scrollbar transition-all"
+              className="h-24 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl custom-scrollbar transition-all"
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
             />
@@ -2538,7 +2538,7 @@ IMPORTANT:
               {jdKeywords && (
                 <div className="flex flex-wrap gap-1">
                   {jdKeywords.hard_skills?.slice(0, 5).map((k: string) => (
-                    <span key={k} className="text-[8px] font-bold bg-violet-500/10 text-violet-300 border border-violet-500/20 rounded-md px-1.5 py-0.5">{k}</span>
+                    <span key={k} className="text-[8px] font-bold bg-sky-500/10 text-sky-300 border border-sky-500/20 rounded-md px-1.5 py-0.5">{k}</span>
                   ))}
                   {(jdKeywords.hard_skills?.length || 0) > 5 && (
                     <span className="text-[8px] font-bold text-zinc-500">+{(jdKeywords.hard_skills?.length || 0) - 5} more</span>
@@ -2553,9 +2553,9 @@ IMPORTANT:
               <ResumeAnalysisDisplay analysis={analysisResult} />
 
               {/* ─── Make ATS Friendly CTA ─── */}
-              <div className="p-4 bg-gradient-to-br from-violet-950/60 to-fuchsia-950/40 border border-violet-500/20 rounded-2xl flex flex-col gap-3">
+              <div className="p-4 bg-gradient-to-br from-sky-950/60 to-blue-950/40 border border-sky-500/20 rounded-2xl flex flex-col gap-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-sky-500/20">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
                   <div>
@@ -2570,7 +2570,7 @@ IMPORTANT:
                 </div>
 
                 {makingAtsFriendly && atsFriendlyProgress && (
-                  <div className="flex items-center gap-2 text-xs text-violet-300 bg-violet-500/10 rounded-xl px-3 py-2 border border-violet-500/20">
+                  <div className="flex items-center gap-2 text-xs text-sky-300 bg-sky-500/10 rounded-xl px-3 py-2 border border-sky-500/20">
                     <Sparkles className="w-3.5 h-3.5 animate-spin shrink-0" />
                     <span>{atsFriendlyProgress}</span>
                   </div>
@@ -2579,7 +2579,7 @@ IMPORTANT:
                 <Button
                   onClick={handleMakeAtsFriendly}
                   disabled={makingAtsFriendly}
-                  className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold rounded-xl h-10 text-sm shadow-lg shadow-violet-500/20 transition-all disabled:opacity-60"
+                  className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold rounded-xl h-10 text-sm shadow-lg shadow-sky-500/20 transition-all disabled:opacity-60"
                 >
                   {makingAtsFriendly ? (
                     <><Sparkles className="w-4 h-4 mr-2 animate-spin" />{atsFriendlyProgress || 'Optimizing...'}</>
@@ -2592,8 +2592,8 @@ IMPORTANT:
           ) : (
             <div className="py-16 flex flex-col items-center justify-center text-zinc-500 gap-6 w-full max-w-md mx-auto">
               <div className="relative flex items-center justify-center">
-                <Sparkles className="w-12 h-12 animate-spin text-violet-500 opacity-60 absolute" />
-                <div className="w-20 h-20 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+                <Sparkles className="w-12 h-12 animate-spin text-sky-500 opacity-60 absolute" />
+                <div className="w-20 h-20 rounded-full border-4 border-sky-500/20 border-t-sky-500 animate-spin" />
               </div>
               <div className="text-center space-y-2 w-full px-6">
                 <p className="text-sm font-semibold text-white">Running ATS Diagnostics...</p>
@@ -2601,13 +2601,13 @@ IMPORTANT:
 
                 <div className="w-full bg-zinc-900 rounded-full h-2 mt-4 overflow-hidden border border-white/5 relative">
                   <div
-                    className="bg-gradient-to-r from-violet-600 to-fuchsia-500 h-full rounded-full transition-all duration-300 ease-out"
+                    className="bg-gradient-to-r from-sky-600 to-blue-500 h-full rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${Math.round(atsProgress)}%` }}
                   />
                 </div>
                 <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 mt-2 px-1">
                   <span>{atsTimeElapsed}s elapsed</span>
-                  <span className="text-violet-400 font-bold">{Math.round(atsProgress)}%</span>
+                  <span className="text-sky-400 font-bold">{Math.round(atsProgress)}%</span>
                 </div>
               </div>
             </div>

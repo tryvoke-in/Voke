@@ -436,8 +436,8 @@ const Auth = () => {
         {/* Background Effects */}
         <div className="absolute inset-0 bg-black">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(124,58,237,0.1),transparent_70%)]" />
-          <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-fuchsia-600/10 rounded-full blur-[120px] -z-10" />
-          <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-[100px] -z-10" />
+          <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[120px] -z-10" />
+          <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-sky-600/10 rounded-full blur-[100px] -z-10" />
         </div>
 
         <div className="relative z-10 max-w-lg">
@@ -454,7 +454,7 @@ const Auth = () => {
             />
             <h1 className="text-5xl font-bold mb-6 leading-tight">
               Master Your <br />
-              <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">
                 Interview Skills
               </span>
             </h1>
@@ -505,7 +505,7 @@ const Auth = () => {
           {(authMode === "signin" || authMode === "signup") && (
             <div className="bg-white/5 p-1 rounded-2xl flex relative">
               <motion.div
-                className="absolute top-1 bottom-1 bg-violet-600 rounded-xl shadow-lg"
+                className="absolute top-1 bottom-1 bg-sky-600 rounded-xl shadow-lg"
                 initial={false}
                 animate={{
                   x: authMode === "signin" ? 0 : "100%",
@@ -540,13 +540,13 @@ const Auth = () => {
             >
               {authMode === "forgot" && resetLinkSent ? (
                 <div className="space-y-6 text-center py-4 bg-white/5 border border-white/10 p-8 rounded-3xl shadow-2xl relative">
-                  <div className="mx-auto w-16 h-16 bg-violet-500/10 border border-violet-500/20 rounded-full flex items-center justify-center text-violet-400">
+                  <div className="mx-auto w-16 h-16 bg-sky-500/10 border border-sky-500/20 rounded-full flex items-center justify-center text-sky-400">
                     <Mail className="w-8 h-8" />
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-xl font-bold">Check your email</h3>
                     <p className="text-gray-400 text-sm leading-relaxed">
-                      We have sent a password reset link to <span className="text-violet-400 font-medium">{email}</span>.
+                      We have sent a password reset link to <span className="text-sky-400 font-medium">{email}</span>.
                     </p>
                   </div>
                   <div className="space-y-3 pt-2">
@@ -590,10 +590,10 @@ const Auth = () => {
                   className="space-y-5"
                 >
                   {authMode === "signup" && (
-                    <div className="bg-violet-950/40 border border-violet-500/30 rounded-xl p-3 flex items-start gap-2.5">
-                      <GraduationCap className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                    <div className="bg-sky-950/40 border border-sky-500/30 rounded-xl p-3 flex items-start gap-2.5">
+                      <GraduationCap className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
                       <div className="text-xs text-gray-300">
-                        <span className="font-semibold text-violet-300">College / University Student?</span> Sign up with your official campus email (e.g. <code className="text-white font-mono bg-white/10 px-1 py-0.5 rounded text-[11px]">@nst.rishihood.edu.in</code>) to automatically link your institutional placement drives!
+                        <span className="font-semibold text-sky-300">College / University Student?</span> Sign up with your official campus email (e.g. <code className="text-white font-mono bg-white/10 px-1 py-0.5 rounded text-[11px]">@nst.rishihood.edu.in</code>) to automatically link your institutional placement drives!
                       </div>
                     </div>
                   )}
@@ -602,14 +602,14 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-gray-300">Full Name</Label>
                     <div className="relative group">
-                      <User className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-violet-500 transition-colors" />
+                      <User className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-sky-500 transition-colors" />
                       <Input
                         id="fullName"
                         type="text"
                         placeholder="John Doe"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl h-12 transition-all"
+                        className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 focus:ring-sky-500/20 rounded-xl h-12 transition-all"
                         required
                       />
                     </div>
@@ -620,14 +620,14 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-gray-300">Email Address</Label>
                     <div className="relative group">
-                      <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-violet-500 transition-colors" />
+                      <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-sky-500 transition-colors" />
                       <Input
                         id="email"
                         type="email"
                         placeholder="name@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl h-12 transition-all"
+                        className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 focus:ring-sky-500/20 rounded-xl h-12 transition-all"
                         required
                       />
                     </div>
@@ -644,21 +644,21 @@ const Auth = () => {
                         <button
                           type="button"
                           onClick={() => setAuthMode("forgot")}
-                          className="text-xs text-violet-400 hover:text-violet-300 focus:outline-none"
+                          className="text-xs text-sky-400 hover:text-sky-300 focus:outline-none"
                         >
                           Forgot password?
                         </button>
                       )}
                     </div>
                     <div className="relative group">
-                      <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-violet-500 transition-colors" />
+                      <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-sky-500 transition-colors" />
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl h-12 transition-all"
+                        className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 focus:ring-sky-500/20 rounded-xl h-12 transition-all"
                         required
                         minLength={6}
                       />
@@ -683,14 +683,14 @@ const Auth = () => {
                       {authMode === "reset" ? "Confirm New Password" : "Confirm Password"}
                     </Label>
                     <div className="relative group">
-                      <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-violet-500 transition-colors" />
+                      <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-sky-500 transition-colors" />
                       <Input
                         id="confirmPassword"
                         type={showConfirmPassword ? "text" : "password"}
                         placeholder="••••••••"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-violet-500 focus:ring-violet-500/20 rounded-xl h-12 transition-all"
+                        className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 focus:ring-sky-500/20 rounded-xl h-12 transition-all"
                         required
                         minLength={6}
                       />
@@ -711,7 +711,7 @@ const Auth = () => {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white h-12 rounded-xl font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 hover:scale-[1.02]"
+                  className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white h-12 rounded-xl font-semibold shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all duration-300 hover:scale-[1.02]"
                   disabled={loading}
                 >
                   {loading ? (
@@ -796,10 +796,10 @@ const Auth = () => {
               </div>
 
               <div className="pt-5 mt-3 border-t border-white/10">
-                <div className="p-3.5 rounded-xl bg-violet-950/20 border border-violet-500/20 flex items-center justify-between gap-3">
+                <div className="p-3.5 rounded-xl bg-sky-950/20 border border-sky-500/20 flex items-center justify-between gap-3">
                   <div className="text-left">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-                      <GraduationCap className="w-4 h-4 text-violet-400" />
+                      <GraduationCap className="w-4 h-4 text-sky-400" />
                       <span>College Placement Cell?</span>
                     </div>
                     <p className="text-[11px] text-gray-400 mt-0.5">
@@ -811,7 +811,7 @@ const Auth = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => navigate("/college/auth")}
-                    className="border-violet-500/30 bg-violet-600/10 text-violet-300 hover:bg-violet-600 hover:text-white text-xs h-8 px-3 shrink-0"
+                    className="border-sky-500/30 bg-sky-600/10 text-sky-300 hover:bg-sky-600 hover:text-white text-xs h-8 px-3 shrink-0"
                   >
                     College Portal →
                   </Button>
@@ -835,11 +835,11 @@ const Auth = () => {
         <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <Mail className="h-5 w-5 text-violet-500" />
+              <Mail className="h-5 w-5 text-sky-500" />
               Verify your email
             </DialogTitle>
             <DialogDescription className="text-gray-400 pt-2 text-sm leading-relaxed">
-              We've sent a verification link to <span className="text-violet-400 font-medium">{email}</span>.
+              We've sent a verification link to <span className="text-sky-400 font-medium">{email}</span>.
               <br /><br />
               Please check your inbox (and spam folder) and click the link to verify your account before signing in.
             </DialogDescription>
@@ -858,7 +858,7 @@ const Auth = () => {
             <Button
               type="button"
               variant="default"
-              className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white"
+              className="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white"
               onClick={() => {
                 setShowVerificationDialog(false);
                 setEmail("");

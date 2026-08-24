@@ -302,7 +302,7 @@ export const DashboardSearchBar: React.FC<{
                       <button
                         key={c.id}
                         onClick={() => handleSelectCompany(c.slug)}
-                        className="px-2.5 py-1 text-xs rounded-xl bg-muted/50 hover:bg-violet-500/10 hover:text-violet-600 dark:hover:text-violet-400 border border-border/40 hover:border-violet-500/30 transition-all font-medium flex items-center gap-1.5"
+                        className="px-2.5 py-1 text-xs rounded-xl bg-muted/50 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 border border-border/40 hover:border-sky-500/30 transition-all font-medium flex items-center gap-1.5"
                       >
                         <Building2 className="w-3 h-3 opacity-60" />
                         <span>{c.name}</span>
@@ -372,7 +372,7 @@ export const DashboardSearchBar: React.FC<{
                           className={cn(
                             "flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all duration-150 group",
                             isSelected
-                              ? "bg-violet-500/15 text-foreground border border-violet-500/30"
+                              ? "bg-sky-500/15 text-foreground border border-sky-500/30"
                               : "hover:bg-muted/60 dark:hover:bg-white/5 text-foreground"
                           )}
                         >
@@ -409,7 +409,7 @@ export const DashboardSearchBar: React.FC<{
                           className={cn(
                             "flex items-center justify-between gap-3 px-3 py-2 rounded-xl cursor-pointer transition-all duration-150 group",
                             isSelected
-                              ? "bg-violet-500/15 text-foreground border border-violet-500/30"
+                              ? "bg-sky-500/15 text-foreground border border-sky-500/30"
                               : "hover:bg-muted/60 dark:hover:bg-white/5 text-foreground"
                           )}
                         >

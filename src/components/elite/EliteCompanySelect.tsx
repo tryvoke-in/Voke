@@ -16,10 +16,10 @@ interface EliteCompanySelectProps {
 
 const TIER_COLORS: Record<string, string> = {
   FAANG: 'bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-lg shadow-amber-500/10',
-  Unicorn: 'bg-violet-500/15 text-violet-300 border-violet-500/40 shadow-lg shadow-violet-500/10',
+  Unicorn: 'bg-sky-500/15 text-sky-300 border-sky-500/40 shadow-lg shadow-sky-500/10',
   FinTech: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-lg shadow-emerald-500/10',
   Enterprise: 'bg-blue-500/15 text-blue-300 border-blue-500/40 shadow-lg shadow-blue-500/10',
-  'AI Pioneer': 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/40 shadow-lg shadow-fuchsia-500/10'
+  'AI Pioneer': 'bg-blue-500/15 text-blue-300 border-blue-500/40 shadow-lg shadow-blue-500/10'
 };
 
 export const EliteCompanySelect: React.FC<EliteCompanySelectProps> = ({
@@ -57,8 +57,8 @@ export const EliteCompanySelect: React.FC<EliteCompanySelectProps> = ({
 
       {/* Hero Header */}
       <div className="text-center max-w-2xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-violet-500/10 via-amber-500/10 to-violet-500/10 border border-violet-500/30 text-violet-300 text-xs font-black uppercase tracking-wider shadow-xl">
-          <Building className="w-4 h-4 text-violet-400" />
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-sky-500/10 via-amber-500/10 to-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-black uppercase tracking-wider shadow-xl">
+          <Building className="w-4 h-4 text-sky-400" />
           Step 2 of 4 • Select Target Company
         </div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent">

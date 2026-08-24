@@ -43,7 +43,7 @@ const TOUR_STEPS: TourStep[] = [
     description: "Practice mock interviews in a chat-like format. Our AI dynamically changes and adapts its follow-up questions to assess your depth of knowledge.",
     position: "bottom",
     icon: Bot,
-    color: "text-violet-500"
+    color: "text-sky-500"
   },
   {
     targetId: "tour-voice-agent",
@@ -75,7 +75,7 @@ const TOUR_STEPS: TourStep[] = [
     description: "Click your avatar in the navbar to configure settings. Be sure to link your GitHub profile and upload your Resume to customize mock questions and unlock ATS auditing recommendations.",
     position: "bottom",
     icon: Compass,
-    color: "text-violet-500"
+    color: "text-sky-500"
   }
 ];
 
@@ -189,7 +189,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
           <DialogTitle className="sr-only">Voke Setup</DialogTitle>
           <DialogDescription className="sr-only">Step 1: Setup preferences</DialogDescription>
           
-          <div className="h-32 bg-gradient-to-r from-violet-600 via-indigo-600 to-fuchsia-600 relative flex items-center justify-between px-8 text-white select-none">
+          <div className="h-32 bg-gradient-to-r from-sky-600 via-indigo-600 to-blue-600 relative flex items-center justify-between px-8 text-white select-none">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.08]" />
             <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
             <div className="z-10 flex items-center gap-3">
@@ -206,7 +206,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
           <div className="p-6 sm:p-8 space-y-6">
             <div className="text-center sm:text-left space-y-2">
               <h4 className="text-2xl font-bold text-foreground">
-                Welcome to Voke, <span className="text-violet-500 font-extrabold">{name || "Scholar"}</span>!
+                Welcome to Voke, <span className="text-sky-500 font-extrabold">{name || "Scholar"}</span>!
               </h4>
               <p className="text-sm text-muted-foreground">
                 Let's personalize your prep. Tell us what you are preparing for so we can highlight the best features for your goals.
@@ -221,7 +221,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your name"
-                  className="w-full sm:max-w-xs px-3.5 py-1.5 rounded-xl border border-border bg-muted/30 focus:bg-background focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 outline-none text-sm transition-all"
+                  className="w-full sm:max-w-xs px-3.5 py-1.5 rounded-xl border border-border bg-muted/30 focus:bg-background focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none text-sm transition-all"
                 />
               </div>
 
@@ -232,15 +232,15 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                     onClick={() => setSelectedTrack(track.id)}
                     className={`p-4 rounded-2xl border text-left cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
                       selectedTrack === track.id
-                        ? "bg-violet-500/10 border-violet-500 shadow-md shadow-violet-500/5"
+                        ? "bg-sky-500/10 border-sky-500 shadow-md shadow-sky-500/5"
                         : "bg-card/50 hover:bg-muted/40 border-border/60"
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <h5 className="font-bold text-sm text-foreground">{track.label}</h5>
                       {selectedTrack === track.id && (
-                        <div className="w-4 h-4 rounded-full bg-violet-500 flex items-center justify-center text-white">
-                          <CheckCircle className="w-3.5 h-3.5 fill-violet-500" />
+                        <div className="w-4 h-4 rounded-full bg-sky-500 flex items-center justify-center text-white">
+                          <CheckCircle className="w-3.5 h-3.5 fill-sky-500" />
                         </div>
                       )}
                     </div>
@@ -262,7 +262,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
               </Button>
               <Button
                 onClick={handleNext}
-                className="gap-1.5 text-xs font-bold rounded-xl bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20 hover:scale-[1.02] transition-all"
+                className="gap-1.5 text-xs font-bold rounded-xl bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-500/20 hover:scale-[1.02] transition-all"
               >
                 Start Guided Tour <ArrowRight className="w-4 h-4" />
               </Button>
@@ -376,7 +376,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between mb-3.5">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-violet-500/10 rounded-lg">
+                <div className="p-1.5 bg-sky-500/10 rounded-lg">
                   <activeStep.icon className={`w-4 h-4 ${activeStep.color}`} />
                 </div>
                 <h5 className="font-extrabold text-sm text-foreground">{activeStep.title}</h5>
@@ -414,7 +414,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                   <Button
                     size="sm"
                     onClick={handleNext}
-                    className="h-7 px-3 text-xs font-bold rounded-lg bg-violet-600 hover:bg-violet-700 text-white shadow-md shadow-violet-500/20"
+                    className="h-7 px-3 text-xs font-bold rounded-lg bg-sky-600 hover:bg-sky-700 text-white shadow-md shadow-sky-500/20"
                   >
                     Next
                   </Button>
@@ -422,7 +422,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                   <Button
                     size="sm"
                     onClick={handleFinish}
-                    className="h-7 px-3 text-xs font-bold rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90 text-white shadow-md"
+                    className="h-7 px-3 text-xs font-bold rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-90 text-white shadow-md"
                   >
                     Finish
                   </Button>

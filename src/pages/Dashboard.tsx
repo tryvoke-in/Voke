@@ -466,8 +466,8 @@ const Dashboard = () => {
       label: "Dashboard",
       icon: LayoutDashboard,
       path: "/dashboard",
-      color: "text-violet-500",
-      hoverBg: "hover:bg-violet-500/10 hover:text-violet-500",
+      color: "text-sky-500",
+      hoverBg: "hover:bg-sky-500/10 hover:text-sky-500",
     },
     {
       id: "job-recommendations",
@@ -482,8 +482,8 @@ const Dashboard = () => {
       label: "Text Interview",
       icon: MessageSquare,
       path: "/interview/new",
-      color: "text-violet-500",
-      hoverBg: "hover:bg-violet-500/10 hover:text-violet-500",
+      color: "text-sky-500",
+      hoverBg: "hover:bg-sky-500/10 hover:text-sky-500",
     },
     {
       id: "voice-assistant",
@@ -514,8 +514,8 @@ const Dashboard = () => {
       label: "Video Practice",
       icon: Play,
       path: "/video-interview",
-      color: "text-fuchsia-500",
-      hoverBg: "hover:bg-fuchsia-500/10 hover:text-fuchsia-500",
+      color: "text-blue-500",
+      hoverBg: "hover:bg-blue-500/10 hover:text-blue-500",
     },
     {
       id: "playground",
@@ -538,8 +538,8 @@ const Dashboard = () => {
       label: "DSA Sheet",
       icon: Code,
       path: "/dsa-sheet",
-      color: "text-fuchsia-500",
-      hoverBg: "hover:bg-fuchsia-500/10 hover:text-fuchsia-500",
+      color: "text-blue-500",
+      hoverBg: "hover:bg-blue-500/10 hover:text-blue-500",
     },
     {
       id: "community",
@@ -555,8 +555,8 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="relative w-16 h-16">
-          <div className="absolute inset-0 border-t-2 border-violet-500 rounded-full animate-spin"></div>
-          <div className="absolute inset-3 border-t-2 border-fuchsia-500 rounded-full animate-spin-reverse"></div>
+          <div className="absolute inset-0 border-t-2 border-sky-500 rounded-full animate-spin"></div>
+          <div className="absolute inset-3 border-t-2 border-blue-500 rounded-full animate-spin-reverse"></div>
         </div>
       </div>
     );
@@ -579,7 +579,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden">
       {/* Subtle Ambient Background Effects */}
       <div className="fixed inset-0 bg-[radial-gradient(rgba(0,0,0,0.04)_1px,transparent_1px)] dark:bg-[radial-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none z-0" />
-      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-violet-600/5 dark:bg-violet-500/7 rounded-full blur-[140px] pointer-events-none z-0" />
+      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-sky-600/5 dark:bg-sky-500/7 rounded-full blur-[140px] pointer-events-none z-0" />
       <div className="fixed top-1/3 right-10 w-[450px] h-[450px] bg-amber-500/4 dark:bg-amber-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
       <div className="fixed bottom-20 left-10 w-[500px] h-[500px] bg-emerald-500/4 dark:bg-emerald-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
 
@@ -652,7 +652,7 @@ const Dashboard = () => {
 
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={profile?.avatar_url} />
-                      <AvatarFallback className="bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-xs">
+                      <AvatarFallback className="bg-gradient-to-br from-sky-500 to-blue-500 text-white text-xs">
                         {(profile?.full_name || "U")[0]}
                       </AvatarFallback>
                     </Avatar>
@@ -773,7 +773,7 @@ const Dashboard = () => {
                       <Button
                         size="sm"
                         onClick={() => setShowFeedbackModal(true)}
-                        className="bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl"
+                        className="bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-xl"
                       >
                         Give Feedback (+2 Credits)
                       </Button>
@@ -831,10 +831,10 @@ const Dashboard = () => {
 
                   {/* Top 4 Core Actions (Always Visible) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card id="tour-text-interview" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-violet-500" onClick={() => navigate("/interview/new")}>
+                    <Card id="tour-text-interview" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-sky-500" onClick={() => navigate("/interview/new")}>
                       <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                        <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                          <Bot className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                        <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                          <Bot className="w-6 h-6 text-sky-600 dark:text-sky-400" />
                         </div>
                         <h4 className="font-semibold text-sm">Text Interview</h4>
                         <p className="text-xs text-muted-foreground mt-1">AI Chat Practice</p>

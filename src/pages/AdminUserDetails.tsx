@@ -289,7 +289,7 @@ const AdminUserDetails = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500"></div>
       </div>
     );
   }
@@ -304,10 +304,10 @@ const AdminUserDetails = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white flex overflow-hidden font-sans selection:bg-violet-500/30">
+    <div className="min-h-screen bg-black text-white flex overflow-hidden font-sans selection:bg-sky-500/30">
       {/* Dynamic Background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-violet-900/10 rounded-full blur-[120px]" />
+        <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-sky-900/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-blue-900/10 rounded-full blur-[120px]" />
       </div>
 
@@ -336,7 +336,7 @@ const AdminUserDetails = () => {
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${
                 activeTab === item.id 
-                  ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20" 
+                  ? "bg-sky-600 text-white shadow-lg shadow-sky-600/20" 
                   : "text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
@@ -385,9 +385,9 @@ const AdminUserDetails = () => {
                     <Card className="lg:col-span-1 bg-white/5 border-white/10 backdrop-blur-sm h-full">
                         <CardContent className="p-8 flex flex-col items-center text-center">
                              <div className="relative mb-6">
-                                <Avatar className="h-32 w-32 border-4 border-violet-500/20 shadow-2xl">
+                                <Avatar className="h-32 w-32 border-4 border-sky-500/20 shadow-2xl">
                                     <AvatarImage src={user.avatar_url} />
-                                    <AvatarFallback className="text-4xl bg-violet-600">{user.full_name[0]}</AvatarFallback>
+                                    <AvatarFallback className="text-4xl bg-sky-600">{user.full_name[0]}</AvatarFallback>
                                 </Avatar>
                                 <Badge className="absolute -bottom-2 -right-2 bg-emerald-500 hover:bg-emerald-600 border-4 border-black px-3 py-1">
                                     {user.status}
@@ -411,7 +411,7 @@ const AdminUserDetails = () => {
 
                              <div className="w-full space-y-3">
                                 <Button 
-                                    className="w-full bg-violet-600 hover:bg-violet-700" 
+                                    className="w-full bg-sky-600 hover:bg-sky-700" 
                                     onClick={() => handleAction('Message')}
                                     disabled={!isAdmin && !currentUserLoading}
                                 >
@@ -436,7 +436,7 @@ const AdminUserDetails = () => {
                                 { label: "XP Earned", value: "0", icon: Trophy, color: "text-amber-400", bg: "bg-amber-500/10" },
                                 { label: "Interviews", value: user.stats?.problems_solved || "0", icon: Terminal, color: "text-blue-400", bg: "bg-blue-500/10" },
                                 { label: "Streak", value: "0 Days", icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-                                { label: "Time Spent", value: formatDuration(user.stats?.total_duration_seconds || 0), icon: Clock, color: "text-purple-400", bg: "bg-purple-500/10" },
+                                { label: "Time Spent", value: formatDuration(user.stats?.total_duration_seconds || 0), icon: Clock, color: "text-blue-400", bg: "bg-blue-500/10" },
                             ].map((stat, i) => (
                                 <Card key={i} className="bg-white/5 border-white/10 backdrop-blur-sm">
                                     <CardContent className="p-6">
@@ -454,7 +454,7 @@ const AdminUserDetails = () => {
                         <Card className="bg-white/5 border-white/10 backdrop-blur-sm shadow-xl">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-lg font-bold">
-                                    <Clock className="w-5 h-5 text-purple-400" />
+                                    <Clock className="w-5 h-5 text-blue-400" />
                                     Time Spent Per Page
                                 </CardTitle>
                                 <CardDescription className="text-gray-400 text-xs">
@@ -503,7 +503,7 @@ const AdminUserDetails = () => {
                                                                 {page.path}
                                                             </span>
                                                             <div className="text-right text-xs">
-                                                                <span className="font-bold text-purple-400 mr-2">
+                                                                <span className="font-bold text-blue-400 mr-2">
                                                                     {formatDuration(page.totalSeconds)}
                                                                 </span>
                                                                 <span className="text-gray-500">
@@ -513,7 +513,7 @@ const AdminUserDetails = () => {
                                                         </div>
                                                         <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                                                             <div 
-                                                                className="bg-purple-600 h-full rounded-full transition-all duration-500" 
+                                                                className="bg-blue-600 h-full rounded-full transition-all duration-500" 
                                                                 style={{ width: `${(page.totalSeconds / maxDuration) * 100}%` }}
                                                             />
                                                         </div>
@@ -575,7 +575,7 @@ const AdminUserDetails = () => {
                                                     interviewTypeLabel = isVoice ? "AI Voice Interview" : "AI Text Interview";
                                                     subtitle = `Role: ${details?.role || "General"}`;
                                                     scoreText = details?.score ? `${details.score}%` : "No Score";
-                                                    badgeColor = isVoice ? "bg-purple-500/10 text-purple-400" : "bg-blue-500/10 text-blue-400";
+                                                    badgeColor = isVoice ? "bg-blue-500/10 text-blue-400" : "bg-blue-500/10 text-blue-400";
                                                     
                                                     const secs = details?.duration_seconds || 0;
                                                     if (secs > 0) {
@@ -623,7 +623,7 @@ const AdminUserDetails = () => {
                                                                 </Badge>
                                                                 <span className="text-gray-500 text-[10px] font-mono">{timeStr}</span>
                                                                 {durationText && (
-                                                                    <span className="text-purple-400 text-[10px] font-semibold bg-purple-500/10 px-2 py-0.5 rounded-full">
+                                                                    <span className="text-blue-400 text-[10px] font-semibold bg-blue-500/10 px-2 py-0.5 rounded-full">
                                                                         {durationText}
                                                                     </span>
                                                                 )}
@@ -632,7 +632,7 @@ const AdminUserDetails = () => {
                                                         </div>
                                                         <div className="text-right">
                                                             <p className="text-xs text-gray-500 uppercase font-bold">Score</p>
-                                                            <p className="text-lg font-black text-violet-400">{scoreText}</p>
+                                                            <p className="text-lg font-black text-sky-400">{scoreText}</p>
                                                         </div>
                                                     </div>
                                                 );
@@ -683,7 +683,7 @@ const AdminUserDetails = () => {
                                     <Switch 
                                         checked={permissions.isModerator}
                                         onCheckedChange={(c) => setPermissions({...permissions, isModerator: c})}
-                                        className="data-[state=checked]:bg-violet-600"
+                                        className="data-[state=checked]:bg-sky-600"
                                     />
                                 </div>
                             </CardContent>
@@ -729,7 +729,7 @@ const AdminUserDetails = () => {
               <Button variant="outline" onClick={() => setIsMessageDialogOpen(false)} className="border-white/10 hover:bg-white/5 text-gray-300">
                 Cancel
               </Button>
-              <Button onClick={sendNotification} disabled={sending} className="bg-violet-600 hover:bg-violet-700 text-white">
+              <Button onClick={sendNotification} disabled={sending} className="bg-sky-600 hover:bg-sky-700 text-white">
                 {sending ? "Sending..." : "Send Notification"}
               </Button>
             </DialogFooter>

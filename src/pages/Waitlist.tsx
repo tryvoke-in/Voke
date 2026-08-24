@@ -201,10 +201,10 @@ const Waitlist = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-violet-500/30 flex flex-col justify-between relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white selection:bg-sky-500/30 flex flex-col justify-between relative overflow-hidden">
       {/* Background Gradients */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-violet-600/20 rounded-full blur-[120px] -z-10 animate-pulse duration-10000" />
-      <div className="absolute bottom-0 right-0 w-[600px] h-[400px] bg-fuchsia-600/10 rounded-full blur-[100px] -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-sky-600/20 rounded-full blur-[120px] -z-10 animate-pulse duration-10000" />
+      <div className="absolute bottom-0 right-0 w-[600px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] -z-10" />
 
       {/* Header */}
       <header className="container mx-auto px-4 py-6 flex items-center justify-between">
@@ -255,9 +255,9 @@ const Waitlist = () => {
                 transition={{ duration: 0.5 }}
                 className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-violet-600/10 rounded-full blur-2xl" />
+                <div className="absolute top-0 right-0 w-24 h-24 bg-sky-600/10 rounded-full blur-2xl" />
                 
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-medium mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs font-medium mb-6">
                   <span>Join Voke Private Beta</span>
                 </div>
 
@@ -282,7 +282,7 @@ const Waitlist = () => {
                         placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="bg-black/50 border-white/10 text-white pl-10 h-12 focus-visible:ring-violet-500 rounded-xl"
+                        className="bg-black/50 border-white/10 text-white pl-10 h-12 focus-visible:ring-sky-500 rounded-xl"
                         disabled={loading}
                         required
                       />
@@ -301,7 +301,7 @@ const Waitlist = () => {
                         placeholder="e.g. Stanford University"
                         value={collegeName}
                         onChange={(e) => setCollegeName(e.target.value)}
-                        className="bg-black/50 border-white/10 text-white pl-10 h-12 focus-visible:ring-violet-500 rounded-xl"
+                        className="bg-black/50 border-white/10 text-white pl-10 h-12 focus-visible:ring-sky-500 rounded-xl"
                         disabled={loading}
                         required
                       />
@@ -320,7 +320,7 @@ const Waitlist = () => {
                         placeholder="e.g. +1 (555) 000-0000"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="bg-black/50 border-white/10 text-white pl-10 h-12 focus-visible:ring-violet-500 rounded-xl"
+                        className="bg-black/50 border-white/10 text-white pl-10 h-12 focus-visible:ring-sky-500 rounded-xl"
                         disabled={loading}
                         required
                       />
@@ -351,13 +351,13 @@ const Waitlist = () => {
                 transition={{ type: "spring", duration: 0.5 }}
                 className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10 text-center shadow-2xl"
               >
-                <div className="mx-auto w-16 h-16 bg-violet-500/10 border border-violet-500/20 rounded-full flex items-center justify-center mb-6 text-violet-400">
+                <div className="mx-auto w-16 h-16 bg-sky-500/10 border border-sky-500/20 rounded-full flex items-center justify-center mb-6 text-sky-400">
                   <CheckCircle className="w-8 h-8" />
                 </div>
 
                 <h2 className="text-2xl font-bold mb-2">You're on the list!</h2>
                 <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-                  Thank you for your interest in Voke. We will email you at <span className="text-violet-300 font-medium">{email}</span> as soon as spots open up.
+                  Thank you for your interest in Voke. We will email you at <span className="text-sky-300 font-medium">{email}</span> as soon as spots open up.
                 </p>
 
                 <div className="space-y-4">
@@ -405,7 +405,7 @@ const Waitlist = () => {
         <DialogContent className="bg-zinc-950 border-white/10 text-white max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg">
-              <ShieldAlert className="w-5 h-5 text-violet-400" />
+              <ShieldAlert className="w-5 h-5 text-sky-400" />
               Enter Security Code
             </DialogTitle>
             <DialogDescription className="text-zinc-400 text-xs">
@@ -427,7 +427,7 @@ const Waitlist = () => {
                   setBypassCode(e.target.value);
                   setBypassError(false);
                 }}
-                className={`bg-zinc-900 border-white/10 text-white focus-visible:ring-violet-500 h-10 ${
+                className={`bg-zinc-900 border-white/10 text-white focus-visible:ring-sky-500 h-10 ${
                   bypassError ? "border-red-500 focus-visible:ring-red-500" : ""
                 }`}
                 autoFocus
@@ -447,7 +447,7 @@ const Waitlist = () => {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-violet-600 hover:bg-violet-700 text-white font-semibold">
+              <Button type="submit" className="bg-sky-600 hover:bg-sky-700 text-white font-semibold">
                 Submit
               </Button>
             </DialogFooter>

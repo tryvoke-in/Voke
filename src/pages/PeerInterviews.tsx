@@ -235,9 +235,9 @@ const PeerInterviews = () => {
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-             <div className="h-16 w-16 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+             <div className="h-16 w-16 rounded-full border-4 border-sky-500/20 border-t-sky-500 animate-spin" />
              <div className="absolute inset-0 flex items-center justify-center">
-                <Globe className="h-6 w-6 text-violet-500 animate-pulse" />
+                <Globe className="h-6 w-6 text-sky-500 animate-pulse" />
              </div>
           </div>
           <p className="text-muted-foreground animate-pulse font-mono tracking-widest uppercase text-sm">Initializing Neural Link...</p>
@@ -247,12 +247,12 @@ const PeerInterviews = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-violet-500/30">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-sky-500/30">
         
        {/* Ambient Backlights */}
        <div className="fixed inset-0 pointer-events-none z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-fuchsia-600/10 blur-[120px]" />
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-sky-600/10 blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[120px]" />
           <div className="absolute top-[20%] right-[20%] w-[300px] h-[300px] rounded-full bg-cyan-600/5 blur-[80px]" />
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] dark:opacity-[0.05]" />
        </div>
@@ -262,13 +262,13 @@ const PeerInterviews = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate("/dashboard")}>
              <div className="relative">
-                <div className="absolute inset-0 bg-violet-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/20 relative z-10">
+                <div className="absolute inset-0 bg-sky-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-sky-600 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20 relative z-10">
                    <Users className="w-5 h-5 text-white" />
                 </div>
              </div>
              <div className="flex flex-col">
-                <span className="font-bold text-lg leading-tight tracking-tight">Peer<span className="text-violet-500">Sync</span></span>
+                <span className="font-bold text-lg leading-tight tracking-tight">Peer<span className="text-sky-500">Sync</span></span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Neural Network</span>
              </div>
           </div>
@@ -311,12 +311,12 @@ const PeerInterviews = () => {
             >
            {/* Left Column: Hero & Search */}
            <motion.div variants={itemVariants} className="lg:col-span-8 flex flex-col justify-center">
-              <Badge variant="outline" className="w-fit mb-4 border-violet-500/30 bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 transition-colors uppercase tracking-widest text-[10px]">
+              <Badge variant="outline" className="w-fit mb-4 border-sky-500/30 bg-sky-500/10 text-sky-500 hover:bg-sky-500/20 transition-colors uppercase tracking-widest text-[10px]">
                  <Sparkles className="w-3 h-3 mr-1.5" /> Beta 2.0
               </Badge>
               <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-muted-foreground/50 leading-[1.1]">
                  Master the Art of <br />
-                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-fuchsia-500">Technical Dialogue.</span>
+                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-blue-500">Technical Dialogue.</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-xl leading-relaxed mb-8">
                  Connect with ambitious engineers from top companies. Simulate real interview pressure, swap feedback, and level up together.
@@ -324,11 +324,11 @@ const PeerInterviews = () => {
 
               <div className="flex flex-col sm:flex-row gap-4">
                  <div className="relative flex-1 max-w-md group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-violet-500 transition-colors" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-blue-500/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-sky-500 transition-colors" />
                     <Input 
                       placeholder="Find practice session (e.g., System Design, React)..." 
-                      className="pl-11 h-14 bg-background/50 backdrop-blur-md border-white/10 ring-offset-background focus-visible:ring-1 focus-visible:ring-violet-500/50 rounded-xl text-base transition-all shadow-sm group-hover:bg-background/80"
+                      className="pl-11 h-14 bg-background/50 backdrop-blur-md border-white/10 ring-offset-background focus-visible:ring-1 focus-visible:ring-sky-500/50 rounded-xl text-base transition-all shadow-sm group-hover:bg-background/80"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -336,7 +336,7 @@ const PeerInterviews = () => {
                  <Button 
                     size="lg" 
                     onClick={() => navigate("/peer-interviews/create")}
-                    className="h-14 px-8 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-lg shadow-violet-500/25 transition-all text-base font-medium"
+                    className="h-14 px-8 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white shadow-lg shadow-sky-500/25 transition-all text-base font-medium"
                  >
                     <Plus className="w-5 h-5 mr-2" />
                     Start Session
@@ -368,14 +368,14 @@ const PeerInterviews = () => {
                               <p className="text-sm text-muted-foreground">Global Sessions</p>
                               <p className="text-3xl font-mono font-bold tracking-tight">1,204</p>
                               <div className="h-1 w-full bg-secondary/50 rounded-full overflow-hidden">
-                                 <div className="h-full bg-violet-500 w-[70%]" />
+                                 <div className="h-full bg-sky-500 w-[70%]" />
                               </div>
                            </div>
                            <div className="space-y-1">
                               <p className="text-sm text-muted-foreground">Match Rate</p>
                               <p className="text-3xl font-mono font-bold tracking-tight">94%</p>
                               <div className="h-1 w-full bg-secondary/50 rounded-full overflow-hidden">
-                                 <div className="h-full bg-fuchsia-500 w-[94%]" />
+                                 <div className="h-full bg-blue-500 w-[94%]" />
                               </div>
                            </div>
                        </div>
@@ -410,7 +410,7 @@ const PeerInterviews = () => {
                  <TabsTrigger value="upcoming" className="rounded-full px-6 h-full data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all relative">
                     Upcoming
                     {userSessions.filter(s => !(s.host_user_id === currentUserId && s.status === 'pending')).length > 0 && (
-                       <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-violet-500 text-[9px] flex items-center justify-center text-white font-bold border border-background">
+                       <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-sky-500 text-[9px] flex items-center justify-center text-white font-bold border border-background">
                           {userSessions.filter(s => !(s.host_user_id === currentUserId && s.status === 'pending')).length}
                        </span>
                     )}
@@ -418,7 +418,7 @@ const PeerInterviews = () => {
                  <TabsTrigger value="requests" className="rounded-full px-6 h-full data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all relative">
                     Requests
                     {userSessions.filter(s => s.host_user_id === currentUserId && s.status === 'pending').length > 0 && (
-                       <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-fuchsia-500 text-[9px] flex items-center justify-center text-white font-bold border border-background">
+                       <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-500 text-[9px] flex items-center justify-center text-white font-bold border border-background">
                           {userSessions.filter(s => s.host_user_id === currentUserId && s.status === 'pending').length}
                        </span>
                     )}
@@ -495,7 +495,7 @@ const PeerInterviews = () => {
                                     session.status === 'scheduled' ? (
                                        <div className="flex gap-2">
                                           <Button 
-                                            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20" 
+                                            className="flex-1 bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-500/20" 
                                             onClick={() => handleJoinSession(session.id)}
                                           >
                                             <Video className="w-4 h-4 mr-2" />
@@ -611,9 +611,9 @@ const SessionCard = ({
 
    return (
       <motion.div variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}>
-         <Card className="h-full border-white/5 bg-card/40 backdrop-blur-md hover:bg-card/60 transition-all duration-300 group hover:shadow-xl hover:shadow-violet-500/5 hover:-translate-y-1 relative overflow-hidden">
+         <Card className="h-full border-white/5 bg-card/40 backdrop-blur-md hover:bg-card/60 transition-all duration-300 group hover:shadow-xl hover:shadow-sky-500/5 hover:-translate-y-1 relative overflow-hidden">
             {/* Decoration gradient */}
-            <div className={`absolute top-0 right-0 p-20 bg-gradient-to-br ${requestMode ? 'from-yellow-500/10' : 'from-violet-500/10'} to-transparent rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:opacity-100 opacity-50 transition-opacity`} />
+            <div className={`absolute top-0 right-0 p-20 bg-gradient-to-br ${requestMode ? 'from-yellow-500/10' : 'from-sky-500/10'} to-transparent rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:opacity-100 opacity-50 transition-opacity`} />
             
             <CardHeader className="pb-4 relative z-10">
                <div className="flex justify-between items-start mb-4">
@@ -663,14 +663,14 @@ const SessionCard = ({
             <CardContent className="relative z-10 space-y-6">
                <div className="grid grid-cols-2 gap-3 text-sm">
                    <div className="flex items-start gap-2 text-muted-foreground bg-background/30 p-2.5 rounded-lg border border-white/5">
-                      <Calendar className="w-4 h-4 mt-0.5 text-violet-400" />
+                      <Calendar className="w-4 h-4 mt-0.5 text-sky-400" />
                       <div className="flex flex-col">
                          <span className="text-foreground font-medium">{new Date(session.scheduled_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                          <span className="text-xs">{new Date(session.scheduled_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                    </div>
                    <div className="flex items-start gap-2 text-muted-foreground bg-background/30 p-2.5 rounded-lg border border-white/5">
-                      <Clock className="w-4 h-4 mt-0.5 text-violet-400" />
+                      <Clock className="w-4 h-4 mt-0.5 text-sky-400" />
                       <div className="flex flex-col">
                          <span className="text-foreground font-medium">{session.duration_minutes} min</span>
                          <span className="text-xs">Duration</span>

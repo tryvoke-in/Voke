@@ -159,9 +159,9 @@ export default function CareerPlanView() {
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                   <div className="relative">
-                     <div className="h-16 w-16 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+                     <div className="h-16 w-16 rounded-full border-4 border-sky-500/20 border-t-sky-500 animate-spin" />
                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Sparkles className="h-6 w-6 text-violet-500 animate-pulse" />
+                        <Sparkles className="h-6 w-6 text-sky-500 animate-pulse" />
                      </div>
                   </div>
                   <p className="text-muted-foreground animate-pulse font-mono tracking-widest uppercase text-sm">Loading Neural Map...</p>
@@ -186,11 +186,11 @@ export default function CareerPlanView() {
     const monthGoals = [plan.month_1_goals, plan.month_2_goals, plan.month_3_goals];
 
     return (
-        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-violet-500/30 overflow-hidden relative">
+        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-sky-500/30 overflow-hidden relative">
             
             {/* Ambient Backlights */}
             <div className="fixed inset-0 pointer-events-none z-0">
-               <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px]" />
+               <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-sky-600/10 blur-[120px]" />
                <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[120px]" />
                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] dark:opacity-[0.05]" />
             </div>
@@ -199,7 +199,7 @@ export default function CareerPlanView() {
             <motion.header
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-violet-500/5' : 'bg-transparent'}`}
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-sky-500/5' : 'bg-transparent'}`}
             >
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -212,7 +212,7 @@ export default function CareerPlanView() {
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                         <div className="flex flex-col">
-                            <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 leading-tight">
+                            <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-500 to-blue-500 leading-tight">
                                 Neural Career Path
                             </h1>
                             <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-1">
@@ -223,11 +223,11 @@ export default function CareerPlanView() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <Button variant="outline" size="sm" className="hidden sm:flex border-violet-500/20 hover:bg-violet-500/10 text-violet-500 rounded-full text-xs h-8">
+                        <Button variant="outline" size="sm" className="hidden sm:flex border-sky-500/20 hover:bg-sky-500/10 text-sky-500 rounded-full text-xs h-8">
                             <Download className="h-3 w-3 mr-2" />
                             Export PDF
                         </Button>
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/20 text-white font-bold text-xs ring-2 ring-white/10">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-sky-600 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20 text-white font-bold text-xs ring-2 ring-white/10">
                            {plan.progress_percentage}%
                         </div>
                     </div>
@@ -244,7 +244,7 @@ export default function CareerPlanView() {
                       animate={{ opacity: 1, y: 0 }}
                       className="lg:col-span-2 relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-card/50 to-background/50 backdrop-blur-md p-8 shadow-2xl"
                    >
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                       
                       <div className="relative z-10">
                          <div className="flex items-center justify-between mb-6">
@@ -261,14 +261,14 @@ export default function CareerPlanView() {
                          <div className="space-y-4">
                             <div className="flex justify-between text-sm font-medium mb-1">
                                <span>Overall Completion</span>
-                               <span className="text-violet-500">{plan.progress_percentage}%</span>
+                               <span className="text-sky-500">{plan.progress_percentage}%</span>
                             </div>
                             <div className="h-2 w-full bg-secondary/50 rounded-full overflow-hidden">
                                <motion.div 
                                   initial={{ width: 0 }}
                                   animate={{ width: `${plan.progress_percentage}%` }}
                                   transition={{ duration: 1, ease: "easeOut" }}
-                                  className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-600" 
+                                  className="h-full bg-gradient-to-r from-sky-600 to-blue-600" 
                                />
                             </div>
                             
@@ -306,7 +306,7 @@ export default function CareerPlanView() {
                       transition={{ delay: 0.1 }}
                       className="lg:col-span-1 rounded-3xl border border-white/10 bg-card/30 backdrop-blur-md p-6 flex flex-col justify-center relative shadow-lg"
                    >
-                       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-50" />
+                       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-sky-500 to-transparent opacity-50" />
                        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                           <Zap className="w-4 h-4 text-yellow-500" />
                           Current Focus
@@ -314,7 +314,7 @@ export default function CareerPlanView() {
                        <div className="space-y-3">
                           {monthGoals[selectedMonth - 1]?.focus_areas?.slice(0, 3).map((area: string, idx: number) => (
                              <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/40 border border-white/5">
-                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center text-xs font-bold text-violet-500">
+                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-sky-500/20 flex items-center justify-center text-xs font-bold text-sky-500">
                                    {idx + 1}
                                 </span>
                                 <span className="text-sm font-medium">{area}</span>
@@ -332,7 +332,7 @@ export default function CareerPlanView() {
                                <TabsTrigger 
                                  key={month} 
                                  value={month.toString()} 
-                                 className="rounded-full px-6 py-2.5 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300"
+                                 className="rounded-full px-6 py-2.5 data-[state=active]:bg-sky-600 data-[state=active]:text-white transition-all duration-300"
                                >
                                    <span className="flex items-center gap-2">
                                        <Calendar className="h-3.5 w-3.5" />
@@ -360,8 +360,8 @@ export default function CareerPlanView() {
                                        <div className="space-y-6">
                                             {getMonthTasks(month).map((weekData, weekIdx) => (
                                                 <div key={weekIdx} className="bg-card/20 backdrop-blur-sm border border-white/5 rounded-2xl p-6 hover:bg-card/30 transition-colors duration-300">
-                                                    <h4 className="font-bold flex items-center gap-2.5 mb-4 text-violet-400">
-                                                        <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
+                                                    <h4 className="font-bold flex items-center gap-2.5 mb-4 text-sky-400">
+                                                        <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center border border-sky-500/20">
                                                            <span className="text-sm">{weekData.week}</span>
                                                         </div>
                                                         Week {weekData.week}
@@ -374,7 +374,7 @@ export default function CareerPlanView() {
                                                             return (
                                                                 <div 
                                                                    key={taskIdx} 
-                                                                   className={`group flex items-start gap-3 p-3.5 rounded-xl transition-all duration-200 border border-transparent ${weekData.completed ? 'bg-emerald-500/5' : 'bg-secondary/40 hover:bg-secondary/60 hover:border-violet-500/20'}`}
+                                                                   className={`group flex items-start gap-3 p-3.5 rounded-xl transition-all duration-200 border border-transparent ${weekData.completed ? 'bg-emerald-500/5' : 'bg-secondary/40 hover:bg-secondary/60 hover:border-sky-500/20'}`}
                                                                 >
                                                                     <Checkbox
                                                                         checked={weekData.completed}
@@ -438,10 +438,10 @@ export default function CareerPlanView() {
                                                        href={resource.url} 
                                                        target="_blank" 
                                                        rel="noopener noreferrer"
-                                                       className="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 border border-white/5 hover:border-violet-500/30 transition-all group"
+                                                       className="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 border border-white/5 hover:border-sky-500/30 transition-all group"
                                                     >
                                                         <div className="flex flex-col gap-1 overflow-hidden">
-                                                           <span className="font-medium text-sm truncate pr-2 group-hover:text-violet-400 transition-colors">{resource.title}</span>
+                                                           <span className="font-medium text-sm truncate pr-2 group-hover:text-sky-400 transition-colors">{resource.title}</span>
                                                            <div className="flex gap-2">
                                                                <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-white/10">{resource.type}</Badge>
                                                                <span className={`text-[10px] flex items-center ${resource.cost === 'free' ? 'text-emerald-500' : 'text-amber-500'}`}>

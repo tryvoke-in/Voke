@@ -25,7 +25,7 @@ export const EliteTypeSelect: React.FC<EliteTypeSelectProps> = ({
     <div className="max-w-5xl mx-auto px-4 py-12 space-y-10">
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-violet-500/10 to-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-wider shadow-xl">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-wider shadow-xl">
           <Sparkles className="w-4 h-4 text-amber-400" />
           Step 1 of 4 • Select Interview Track
         </div>

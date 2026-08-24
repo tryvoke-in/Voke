@@ -8,8 +8,8 @@ const NsatPrep = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center">
-      <div className="mb-6 bg-violet-100 p-4 rounded-full dark:bg-violet-900/30">
-        <Rocket className="w-12 h-12 text-violet-600 dark:text-violet-400" />
+      <div className="mb-6 bg-sky-100 p-4 rounded-full dark:bg-sky-900/30">
+        <Rocket className="w-12 h-12 text-sky-600 dark:text-sky-400" />
       </div>
       <h1 className="text-3xl font-bold mb-4">NSAT Prep Coming Soon</h1>
       <p className="text-muted-foreground max-w-md mb-8">

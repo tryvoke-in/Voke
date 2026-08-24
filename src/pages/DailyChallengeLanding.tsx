@@ -153,7 +153,7 @@ const DailyChallengeLanding = () => {
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white p-8 shadow-2xl"
+                        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white p-8 shadow-2xl"
                     >
                          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -175,7 +175,7 @@ const DailyChallengeLanding = () => {
 
                     {/* Problem Card */}
                     <Card className="border-border/50 shadow-lg overflow-hidden">
-                        <div className="h-2 bg-gradient-to-r from-primary to-purple-600"></div>
+                        <div className="h-2 bg-gradient-to-r from-primary to-blue-600"></div>
                         <CardHeader>
                             <div className="flex justify-between items-start">
                                 <div>
@@ -294,9 +294,9 @@ const DailyChallengeLanding = () => {
                                 <div className="text-xs text-muted-foreground">Your Rank</div>
                             </CardContent>
                         </Card>
-                        <Card className="bg-purple-500/5 border-purple-500/10">
+                        <Card className="bg-blue-500/5 border-blue-500/10">
                             <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                                <Trophy className="w-6 h-6 text-purple-500 mb-2" />
+                                <Trophy className="w-6 h-6 text-blue-500 mb-2" />
                                 <div className="text-2xl font-bold">12</div>
                                 <div className="text-xs text-muted-foreground">Solved Total</div>
                             </CardContent>
@@ -344,7 +344,7 @@ const DailyChallengeLanding = () => {
                     </Card>
 
                     {/* Motivation */}
-                    <Card className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-500/20">
+                    <Card className="bg-gradient-to-br from-indigo-500/10 to-blue-500/10 border-indigo-500/20">
                         <CardContent className="p-4 flex gap-3">
                             <Sparkles className="w-10 h-10 text-indigo-500 shrink-0" />
                             <div>

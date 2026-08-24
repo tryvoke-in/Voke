@@ -40,7 +40,7 @@ const Blogs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-violet-500/30">
+    <div className="min-h-screen bg-black text-white selection:bg-sky-500/30">
       <Navbar />
       
       {/* Hero Section */}
@@ -52,12 +52,12 @@ const Blogs = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Badge variant="outline" className="mb-6 border-violet-500/30 text-violet-300 bg-violet-500/10 px-4 py-1.5 text-sm rounded-full">
+            <Badge variant="outline" className="mb-6 border-sky-500/30 text-sky-300 bg-sky-500/10 px-4 py-1.5 text-sm rounded-full">
               Our Blog
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60 tracking-tight">
               Latest Updates & <br />
-              <span className="text-violet-400">Industry Insights</span>
+              <span className="text-sky-400">Industry Insights</span>
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
               Discover the latest trends in tech, interview strategies, and career advice from industry experts.
@@ -79,7 +79,7 @@ const Blogs = () => {
                 transition={{ delay: index * 0.1 }}
                 className="group h-full"
               >
-                <Card className="bg-white/5 border-white/10 overflow-hidden hover:border-violet-500/30 transition-all duration-500 h-full flex flex-col group-hover:shadow-2xl group-hover:shadow-violet-500/10">
+                <Card className="bg-white/5 border-white/10 overflow-hidden hover:border-sky-500/30 transition-all duration-500 h-full flex flex-col group-hover:shadow-2xl group-hover:shadow-sky-500/10">
                   <div className="relative h-56 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
                     <img 
@@ -103,7 +103,7 @@ const Blogs = () => {
                         5 min read
                       </div>
                     </div>
-                    <h3 className="text-2xl font-bold group-hover:text-violet-400 transition-colors line-clamp-2">
+                    <h3 className="text-2xl font-bold group-hover:text-sky-400 transition-colors line-clamp-2">
                       {blog.title}
                     </h3>
                     <p className="text-gray-400 line-clamp-3 text-sm leading-relaxed">
@@ -114,12 +114,12 @@ const Blogs = () => {
                   <CardFooter className="pt-0 mt-auto border-t border-white/5 p-6">
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-500 to-fuchsia-500 flex items-center justify-center text-xs font-bold">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-blue-500 flex items-center justify-center text-xs font-bold">
                           {blog.author[0]}
                         </div>
                         <span className="text-sm font-medium text-gray-300">{blog.author}</span>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 p-0 h-auto font-medium group/btn">
+                      <Button variant="ghost" size="sm" className="text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 p-0 h-auto font-medium group/btn">
                         Read Article
                         <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                       </Button>

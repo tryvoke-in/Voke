@@ -409,7 +409,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                 Upcoming Schedules
               </h3>
               {matchedCollegeName && (
-                <Badge variant="outline" className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30 text-[10px] font-medium py-0 px-2 h-5 flex items-center">
+                <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 text-[10px] font-medium py-0 px-2 h-5 flex items-center">
                   <GraduationCap className="w-3 h-3 mr-1" /> {matchedCollegeName} Partner
                 </Badge>
               )}

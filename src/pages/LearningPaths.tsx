@@ -257,15 +257,15 @@ const LearningPaths = () => {
               </div>
               
               <div className="mt-auto p-4 border-t border-border">
-                  <div className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-violet-500/20 rounded-xl p-4">
+                  <div className="bg-gradient-to-br from-sky-500/10 to-blue-500/10 border border-sky-500/20 rounded-xl p-4">
                       <div className="flex gap-2 mb-2">
-                          <Zap className="w-4 h-4 text-violet-500" />
-                          <span className="text-xs font-bold text-violet-600 dark:text-violet-400">Pro Feature</span>
+                          <Zap className="w-4 h-4 text-sky-500" />
+                          <span className="text-xs font-bold text-sky-600 dark:text-sky-400">Pro Feature</span>
                       </div>
                       <p className="text-xs text-muted-foreground leading-relaxed">
                           Upgrade to unlock AI-Mock Interviews specific to these tracks.
                       </p>
-                      <Button size="sm" className="w-full mt-3 h-7 text-xs bg-violet-600 hover:bg-violet-700 text-white border-0">
+                      <Button size="sm" className="w-full mt-3 h-7 text-xs bg-sky-600 hover:bg-sky-700 text-white border-0">
                           Upgrade Plan
                       </Button>
                   </div>

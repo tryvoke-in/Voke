@@ -213,7 +213,7 @@ export const ProgressFloatingMascot: React.FC<ProgressFloatingMascotProps> = ({
             transition={{ duration: 0.25 }}
             className={`absolute ${
               isExpanded ? "left-[76px] top-1/2 -translate-y-1/2" : "right-[82px] top-1/2 -translate-y-1/2"
-            } min-w-[145px] max-w-[195px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md rounded-2xl px-3 py-2 shadow-2xl border border-violet-500/30 cursor-pointer pointer-events-auto`}
+            } min-w-[145px] max-w-[195px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md rounded-2xl px-3 py-2 shadow-2xl border border-sky-500/30 cursor-pointer pointer-events-auto`}
             onClick={handlePoke}
           >
             {/* Bubble Tail */}
@@ -224,7 +224,7 @@ export const ProgressFloatingMascot: React.FC<ProgressFloatingMascotProps> = ({
             )}
 
             <div className="flex items-center justify-between mb-0.5">
-              <span className="text-[8.5px] font-bold text-violet-400 uppercase tracking-wider">
+              <span className="text-[8.5px] font-bold text-sky-400 uppercase tracking-wider">
                 {step === "greet" && !isDoneMoving
                   ? "Welcome"
                   : isExpanded
@@ -250,7 +250,7 @@ export const ProgressFloatingMascot: React.FC<ProgressFloatingMascotProps> = ({
         title="Drag Voki anywhere across the website!"
       >
         {/* Soft Ambient Glow Aura */}
-        <div className="absolute -inset-2.5 rounded-full blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-r from-violet-500/35 via-fuchsia-500/25 to-cyan-500/35 animate-pulse" />
+        <div className="absolute -inset-2.5 rounded-full blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-r from-sky-500/35 via-blue-500/25 to-cyan-500/35 animate-pulse" />
 
         {/* Floating / Bobbing Hover Animation */}
         <motion.div
@@ -279,17 +279,17 @@ export const ProgressFloatingMascot: React.FC<ProgressFloatingMascotProps> = ({
                 ]
               }}
               transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-              className="w-3 h-3 rounded-full bg-gradient-to-br from-violet-400 via-fuchsia-400 to-pink-400 border-2 border-white shadow-md z-10"
+              className="w-3 h-3 rounded-full bg-gradient-to-br from-sky-400 via-blue-400 to-pink-400 border-2 border-white shadow-md z-10"
             />
             {/* Antenna Rod */}
-            <div className="w-0.5 h-2 bg-gradient-to-b from-violet-300 to-slate-600 rounded-t-sm" />
+            <div className="w-0.5 h-2 bg-gradient-to-b from-sky-300 to-slate-600 rounded-t-sm" />
           </div>
 
           {/* Cute Robot Head with Rounded Curves */}
-          <div className="relative w-15 h-11 rounded-2xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-2 border-violet-400/80 shadow-xl flex items-center justify-center overflow-hidden p-0.5">
+          <div className="relative w-15 h-11 rounded-2xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-2 border-sky-400/80 shadow-xl flex items-center justify-center overflow-hidden p-0.5">
             {/* Headphone Ear Cups */}
-            <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-l-md bg-gradient-to-b from-violet-500 to-fuchsia-600 border border-violet-300 shadow-xs" />
-            <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-r-md bg-gradient-to-b from-violet-500 to-fuchsia-600 border border-violet-300 shadow-xs" />
+            <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-l-md bg-gradient-to-b from-sky-500 to-blue-600 border border-sky-300 shadow-xs" />
+            <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-r-md bg-gradient-to-b from-sky-500 to-blue-600 border border-sky-300 shadow-xs" />
 
             {/* Glowing Face Visor Screen with Cute Happy Eyes & Blushing Cheeks */}
             <div className="w-full h-full rounded-xl bg-slate-950 border border-cyan-500/40 flex items-center justify-around px-2 relative shadow-inner overflow-hidden">
@@ -348,7 +348,7 @@ export const ProgressFloatingMascot: React.FC<ProgressFloatingMascotProps> = ({
           <div className="w-2.5 h-0.5 bg-slate-700 -my-0.5 z-0" />
 
           {/* Robot Torso */}
-          <div className="relative w-11 h-6 rounded-xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-[1.5px] border-violet-400/60 shadow-md flex items-center justify-center">
+          <div className="relative w-11 h-6 rounded-xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-[1.5px] border-sky-400/60 shadow-md flex items-center justify-center">
             {/* Chest Core Power Orb */}
             <motion.div
               animate={{
@@ -379,7 +379,7 @@ export const ProgressFloatingMascot: React.FC<ProgressFloatingMascotProps> = ({
                 repeat: isWaving || step === "greet" ? Infinity : Infinity,
                 ease: "easeInOut"
               }}
-              className="absolute -left-2 top-0.5 w-1.5 h-4 rounded-full bg-violet-600 border border-violet-300 shadow-xs flex items-end justify-center pb-0.5"
+              className="absolute -left-2 top-0.5 w-1.5 h-4 rounded-full bg-sky-600 border border-sky-300 shadow-xs flex items-end justify-center pb-0.5"
             >
               <div className="w-1 h-1 rounded-full bg-cyan-300 shadow-[0_0_3px_#67e8f9]" />
             </motion.div>
@@ -392,7 +392,7 @@ export const ProgressFloatingMascot: React.FC<ProgressFloatingMascotProps> = ({
                 originY: 0
               }}
               transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -right-2 top-0.5 w-1.5 h-4 rounded-full bg-violet-600 border border-violet-300 shadow-xs flex items-end justify-center pb-0.5"
+              className="absolute -right-2 top-0.5 w-1.5 h-4 rounded-full bg-sky-600 border border-sky-300 shadow-xs flex items-end justify-center pb-0.5"
             >
               <div className="w-1 h-1 rounded-full bg-cyan-300 shadow-[0_0_3px_#67e8f9]" />
             </motion.div>

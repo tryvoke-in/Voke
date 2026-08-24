@@ -49,9 +49,9 @@ export const AudioVisualizerSimple: React.FC<AudioVisualizerSimpleProps> = ({
             ctx.clearRect(0, 0, rect.width, rect.height);
 
             // Palette definitions based on speaking state
-            let primaryGlow = '#8b5cf6'; // Violet 500
+            let primaryGlow = '#8b5cf6'; // Sky 500
             let secondaryGlow = '#6366f1'; // Indigo 500
-            let innerCore = '#c4b5fd'; // Violet 300
+            let innerCore = '#c4b5fd'; // Sky 300
             let radiusMultiplier = 1;
             let pulseSpeed = 0.03;
 
@@ -64,10 +64,10 @@ export const AudioVisualizerSimple: React.FC<AudioVisualizerSimpleProps> = ({
                 radiusMultiplier = 1 + normalizedVol * 0.55;
                 pulseSpeed = 0.12;
             } else if (isAiSpeaking) {
-                // Vibrant Purple / Magenta for AI response
-                primaryGlow = '#a855f7'; // Purple 500
+                // Vibrant Blue / Magenta for AI response
+                primaryGlow = '#a855f7'; // Blue 500
                 secondaryGlow = '#ec4899'; // Pink 500
-                innerCore = '#f5d0fe'; // Fuchsia 200
+                innerCore = '#f5d0fe'; // Blue 200
                 radiusMultiplier = 1.15 + Math.sin(phase * 2.5) * 0.14;
                 pulseSpeed = 0.08;
             }

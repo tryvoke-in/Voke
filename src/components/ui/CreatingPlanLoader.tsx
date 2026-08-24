@@ -16,21 +16,21 @@ export function CreatingPlanLoader() {
                             delay: index * 0.6,
                             ease: "easeOut",
                         }}
-                        className="absolute w-32 h-32 rounded-full border border-violet-500/30 bg-violet-500/5 shadow-[0_0_30px_rgba(139,92,246,0.2)]"
+                        className="absolute w-32 h-32 rounded-full border border-sky-500/30 bg-sky-500/5 shadow-[0_0_30px_rgba(139,92,246,0.2)]"
                     />
                 ))}
 
                 {/* Central Core */}
-                <div className="relative z-10 w-24 h-24 rounded-full bg-black border border-violet-500/50 flex items-center justify-center shadow-[0_0_50px_rgba(139,92,246,0.4)]">
+                <div className="relative z-10 w-24 h-24 rounded-full bg-black border border-sky-500/50 flex items-center justify-center shadow-[0_0_50px_rgba(139,92,246,0.4)]">
                     <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-0 rounded-full border-t-2 border-r-2 border-violet-400 opacity-80"
+                        className="absolute inset-0 rounded-full border-t-2 border-r-2 border-sky-400 opacity-80"
                     />
                     <motion.div
                         animate={{ scale: [1, 1.1, 1] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-12 h-12 rounded-full bg-violet-600 blur-md opacity-60"
+                        className="w-12 h-12 rounded-full bg-sky-600 blur-md opacity-60"
                     />
                 </div>
 
@@ -41,7 +41,7 @@ export function CreatingPlanLoader() {
                     transition={{ delay: 0.5 }}
                     className="mt-12 text-center"
                 >
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent mb-2">
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent mb-2">
                         Creating Career Plan
                     </h2>
                     <motion.p

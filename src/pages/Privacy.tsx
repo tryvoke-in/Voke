@@ -36,8 +36,8 @@ const Privacy = () => {
         {
             title: "How We Use Your Information",
             icon: UserCheck,
-            color: "text-violet-500",
-            bg: "bg-violet-500/10",
+            color: "text-sky-500",
+            bg: "bg-sky-500/10",
             content: [
                 "Provide and improve our interview practice services",
                 "Generate personalized feedback and recommendations",
@@ -78,8 +78,8 @@ const Privacy = () => {
         {
             title: "Data Sharing",
             icon: Eye,
-            color: "text-fuchsia-500",
-            bg: "bg-fuchsia-500/10",
+            color: "text-blue-500",
+            bg: "bg-blue-500/10",
             content: [
                 "We do not sell your personal information to third parties",
                 "Share data with service providers under strict agreements",
@@ -106,11 +106,11 @@ const Privacy = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-violet-500/30 overflow-x-hidden">
+        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-sky-500/30 overflow-x-hidden">
             {/* Background Ambience */}
             <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-[1000px] h-[600px] bg-violet-600/5 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-screen mix-blend-multiply" />
-                <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-fuchsia-600/5 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-screen mix-blend-multiply" />
+                <div className="absolute top-0 left-1/4 w-[1000px] h-[600px] bg-sky-600/5 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-screen mix-blend-multiply" />
+                <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-screen mix-blend-multiply" />
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] dark:opacity-[0.05]" />
             </div>
 
@@ -123,7 +123,7 @@ const Privacy = () => {
                         </Button>
                         <div className="flex items-center gap-2 cursor-pointer group" onClick={handleLogoClick}>
                              <div className="relative">
-                                <div className="absolute inset-0 bg-violet-500/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute inset-0 bg-sky-500/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <img
                                     src="/images/voke_logo.png"
                                     alt="Voke Logo"
@@ -147,12 +147,12 @@ const Privacy = () => {
                     className="text-center mb-16 space-y-6 max-w-4xl mx-auto"
                 >
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/30 border border-border/50 text-sm font-medium text-muted-foreground mb-4">
-                        <Shield className="w-4 h-4 text-violet-500" />
+                        <Shield className="w-4 h-4 text-sky-500" />
                         <span>Trust & Security</span>
                     </div>
                     
                     <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                        We value your <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-fuchsia-500">privacy</span>
+                        We value your <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-blue-500">privacy</span>
                     </h1>
                     
                     <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
@@ -173,7 +173,7 @@ const Privacy = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 + (idx * 0.1) }}
                         >
-                            <Card className="h-full bg-card/40 backdrop-blur-xl border-border/50 hover:border-violet-500/20 transition-all duration-300">
+                            <Card className="h-full bg-card/40 backdrop-blur-xl border-border/50 hover:border-sky-500/20 transition-all duration-300">
                                 <CardHeader>
                                     <div className="flex items-center gap-4">
                                         <div className={`p-3 rounded-xl ${section.bg} border border-white/5`}>
@@ -204,12 +204,12 @@ const Privacy = () => {
                     transition={{ delay: 0.8 }}
                     className="max-w-3xl mx-auto"
                 >
-                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-900/40 to-fuchsia-900/40 border border-white/10 p-8 text-center">
+                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-900/40 to-blue-900/40 border border-white/10 p-8 text-center">
                         <div className="absolute inset-0 bg-noise opacity-10 mix-blend-overlay" />
                         
                         <div className="relative z-10 space-y-6">
                             <h2 className="text-2xl font-bold text-white">Questions about your data?</h2>
-                            <p className="text-violet-200/80">
+                            <p className="text-sky-200/80">
                                 If you have any questions about this Privacy Policy or how we handle your data, please don't hesitate to reach out.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">

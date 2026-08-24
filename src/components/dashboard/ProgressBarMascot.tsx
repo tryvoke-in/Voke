@@ -143,7 +143,7 @@ export const ProgressBarMascot: React.FC<ProgressBarMascotProps> = ({
                 ? "bg-slate-900/95 border-emerald-500/50 shadow-emerald-500/10"
                 : isDipped
                 ? "bg-slate-900/95 border-amber-500/50 shadow-amber-500/10"
-                : "bg-slate-900/95 border-violet-500/50 shadow-violet-500/10"
+                : "bg-slate-900/95 border-sky-500/50 shadow-sky-500/10"
             }`}
             onClick={handlePoke}
           >
@@ -189,7 +189,7 @@ export const ProgressBarMascot: React.FC<ProgressBarMascotProps> = ({
               ? "bg-gradient-to-r from-emerald-400 to-teal-400"
               : isDipped
               ? "bg-gradient-to-r from-amber-400 to-orange-400"
-              : "bg-gradient-to-r from-violet-400 to-cyan-400"
+              : "bg-gradient-to-r from-sky-400 to-cyan-400"
           }`}
         />
 
@@ -225,7 +225,7 @@ export const ProgressBarMascot: React.FC<ProgressBarMascotProps> = ({
                   ? "bg-gradient-to-br from-emerald-300 to-teal-400"
                   : isDipped
                   ? "bg-gradient-to-br from-amber-300 to-orange-400"
-                  : "bg-gradient-to-br from-violet-300 to-fuchsia-400"
+                  : "bg-gradient-to-br from-sky-300 to-blue-400"
               }`}
             />
             <div className="w-0.5 h-1 bg-slate-500" />
@@ -233,7 +233,7 @@ export const ProgressBarMascot: React.FC<ProgressBarMascotProps> = ({
 
           {/* Robot Head */}
           <div className={`relative w-8 h-6 rounded-lg bg-slate-900 border-[1.5px] shadow-md flex items-center justify-center p-0.5 ${
-            isHappy ? "border-emerald-400/80" : isDipped ? "border-amber-400/80" : "border-violet-400/80"
+            isHappy ? "border-emerald-400/80" : isDipped ? "border-amber-400/80" : "border-sky-400/80"
           }`}>
             {/* Visor Screen */}
             <div className="w-full h-full rounded-md bg-slate-950 flex items-center justify-around px-1 relative shadow-inner overflow-hidden">
@@ -285,7 +285,7 @@ export const ProgressBarMascot: React.FC<ProgressBarMascotProps> = ({
               animate={{ scale: [1, 1.25, 1] }}
               transition={{ duration: 0.9, repeat: Infinity }}
               className={`w-2 h-2 rounded-full flex items-center justify-center ${
-                isHappy ? "bg-emerald-500 shadow-[0_0_6px_#10b981]" : isDipped ? "bg-amber-500 shadow-[0_0_6px_#f59e0b]" : "bg-violet-500 shadow-[0_0_6px_#8b5cf6]"
+                isHappy ? "bg-emerald-500 shadow-[0_0_6px_#10b981]" : isDipped ? "bg-amber-500 shadow-[0_0_6px_#f59e0b]" : "bg-sky-500 shadow-[0_0_6px_#8b5cf6]"
               }`}
             >
               <Zap className="w-1 h-1 text-white fill-white" />
@@ -303,7 +303,7 @@ export const ProgressBarMascot: React.FC<ProgressBarMascotProps> = ({
                 originY: 0
               }}
               transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -left-1.5 top-0.5 w-1 h-2.5 rounded-full bg-violet-600 border border-violet-300"
+              className="absolute -left-1.5 top-0.5 w-1 h-2.5 rounded-full bg-sky-600 border border-sky-300"
             />
 
             {/* Right Arm */}
@@ -316,7 +316,7 @@ export const ProgressBarMascot: React.FC<ProgressBarMascotProps> = ({
                 originY: 0
               }}
               transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -right-1.5 top-0.5 w-1 h-2.5 rounded-full bg-violet-600 border border-violet-300"
+              className="absolute -right-1.5 top-0.5 w-1 h-2.5 rounded-full bg-sky-600 border border-sky-300"
             />
           </div>
 

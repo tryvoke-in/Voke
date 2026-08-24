@@ -166,7 +166,7 @@ export const MotivationalMascot: React.FC<MotivationalMascotProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 5 }}
             transition={{ duration: 0.25 }}
-            className="absolute bottom-[105px] left-1/2 -translate-x-1/2 min-w-[160px] max-w-[220px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-violet-500/50 rounded-2xl px-3 py-2 shadow-2xl text-center pointer-events-auto cursor-pointer"
+            className="absolute bottom-[105px] left-1/2 -translate-x-1/2 min-w-[160px] max-w-[220px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-sky-500/50 rounded-2xl px-3 py-2 shadow-2xl text-center pointer-events-auto cursor-pointer"
             onClick={handlePoke}
           >
             {/* Bubble Tail pointing to mascot */}
@@ -201,7 +201,7 @@ export const MotivationalMascot: React.FC<MotivationalMascotProps> = ({
         onMouseEnter={() => setShowBubble(true)}
       >
         {/* Soft Ambient Glow Aura */}
-        <div className="absolute -inset-2 bg-gradient-to-r from-violet-500/35 via-fuchsia-500/25 to-cyan-500/35 rounded-full blur-lg opacity-80 group-hover:opacity-100 transition-opacity duration-300 animate-pulse pointer-events-none" />
+        <div className="absolute -inset-2 bg-gradient-to-r from-sky-500/35 via-blue-500/25 to-cyan-500/35 rounded-full blur-lg opacity-80 group-hover:opacity-100 transition-opacity duration-300 animate-pulse pointer-events-none" />
 
         {/* Hovering Bob Animation */}
         <motion.div
@@ -230,17 +230,17 @@ export const MotivationalMascot: React.FC<MotivationalMascotProps> = ({
                 ]
               }}
               transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-              className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-500 border-2 border-white shadow-md z-10"
+              className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 border-2 border-white shadow-md z-10"
             />
             {/* Antenna Rod */}
-            <div className="w-1 h-3 bg-gradient-to-b from-violet-300 to-slate-600 rounded-t-sm" />
+            <div className="w-1 h-3 bg-gradient-to-b from-sky-300 to-slate-600 rounded-t-sm" />
           </div>
 
           {/* Robot Head */}
-          <div className="relative w-16 h-12 rounded-2xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-2 border-violet-400/70 shadow-xl flex items-center justify-center overflow-hidden p-1">
+          <div className="relative w-16 h-12 rounded-2xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-2 border-sky-400/70 shadow-xl flex items-center justify-center overflow-hidden p-1">
             {/* Headphone Ear Cups */}
-            <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-2 h-6 rounded-l-md bg-violet-600 border border-violet-300 shadow-xs shadow-violet-500/50" />
-            <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-2 h-6 rounded-r-md bg-violet-600 border border-violet-300 shadow-xs shadow-violet-500/50" />
+            <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-2 h-6 rounded-l-md bg-sky-600 border border-sky-300 shadow-xs shadow-sky-500/50" />
+            <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-2 h-6 rounded-r-md bg-sky-600 border border-sky-300 shadow-xs shadow-sky-500/50" />
 
             {/* Glowing Face Visor Screen */}
             <div className="w-full h-full rounded-xl bg-slate-950 border border-cyan-500/40 flex items-center justify-around px-2 relative shadow-inner overflow-hidden">
@@ -285,7 +285,7 @@ export const MotivationalMascot: React.FC<MotivationalMascotProps> = ({
           <div className="w-3.5 h-1 bg-slate-700 -my-0.5 z-0" />
 
           {/* Robot Torso */}
-          <div className="relative w-12 h-8 rounded-xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-[1.5px] border-violet-400/60 shadow-lg flex items-center justify-center">
+          <div className="relative w-12 h-8 rounded-xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-[1.5px] border-sky-400/60 shadow-lg flex items-center justify-center">
             {/* Chest Core Power Orb (Glowing Flame / Zap) */}
             <motion.div
               animate={{
@@ -310,7 +310,7 @@ export const MotivationalMascot: React.FC<MotivationalMascotProps> = ({
                 repeat: isWaving ? 2 : Infinity,
                 ease: "easeInOut"
               }}
-              className="absolute -left-2.5 top-0.5 w-2 h-4.5 rounded-full bg-violet-600 border border-violet-300 shadow-xs flex items-end justify-center pb-0.5"
+              className="absolute -left-2.5 top-0.5 w-2 h-4.5 rounded-full bg-sky-600 border border-sky-300 shadow-xs flex items-end justify-center pb-0.5"
             >
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_4px_#67e8f9]" />
             </motion.div>
@@ -323,7 +323,7 @@ export const MotivationalMascot: React.FC<MotivationalMascotProps> = ({
                 originY: 0
               }}
               transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -right-2.5 top-0.5 w-2 h-4.5 rounded-full bg-violet-600 border border-violet-300 shadow-xs flex items-end justify-center pb-0.5"
+              className="absolute -right-2.5 top-0.5 w-2 h-4.5 rounded-full bg-sky-600 border border-sky-300 shadow-xs flex items-end justify-center pb-0.5"
             >
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_4px_#67e8f9]" />
             </motion.div>
@@ -336,7 +336,7 @@ export const MotivationalMascot: React.FC<MotivationalMascotProps> = ({
               opacity: [0.3, 0.7, 0.3]
             }}
             transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-            className="w-10 h-2 rounded-full bg-violet-500/50 blur-xs mt-1.5"
+            className="w-10 h-2 rounded-full bg-sky-500/50 blur-xs mt-1.5"
           />
         </motion.div>
       </div>

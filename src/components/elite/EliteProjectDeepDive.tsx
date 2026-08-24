@@ -998,8 +998,8 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0">
-                  <Layers className="w-5 h-5 text-violet-400" />
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
+                  <Layers className="w-5 h-5 text-sky-400" />
                 </div>
                 <div>
                   <h2 className="text-lg font-extrabold text-white tracking-tight">
@@ -1024,7 +1024,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-white leading-tight">{company.name}</span>
-                  <span className="text-[10px] text-violet-400 font-semibold leading-tight">{role.title}</span>
+                  <span className="text-[10px] text-sky-400 font-semibold leading-tight">{role.title}</span>
                 </div>
               </div>
             </div>
@@ -1043,7 +1043,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
             <div className="space-y-3 flex-1 flex flex-col min-h-0">
               <div className="flex items-center justify-between text-xs font-medium text-zinc-400 px-1">
                 <span className="flex items-center gap-1.5 text-zinc-200 font-bold">
-                  <FolderCode className="w-4 h-4 text-violet-400" />
+                  <FolderCode className="w-4 h-4 text-sky-400" />
                   Your GitHub Repositories ({availableRepos.length} available)
                 </span>
                 <span className="text-[10px] text-zinc-500">Pick exactly one</span>
@@ -1058,7 +1058,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search repositories..."
-                    className="w-full bg-[#121422] border border-white/10 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/60 transition-colors"
+                    className="w-full bg-[#121422] border border-white/10 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-sky-500/60 transition-colors"
                   />
                 </div>
               )}
@@ -1067,8 +1067,8 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
               {isLoadingRepos ? (
                 <div className="p-8 rounded-2xl bg-[#121422]/60 border border-white/10 text-center space-y-4 flex flex-col items-center justify-center min-h-[220px]">
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
-                    <Sparkles className="w-4 h-4 text-violet-400 absolute inset-0 m-auto" />
+                    <div className="w-10 h-10 rounded-full border-2 border-sky-500/30 border-t-sky-500 animate-spin" />
+                    <Sparkles className="w-4 h-4 text-sky-400 absolute inset-0 m-auto" />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white tracking-wide">Fetching Your GitHub Repositories...</h4>
@@ -1077,7 +1077,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
                 </div>
               ) : availableRepos.length === 0 ? (
                 <div className="p-6 rounded-2xl bg-[#121422]/70 border border-white/10 text-center space-y-3 flex flex-col items-center justify-center">
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
                     <Github className="w-5 h-5" />
                   </div>
                   <div>
@@ -1098,7 +1098,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
                       });
                       if (error) toast.error(error.message);
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs inline-flex items-center gap-2 shadow-lg shadow-violet-600/20 cursor-pointer transition-all transform hover:scale-[1.02]"
+                    className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs inline-flex items-center gap-2 shadow-lg shadow-sky-600/20 cursor-pointer transition-all transform hover:scale-[1.02]"
                   >
                     <Github className="w-4 h-4" /> Connect GitHub Account
                   </button>
@@ -1114,7 +1114,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
                         onClick={() => setSelectedProject(repo)}
                         className={`group p-3.5 rounded-xl border cursor-pointer transition-all duration-150 flex flex-col justify-between relative ${
                           isSelected
-                            ? 'bg-[#141628] border-violet-500/50 shadow-md shadow-violet-500/10 ring-1 ring-violet-500/20'
+                            ? 'bg-[#141628] border-sky-500/50 shadow-md shadow-sky-500/10 ring-1 ring-sky-500/20'
                             : 'bg-[#0d0e17]/80 border-white/5 hover:border-white/15 hover:bg-[#121422]/60 opacity-70 hover:opacity-100'
                         }`}
                       >
@@ -1122,13 +1122,13 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
                           <div className="flex items-center gap-2.5">
                             <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all shrink-0 ${
                               isSelected
-                                ? 'bg-violet-500 text-white shadow-sm shadow-violet-500/20'
+                                ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/20'
                                 : 'bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
                             }`}>
                               {isSelected ? <Check className="w-3.5 h-3.5 text-white stroke-[3]" /> : <GitBranch className="w-3.5 h-3.5 text-zinc-500" />}
                             </div>
                             <div>
-                              <h4 className="text-xs font-bold text-white tracking-tight group-hover:text-violet-300 transition-colors">{repo}</h4>
+                              <h4 className="text-xs font-bold text-white tracking-tight group-hover:text-sky-300 transition-colors">{repo}</h4>
                               {repoMeta?.language && (
                                 <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-white/5 inline-block mt-0.5">
                                   {repoMeta.language}
@@ -1144,7 +1144,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
 
                         <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[10px]">
                           <span className="text-zinc-500 font-medium">Deep Dive Target</span>
-                          <span className={`font-bold ${isSelected ? 'text-violet-400' : 'text-zinc-600'}`}>
+                          <span className={`font-bold ${isSelected ? 'text-sky-400' : 'text-zinc-600'}`}>
                             {isSelected ? '✓ Selected' : 'Tap to Select'}
                           </span>
                         </div>
@@ -1162,7 +1162,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
                 disabled={!selectedProject || isLoadingRepos}
                 className={`w-full h-12 rounded-xl font-extrabold text-xs tracking-wide shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   selectedProject
-                    ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-600/20'
+                    ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-sky-600/20'
                     : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                 }`}
               >
@@ -1198,7 +1198,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
             <div className="flex items-center gap-2">
               <span className="font-black text-base text-white tracking-wide">{company.name}</span>
               <span className="text-zinc-600">•</span>
-              <span className="text-xs font-bold text-violet-400">{role.title}</span>
+              <span className="text-xs font-bold text-sky-400">{role.title}</span>
               <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] py-0.5 font-semibold">
                 {interviewType.title}
               </Badge>
@@ -1244,7 +1244,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
         <div className="flex-1 flex flex-col relative min-h-0 h-full">
           <div className="flex-1 relative rounded-3xl bg-zinc-950 border border-white/15 overflow-hidden shadow-2xl flex flex-col items-center justify-center p-6 group h-full">
             {/* Ambient Glow */}
-            <div className="absolute inset-0 bg-gradient-to-b from-violet-950/30 via-zinc-950 to-zinc-950 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-sky-950/30 via-zinc-950 to-zinc-950 pointer-events-none" />
 
             {/* AI Audio Visualizer */}
             <div className="relative z-10 w-48 h-48 md:w-64 md:h-64 flex items-center justify-center my-auto">
@@ -1370,7 +1370,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-[10px] border-white/10 text-zinc-400">Real-time</Badge>
                 {selectedProject && (
-                  <span className="text-[10px] text-violet-400 font-bold bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] text-sky-400 font-bold bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
                     {selectedProject}
                   </span>
                 )}
@@ -1392,7 +1392,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
                       className={`flex gap-3 ${log.role === 'user' ? 'flex-row-reverse' : ''}`}
                     >
                       <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
-                        log.role === 'assistant' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
+                        log.role === 'assistant' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                       }`}>
                         {log.role === 'assistant' ? <Sparkles className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                       </div>
@@ -1400,7 +1400,7 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
                       <div className={`p-3.5 rounded-2xl text-xs leading-relaxed max-w-[85%] border shadow-md ${
                         log.role === 'assistant'
                           ? 'bg-zinc-900 text-zinc-200 border-white/10'
-                          : 'bg-violet-950/50 text-violet-200 border-violet-500/30'
+                          : 'bg-sky-950/50 text-sky-200 border-sky-500/30'
                       }`}>
                         <div className="text-[10px] font-bold mb-1 opacity-70">
                           {log.role === 'assistant' ? `${company.name} Technical Lead` : 'You (Candidate)'}

@@ -464,7 +464,7 @@ const AdminDashboard = () => {
   const stats = [
     { title: "Total Users", value: users.length.toString(), change: `Registered`, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", data: [40, 30, 45, 50, 65, 60, 70] },
     { title: "Interviews Conducted", value: totalSessions.toString(), change: "Active", icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10", data: [20, 40, 35, 50, 45, 60, 55] },
-    { title: "System Health", value: "99.9%", change: "Stable", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10", data: [80, 85, 82, 90, 88, 95, 99] },
+    { title: "System Health", value: "99.9%", change: "Stable", icon: Database, color: "text-sky-400", bg: "bg-sky-500/10", data: [80, 85, 82, 90, 88, 95, 99] },
     { title: "Waitlist Signups", value: waitlist.length.toString(), change: "Active", icon: Mail, color: "text-orange-400", bg: "bg-orange-500/10", data: [10, 15, 12, 20, 18, 15, 10] },
   ];
 
@@ -526,7 +526,7 @@ const AdminDashboard = () => {
   if (checking) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500"></div>
       </div>
     );
   }
@@ -562,10 +562,10 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex overflow-hidden font-sans selection:bg-violet-500/30">
+    <div className="min-h-screen bg-black text-white flex overflow-hidden font-sans selection:bg-sky-500/30">
       {/* Dynamic Background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-violet-900/20 rounded-full blur-[120px]" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-sky-900/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[120px]" />
       </div>
 
@@ -579,7 +579,7 @@ const AdminDashboard = () => {
           <img 
             src="/images/voke_logo.png" 
             alt="Voke Logo" 
-            className="w-10 h-10 object-contain shadow-lg shadow-violet-500/20"
+            className="w-10 h-10 object-contain shadow-lg shadow-sky-500/20"
           />
           <div>
             <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 block leading-none">Voke</span>
@@ -603,7 +603,7 @@ const AdminDashboard = () => {
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${
                 activeTab === item.id 
-                  ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20" 
+                  ? "bg-sky-600 text-white shadow-lg shadow-sky-600/20" 
                   : "text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
@@ -623,7 +623,7 @@ const AdminDashboard = () => {
 
         <div className="p-6 border-t border-white/10">
           <div className="flex items-center gap-3 mb-6 px-2">
-            <Avatar className="h-10 w-10 border-2 border-violet-500/30">
+            <Avatar className="h-10 w-10 border-2 border-sky-500/30">
               <AvatarImage src="https://github.com/shadcn.png" />
               <AvatarFallback>AD</AvatarFallback>
             </Avatar>
@@ -790,7 +790,7 @@ const AdminDashboard = () => {
                 <Card className="bg-white/5 border-white/10 backdrop-blur-sm overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Recent Registrations</CardTitle>
-                    <Button variant="ghost" size="sm" className="text-violet-400 hover:text-violet-300">View All</Button>
+                    <Button variant="ghost" size="sm" className="text-sky-400 hover:text-sky-300">View All</Button>
                   </CardHeader>
                   <CardContent className="p-0">
                     <Table>
@@ -823,7 +823,7 @@ const AdminDashboard = () => {
                             <TableCell>
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-8 w-8 border border-white/10">
-                                  <AvatarFallback className="bg-violet-500/20 text-violet-300">{(user.full_name || "U")[0]}</AvatarFallback>
+                                  <AvatarFallback className="bg-sky-500/20 text-sky-300">{(user.full_name || "U")[0]}</AvatarFallback>
                                 </Avatar>
                                 <div>
                                   <p className="font-medium text-gray-200">{user.full_name || "Unknown User"}</p>
@@ -891,7 +891,7 @@ const AdminDashboard = () => {
                         id="new-users-toggle"
                         checked={newUsersOnly}
                         onCheckedChange={setNewUsersOnly}
-                        className="data-[state=checked]:bg-violet-600"
+                        className="data-[state=checked]:bg-sky-600"
                       />
                     </div>
                   </div>
@@ -903,8 +903,8 @@ const AdminDashboard = () => {
                       value: activities.filter(a => a.event_type === 'page_view').length,
                       desc: "Accumulated page views",
                       icon: Activity,
-                      color: "text-violet-400",
-                      bg: "bg-violet-500/10"
+                      color: "text-sky-400",
+                      bg: "bg-sky-500/10"
                     },
                     {
                       title: "Total Visits",
@@ -951,7 +951,7 @@ const AdminDashboard = () => {
                 <Card className="bg-white/5 border-white/10 shadow-xl">
                   <CardHeader>
                     <CardTitle className="text-xl font-bold flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-violet-400 animate-pulse" />
+                      <TrendingUp className="w-5 h-5 text-sky-400 animate-pulse" />
                       Web Activity Trends
                     </CardTitle>
                     <p className="text-xs text-gray-400">Daily breakdown of unique visits and page views</p>
@@ -1033,11 +1033,11 @@ const AdminDashboard = () => {
                             <div key={index} className="space-y-1.5">
                               <div className="flex justify-between text-sm">
                                 <span className="font-mono text-gray-300 truncate max-w-[80%]">{page.path}</span>
-                                <span className="font-bold text-violet-400">{page.count} hits</span>
+                                <span className="font-bold text-sky-400">{page.count} hits</span>
                               </div>
                               <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                                 <div 
-                                  className="bg-violet-600 h-full rounded-full transition-all duration-500" 
+                                  className="bg-sky-600 h-full rounded-full transition-all duration-500" 
                                   style={{ width: `${(page.count / maxCount) * 100}%` }}
                                 />
                               </div>
@@ -1198,7 +1198,7 @@ const AdminDashboard = () => {
                                     return (
                                       <button
                                         onClick={() => navigate(`/admin/users/${userBreakdown.userId}`)}
-                                        className="text-violet-400 hover:text-violet-300 hover:underline font-semibold text-left transition-colors"
+                                        className="text-sky-400 hover:text-sky-300 hover:underline font-semibold text-left transition-colors"
                                       >
                                         {displayName}
                                       </button>
@@ -1207,7 +1207,7 @@ const AdminDashboard = () => {
                                     <span className="text-gray-500 italic">{userBreakdown.email}</span>
                                   )}
                                 </TableCell>
-                                <TableCell className="font-bold text-violet-400">
+                                <TableCell className="font-bold text-sky-400">
                                   {userBreakdown.visitCount} visits
                                 </TableCell>
                                 <TableCell className="text-gray-300 text-sm">
@@ -1302,7 +1302,7 @@ const AdminDashboard = () => {
                                 else if (activity.event_type === "auth_login" || activity.event_type === "user_signup") badgeColor = "bg-blue-500/10 text-blue-400";
                                 else if (activity.event_type === "pricing_upgrade_success") badgeColor = "bg-yellow-500/10 text-yellow-400";
                                 else if (activity.event_type === "pricing_upgrade_click") badgeColor = "bg-amber-500/10 text-amber-400";
-                                else if (activity.event_type === "interview_start" || activity.event_type === "interview_complete") badgeColor = "bg-purple-500/10 text-purple-400";
+                                else if (activity.event_type === "interview_start" || activity.event_type === "interview_complete") badgeColor = "bg-blue-500/10 text-blue-400";
 
                                 return (
                                   <>
@@ -1335,7 +1335,7 @@ const AdminDashboard = () => {
                                           variant="ghost" 
                                           size="sm" 
                                           onClick={() => setExpandedActivityId(isExpanded ? null : activity.id)}
-                                          className="text-violet-400 hover:text-white hover:bg-violet-600/20 rounded-lg text-xs"
+                                          className="text-sky-400 hover:text-white hover:bg-sky-600/20 rounded-lg text-xs"
                                         >
                                           {isExpanded ? "Hide Details" : "View Details"}
                                         </Button>
@@ -1501,7 +1501,7 @@ const AdminDashboard = () => {
                 <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
-                      <Mail className="w-5 h-5 text-violet-400" />
+                      <Mail className="w-5 h-5 text-sky-400" />
                       Waitlist Signups
                       <span className="ml-2 px-2.5 py-0.5 rounded-full bg-white/10 text-xs text-gray-400 font-normal">
                         {waitlist.length}
@@ -1554,7 +1554,7 @@ const AdminDashboard = () => {
                                   {formatDate(entry.created_at)}
                                 </TableCell>
                                 <TableCell>
-                                  <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-0">
+                                  <Badge variant="outline" className="bg-sky-500/10 text-sky-400 border-0">
                                     {entry.status || "Pending"}
                                   </Badge>
                                 </TableCell>
@@ -1693,7 +1693,7 @@ const AdminDashboard = () => {
                     <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                          <Plus className="w-5 h-5 text-violet-400" />
+                          <Plus className="w-5 h-5 text-sky-400" />
                           Create New Blog
                         </CardTitle>
                       </CardHeader>
@@ -1749,7 +1749,7 @@ const AdminDashboard = () => {
                           />
                         </div>
                         <div className="flex justify-end">
-                          <Button onClick={handlePublishBlog} className="bg-violet-600 hover:bg-violet-700">
+                          <Button onClick={handlePublishBlog} className="bg-sky-600 hover:bg-sky-700">
                             Publish Blog
                           </Button>
                         </div>
@@ -1895,7 +1895,7 @@ const AdminDashboard = () => {
                 className="relative pb-24"
               >
                 <div className="mb-8">
-                  <h3 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400">
+                  <h3 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-blue-400">
                     System Control Center
                   </h3>
                   <p className="text-gray-400 mt-2">Manage global configurations and security policies.</p>
@@ -1908,11 +1908,11 @@ const AdminDashboard = () => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.1 }}
                   >
-                    <Card className="h-full bg-black/40 border-white/10 backdrop-blur-xl hover:border-violet-500/30 transition-all duration-500 group overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <Card className="h-full bg-black/40 border-white/10 backdrop-blur-xl hover:border-sky-500/30 transition-all duration-500 group overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-3 text-xl">
-                          <div className="p-2 rounded-lg bg-violet-500/10 text-violet-400 group-hover:text-violet-300 transition-colors">
+                          <div className="p-2 rounded-lg bg-sky-500/10 text-sky-400 group-hover:text-sky-300 transition-colors">
                             <Settings className="w-6 h-6" />
                           </div>
                           Platform
@@ -1925,7 +1925,7 @@ const AdminDashboard = () => {
                             id="siteName" 
                             value={settings.siteName} 
                             onChange={(e) => setSettings({...settings, siteName: e.target.value})}
-                            className="bg-white/5 border-white/10 text-white focus:border-violet-500/50 focus:ring-violet-500/20 transition-all h-11"
+                            className="bg-white/5 border-white/10 text-white focus:border-sky-500/50 focus:ring-sky-500/20 transition-all h-11"
                           />
                         </div>
                         
@@ -1936,13 +1936,13 @@ const AdminDashboard = () => {
                               <p className="text-xs text-gray-500">Disable user access</p>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className={`text-xs font-medium ${settings.maintenanceMode ? 'text-violet-400' : 'text-gray-600'}`}>
+                              <span className={`text-xs font-medium ${settings.maintenanceMode ? 'text-sky-400' : 'text-gray-600'}`}>
                                 {settings.maintenanceMode ? 'ON' : 'OFF'}
                               </span>
                               <Switch 
                                 checked={settings.maintenanceMode}
                                 onCheckedChange={(checked) => setSettings({...settings, maintenanceMode: checked})}
-                                className="data-[state=checked]:bg-violet-600"
+                                className="data-[state=checked]:bg-sky-600"
                               />
                             </div>
                           </div>
@@ -2095,7 +2095,7 @@ const AdminDashboard = () => {
                       </Button>
                       <Button 
                         onClick={handleSaveSettings} 
-                        className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-lg shadow-violet-500/25"
+                        className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white shadow-lg shadow-sky-500/25"
                       >
                         <CheckCircle2 className="w-4 h-4 mr-2" />
                         Save Changes
@@ -2118,7 +2118,7 @@ const AdminDashboard = () => {
                 <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-violet-400" />
+                      <MapPin className="w-5 h-5 text-sky-400" />
                       Manage Monitored Locations
                     </CardTitle>
                   </CardHeader>
@@ -2130,7 +2130,7 @@ const AdminDashboard = () => {
                         onChange={(e) => setNewLocationName(e.target.value)}
                         className="bg-black/50 border-white/10 text-white flex-1"
                       />
-                      <Button onClick={handleAddLocation} className="bg-violet-600 hover:bg-violet-700 text-white">
+                      <Button onClick={handleAddLocation} className="bg-sky-600 hover:bg-sky-700 text-white">
                         <Plus className="w-4 h-4 mr-2" /> Add Location
                       </Button>
                     </div>

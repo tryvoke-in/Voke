@@ -49,7 +49,7 @@ export const MarketPulse = ({ profile }: MarketPulseProps) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
         >
-            <Card className="border-0 shadow-xl bg-white dark:bg-slate-900/50 dark:bg-gradient-to-br dark:from-indigo-950/50 dark:to-purple-950/20 backdrop-blur-xl border-gray-100 dark:border-white/5 overflow-hidden relative group">
+            <Card className="border-0 shadow-xl bg-white dark:bg-slate-900/50 dark:bg-gradient-to-br dark:from-indigo-950/50 dark:to-blue-950/20 backdrop-blur-xl border-gray-100 dark:border-white/5 overflow-hidden relative group">
 
                 {/* Background Decor */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
@@ -135,18 +135,18 @@ export const MarketPulse = ({ profile }: MarketPulseProps) => {
                             onClick={() => navigate("/job-recommendations")}
                         >
                             <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
-                                <Briefcase className="w-4 h-4 text-violet-500 dark:text-violet-400" />
+                                <Briefcase className="w-4 h-4 text-sky-500 dark:text-sky-400" />
                                 Job Matches
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-2xl font-bold text-gray-900 dark:text-white">12</span>
                                     <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
                                     </span>
                                 </div>
-                                <div className="text-xs text-violet-600 dark:text-violet-400 font-medium flex items-center gap-1 mt-1">
+                                <div className="text-xs text-sky-600 dark:text-sky-400 font-medium flex items-center gap-1 mt-1">
                                     View Recommended Jobs
                                 </div>
                             </div>

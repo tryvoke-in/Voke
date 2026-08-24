@@ -209,13 +209,13 @@ const DailyChallenge = () => {
   };
 
   return (
-    <div className="h-screen bg-[#0f1117] text-gray-200 flex flex-col overflow-hidden font-sans selection:bg-purple-500/30">
+    <div className="h-screen bg-[#0f1117] text-gray-200 flex flex-col overflow-hidden font-sans selection:bg-blue-500/30">
       {isSubmitted && <Confetti width={windowSize.width} height={windowSize.height} recycle={false} numberOfPieces={500} />}
       
       {/* Vibrant Header */}
       <header className="h-14 bg-[#161b22] border-b border-[#2d333b] flex items-center px-6 justify-between shrink-0 shadow-md relative overflow-hidden">
         {/* Top glowing line */}
-        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50"></div>
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
 
         <div className="flex items-center gap-6 relative z-10">
           <Button 
@@ -243,7 +243,7 @@ const DailyChallenge = () => {
 
         <div className="flex items-center gap-6 relative z-10">
            <div className="flex items-center gap-2 px-4 py-1.5 bg-[#0d1117] rounded-full border border-[#30363d] shadow-inner">
-              <Timer className="h-4 w-4 text-purple-400" />
+              <Timer className="h-4 w-4 text-blue-400" />
               <span className="text-xs font-mono font-medium text-gray-300">{formatTime(timeLeft)}</span>
            </div>
            
@@ -334,7 +334,7 @@ const DailyChallenge = () => {
              <div className="h-10 bg-[#0d1117]/50 flex items-center px-1 border-b border-[#30363d] backdrop-blur-sm">
                 <button 
                   onClick={() => setActiveTab('description')}
-                  className={`px-4 h-full text-xs font-semibold flex items-center gap-2 border-b-2 transition-all duration-200 ${activeTab === 'description' ? 'border-purple-500 text-purple-400 bg-purple-500/5' : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-[#21262d]'}`}
+                  className={`px-4 h-full text-xs font-semibold flex items-center gap-2 border-b-2 transition-all duration-200 ${activeTab === 'description' ? 'border-blue-500 text-blue-400 bg-blue-500/5' : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-[#21262d]'}`}
                 >
                   <Code2 className="h-4 w-4" />
                   Problem
@@ -372,7 +372,7 @@ const DailyChallenge = () => {
 
                       <div className="p-6 rounded-xl bg-[#0d1117] border border-[#30363d] text-center space-y-4">
                           <div className="w-16 h-16 mx-auto rounded-full bg-[#161b22] flex items-center justify-center border border-[#30363d]">
-                             <Code2 className="h-8 w-8 text-purple-500" />
+                             <Code2 className="h-8 w-8 text-blue-500" />
                           </div>
                           <div>
                               <h3 className="text-base font-semibold text-white mb-2">External Challenge</h3>
@@ -380,7 +380,7 @@ const DailyChallenge = () => {
                                   This Daily Challenge is hosted on {dailyQuestion.platform}. Solve it there and track your progress here.
                               </p>
                               <Button 
-                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
                                 onClick={() => window.open(dailyQuestion.url, '_blank')}
                               >
                                   Open in {dailyQuestion.platform} <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
@@ -390,11 +390,11 @@ const DailyChallenge = () => {
                       
                       <div className="mt-6">
                         <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
-                            <Sparkles className="h-4 w-4 text-purple-400" /> Topics
+                            <Sparkles className="h-4 w-4 text-blue-400" /> Topics
                         </h4>
                         <div className="flex flex-wrap gap-2">
                             {dailyQuestion.tags.map(tag => (
-                                <Badge key={tag} className="bg-purple-500/10 text-purple-400 border border-purple-500/20">{tag}</Badge>
+                                <Badge key={tag} className="bg-blue-500/10 text-blue-400 border border-blue-500/20">{tag}</Badge>
                             ))}
                         </div>
                       </div>
@@ -413,8 +413,8 @@ const DailyChallenge = () => {
                      </div>
                      
                      {hints.map((hint, i) => (
-                        <div key={i} className="p-4 bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20 rounded-lg text-sm text-purple-200 shadow-sm relative animate-in fade-in slide-in-from-bottom-2">
-                             <h4 className="font-bold text-purple-400 mb-2 flex items-center gap-2"><Brain className="h-4 w-4" /> AI Hint {i + 2}</h4>
+                        <div key={i} className="p-4 bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20 rounded-lg text-sm text-blue-200 shadow-sm relative animate-in fade-in slide-in-from-bottom-2">
+                             <h4 className="font-bold text-blue-400 mb-2 flex items-center gap-2"><Brain className="h-4 w-4" /> AI Hint {i + 2}</h4>
                              <p className="relative z-10">{hint}</p>
                         </div>
                      ))}

@@ -900,7 +900,7 @@ export default function Community() {
   const userLocation = userProfile?.location || 'India';
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans selection:bg-purple-500 selection:text-white">
+    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans selection:bg-blue-500 selection:text-white">
       <Navbar />
 
       <main className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-[1550px] mx-auto">
@@ -915,8 +915,8 @@ export default function Community() {
             {/* CARD 1: USER SOCIAL MEDIA PROFILE CARD */}
             <div className="bg-[#111726]/90 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl backdrop-blur-xl transition-all hover:border-slate-700/80 group">
               {/* Cover Banner */}
-              <div className="h-24 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 relative p-3">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-500/25 via-transparent to-transparent opacity-70 pointer-events-none" />
+              <div className="h-24 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 relative p-3">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/25 via-transparent to-transparent opacity-70 pointer-events-none" />
                 <button
                   onClick={handleOpenEditProfile}
                   className="absolute top-2.5 right-2.5 p-1.5 rounded-lg bg-black/40 hover:bg-black/60 text-slate-300 hover:text-white border border-white/10 backdrop-blur-sm transition-all flex items-center gap-1.5 text-[11px] font-medium"
@@ -932,9 +932,9 @@ export default function Community() {
                 {/* Avatar with Online Status */}
                 <div className="flex justify-between items-end -mt-10 mb-3">
                   <div className="relative">
-                    <Avatar className="w-20 h-20 border-4 border-[#111726] shadow-xl bg-purple-950">
+                    <Avatar className="w-20 h-20 border-4 border-[#111726] shadow-xl bg-blue-950">
                       <AvatarImage src={userAvatar} />
-                      <AvatarFallback className="bg-purple-600 text-white text-lg font-bold">
+                      <AvatarFallback className="bg-blue-600 text-white text-lg font-bold">
                         {userName[0]}
                       </AvatarFallback>
                     </Avatar>
@@ -945,7 +945,7 @@ export default function Community() {
                     size="sm"
                     variant="outline"
                     onClick={handleOpenEditProfile}
-                    className="bg-[#161d2f] hover:bg-[#1f283e] text-purple-300 hover:text-white border-purple-500/30 hover:border-purple-500/60 rounded-xl text-xs h-8 px-3 transition-all"
+                    className="bg-[#161d2f] hover:bg-[#1f283e] text-blue-300 hover:text-white border-blue-500/30 hover:border-blue-500/60 rounded-xl text-xs h-8 px-3 transition-all"
                   >
                     Edit Profile
                   </Button>
@@ -957,10 +957,10 @@ export default function Community() {
                     <h2 className="text-base font-bold text-slate-100 tracking-tight">
                       {userName}
                     </h2>
-                    <ShieldCheck className="w-4 h-4 text-purple-400 fill-purple-500/20" />
+                    <ShieldCheck className="w-4 h-4 text-blue-400 fill-blue-500/20" />
                   </div>
 
-                  <p className="text-xs text-purple-300 font-medium">
+                  <p className="text-xs text-blue-300 font-medium">
                     {userRole}
                   </p>
 
@@ -972,7 +972,7 @@ export default function Community() {
                 {/* Location & External Links */}
                 <div className="flex items-center justify-between pt-3 text-[11px] text-slate-400 border-t border-slate-800/60 mt-3.5">
                   <div className="flex items-center gap-1 text-slate-400">
-                    <MapPin className="w-3.5 h-3.5 text-purple-400" />
+                    <MapPin className="w-3.5 h-3.5 text-blue-400" />
                     <span>{userLocation}</span>
                   </div>
 
@@ -1009,7 +1009,7 @@ export default function Community() {
                     <div className="text-[10px] text-slate-400">Streak</div>
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-purple-400">{userPrepScore > 0 ? `${userPrepScore}%` : '--'}</div>
+                    <div className="text-xs font-bold text-blue-400">{userPrepScore > 0 ? `${userPrepScore}%` : '--'}</div>
                     <div className="text-[10px] text-slate-400">Prep Score</div>
                   </div>
                 </div>
@@ -1077,7 +1077,7 @@ export default function Community() {
                       setSelectedTag(null);
                     }}
                     className={`px-5 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 ${isActive
-                        ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)] border border-purple-400/30'
+                        ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)] border border-blue-400/30'
                         : 'bg-[#111726]/80 text-slate-400 hover:text-slate-200 border border-slate-800/80 hover:border-slate-700'
                       }`}
                   >
@@ -1089,7 +1089,7 @@ export default function Community() {
               {selectedTag && (
                 <button
                   onClick={() => setSelectedTag(null)}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40 flex items-center gap-1.5"
                 >
                   <span>Tag: #{selectedTag}</span>
                   <X className="w-3 h-3 hover:text-white" />
@@ -1108,13 +1108,13 @@ export default function Community() {
                     setCreateCategory('Experience');
                     setIsCreateOpen(true);
                   }}
-                  className="p-3.5 rounded-xl bg-[#0b0f19]/70 border border-slate-800/60 hover:border-purple-500/40 hover:bg-[#141b2e] cursor-pointer transition-all flex items-center gap-3 group"
+                  className="p-3.5 rounded-xl bg-[#0b0f19]/70 border border-slate-800/60 hover:border-blue-500/40 hover:bg-[#141b2e] cursor-pointer transition-all flex items-center gap-3 group"
                 >
-                  <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
+                  <div className="p-2.5 rounded-lg bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
                     <PenSquare className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-semibold text-slate-200 group-hover:text-purple-300 transition-colors">
+                    <div className="text-xs font-semibold text-slate-200 group-hover:text-blue-300 transition-colors">
                       Share an experience
                     </div>
                     <div className="text-[11px] text-slate-400">Inspire the community</div>
@@ -1165,19 +1165,19 @@ export default function Community() {
             <div className="space-y-4">
               {isLoadingPosts ? (
                 <div className="p-12 text-center bg-[#111726]/60 border border-slate-800/60 rounded-2xl text-slate-400 space-y-3">
-                  <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
                   <p className="text-xs text-slate-400">Loading community discussions from Supabase...</p>
                 </div>
               ) : filteredPosts.length === 0 ? (
                 <div className="p-10 text-center bg-[#111726]/60 border border-slate-800/60 rounded-2xl text-slate-400 space-y-3">
-                  <MessageSquare className="w-10 h-10 mx-auto text-purple-400 opacity-60" />
+                  <MessageSquare className="w-10 h-10 mx-auto text-blue-400 opacity-60" />
                   <div>
                     <p className="text-sm font-semibold text-slate-200">No community posts yet</p>
                     <p className="text-xs text-slate-400 mt-1">Be the first member to share an experience, ask a question, or post a win!</p>
                   </div>
                   <Button
                     onClick={() => setIsCreateOpen(true)}
-                    className="mt-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg shadow-purple-600/20"
+                    className="mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg shadow-blue-600/20"
                   >
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Create First Post
@@ -1202,18 +1202,18 @@ export default function Community() {
                         })}
                         className="flex items-center gap-3 cursor-pointer group"
                       >
-                        <Avatar className="w-10 h-10 border border-purple-500/30 group-hover:scale-105 transition-transform">
+                        <Avatar className="w-10 h-10 border border-blue-500/30 group-hover:scale-105 transition-transform">
                           <AvatarImage src={post.authorAvatar} />
-                          <AvatarFallback className="bg-purple-600 text-white text-xs font-bold">
+                          <AvatarFallback className="bg-blue-600 text-white text-xs font-bold">
                             {post.authorName[0]}
                           </AvatarFallback>
                         </Avatar>
 
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-semibold text-slate-100 group-hover:text-purple-300 transition-colors">{post.authorName}</span>
+                            <span className="text-sm font-semibold text-slate-100 group-hover:text-blue-300 transition-colors">{post.authorName}</span>
                             {post.isTopContributor && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
                                 Top Contributor
                               </span>
                             )}
@@ -1242,7 +1242,7 @@ export default function Community() {
                         <button
                           key={tag}
                           onClick={() => setSelectedTag(tag)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#182035] text-slate-300 hover:text-white border border-slate-700/50 hover:border-purple-500/40 transition-colors"
+                          className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#182035] text-slate-300 hover:text-white border border-slate-700/50 hover:border-blue-500/40 transition-colors"
                         >
                           {tag}
                         </button>
@@ -1256,9 +1256,9 @@ export default function Community() {
 
                     {/* DIAGRAM PREVIEW (IF PRESENT) */}
                     {post.diagramPreview && (
-                      <div className="p-4 rounded-xl bg-[#0b0f19]/90 border border-purple-500/20 space-y-2">
-                        <div className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
-                          <Network className="w-3.5 h-3.5 text-purple-400" />
+                      <div className="p-4 rounded-xl bg-[#0b0f19]/90 border border-blue-500/20 space-y-2">
+                        <div className="text-xs font-semibold text-blue-300 flex items-center gap-1.5">
+                          <Network className="w-3.5 h-3.5 text-blue-400" />
                           <span>{post.diagramPreview.title}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
@@ -1268,7 +1268,7 @@ export default function Community() {
                                 {step}
                               </span>
                               {idx < post.diagramPreview!.steps.length - 1 && (
-                                <span className="text-purple-400 font-bold">→</span>
+                                <span className="text-blue-400 font-bold">→</span>
                               )}
                             </div>
                           ))}
@@ -1290,10 +1290,10 @@ export default function Community() {
                         {/* Helpful / Like Button */}
                         <button
                           onClick={() => handleToggleLike(post.id)}
-                          className={`flex items-center gap-1.5 font-medium transition-colors ${post.isLiked ? 'text-purple-400 font-bold' : 'hover:text-slate-200'
+                          className={`flex items-center gap-1.5 font-medium transition-colors ${post.isLiked ? 'text-blue-400 font-bold' : 'hover:text-slate-200'
                             }`}
                         >
-                          <ThumbsUp className={`w-4 h-4 ${post.isLiked ? 'fill-purple-400' : ''}`} />
+                          <ThumbsUp className={`w-4 h-4 ${post.isLiked ? 'fill-blue-400' : ''}`} />
                           <span>{post.likeCount} Helpful</span>
                         </button>
 
@@ -1340,12 +1340,12 @@ export default function Community() {
                             value={commentText[post.id] || ''}
                             onChange={(e) => setCommentText(prev => ({ ...prev, [post.id]: e.target.value }))}
                             onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment(post.id); }}
-                            className="bg-[#0b0f19] border-slate-800 text-xs rounded-xl focus-visible:ring-purple-500 text-slate-100 placeholder:text-slate-500"
+                            className="bg-[#0b0f19] border-slate-800 text-xs rounded-xl focus-visible:ring-blue-500 text-slate-100 placeholder:text-slate-500"
                           />
                           <Button
                             size="sm"
                             onClick={() => handleAddComment(post.id)}
-                            className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs px-3"
+                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs px-3"
                           >
                             <Send className="w-3.5 h-3.5" />
                           </Button>
@@ -1370,12 +1370,12 @@ export default function Community() {
               <div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
                       <Users className="w-4 h-4" />
                     </div>
                     <h2 className="text-base font-semibold text-slate-100">Profiles to Follow</h2>
                   </div>
-                  <span className="text-[11px] font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">
+                  <span className="text-[11px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full">
                     {networkPeers.length} Registered
                   </span>
                 </div>
@@ -1389,7 +1389,7 @@ export default function Community() {
                     placeholder="Search members by name or role..."
                     value={searchPeerQuery}
                     onChange={(e) => setSearchPeerQuery(e.target.value)}
-                    className="bg-[#0b0f19] border-slate-800/80 text-xs rounded-xl focus-visible:ring-purple-500 text-slate-100 placeholder:text-slate-500 h-8 px-3"
+                    className="bg-[#0b0f19] border-slate-800/80 text-xs rounded-xl focus-visible:ring-blue-500 text-slate-100 placeholder:text-slate-500 h-8 px-3"
                   />
                 </div>
               )}
@@ -1418,14 +1418,14 @@ export default function Community() {
                             onClick={() => handleViewPublicProfile({ name: peer.name, avatar: peer.avatar, role: peer.role, userId: peer.id })}
                             className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
                           >
-                            <Avatar className="w-9 h-9 border border-purple-500/30 shrink-0 group-hover:scale-105 transition-transform">
+                            <Avatar className="w-9 h-9 border border-blue-500/30 shrink-0 group-hover:scale-105 transition-transform">
                               <AvatarImage src={peer.avatar} />
-                              <AvatarFallback className="bg-purple-900 text-purple-200 text-xs font-bold">
+                              <AvatarFallback className="bg-blue-900 text-blue-200 text-xs font-bold">
                                 {peer.name[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                              <div className="text-xs font-semibold text-slate-200 group-hover:text-purple-300 transition-colors truncate flex items-center gap-1">
+                              <div className="text-xs font-semibold text-slate-200 group-hover:text-blue-300 transition-colors truncate flex items-center gap-1">
                                 <span>{peer.name}</span>
                                 <span className="text-slate-500 font-normal">• {peer.role}</span>
                               </div>
@@ -1440,8 +1440,8 @@ export default function Community() {
                             onClick={() => handleFollowPeer(peer.id, peer.name)}
                             className={`text-xs font-semibold h-7 px-3 rounded-lg transition-all shrink-0 ${
                               isFollowed
-                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30'
-                                : 'bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20'
+                                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40 hover:bg-blue-500/30'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20'
                             }`}
                           >
                             {isFollowed ? (
@@ -1465,7 +1465,7 @@ export default function Community() {
                 <h2 className="text-base font-semibold text-slate-100">Trending skills</h2>
                 <button
                   onClick={() => navigate('/dsa-sheet')}
-                  className="text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors"
+                  className="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
                 >
                   View all
                 </button>
@@ -1503,7 +1503,7 @@ export default function Community() {
         <DialogContent className="bg-[#111726] border border-slate-800 text-slate-100 rounded-2xl sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-100 flex items-center gap-2">
-              <PenSquare className="w-5 h-5 text-purple-400" />
+              <PenSquare className="w-5 h-5 text-blue-400" />
               <span>Create Post on Voke Pulse</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-400">
@@ -1521,7 +1521,7 @@ export default function Community() {
                     type="button"
                     onClick={() => setCreateCategory(cat)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${createCategory === cat
-                        ? 'bg-purple-600 text-white border-purple-500'
+                        ? 'bg-blue-600 text-white border-blue-500'
                         : 'bg-[#0b0f19] border-slate-800 text-slate-400 hover:text-slate-200'
                       }`}
                   >
@@ -1537,7 +1537,7 @@ export default function Community() {
                 placeholder="e.g. Amazon SDE 1 — final round debrief"
                 value={postTitle}
                 onChange={(e) => setPostTitle(e.target.value)}
-                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-blue-500 mt-1"
               />
             </div>
 
@@ -1548,7 +1548,7 @@ export default function Community() {
                 value={postContent}
                 onChange={(e) => setPostContent(e.target.value)}
                 rows={5}
-                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-blue-500 mt-1"
               />
             </div>
 
@@ -1558,7 +1558,7 @@ export default function Community() {
                 placeholder="Amazon, System Design, SDE 1"
                 value={postTags}
                 onChange={(e) => setPostTags(e.target.value)}
-                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-blue-500 mt-1"
               />
             </div>
 
@@ -1573,7 +1573,7 @@ export default function Community() {
               <Button
                 onClick={handleCreatePost}
                 disabled={isSubmitting}
-                className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-xl px-5"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl px-5"
               >
                 {isSubmitting ? 'Publishing...' : 'Publish Post'}
               </Button>
@@ -1591,7 +1591,7 @@ export default function Community() {
         <DialogContent className="bg-[#111726] border border-slate-800 text-slate-100 rounded-2xl sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-100 flex items-center gap-2">
-              <Edit3 className="w-5 h-5 text-purple-400" />
+              <Edit3 className="w-5 h-5 text-blue-400" />
               <span>Edit Voke Pulse Profile</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-400">
@@ -1607,7 +1607,7 @@ export default function Community() {
                 placeholder="e.g. Priyanshu Sharma"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-blue-500 mt-1"
               />
             </div>
 
@@ -1618,7 +1618,7 @@ export default function Community() {
                 placeholder="e.g. SDE @ Microsoft | System Design Enthusiast"
                 value={editHeadline}
                 onChange={(e) => setEditHeadline(e.target.value)}
-                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-blue-500 mt-1"
               />
             </div>
 
@@ -1629,7 +1629,7 @@ export default function Community() {
                 placeholder="https://..."
                 value={editAvatar}
                 onChange={(e) => setEditAvatar(e.target.value)}
-                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-blue-500 mt-1"
               />
               {/* Preset Avatars Selection */}
               <div className="flex items-center gap-2 mt-2">
@@ -1643,7 +1643,7 @@ export default function Community() {
                   <Avatar
                     key={i}
                     onClick={() => setEditAvatar(url)}
-                    className={`w-7 h-7 cursor-pointer border hover:scale-110 transition-transform ${editAvatar === url ? 'border-purple-400 ring-2 ring-purple-500/50' : 'border-slate-700'}`}
+                    className={`w-7 h-7 cursor-pointer border hover:scale-110 transition-transform ${editAvatar === url ? 'border-blue-400 ring-2 ring-blue-500/50' : 'border-slate-700'}`}
                   >
                     <AvatarImage src={url} />
                   </Avatar>
@@ -1659,7 +1659,7 @@ export default function Community() {
                 value={editBio}
                 onChange={(e) => setEditBio(e.target.value)}
                 rows={3}
-                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-blue-500 mt-1"
               />
             </div>
 
@@ -1670,7 +1670,7 @@ export default function Community() {
                 placeholder="e.g. Bengaluru, India"
                 value={editLocation}
                 onChange={(e) => setEditLocation(e.target.value)}
-                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-blue-500 mt-1"
               />
             </div>
 
@@ -1685,7 +1685,7 @@ export default function Community() {
                   placeholder="https://github.com/..."
                   value={editGithub}
                   onChange={(e) => setEditGithub(e.target.value)}
-                  className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                  className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-blue-500 mt-1"
                 />
               </div>
 
@@ -1698,7 +1698,7 @@ export default function Community() {
                   placeholder="https://linkedin.com/in/..."
                   value={editLinkedin}
                   onChange={(e) => setEditLinkedin(e.target.value)}
-                  className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-purple-500 mt-1"
+                  className="bg-[#0b0f19] border-slate-800 text-slate-100 text-xs rounded-xl focus-visible:ring-blue-500 mt-1"
                 />
               </div>
             </div>
@@ -1714,7 +1714,7 @@ export default function Community() {
               </Button>
               <Button
                 onClick={handleSaveProfile}
-                className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-xl px-5"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl px-5"
               >
                 Save Pulse Profile
               </Button>
@@ -1730,9 +1730,9 @@ export default function Community() {
           {viewingProfile && (
             <div>
               {/* Profile Header Banner */}
-              <div className="relative h-28 bg-gradient-to-r from-purple-900/80 via-indigo-900/60 to-slate-900 p-4 flex items-start justify-between">
-                <div className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-md flex items-center gap-1.5">
-                  <Eye className="w-3 h-3 text-purple-400" />
+              <div className="relative h-28 bg-gradient-to-r from-blue-900/80 via-indigo-900/60 to-slate-900 p-4 flex items-start justify-between">
+                <div className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 backdrop-blur-md flex items-center gap-1.5">
+                  <Eye className="w-3 h-3 text-blue-400" />
                   <span>Public View Format</span>
                 </div>
               </div>
@@ -1744,7 +1744,7 @@ export default function Community() {
                   <div className="relative">
                     <Avatar className="w-20 h-20 border-4 border-[#111726] shadow-2xl">
                       <AvatarImage src={viewingProfile.avatar} />
-                      <AvatarFallback className="bg-purple-600 text-white text-lg font-bold">
+                      <AvatarFallback className="bg-blue-600 text-white text-lg font-bold">
                         {viewingProfile.name[0]}
                       </AvatarFallback>
                     </Avatar>
@@ -1760,8 +1760,8 @@ export default function Community() {
                       }}
                       className={`text-xs font-semibold rounded-xl px-4 py-2 h-9 transition-all ${
                         followedPeers.includes(viewingProfile.id || viewingProfile.name)
-                          ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-600/20'
+                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40 hover:bg-blue-500/30'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20'
                       }`}
                     >
                       {followedPeers.includes(viewingProfile.id || viewingProfile.name) ? 'Following' : 'Follow'}
@@ -1773,9 +1773,9 @@ export default function Community() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-bold text-slate-100">{viewingProfile.name}</h2>
-                    <CheckCircle2 className="w-4 h-4 text-purple-400 fill-purple-400/20" />
+                    <CheckCircle2 className="w-4 h-4 text-blue-400 fill-blue-400/20" />
                   </div>
-                  <p className="text-xs text-purple-300 font-medium mt-0.5">{viewingProfile.role}</p>
+                  <p className="text-xs text-blue-300 font-medium mt-0.5">{viewingProfile.role}</p>
                 </div>
 
                 {/* Bio Box */}
@@ -1797,7 +1797,7 @@ export default function Community() {
                     <div className="text-[10px] text-slate-400">Streak</div>
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-purple-400">{viewingProfile.prepScore || 85}%</div>
+                    <div className="text-sm font-bold text-blue-400">{viewingProfile.prepScore || 85}%</div>
                     <div className="text-[10px] text-slate-400">Prep Score</div>
                   </div>
                 </div>
@@ -1817,7 +1817,7 @@ export default function Community() {
                 {/* Location & Social Icons */}
                 <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800/60">
                   <div className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-purple-400" />
+                    <MapPin className="w-3.5 h-3.5 text-blue-400" />
                     <span>{viewingProfile.location}</span>
                   </div>
 

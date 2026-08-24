@@ -65,7 +65,7 @@ const VideoInterviewResults = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
           <p className="text-muted-foreground animate-pulse">Analyzing your performance...</p>
         </div>
       </div>
@@ -117,7 +117,7 @@ const VideoInterviewResults = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <Button variant="ghost" onClick={() => navigate("/video-interview")} className="mb-8 hover:bg-violet-500/10 hover:text-violet-500 transition-colors">
+        <Button variant="ghost" onClick={() => navigate("/video-interview")} className="mb-8 hover:bg-sky-500/10 hover:text-sky-500 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Practice
         </Button>
@@ -127,7 +127,7 @@ const VideoInterviewResults = () => {
           <div className="lg:col-span-1 space-y-6">
             {/* Score Card */}
             <Card className="bg-card/30 backdrop-blur-xl border-border/50 overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-purple-500/5"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-blue-500/5"></div>
               <CardContent className="pt-8 pb-8 text-center relative z-10">
                 <h3 className="text-lg font-medium text-muted-foreground mb-6">Overall Performance</h3>
                 <div className="relative w-40 h-40 mx-auto mb-6 flex items-center justify-center">
@@ -155,10 +155,10 @@ const VideoInterviewResults = () => {
                   </div>
                 </div>
                 <div className="flex justify-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-violet-500/10 text-violet-500 text-xs font-medium border border-violet-500/20">
+                  <span className="px-3 py-1 rounded-full bg-sky-500/10 text-sky-500 text-xs font-medium border border-sky-500/20">
                     AI Analyzed
                   </span>
-                  <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-500 text-xs font-medium border border-purple-500/20">
+                  <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-xs font-medium border border-blue-500/20">
                     {new Date(session.created_at).toLocaleDateString()}
                   </span>
                 </div>
@@ -191,9 +191,9 @@ const VideoInterviewResults = () => {
           {/* Right Column: Detailed Analysis */}
           <div className="lg:col-span-2 space-y-6">
             {/* Question */}
-            <Card className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 border-violet-500/20">
+            <Card className="bg-gradient-to-br from-sky-500/10 to-blue-500/10 border-sky-500/20">
               <CardContent className="p-6">
-                <h3 className="text-sm font-semibold text-violet-500 uppercase tracking-wider mb-2">Interview Question</h3>
+                <h3 className="text-sm font-semibold text-sky-500 uppercase tracking-wider mb-2">Interview Question</h3>
                 <p className="text-xl font-medium leading-relaxed">"{session.question}"</p>
               </CardContent>
             </Card>
@@ -340,10 +340,10 @@ const VideoInterviewResults = () => {
 
             {/* Video Analysis Details */}
             {session.video_analysis_details && (
-              <Card className="bg-purple-500/5 border-purple-500/20">
+              <Card className="bg-blue-500/5 border-blue-500/20">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Eye className="w-5 h-5 text-purple-500" />
+                    <Eye className="w-5 h-5 text-blue-500" />
                     Video Analysis Details
                   </CardTitle>
                 </CardHeader>
@@ -352,7 +352,7 @@ const VideoInterviewResults = () => {
                     {session.video_analysis_details.eye_contact && (
                       <div className="p-4 rounded-lg bg-background/50">
                         <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                          <Eye className="w-4 h-4 text-purple-500" />
+                          <Eye className="w-4 h-4 text-blue-500" />
                           Eye Contact
                         </h4>
                         <p className="text-sm text-muted-foreground">{session.video_analysis_details.eye_contact}</p>
@@ -361,7 +361,7 @@ const VideoInterviewResults = () => {
                     {session.video_analysis_details.voice_volume && (
                       <div className="p-4 rounded-lg bg-background/50">
                         <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                          <Mic className="w-4 h-4 text-purple-500" />
+                          <Mic className="w-4 h-4 text-blue-500" />
                           Voice Volume
                         </h4>
                         <p className="text-sm text-muted-foreground">{session.video_analysis_details.voice_volume}</p>
@@ -370,7 +370,7 @@ const VideoInterviewResults = () => {
                     {session.video_analysis_details.posture && (
                       <div className="p-4 rounded-lg bg-background/50">
                         <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                          <TrendingUp className="w-4 h-4 text-purple-500" />
+                          <TrendingUp className="w-4 h-4 text-blue-500" />
                           Posture
                         </h4>
                         <p className="text-sm text-muted-foreground">{session.video_analysis_details.posture}</p>
@@ -379,7 +379,7 @@ const VideoInterviewResults = () => {
                     {session.video_analysis_details.facial_expressions && (
                       <div className="p-4 rounded-lg bg-background/50">
                         <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4 text-purple-500" />
+                          <MessageSquare className="w-4 h-4 text-blue-500" />
                           Facial Expressions
                         </h4>
                         <p className="text-sm text-muted-foreground">{session.video_analysis_details.facial_expressions}</p>
@@ -414,7 +414,7 @@ const VideoInterviewResults = () => {
             <Card className="bg-card/30 backdrop-blur-xl border-border/50">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-violet-500" />
+                  <MessageSquare className="w-5 h-5 text-sky-500" />
                   Overall Feedback
                 </CardTitle>
               </CardHeader>

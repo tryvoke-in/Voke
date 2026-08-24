@@ -648,7 +648,7 @@ CRITICAL INTERVIEW GUIDELINES:
       {/* Atmospheric Theme Gradient Glows */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-primary/10 dark:bg-primary/15 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -right-32 w-[600px] h-[600px] bg-violet-500/10 dark:bg-violet-600/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-32 w-[600px] h-[600px] bg-sky-500/10 dark:bg-sky-600/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-32 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 dark:bg-cyan-500/10 rounded-full blur-3xl" />
       </div>
 
@@ -688,7 +688,7 @@ CRITICAL INTERVIEW GUIDELINES:
             </Badge>
 
             {collegeDrive && (
-              <Badge className="hidden md:inline-flex bg-violet-500/15 text-violet-600 dark:text-violet-300 border-violet-500/30 text-xs px-2.5 py-0.5 rounded-full font-medium">
+              <Badge className="hidden md:inline-flex bg-sky-500/15 text-sky-600 dark:text-sky-300 border-sky-500/30 text-xs px-2.5 py-0.5 rounded-full font-medium">
                 <Building2 className="w-3 h-3 mr-1" />
                 {collegeDrive.collegeName} Drive
               </Badge>
@@ -810,14 +810,14 @@ CRITICAL INTERVIEW GUIDELINES:
                     <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
                       <div className={`text-xs font-bold px-3.5 py-1 rounded-full border flex items-center gap-2 transition-all ${
                         isAiSpeaking
-                          ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/40 shadow-xs'
+                          ? 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/40 shadow-xs'
                           : isUserSpeaking
                           ? 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/40 shadow-xs'
                           : 'bg-secondary/70 text-muted-foreground border-border/70'
                       }`}>
                         <div className={`w-2 h-2 rounded-full ${
                           isAiSpeaking
-                            ? 'bg-purple-500 animate-ping'
+                            ? 'bg-blue-500 animate-ping'
                             : isUserSpeaking
                             ? 'bg-blue-500 animate-ping'
                             : 'bg-emerald-500'
@@ -1216,7 +1216,7 @@ CRITICAL INTERVIEW GUIDELINES:
                 {/* Bottom Voice Bar during Coding */}
                 <div className="h-14 bg-card/90 backdrop-blur-xl border border-border/80 rounded-2xl flex items-center px-4 justify-between shadow-xl">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2.5 h-2.5 rounded-full ${isAiSpeaking ? 'bg-purple-500 animate-ping' : isUserSpeaking ? 'bg-cyan-500 animate-ping' : 'bg-emerald-500'}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${isAiSpeaking ? 'bg-blue-500 animate-ping' : isUserSpeaking ? 'bg-cyan-500 animate-ping' : 'bg-emerald-500'}`} />
                     <span className="text-xs font-bold text-foreground">
                       {isAiSpeaking ? "Interviewer speaking..." : isUserSpeaking ? "Listening to your explanation..." : "Voice session active"}
                     </span>

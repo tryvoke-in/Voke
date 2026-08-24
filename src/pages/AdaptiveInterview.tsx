@@ -159,7 +159,7 @@ export default function AdaptiveInterview() {
       <main className="container mx-auto px-4 pt-32 pb-16 max-w-6xl flex-1 flex items-center justify-center">
         {creditsLoading ? (
           <div className="flex items-center justify-center min-h-[400px]">
-            <Loader2 className="w-12 h-12 animate-spin text-violet-500" />
+            <Loader2 className="w-12 h-12 animate-spin text-sky-500" />
           </div>
         ) : !canTakeInterview ? (
           <InterviewGate
@@ -181,7 +181,7 @@ export default function AdaptiveInterview() {
             >
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
                 Master your next <br />
-                <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">Technical Interview</span>
+                <span className="bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">Technical Interview</span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
                 Practice with our AI interviewer that adapts to your responses in real-time. Get instant feedback on your technical accuracy, communication style, and problem-solving approach.
@@ -276,7 +276,7 @@ export default function AdaptiveInterview() {
 
                   <Button 
                     size="lg" 
-                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25 transition-all hover:scale-[1.02]"
+                    className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white shadow-lg shadow-sky-500/25 transition-all hover:scale-[1.02]"
                     onClick={() => startSession()}
                     disabled={starting}
                   >

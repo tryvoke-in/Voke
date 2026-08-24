@@ -32,7 +32,7 @@ export const SkillRadar = ({ data = defaultData }: SkillRadarProps) => {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 mb-6">
-                    <Zap className="w-5 h-5 text-violet-500" />
+                    <Zap className="w-5 h-5 text-sky-500" />
                     <h3 className="font-semibold text-lg">AI Competency Map</h3>
                     <TooltipProvider>
                         <ShadTooltip>
@@ -68,7 +68,7 @@ export const SkillRadar = ({ data = defaultData }: SkillRadarProps) => {
               <Radar
                 name="My Skills"
                 dataKey="A"
-                stroke="#8b5cf6" // Violet-500
+                stroke="#8b5cf6" // Sky-500
                 strokeWidth={2}
                 fill="#8b5cf6"
                 fillOpacity={0.2}
@@ -89,7 +89,7 @@ export const SkillRadar = ({ data = defaultData }: SkillRadarProps) => {
         
         <div className="flex justify-center gap-6 mt-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <div className="w-2 h-2 rounded-full bg-violet-500/20 border border-violet-500" />
+                <div className="w-2 h-2 rounded-full bg-sky-500/20 border border-sky-500" />
                 <span>Current Level</span>
             </div>
              <div className="flex items-center gap-2 text-xs text-muted-foreground">

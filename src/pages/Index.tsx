@@ -107,7 +107,7 @@ const Index = () => {
 
   return (
     <ReactLenis root options={{ anchors: true }}>
-      <div className="min-h-screen text-white selection:bg-violet-500/30 font-sans antialiased overflow-x-hidden relative">
+      <div className="min-h-screen text-white selection:bg-sky-500/30 font-sans antialiased overflow-x-hidden relative">
       {/* Base Solid Background beneath all negative layers */}
       <div className="absolute inset-0 bg-[#030305] -z-30 pointer-events-none" />
 
@@ -122,15 +122,15 @@ const Index = () => {
 
       {/* Dynamic mesh backgrounds with rich drifting glow auras */}
       <div 
-        className="absolute top-0 left-1/4 w-[300px] md:w-[900px] h-[300px] md:h-[900px] bg-gradient-to-r from-violet-600/25 via-fuchsia-600/20 to-indigo-600/15 rounded-full blur-[140px] -z-10 pointer-events-none" 
+        className="absolute top-0 left-1/4 w-[300px] md:w-[900px] h-[300px] md:h-[900px] bg-gradient-to-r from-sky-600/25 via-blue-600/20 to-indigo-600/15 rounded-full blur-[140px] -z-10 pointer-events-none" 
         style={{ animation: 'drift 15s infinite ease-in-out' }}
       />
       <div 
-        className="absolute top-[35%] right-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-gradient-to-br from-fuchsia-600/22 via-violet-600/18 to-transparent rounded-full blur-[130px] -z-10 pointer-events-none" 
+        className="absolute top-[35%] right-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-gradient-to-br from-blue-600/22 via-sky-600/18 to-transparent rounded-full blur-[130px] -z-10 pointer-events-none" 
         style={{ animation: 'drift 20s infinite ease-in-out 2s' }}
       />
       <div 
-        className="absolute top-[65%] left-[-10%] w-[300px] md:w-[850px] h-[300px] md:h-[850px] bg-gradient-to-tr from-violet-600/22 via-indigo-600/18 to-transparent rounded-full blur-[150px] -z-10 pointer-events-none" 
+        className="absolute top-[65%] left-[-10%] w-[300px] md:w-[850px] h-[300px] md:h-[850px] bg-gradient-to-tr from-sky-600/22 via-indigo-600/18 to-transparent rounded-full blur-[150px] -z-10 pointer-events-none" 
         style={{ animation: 'drift 18s infinite ease-in-out 4s' }}
       />
 
@@ -177,7 +177,7 @@ const Index = () => {
                   className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group"
                 >
                   {item}
-                  <span className="absolute bottom-[-4px] left-0 w-0 h-[1px] bg-violet-400 transition-all duration-300 group-hover:w-full" />
+                  <span className="absolute bottom-[-4px] left-0 w-0 h-[1px] bg-sky-400 transition-all duration-300 group-hover:w-full" />
                 </a>
               ))}
             </div>
@@ -185,9 +185,9 @@ const Index = () => {
             <div className="hidden md:flex items-center gap-3">
               <Button 
                 onClick={() => navigate("/college/auth")}
-                className="text-violet-300 hover:text-white bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 rounded-full px-4 h-10 flex items-center gap-1.5 transition-all text-xs font-semibold shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+                className="text-sky-300 hover:text-white bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 rounded-full px-4 h-10 flex items-center gap-1.5 transition-all text-xs font-semibold shadow-[0_0_15px_rgba(139,92,246,0.15)]"
               >
-                <GraduationCap className="w-4 h-4 text-violet-400" />
+                <GraduationCap className="w-4 h-4 text-sky-400" />
                 Sign in as College
               </Button>
               <Button 
@@ -242,9 +242,9 @@ const Index = () => {
                     setMobileMenuOpen(false);
                     navigate("/college/auth");
                   }}
-                  className="w-full border border-violet-500/30 bg-violet-600/15 text-violet-300 hover:bg-violet-600/25 rounded-full h-12 flex items-center justify-center gap-2 font-semibold"
+                  className="w-full border border-sky-500/30 bg-sky-600/15 text-sky-300 hover:bg-sky-600/25 rounded-full h-12 flex items-center justify-center gap-2 font-semibold"
                 >
-                  <GraduationCap className="w-5 h-5 text-violet-400" />
+                  <GraduationCap className="w-5 h-5 text-sky-400" />
                   Sign in as College
                 </Button>
                 <Button 
@@ -255,7 +255,7 @@ const Index = () => {
                 </Button>
                 <Button
                   onClick={handleAuthNavigation}
-                  className="w-full bg-violet-600 hover:bg-violet-700 text-white rounded-full h-12 flex items-center justify-center font-semibold"
+                  className="w-full bg-sky-600 hover:bg-sky-700 text-white rounded-full h-12 flex items-center justify-center font-semibold"
                 >
                   Get Started
                 </Button>
@@ -282,7 +282,7 @@ const Index = () => {
                 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.1]"
               >
                 Master the Interview.<br />
-                <span className="bg-gradient-to-r from-white via-violet-300 to-fuchsia-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-white via-sky-300 to-blue-400 bg-clip-text text-transparent">
                   Secure the Offer.
                 </span>
               </motion.h1>
@@ -306,7 +306,7 @@ const Index = () => {
                 <Button
                   onClick={handleAuthNavigation}
                   variant="ghost"
-                  className="w-full max-w-[280px] sm:w-auto bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white text-sm px-8 h-12 rounded-full font-bold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 hover:scale-105 transition-all duration-300 flex items-center justify-center border-0"
+                  className="w-full max-w-[280px] sm:w-auto bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white text-sm px-8 h-12 rounded-full font-bold shadow-lg shadow-sky-500/20 hover:shadow-sky-500/35 hover:scale-105 transition-all duration-300 flex items-center justify-center border-0"
                 >
                   Start Preparing Free
                   <ArrowRight className="ml-2 w-4 h-4" />
@@ -341,7 +341,7 @@ const Index = () => {
             <div className="lg:col-span-6 relative h-[450px] flex items-center justify-center select-none">
               
               {/* Glow backdrop blob */}
-              <div className="absolute w-72 h-72 bg-violet-600/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+              <div className="absolute w-72 h-72 bg-sky-600/10 rounded-full blur-[100px] pointer-events-none -z-10" />
 
               {/* CARD 1 (Main Base Card): Webcam Feed & Live Dialogue simulation */}
               <motion.div
@@ -359,7 +359,7 @@ const Index = () => {
                   <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-20 pointer-events-none z-10">
                     {[...Array(36)].map((_, i) => (
                       <div key={i} className="flex items-center justify-center">
-                        <span className="w-0.5 h-0.5 rounded-full bg-violet-400" />
+                        <span className="w-0.5 h-0.5 rounded-full bg-sky-400" />
                       </div>
                     ))}
                   </div>
@@ -378,27 +378,27 @@ const Index = () => {
                   <div className="relative z-20 flex-1 flex flex-col justify-center gap-2 my-1">
                     {/* AI Coach question bubble */}
                     <div className="bg-black/60 border border-white/10 rounded-xl p-2.5 space-y-1 text-[10px] backdrop-blur-md">
-                      <div className="flex items-center gap-1.5 text-[8px] text-violet-300 font-bold uppercase tracking-wider">
-                        <span className="w-1 h-1 rounded-full bg-violet-400 animate-pulse" />
+                      <div className="flex items-center gap-1.5 text-[8px] text-sky-300 font-bold uppercase tracking-wider">
+                        <span className="w-1 h-1 rounded-full bg-sky-400 animate-pulse" />
                         AI Coach:
                       </div>
                       <p className="text-gray-300 leading-tight font-mono text-[10px]">
                         {typedAi || <span className="text-gray-600 animate-pulse">Waiting for AI...</span>}
-                        {isAiSpeaking && <span className="inline-block w-1 h-2.5 bg-violet-400 ml-1 animate-pulse" />}
+                        {isAiSpeaking && <span className="inline-block w-1 h-2.5 bg-sky-400 ml-1 animate-pulse" />}
                       </p>
                     </div>
 
                     {/* Candidate answer bubble */}
                     {(typedUser || !isAiSpeaking) && (
                       <div className="bg-black/60 border border-white/10 rounded-xl p-2.5 space-y-1 text-[10px] backdrop-blur-md">
-                        <div className="flex items-center gap-1.5 text-[8px] text-fuchsia-300 font-bold uppercase tracking-wider">
-                          <span className="w-1 h-1 rounded-full bg-fuchsia-400 animate-pulse" />
+                        <div className="flex items-center gap-1.5 text-[8px] text-blue-300 font-bold uppercase tracking-wider">
+                          <span className="w-1 h-1 rounded-full bg-blue-400 animate-pulse" />
                           Candidate (You):
                         </div>
                         <p className="text-gray-200 leading-tight font-mono text-[10px]">
                           {typedUser || <span className="text-gray-600 animate-pulse">Answering...</span>}
                           {!isAiSpeaking && typedUser.length < dialogues[currentDialogueIdx].user.length && (
-                            <span className="inline-block w-1 h-2.5 bg-fuchsia-400 ml-1 animate-pulse" />
+                            <span className="inline-block w-1 h-2.5 bg-blue-400 ml-1 animate-pulse" />
                           )}
                         </p>
                       </div>
@@ -410,7 +410,7 @@ const Index = () => {
                     {[...Array(14)].map((_, i) => (
                       <span 
                         key={i} 
-                        className={`w-[2px] rounded-full transition-all duration-300 ${isAiSpeaking ? 'bg-violet-500/80 animate-pulse' : 'bg-fuchsia-500/90 animate-bounce'}`} 
+                        className={`w-[2px] rounded-full transition-all duration-300 ${isAiSpeaking ? 'bg-sky-500/80 animate-pulse' : 'bg-blue-500/90 animate-bounce'}`} 
                         style={{ 
                           height: isAiSpeaking 
                             ? `${Math.sin(i * 0.5) * 5 + 8}px` 
@@ -447,7 +447,7 @@ const Index = () => {
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Match Scorecard</span>
-                  <span className="text-[10px] font-extrabold text-violet-400 bg-violet-950/40 border border-violet-500/20 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-extrabold text-sky-400 bg-sky-950/40 border border-sky-500/20 px-2 py-0.5 rounded-full">
                     92% Match
                   </span>
                 </div>
@@ -478,8 +478,8 @@ const Index = () => {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
-              { icon: <Terminal className="w-4 h-4 text-violet-400" />, label: "Software Engineering" },
-              { icon: <Layers className="w-4 h-4 text-fuchsia-400" />, label: "Product Management" },
+              { icon: <Terminal className="w-4 h-4 text-sky-400" />, label: "Software Engineering" },
+              { icon: <Layers className="w-4 h-4 text-blue-400" />, label: "Product Management" },
               { icon: <Globe className="w-4 h-4 text-blue-400" />, label: "System Design" },
               { icon: <BarChart3 className="w-4 h-4 text-green-400" />, label: "Data Science" },
               { icon: <MessageSquare className="w-4 h-4 text-yellow-400" />, label: "Behavioral rounds" },
@@ -508,7 +508,7 @@ const Index = () => {
               viewport={{ once: true }}
               className="text-3xl md:text-5xl font-extrabold tracking-tight"
             >
-              Master Every <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Interview Dimension</span>
+              Master Every <span className="bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">Interview Dimension</span>
             </motion.h2>
             <p className="text-base md:text-lg text-gray-400 leading-relaxed">
               Explore the detailed visual tools built directly into Voke to measure and optimize your interview performance.
@@ -522,13 +522,13 @@ const Index = () => {
             <motion.div 
               whileHover={{ y: -8, scale: 1.01, rotateY: 1, rotateX: -1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="md:col-span-6 group relative bg-white/[0.015] border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col justify-between overflow-hidden hover:border-violet-500/30 hover:shadow-[0_20px_40px_rgba(124,58,237,0.08)] transition-all duration-500"
+              className="md:col-span-6 group relative bg-white/[0.015] border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col justify-between overflow-hidden hover:border-sky-500/30 hover:shadow-[0_20px_40px_rgba(124,58,237,0.08)] transition-all duration-500"
             >
-              <div className="absolute top-0 right-0 w-36 h-36 bg-violet-600/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-36 h-36 bg-sky-600/5 rounded-full blur-3xl pointer-events-none" />
               
               <div className="space-y-3 mb-8">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-violet-400 font-bold uppercase tracking-wider">Visual Prep</span>
+                  <span className="text-xs text-sky-400 font-bold uppercase tracking-wider">Visual Prep</span>
                 </div>
                 <h3 className="text-2xl font-bold"> AI Video Interviews</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">
@@ -544,16 +544,16 @@ const Index = () => {
                 <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-35 pointer-events-none">
                   {[...Array(36)].map((_, i) => (
                     <div key={i} className="flex items-center justify-center">
-                      <span className="w-1 h-1 rounded-full bg-violet-400 animate-ping" style={{ animationDelay: `${i * 100}ms`, animationDuration: '3s' }} />
+                      <span className="w-1 h-1 rounded-full bg-sky-400 animate-ping" style={{ animationDelay: `${i * 100}ms`, animationDuration: '3s' }} />
                     </div>
                   ))}
                 </div>
 
                 <div className="relative z-20 space-y-2">
-                  <div className="w-12 h-12 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center mx-auto text-violet-400 animate-pulse">
+                  <div className="w-12 h-12 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center mx-auto text-sky-400 animate-pulse">
                     <Camera className="w-6 h-6" />
                   </div>
-                  <p className="text-[10px] text-violet-300 font-bold uppercase tracking-widest">Webcam Feed Active</p>
+                  <p className="text-[10px] text-sky-300 font-bold uppercase tracking-widest">Webcam Feed Active</p>
                 </div>
               </div>
             </motion.div>
@@ -562,13 +562,13 @@ const Index = () => {
             <motion.div 
               whileHover={{ y: -8, scale: 1.01, rotateY: -1, rotateX: -1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="md:col-span-6 group relative bg-white/[0.015] border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col justify-between overflow-hidden hover:border-fuchsia-500/30 hover:shadow-[0_20px_40px_rgba(240,79,207,0.08)] transition-all duration-500"
+              className="md:col-span-6 group relative bg-white/[0.015] border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col justify-between overflow-hidden hover:border-blue-500/30 hover:shadow-[0_20px_40px_rgba(240,79,207,0.08)] transition-all duration-500"
             >
-              <div className="absolute top-0 right-0 w-36 h-36 bg-fuchsia-600/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-36 h-36 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
               
               <div className="space-y-3 mb-8">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-fuchsia-400 font-bold uppercase tracking-wider">Audio Prep</span>
+                  <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Audio Prep</span>
                 </div>
                 <h3 className="text-2xl font-bold"> AI Voice Interviews</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">
@@ -580,15 +580,15 @@ const Index = () => {
               <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-center h-[180px] relative overflow-hidden">
                 <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-4 text-[10px] text-gray-500 font-bold">
                   <span>VOICE SESSION IN PROGRESS</span>
-                  <span className="text-fuchsia-400 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 animate-ping" /> Live Audio
+                  <span className="text-blue-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping" /> Live Audio
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-1.5 h-16">
                   {[...Array(24)].map((_, i) => (
                     <span 
                       key={i} 
-                      className="w-[2.5px] bg-gradient-to-t from-fuchsia-500 to-violet-500 rounded-full animate-bounce"
+                      className="w-[2.5px] bg-gradient-to-t from-blue-500 to-sky-500 rounded-full animate-bounce"
                       style={{ 
                         height: `${Math.abs(Math.sin(i * 0.4)) * 40 + 10}px`,
                         animationDuration: `${0.8 + (i % 4) * 0.15}s`
@@ -646,9 +646,9 @@ const Index = () => {
             <motion.div 
               whileHover={{ y: -8, scale: 1.01, rotateY: -1, rotateX: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="md:col-span-6 group relative bg-white/[0.015] border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col justify-between overflow-hidden hover:border-violet-500/30 hover:shadow-[0_20px_40px_rgba(124,58,237,0.08)] transition-all duration-500"
+              className="md:col-span-6 group relative bg-white/[0.015] border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col justify-between overflow-hidden hover:border-sky-500/30 hover:shadow-[0_20px_40px_rgba(124,58,237,0.08)] transition-all duration-500"
             >
-              <div className="absolute top-0 right-0 w-36 h-36 bg-violet-600/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-36 h-36 bg-sky-600/5 rounded-full blur-3xl pointer-events-none" />
               
               <div className="space-y-3 mb-8">
                 <div className="flex items-center gap-2">
@@ -664,11 +664,11 @@ const Index = () => {
               <div className="bg-black/60 border border-white/5 rounded-2xl p-4 font-mono text-[10px] space-y-2 backdrop-blur-md">
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
                   <span className="text-[9px] text-gray-500">repo: Anurag/tryvoke-app</span>
-                  <span className="text-violet-400 text-[8px] bg-violet-950/40 border border-violet-500/20 px-2 py-0.5 rounded">Connected</span>
+                  <span className="text-sky-400 text-[8px] bg-sky-950/40 border border-sky-500/20 px-2 py-0.5 rounded">Connected</span>
                 </div>
                 <div className="space-y-1 text-gray-400 text-[9px]">
                   <p>📁 src/pages/Index.tsx <span className="text-gray-600">// technical triggers</span></p>
-                  <p className="text-violet-300">➜ AI Question: "Explain why you chose Redis over Memcached for caching user tokens in your middleware..."</p>
+                  <p className="text-sky-300">➜ AI Question: "Explain why you chose Redis over Memcached for caching user tokens in your middleware..."</p>
                 </div>
               </div>
             </motion.div>
@@ -754,12 +754,12 @@ const Index = () => {
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-5 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-semibold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs font-semibold uppercase tracking-wider">
                 <Users className="w-3.5 h-3.5" /> Job Alignment
               </div>
               <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
                 Discover Jobs Based on <br />
-                <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-white bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-white bg-clip-text text-transparent">
                   Your Interview Scores
                 </span>
               </h2>
@@ -769,14 +769,14 @@ const Index = () => {
               
               <div className="space-y-4 pt-4 text-left max-w-md mx-auto lg:mx-0">
                 <div className="flex items-start gap-3.5 text-sm text-gray-300">
-                  <div className="w-5 h-5 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-violet-400" />
+                  <div className="w-5 h-5 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-sky-400" />
                   </div>
                   <p><strong>Role Compatibility Benchmarks</strong> – Compare your scores against standard performance baselines expected for target technical roles.</p>
                 </div>
                 <div className="flex items-start gap-3.5 text-sm text-gray-300">
-                  <div className="w-5 h-5 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-violet-400" />
+                  <div className="w-5 h-5 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-sky-400" />
                   </div>
                   <p><strong>Targeted Prep Insights</strong> – Instantly identify which modules you need to focus on to match hiring expectations.</p>
                 </div>
@@ -808,7 +808,7 @@ const Index = () => {
                   location: "San Francisco, CA",
                   salary: "$150k - $185k",
                   score: 86,
-                  logoBg: "bg-violet-600"
+                  logoBg: "bg-sky-600"
                 },
                 {
                   role: "Infrastructure Engineer",
@@ -823,7 +823,7 @@ const Index = () => {
                   key={idx}
                   whileHover={{ y: -6, scale: 1.02 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="bg-[#0c0c12] border border-white/5 rounded-3xl p-5 space-y-4 hover:border-violet-500/20 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
+                  className="bg-[#0c0c12] border border-white/5 rounded-3xl p-5 space-y-4 hover:border-sky-500/20 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex gap-3 min-w-0 flex-1">
@@ -835,7 +835,7 @@ const Index = () => {
                         <p className="text-xs text-gray-500">{job.company}</p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold text-violet-400 bg-violet-950/40 border border-violet-500/25 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                    <span className="text-[10px] font-bold text-sky-400 bg-sky-950/40 border border-sky-500/25 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
                       Full-time
                     </span>
                   </div>
@@ -854,12 +854,12 @@ const Index = () => {
                   <div className="flex items-center justify-between pt-3 border-t border-white/5">
                     <div className="text-[10px]">
                       <p className="text-gray-500 uppercase font-bold">BENCHMARK SCORE</p>
-                      <p className="text-xs font-extrabold text-violet-300">Score &ge; {job.score}+</p>
+                      <p className="text-xs font-extrabold text-sky-300">Score &ge; {job.score}+</p>
                     </div>
                     
                     <Button 
                       onClick={handleAuthNavigation}
-                      className="bg-white/10 text-white border border-white/10 hover:bg-violet-600 hover:border-violet-600 hover:text-white rounded-xl text-xs px-4 h-9 flex items-center justify-center transition-all duration-300 font-semibold"
+                      className="bg-white/10 text-white border border-white/10 hover:bg-sky-600 hover:border-sky-600 hover:text-white rounded-xl text-xs px-4 h-9 flex items-center justify-center transition-all duration-300 font-semibold"
                     >
                       Check Fit
                     </Button>
@@ -876,7 +876,7 @@ const Index = () => {
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="text-center mb-20 max-w-2xl mx-auto space-y-4">
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
-              How Voke <span className="text-fuchsia-400">Works</span>
+              How Voke <span className="text-blue-400">Works</span>
             </h2>
             <p className="text-base text-gray-400 leading-relaxed">
               Three simple steps to test your skills and get placed.
@@ -885,7 +885,7 @@ const Index = () => {
 
           <div className="grid md:grid-cols-3 gap-12 relative max-w-6xl mx-auto">
             {/* Connecting Line */}
-            <div className="hidden md:block absolute top-1/3 left-0 w-full h-0.5 bg-gradient-to-r from-violet-500/0 via-violet-500/20 to-violet-500/0 -translate-y-1/2 z-0" />
+            <div className="hidden md:block absolute top-1/3 left-0 w-full h-0.5 bg-gradient-to-r from-sky-500/0 via-sky-500/20 to-sky-500/0 -translate-y-1/2 z-0" />
 
             {[
               {
@@ -906,9 +906,9 @@ const Index = () => {
             ].map((item, i) => (
               <div
                 key={i}
-                className="relative z-10 bg-zinc-950/40 border border-white/10 p-8 rounded-3xl text-center group hover:border-violet-500/30 transition-all duration-300"
+                className="relative z-10 bg-zinc-950/40 border border-white/10 p-8 rounded-3xl text-center group hover:border-sky-500/30 transition-all duration-300"
               >
-                <div className="w-16 h-16 rounded-2xl bg-violet-500/5 border border-violet-500/10 flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-violet-400 group-hover:scale-105 transition-transform duration-300">
+                <div className="w-16 h-16 rounded-2xl bg-sky-500/5 border border-sky-500/10 flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-sky-400 group-hover:scale-105 transition-transform duration-300">
                   {item.step}
                 </div>
                 <h3 className="text-xl font-bold text-gray-100 mb-4">{item.title}</h3>
@@ -926,7 +926,7 @@ const Index = () => {
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-20 max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6">
-              Simple, Transparent <span className="text-fuchsia-400">Pricing</span>
+              Simple, Transparent <span className="text-blue-400">Pricing</span>
             </h2>
             <p className="text-lg text-gray-400 leading-relaxed">
               Start practicing immediately for free, or unlock unlimited access with a Voke Elite upgrade.
@@ -992,12 +992,12 @@ const Index = () => {
                 key={i}
                 className={`relative p-8 rounded-3xl border flex flex-col transition-all duration-300 ${
                   plan.popular 
-                    ? "bg-violet-900/10 border-violet-500/50 shadow-2xl shadow-violet-500/5 hover:border-violet-500" 
+                    ? "bg-sky-900/10 border-sky-500/50 shadow-2xl shadow-sky-500/5 hover:border-sky-500" 
                     : "bg-zinc-950/40 border-white/10 hover:border-white/20"
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-xs font-bold shadow-lg uppercase tracking-wider">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-xs font-bold shadow-lg uppercase tracking-wider">
                     Most Popular
                   </div>
                 )}
@@ -1010,14 +1010,14 @@ const Index = () => {
                     )}
                   </div>
                   {plan.priceLabel && (
-                    <p className="text-xs text-violet-400 mt-2 font-medium">{plan.priceLabel}</p>
+                    <p className="text-xs text-sky-400 mt-2 font-medium">{plan.priceLabel}</p>
                   )}
                   <p className="text-gray-400 mt-2 text-xs leading-relaxed">{plan.desc}</p>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3 text-xs text-gray-300">
-                      <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                      <Check className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -1046,23 +1046,23 @@ const Index = () => {
       </section>
 
       {/* Voke for Universities & Colleges B2B Section */}
-      <section id="for-colleges" className="py-20 relative bg-gradient-to-b from-[#050509] via-[#090814] to-[#050509] border-y border-violet-500/20 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-violet-600/10 rounded-full blur-[140px] pointer-events-none" />
+      <section id="for-colleges" className="py-20 relative bg-gradient-to-b from-[#050509] via-[#090814] to-[#050509] border-y border-sky-500/20 overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-sky-600/10 rounded-full blur-[140px] pointer-events-none" />
         
         <div className="container mx-auto px-4 md:px-6 relative z-10 max-w-6xl">
-          <div className="rounded-3xl border border-violet-500/30 bg-[#0c0c16]/90 p-8 md:p-14 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
+          <div className="rounded-3xl border border-sky-500/30 bg-[#0c0c16]/90 p-8 md:p-14 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-              <GraduationCap className="w-64 h-64 text-violet-400" />
+              <GraduationCap className="w-64 h-64 text-sky-400" />
             </div>
 
             <div className="grid lg:grid-cols-12 gap-8 items-center relative z-10">
               <div className="lg:col-span-7 space-y-5">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-300 text-xs font-semibold uppercase tracking-wider">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-semibold uppercase tracking-wider">
                   <GraduationCap className="w-3.5 h-3.5" /> Institutional & Campus Partnerships
                 </div>
                 <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
                   Power Your College Placements with <br />
-                  <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-white bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-white bg-clip-text text-transparent">
                     Enterprise AI Mock Assessment Drives
                   </span>
                 </h2>
@@ -1078,7 +1078,7 @@ const Index = () => {
                     "Comprehensive candidate readiness analytics"
                   ].map(feat => (
                     <div key={feat} className="flex items-center gap-2 text-xs md:text-sm text-gray-200">
-                      <div className="w-4 h-4 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center shrink-0">
+                      <div className="w-4 h-4 rounded-full bg-sky-500/20 text-sky-300 flex items-center justify-center shrink-0">
                         <Check className="w-2.5 h-2.5" />
                       </div>
                       <span>{feat}</span>
@@ -1089,7 +1089,7 @@ const Index = () => {
                 <div className="pt-4 flex flex-wrap items-center gap-4">
                   <Button
                     onClick={() => navigate("/college/auth")}
-                    className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold px-6 py-5 rounded-full shadow-lg shadow-violet-600/30 text-sm transition-all"
+                    className="bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold px-6 py-5 rounded-full shadow-lg shadow-sky-600/30 text-sm transition-all"
                   >
                     <GraduationCap className="w-4 h-4 mr-2" />
                     Sign in as College Admin
@@ -1111,7 +1111,7 @@ const Index = () => {
                       <div className="w-3 h-3 rounded-full bg-emerald-500" />
                       <span className="text-xs font-semibold text-white">Campus T&P Live Suite</span>
                     </div>
-                    <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-[10px]">
+                    <Badge className="bg-sky-500/20 text-sky-300 border-sky-500/30 text-[10px]">
                       Enterprise Tier
                     </Badge>
                   </div>
@@ -1123,7 +1123,7 @@ const Index = () => {
                     </div>
                     <div className="p-2.5 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between">
                       <span className="text-gray-300 font-medium">Active College Drives</span>
-                      <span className="font-bold text-violet-300 font-mono">3 Scheduled</span>
+                      <span className="font-bold text-sky-300 font-mono">3 Scheduled</span>
                     </div>
                     <div className="p-2.5 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between">
                       <span className="text-gray-300 font-medium">Domain Auto-Enrollment</span>
@@ -1166,10 +1166,10 @@ const Index = () => {
               <div className="space-y-1 mt-1">
                 <div className="flex justify-between text-[8px] text-gray-400">
                   <span>Compatibility</span>
-                  <span className="text-violet-400 font-bold">94%</span>
+                  <span className="text-sky-400 font-bold">94%</span>
                 </div>
                 <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full" style={{ width: '94%' }} />
+                  <div className="h-full bg-gradient-to-r from-sky-500 to-blue-500 rounded-full" style={{ width: '94%' }} />
                 </div>
               </div>
             </div>
@@ -1189,7 +1189,7 @@ const Index = () => {
                 {[5, 12, 18, 14, 8, 16, 20, 10, 6].map((h, i) => (
                   <span 
                     key={i} 
-                    className="flex-1 rounded-sm bg-gradient-to-t from-fuchsia-500 to-violet-500" 
+                    className="flex-1 rounded-sm bg-gradient-to-t from-blue-500 to-sky-500" 
                     style={{ height: `${h}px` }} 
                   />
                 ))}
@@ -1200,7 +1200,7 @@ const Index = () => {
             <div className="relative z-10 space-y-6 max-w-xl mx-auto">
               <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
                 Ready to take the<br />
-                <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">
                   interview sandbox?
                 </span>
               </h2>
@@ -1211,7 +1211,7 @@ const Index = () => {
               <div className="pt-4">
                 <Button
                   onClick={handleAuthNavigation}
-                  className="bg-white text-black hover:bg-zinc-200 text-sm px-10 h-13 rounded-full font-bold shadow-2xl hover:shadow-violet-600/10 transition-all duration-300 hover:scale-105 flex items-center justify-center border-0 mx-auto"
+                  className="bg-white text-black hover:bg-zinc-200 text-sm px-10 h-13 rounded-full font-bold shadow-2xl hover:shadow-sky-600/10 transition-all duration-300 hover:scale-105 flex items-center justify-center border-0 mx-auto"
                 >
                   Get Started for Free
                   <ArrowRight className="ml-2 w-4 h-4" />
@@ -1250,19 +1250,19 @@ const Index = () => {
             <div>
               <h4 className="font-bold text-white mb-6 text-sm">Product</h4>
               <ul className="space-y-4 text-gray-400 text-sm">
-                <li><a href="/#features" className="hover:text-violet-400 transition-colors">Features</a></li>
-                <li><a href="/pricing" className="hover:text-violet-400 transition-colors">Pricing</a></li>
-                <li><a href="/companies" className="hover:text-violet-400 transition-colors">Companies</a></li>
-                <li><a href="/dsa-sheet" className="hover:text-violet-400 transition-colors">DSA Sheet</a></li>
+                <li><a href="/#features" className="hover:text-sky-400 transition-colors">Features</a></li>
+                <li><a href="/pricing" className="hover:text-sky-400 transition-colors">Pricing</a></li>
+                <li><a href="/companies" className="hover:text-sky-400 transition-colors">Companies</a></li>
+                <li><a href="/dsa-sheet" className="hover:text-sky-400 transition-colors">DSA Sheet</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-bold text-white mb-6 text-sm">Support</h4>
               <ul className="space-y-4 text-gray-400 text-sm">
-                <li><a href="/help" className="hover:text-violet-400 transition-colors">Help Center</a></li>
-                <li><a href="/contact" className="hover:text-violet-400 transition-colors">Contact Support</a></li>
-                <li><a href="/about" className="hover:text-violet-400 transition-colors">About Voke</a></li>
+                <li><a href="/help" className="hover:text-sky-400 transition-colors">Help Center</a></li>
+                <li><a href="/contact" className="hover:text-sky-400 transition-colors">Contact Support</a></li>
+                <li><a href="/about" className="hover:text-sky-400 transition-colors">About Voke</a></li>
               </ul>
             </div>
           </div>

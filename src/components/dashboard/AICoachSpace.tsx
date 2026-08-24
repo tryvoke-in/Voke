@@ -153,13 +153,13 @@ export const AICoachSpace: React.FC<AICoachSpaceProps> = ({
   };
 
   return (
-    <div className="relative rounded-2xl bg-gradient-to-r from-violet-950/40 via-slate-900/60 to-slate-900/40 border border-violet-500/20 p-4 sm:p-5 shadow-lg backdrop-blur-sm">
+    <div className="relative rounded-2xl bg-gradient-to-r from-sky-950/40 via-slate-900/60 to-slate-900/40 border border-sky-500/20 p-4 sm:p-5 shadow-lg backdrop-blur-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Left Side: Coach Info & Rotating Daily Focus Message */}
         <div className="flex-1 min-w-0 pr-4">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[10px] font-bold uppercase tracking-wider">
-              <Zap className="w-3 h-3 text-violet-400 fill-violet-400" />
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-300 text-[10px] font-bold uppercase tracking-wider">
+              <Zap className="w-3 h-3 text-sky-400 fill-sky-400" />
               AI Coach Lounge
             </span>
             <span className="text-xs text-muted-foreground">Voki Companion</span>
@@ -176,9 +176,9 @@ export const AICoachSpace: React.FC<AICoachSpaceProps> = ({
         {/* Right Side: Dedicated Glowing Landing Space for Voki */}
         <div className="relative w-24 h-24 flex items-center justify-center shrink-0 self-center sm:self-auto">
           {/* Landing Pad Cyber Ring */}
-          <div className="absolute inset-2 rounded-full border border-violet-500/30 bg-violet-500/5 animate-pulse" />
+          <div className="absolute inset-2 rounded-full border border-sky-500/30 bg-sky-500/5 animate-pulse" />
           <div className="absolute inset-4 rounded-full border border-dashed border-cyan-500/30" />
-          <div className="absolute bottom-1 w-14 h-2 rounded-full bg-violet-500/20 blur-xs" />
+          <div className="absolute bottom-1 w-14 h-2 rounded-full bg-sky-500/20 blur-xs" />
 
           {/* Draggable Mascot (Resting inside this space by default, with on-refresh tour) */}
           <motion.div
@@ -214,14 +214,14 @@ export const AICoachSpace: React.FC<AICoachSpaceProps> = ({
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.88, y: -4 }}
                   transition={{ duration: 0.25 }}
-                  className="absolute bottom-[86px] left-1/2 -translate-x-1/2 min-w-[140px] max-w-[185px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md rounded-2xl px-3 py-2 shadow-2xl border border-violet-500/30 cursor-pointer pointer-events-auto text-center"
+                  className="absolute bottom-[86px] left-1/2 -translate-x-1/2 min-w-[140px] max-w-[185px] bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md rounded-2xl px-3 py-2 shadow-2xl border border-sky-500/30 cursor-pointer pointer-events-auto text-center"
                   onClick={handlePoke}
                 >
                   {/* Bubble Tail */}
                   <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-slate-900/95 dark:border-t-slate-950/95" />
 
                   <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[8.5px] font-bold text-violet-400 uppercase tracking-wider">
+                    <span className="text-[8.5px] font-bold text-sky-400 uppercase tracking-wider">
                       {step === "greet" && !isDoneMoving
                         ? "Welcome"
                         : isDoneMoving || isUserDragged
@@ -245,7 +245,7 @@ export const AICoachSpace: React.FC<AICoachSpaceProps> = ({
               title="Drag Voki anywhere across the website!"
             >
               {/* Soft Ambient Glow */}
-              <div className="absolute -inset-2.5 rounded-full blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-r from-violet-500/35 via-fuchsia-500/25 to-cyan-500/35 animate-pulse" />
+              <div className="absolute -inset-2.5 rounded-full blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-r from-sky-500/35 via-blue-500/25 to-cyan-500/35 animate-pulse" />
 
               {/* Floating / Bobbing Hover Animation */}
               <motion.div
@@ -274,17 +274,17 @@ export const AICoachSpace: React.FC<AICoachSpaceProps> = ({
                       ]
                     }}
                     transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-3 h-3 rounded-full bg-gradient-to-br from-violet-400 via-fuchsia-400 to-pink-400 border-2 border-white shadow-md z-10"
+                    className="w-3 h-3 rounded-full bg-gradient-to-br from-sky-400 via-blue-400 to-pink-400 border-2 border-white shadow-md z-10"
                   />
                   {/* Antenna Rod */}
-                  <div className="w-0.5 h-2 bg-gradient-to-b from-violet-300 to-slate-600 rounded-t-sm" />
+                  <div className="w-0.5 h-2 bg-gradient-to-b from-sky-300 to-slate-600 rounded-t-sm" />
                 </div>
 
                 {/* Cute Robot Head with Rounded Curves */}
-                <div className="relative w-15 h-11 rounded-2xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-2 border-violet-400/80 shadow-xl flex items-center justify-center overflow-hidden p-0.5">
+                <div className="relative w-15 h-11 rounded-2xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-2 border-sky-400/80 shadow-xl flex items-center justify-center overflow-hidden p-0.5">
                   {/* Headphone Ear Cups */}
-                  <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-l-md bg-gradient-to-b from-violet-500 to-fuchsia-600 border border-violet-300 shadow-xs" />
-                  <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-r-md bg-gradient-to-b from-violet-500 to-fuchsia-600 border border-violet-300 shadow-xs" />
+                  <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-l-md bg-gradient-to-b from-sky-500 to-blue-600 border border-sky-300 shadow-xs" />
+                  <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-r-md bg-gradient-to-b from-sky-500 to-blue-600 border border-sky-300 shadow-xs" />
 
                   {/* Glowing Face Visor Screen with Cute Happy Eyes & Blushing Cheeks */}
                   <div className="w-full h-full rounded-xl bg-slate-950 border border-cyan-500/40 flex items-center justify-around px-2 relative shadow-inner overflow-hidden">
@@ -343,7 +343,7 @@ export const AICoachSpace: React.FC<AICoachSpaceProps> = ({
                 <div className="w-2.5 h-0.5 bg-slate-700 -my-0.5 z-0" />
 
                 {/* Robot Torso */}
-                <div className="relative w-11 h-6 rounded-xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-[1.5px] border-violet-400/60 shadow-md flex items-center justify-center">
+                <div className="relative w-11 h-6 rounded-xl bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-[1.5px] border-sky-400/60 shadow-md flex items-center justify-center">
                   {/* Chest Core Power Orb */}
                   <motion.div
                     animate={{
@@ -370,7 +370,7 @@ export const AICoachSpace: React.FC<AICoachSpaceProps> = ({
                       repeat: Infinity,
                       ease: "easeInOut"
                     }}
-                    className="absolute -left-2 top-0.5 w-1.5 h-4 rounded-full bg-violet-600 border border-violet-300 shadow-xs flex items-end justify-center pb-0.5"
+                    className="absolute -left-2 top-0.5 w-1.5 h-4 rounded-full bg-sky-600 border border-sky-300 shadow-xs flex items-end justify-center pb-0.5"
                   >
                     <div className="w-1 h-1 rounded-full bg-cyan-300 shadow-[0_0_3px_#67e8f9]" />
                   </motion.div>
@@ -383,7 +383,7 @@ export const AICoachSpace: React.FC<AICoachSpaceProps> = ({
                       originY: 0
                     }}
                     transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute -right-2 top-0.5 w-1.5 h-4 rounded-full bg-violet-600 border border-violet-300 shadow-xs flex items-end justify-center pb-0.5"
+                    className="absolute -right-2 top-0.5 w-1.5 h-4 rounded-full bg-sky-600 border border-sky-300 shadow-xs flex items-end justify-center pb-0.5"
                   >
                     <div className="w-1 h-1 rounded-full bg-cyan-300 shadow-[0_0_3px_#67e8f9]" />
                   </motion.div>

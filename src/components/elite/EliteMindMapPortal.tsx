@@ -54,7 +54,7 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
       
       {/* MIND MAP CANVAS HEADER */}
       <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-violet-500/10 to-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-wider shadow-xl">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-wider shadow-xl">
           <Sparkles className="w-4 h-4 text-amber-400" />
           Interactive Mind Map Configurator
         </div>
@@ -129,8 +129,8 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
 
         {/* GLOWING CONNECTOR ARROW 1 -> 2 */}
         <div className="flex flex-col items-center text-amber-400/80 animate-pulse my-[-4px]">
-          <div className="w-0.5 h-6 bg-gradient-to-b from-amber-500 to-violet-500" />
-          <ArrowDown className="w-5 h-5 text-violet-400 -mt-1" />
+          <div className="w-0.5 h-6 bg-gradient-to-b from-amber-500 to-sky-500" />
+          <ArrowDown className="w-5 h-5 text-sky-400 -mt-1" />
         </div>
 
         {/* ==================== NODE 2: COMPANY NODE ==================== */}
@@ -139,8 +139,8 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
             onClick={() => setActiveNode(activeNode === 'company' ? 'role' : 'company')}
             className={`cursor-pointer transition-all duration-300 border rounded-3xl bg-zinc-950/90 backdrop-blur-2xl shadow-2xl overflow-hidden ${
               activeNode === 'company'
-                ? 'border-violet-500 bg-violet-500/10 ring-2 ring-violet-500/30'
-                : 'border-white/15 hover:border-violet-500/40'
+                ? 'border-sky-500 bg-sky-500/10 ring-2 ring-sky-500/30'
+                : 'border-white/15 hover:border-sky-500/40'
             }`}
           >
             <CardContent className="p-5 flex items-center justify-between">
@@ -153,17 +153,17 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
                   />
                 </div>
                 <div>
-                  <div className="text-[10px] font-mono font-extrabold text-violet-400 uppercase tracking-wider">Node 2 • Target Company</div>
+                  <div className="text-[10px] font-mono font-extrabold text-sky-400 uppercase tracking-wider">Node 2 • Target Company</div>
                   <h3 className="text-lg font-black text-white flex items-center gap-2">
                     {selectedCompany.name}
-                    <Badge variant="outline" className="border-violet-500/40 bg-violet-500/10 text-violet-300 text-[9px]">
+                    <Badge variant="outline" className="border-sky-500/40 bg-sky-500/10 text-sky-300 text-[9px]">
                       {selectedCompany.tier}
                     </Badge>
                   </h3>
                   <p className="text-xs text-zinc-400">{selectedCompany.description}</p>
                 </div>
               </div>
-              <Badge className="bg-violet-500/20 text-violet-300 border border-violet-500/40 text-[10px] font-extrabold px-3 py-1">
+              <Badge className="bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[10px] font-extrabold px-3 py-1">
                 SWITCH COMPANY <ChevronDown className={`w-3.5 h-3.5 ml-1 transition-transform ${activeNode === 'company' ? 'rotate-180' : ''}`} />
               </Badge>
             </CardContent>
@@ -197,8 +197,8 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
                         onSelectCompany(c);
                         setActiveNode('role');
                       }}
-                      className={`p-2.5 rounded-xl border bg-zinc-900 flex items-center gap-2 cursor-pointer hover:border-violet-500/60 transition-all ${
-                        selectedCompany.id === c.id ? 'border-violet-500 bg-violet-500/20' : 'border-white/10'
+                      className={`p-2.5 rounded-xl border bg-zinc-900 flex items-center gap-2 cursor-pointer hover:border-sky-500/60 transition-all ${
+                        selectedCompany.id === c.id ? 'border-sky-500 bg-sky-500/20' : 'border-white/10'
                       }`}
                     >
                       <div className="w-7 h-7 rounded-lg bg-white p-1 shrink-0 overflow-hidden">
@@ -214,8 +214,8 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
         </div>
 
         {/* GLOWING CONNECTOR ARROW 2 -> 3 */}
-        <div className="flex flex-col items-center text-violet-400/80 animate-pulse my-[-4px]">
-          <div className="w-0.5 h-6 bg-gradient-to-b from-violet-500 to-emerald-500" />
+        <div className="flex flex-col items-center text-sky-400/80 animate-pulse my-[-4px]">
+          <div className="w-0.5 h-6 bg-gradient-to-b from-sky-500 to-emerald-500" />
           <ArrowDown className="w-5 h-5 text-emerald-400 -mt-1" />
         </div>
 
@@ -356,7 +356,7 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
                           <Button
                             size="sm"
                             onClick={() => navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`)}
-                            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-extrabold text-xs rounded-xl px-3"
+                            className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl px-3"
                           >
                             <Sparkles className="w-3.5 h-3.5 mr-1 text-amber-300" /> View Analysis
                           </Button>

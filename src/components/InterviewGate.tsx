@@ -42,17 +42,17 @@ export const InterviewGate = ({
   return (
     <div className="w-full min-h-[500px] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-md rounded-3xl border border-white/5 relative overflow-hidden my-6">
       {/* Glow Effects */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-violet-600/10 rounded-full blur-[100px] -z-10" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-fuchsia-600/5 rounded-full blur-[120px] -z-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-sky-600/10 rounded-full blur-[100px] -z-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-[120px] -z-10" />
 
       <div className="max-w-md w-full text-center space-y-8 p-6 md:p-8">
         {/* Lock / Icon Header */}
         <div className="relative inline-flex">
           <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center text-zinc-400 shadow-2xl relative z-10">
-            <Lock className="w-6 h-6 text-violet-400 animate-pulse" />
+            <Lock className="w-6 h-6 text-sky-400 animate-pulse" />
           </div>
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-fuchsia-500 rounded-full animate-ping opacity-75" />
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-fuchsia-500 rounded-full" />
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full animate-ping opacity-75" />
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full" />
         </div>
 
         {/* Content */}
@@ -71,11 +71,11 @@ export const InterviewGate = ({
         {!hasGivenFeedback ? (
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="p-5 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border border-violet-500/20 rounded-2xl text-left space-y-4 cursor-pointer relative group"
+            className="p-5 bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-sky-500/20 rounded-2xl text-left space-y-4 cursor-pointer relative group"
             onClick={() => setShowFeedbackModal(true)}
           >
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center text-violet-300 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center text-sky-300 shrink-0">
                 <MessageSquareHeart className="w-5 h-5" />
               </div>
               <div className="space-y-1">
@@ -90,7 +90,7 @@ export const InterviewGate = ({
               <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-white group-hover:translate-x-1 transition-all ml-auto self-center" />
             </div>
             <Button
-              className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs h-10 rounded-xl"
+              className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs h-10 rounded-xl"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowFeedbackModal(true);

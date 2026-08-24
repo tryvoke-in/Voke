@@ -678,8 +678,8 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0">
-                  <GitBranch className="w-5 h-5 text-violet-400" />
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
+                  <GitBranch className="w-5 h-5 text-sky-400" />
                 </div>
                 <div>
                   <h2 className="text-lg font-extrabold text-white tracking-tight">
@@ -704,7 +704,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-white leading-tight">{company.name}</span>
-                  <span className="text-[10px] text-violet-400 font-semibold leading-tight">{role.title}</span>
+                  <span className="text-[10px] text-sky-400 font-semibold leading-tight">{role.title}</span>
                 </div>
               </div>
             </div>
@@ -713,10 +713,10 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
             <div className="space-y-3 flex-1 flex flex-col min-h-0">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-white flex items-center gap-2">
-                  <FolderCode className="w-4 h-4 text-violet-400" />
+                  <FolderCode className="w-4 h-4 text-sky-400" />
                   Your Repositories ({availableRepoOptions.length} Available)
                 </span>
-                <Badge className="bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold">
+                <Badge className="bg-sky-500/20 border border-sky-500/30 text-sky-300 text-[10px] font-bold">
                   {selectedRepos.length === 1 ? `Target: ${selectedRepos[0]}` : '1 Project Selected'}
                 </Badge>
               </div>
@@ -729,7 +729,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search repositories..."
-                    className="w-full bg-[#121422] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/60 transition-colors"
+                    className="w-full bg-[#121422] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-sky-500/60 transition-colors"
                   />
                 </div>
               )}
@@ -738,8 +738,8 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
               {isLoadingRepos ? (
                 <div className="p-8 rounded-2xl bg-[#121422]/60 border border-white/10 text-center space-y-4 my-auto flex flex-col items-center justify-center min-h-[220px]">
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
-                    <Sparkles className="w-4 h-4 text-violet-400 absolute inset-0 m-auto" />
+                    <div className="w-10 h-10 rounded-full border-2 border-sky-500/30 border-t-sky-500 animate-spin" />
+                    <Sparkles className="w-4 h-4 text-sky-400 absolute inset-0 m-auto" />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white tracking-wide">Fetching Your GitHub Repositories...</h4>
@@ -754,7 +754,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
                 </div>
               ) : availableRepoOptions.length === 0 ? (
                 <div className="p-6 rounded-2xl bg-[#121422]/70 border border-white/10 text-center space-y-3 my-auto flex flex-col items-center justify-center">
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
                     <Github className="w-5 h-5" />
                   </div>
                   <div>
@@ -775,7 +775,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
                       });
                       if (error) toast.error(error.message);
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs inline-flex items-center gap-2 shadow-lg shadow-violet-600/20 cursor-pointer transition-all transform hover:scale-[1.02]"
+                    className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs inline-flex items-center gap-2 shadow-lg shadow-sky-600/20 cursor-pointer transition-all transform hover:scale-[1.02]"
                   >
                     <Github className="w-4 h-4" /> ⚡ Connect GitHub Account
                   </button>
@@ -792,7 +792,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
                           onClick={() => toggleRepoSelection(repo)}
                           className={`group p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col justify-between relative ${
                             isSelected
-                              ? 'bg-[#141628] border-violet-500/80 ring-2 ring-violet-500/30 shadow-lg shadow-violet-500/10'
+                              ? 'bg-[#141628] border-sky-500/80 ring-2 ring-sky-500/30 shadow-lg shadow-sky-500/10'
                               : 'bg-[#0d0e17]/80 border-white/5 hover:border-white/20 hover:bg-[#121422]/60 opacity-60 hover:opacity-100'
                           }`}
                         >
@@ -800,13 +800,13 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
                             <div className="flex items-center gap-2.5 min-w-0">
                               <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all shrink-0 ${
                                 isSelected 
-                                  ? 'bg-violet-500 text-white shadow-sm shadow-violet-500/30 font-extrabold' 
+                                  ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/30 font-extrabold' 
                                   : 'bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
                               }`}>
                                 {isSelected ? <Check className="w-3.5 h-3.5 text-white stroke-[3]" /> : <GitBranch className="w-3.5 h-3.5 text-zinc-500" />}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <h4 className={`text-xs font-bold tracking-tight truncate ${isSelected ? 'text-violet-200' : 'text-white group-hover:text-violet-300'}`}>
+                                <h4 className={`text-xs font-bold tracking-tight truncate ${isSelected ? 'text-sky-200' : 'text-white group-hover:text-sky-300'}`}>
                                   {repo}
                                 </h4>
                                 <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-white/5 inline-block mt-0.5">
@@ -818,7 +818,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
 
                           <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[10px]">
                             <span className="text-zinc-500 font-medium">Interview Target</span>
-                            <span className={`font-bold ${isSelected ? 'text-violet-400' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
+                            <span className={`font-bold ${isSelected ? 'text-sky-400' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
                               {isSelected ? '✓ Selected Target' : 'Click to Select'}
                             </span>
                           </div>
@@ -833,7 +833,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
             <div className="pt-2 border-t border-white/10">
               <Button
                 onClick={handleConfirmSetupAndStart}
-                className="w-full h-12 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-violet-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-sky-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
                 <Zap className="w-4 h-4 text-amber-400" />
                 Start Interview Session with "{selectedRepos[0] || 'Selected Project'}"
@@ -861,7 +861,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
             <div className="flex items-center gap-2">
               <span className="font-black text-base text-white tracking-wide">{company.name}</span>
               <span className="text-zinc-600">•</span>
-              <span className="text-xs font-bold text-violet-400">{role.title}</span>
+              <span className="text-xs font-bold text-sky-400">{role.title}</span>
               <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] py-0.5 font-semibold">
                 {interviewType.title}
               </Badge>
@@ -936,7 +936,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
           {/* AI INTERVIEWER STAGE CARD */}
           <div className="flex-1 relative rounded-3xl bg-zinc-950 border border-white/15 overflow-hidden shadow-2xl flex flex-col items-center justify-center p-6 group h-full">
             {/* Ambient Radial Glow */}
-            <div className="absolute inset-0 bg-gradient-to-b from-violet-950/30 via-zinc-950 to-zinc-950 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-sky-950/30 via-zinc-950 to-zinc-950 pointer-events-none" />
 
             {/* AI Sphere Visualizer */}
             <div className="relative z-10 w-48 h-48 md:w-64 md:h-64 flex items-center justify-center my-auto">
@@ -1086,7 +1086,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
                       className={`flex gap-3 ${log.role === 'user' ? 'flex-row-reverse' : ''}`}
                     >
                       <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
-                        log.role === 'assistant' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
+                        log.role === 'assistant' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                       }`}>
                         {log.role === 'assistant' ? <Sparkles className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                       </div>
@@ -1094,7 +1094,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
                       <div className={`p-3.5 rounded-2xl text-xs leading-relaxed max-w-[85%] border shadow-md ${
                         log.role === 'assistant'
                           ? 'bg-zinc-900 text-zinc-200 border-white/10'
-                          : 'bg-violet-950/50 text-violet-200 border-violet-500/30'
+                          : 'bg-sky-950/50 text-sky-200 border-sky-500/30'
                       }`}>
                         <div className="text-[10px] font-bold mb-1 opacity-70">
                           {log.role === 'assistant' ? `${company.name} AI Lead` : 'You (Candidate)'}

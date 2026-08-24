@@ -178,9 +178,9 @@ export const TractionChartWidget: React.FC<TractionChartWidgetProps> = ({
             {data.fullDate || label}
           </p>
           <div className="space-y-1.5 text-xs">
-            <div className="flex justify-between items-center text-violet-400 font-medium">
+            <div className="flex justify-between items-center text-sky-400 font-medium">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-violet-500 inline-block" />
+                <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" />
                 Total Users:
               </span>
               <span className="font-bold text-white">{data.users}</span>
@@ -211,7 +211,7 @@ export const TractionChartWidget: React.FC<TractionChartWidgetProps> = ({
       <CardHeader className="pb-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <CardTitle className="text-xl font-bold text-white flex items-center gap-2 tracking-tight">
-            <TrendingUp className="w-5 h-5 text-violet-400" />
+            <TrendingUp className="w-5 h-5 text-sky-400" />
             User Growth & Activity
           </CardTitle>
           <p className="text-xs text-gray-400 mt-1">
@@ -221,8 +221,8 @@ export const TractionChartWidget: React.FC<TractionChartWidgetProps> = ({
 
         {/* Clean Header Legend & Totals */}
         <div className="flex items-center gap-4 text-xs">
-          <div className="flex items-center gap-1.5 bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 rounded-lg text-violet-300">
-            <Users className="w-3.5 h-3.5 text-violet-400" />
+          <div className="flex items-center gap-1.5 bg-sky-500/10 border border-sky-500/20 px-3 py-1.5 rounded-lg text-sky-300">
+            <Users className="w-3.5 h-3.5 text-sky-400" />
             <span className="font-medium">Users:</span>
             <span className="font-bold text-white">{chartDataResult.totalUsers}</span>
           </div>

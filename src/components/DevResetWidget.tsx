@@ -333,7 +333,7 @@ export const DevResetWidget = () => {
                   onClick={() => navigate('/elite-prep')}
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start h-7 px-2.5 bg-gradient-to-r from-amber-500/10 to-violet-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300 hover:bg-amber-500/20 rounded-lg text-[11px] font-bold"
+                  className="w-full justify-start h-7 px-2.5 bg-gradient-to-r from-amber-500/10 to-sky-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300 hover:bg-amber-500/20 rounded-lg text-[11px] font-bold"
                 >
                   <Layers className="w-3 h-3 mr-1.5 text-amber-500 dark:text-amber-400" />
                   Open Elite Prep Mind Map

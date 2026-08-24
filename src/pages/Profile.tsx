@@ -1068,7 +1068,7 @@ const Profile = () => {
                 {[
                   { label: "Interviews", value: stats.totalInterviews, icon: Target, color: "text-blue-500" },
                   { label: "Completed", value: stats.completedSessions, icon: Award, color: "text-green-500" },
-                  { label: "Avg Score", value: `${stats.averageScore}%`, icon: TrendingUp, color: "text-fuchsia-500" },
+                  { label: "Avg Score", value: `${stats.averageScore}%`, icon: TrendingUp, color: "text-blue-500" },
                   { label: "Peers", value: stats.peerSessions, icon: User, color: "text-orange-500" },
                 ].map((stat, i) => (
                   <motion.div

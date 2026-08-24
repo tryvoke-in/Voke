@@ -172,7 +172,7 @@ const VoiceInterviewResults = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
         <div className="flex flex-col items-center gap-4 text-center max-w-md">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
           <p className="text-muted-foreground animate-pulse font-medium">Analyzing your conversation...</p>
           
           {loadingTimeout && (
@@ -190,7 +190,7 @@ const VoiceInterviewResults = () => {
                 }}>
                   Show Load Logs & Diagnostics
                 </Button>
-                <Button size="sm" variant="ghost" className="text-xs font-semibold rounded-xl text-violet-500 hover:bg-violet-500/10" onClick={() => {
+                <Button size="sm" variant="ghost" className="text-xs font-semibold rounded-xl text-sky-500 hover:bg-sky-500/10" onClick={() => {
                   logMessage("Bypassing load screen manually.");
                   setLoading(false);
                 }}>
@@ -254,7 +254,7 @@ const VoiceInterviewResults = () => {
         <Button
           variant="ghost"
           onClick={() => navigate(isElite ? "/elite-prep" : "/voice-assistant")}
-          className="mb-8 hover:bg-violet-500/10 hover:text-violet-500 transition-colors"
+          className="mb-8 hover:bg-sky-500/10 hover:text-sky-500 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           {isElite ? "Back to Elite Prep" : "Back to Assistant"}
@@ -265,7 +265,7 @@ const VoiceInterviewResults = () => {
           <div className="lg:col-span-1 space-y-6">
             {/* Score Card */}
             <Card className="bg-card/30 backdrop-blur-xl border-border/50 overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-purple-500/5"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-blue-500/5"></div>
               <CardContent className="pt-8 pb-8 text-center relative z-10">
                 <h3 className="text-lg font-medium text-muted-foreground mb-6">Conversation Score</h3>
                 <div className="relative w-40 h-40 mx-auto mb-6 flex items-center justify-center">
@@ -293,10 +293,10 @@ const VoiceInterviewResults = () => {
                   </div>
                 </div>
                 <div className="flex justify-center gap-2 mb-4">
-                  <span className="px-3 py-1 rounded-full bg-violet-500/10 text-violet-500 text-xs font-medium border border-violet-500/20">
+                  <span className="px-3 py-1 rounded-full bg-sky-500/10 text-sky-500 text-xs font-medium border border-sky-500/20">
                     AI Analyzed
                   </span>
-                  <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-500 text-xs font-medium border border-purple-500/20">
+                  <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-xs font-medium border border-blue-500/20">
                     {session.created_at ? new Date(session.created_at).toLocaleDateString() : "Today"}
                   </span>
                 </div>
@@ -351,7 +351,7 @@ const VoiceInterviewResults = () => {
              <Card className="bg-card/30 backdrop-blur-xl border-border/50 overflow-hidden flex flex-col h-[500px]">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-violet-500" />
+                    <MessageSquare className="w-5 h-5 text-sky-500" />
                     Transcript
                 </CardTitle>
               </CardHeader>
@@ -420,7 +420,7 @@ const VoiceInterviewResults = () => {
                     <Card className="bg-card/30 backdrop-blur-xl border-border/50">
                       <CardContent className="p-5">
                         <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-                          <Mic className="w-4 h-4 text-violet-400" />
+                          <Mic className="w-4 h-4 text-sky-400" />
                           <span className="text-xs font-semibold uppercase tracking-wider">Communication</span>
                         </div>
                         <div className="flex items-end gap-2 mb-2">
@@ -436,7 +436,7 @@ const VoiceInterviewResults = () => {
                     <Card className="bg-card/30 backdrop-blur-xl border-border/50">
                       <CardContent className="p-5">
                         <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-                          <TrendingUp className="w-4 h-4 text-purple-400" />
+                          <TrendingUp className="w-4 h-4 text-blue-400" />
                           <span className="text-xs font-semibold uppercase tracking-wider">Content Quality</span>
                         </div>
                         <div className="flex items-end gap-2 mb-2">
@@ -490,7 +490,7 @@ const VoiceInterviewResults = () => {
                           {videoDetails.posture && (
                             <div className="p-3 bg-background/50 rounded-xl border border-border/40 space-y-1">
                               <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                                <User className="w-3.5 h-3.5 text-violet-400" /> Posture & Presence
+                                <User className="w-3.5 h-3.5 text-sky-400" /> Posture & Presence
                               </div>
                               <p className="text-xs text-foreground leading-relaxed">{videoDetails.posture}</p>
                             </div>

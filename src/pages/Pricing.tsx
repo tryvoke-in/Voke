@@ -259,14 +259,14 @@ const Pricing = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-background font-sans selection:bg-violet-500/30 flex flex-col overflow-x-hidden">
+        <div className="min-h-screen bg-background font-sans selection:bg-sky-500/30 flex flex-col overflow-x-hidden">
             {showConfetti && <ReactConfetti width={window.innerWidth} height={window.innerHeight} style={{ zIndex: 100 }} />}
             <Navbar />
             
             {/* Ambient Background */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-violet-600/5 rounded-full blur-[120px] mix-blend-screen" />
-                <div className="absolute top-[40%] left-[-20%] w-[600px] h-[600px] bg-fuchsia-600/5 rounded-full blur-[120px] mix-blend-screen" />
+                <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-sky-600/5 rounded-full blur-[120px] mix-blend-screen" />
+                <div className="absolute top-[40%] left-[-20%] w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px] mix-blend-screen" />
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02] dark:opacity-[0.04]" />
             </div>
 
@@ -283,7 +283,7 @@ const Pricing = () => {
                             whileHover={{ scale: 1.05 }}
                             className="inline-flex"
                          >
-                             <Badge variant="secondary" className="px-4 py-1.5 rounded-full text-violet-600 bg-violet-500/10 border border-violet-500/20 backdrop-blur-md">
+                             <Badge variant="secondary" className="px-4 py-1.5 rounded-full text-sky-600 bg-sky-500/10 border border-sky-500/20 backdrop-blur-md">
                                 <Zap className="w-3.5 h-3.5 mr-2 fill-current" />
                                 Launch your career
                             </Badge>
@@ -291,7 +291,7 @@ const Pricing = () => {
                         
                         <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
                             Plans that scale with your <br/>
-                            <span className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500 bg-clip-text text-transparent animate-gradient-x">
+                            <span className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 bg-clip-text text-transparent animate-gradient-x">
                                 ambition
                             </span>
                         </h1>
@@ -318,16 +318,16 @@ const Pricing = () => {
                                     className={`relative group rounded-[2rem] transition-all duration-300 ${plan.popular ? 'md:-mt-8 md:mb-8 z-10' : 'z-0'}`}
                                 >
                                     {plan.popular && (
-                                        <div className="absolute -inset-[2px] bg-gradient-to-b from-violet-500 via-fuchsia-500 to-violet-500 rounded-[2rem] opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-500" />
+                                        <div className="absolute -inset-[2px] bg-gradient-to-b from-sky-500 via-blue-500 to-sky-500 rounded-[2rem] opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-500" />
                                     )}
                                     
                                     <div className={`
                                         relative h-full rounded-[1.9rem] p-8 flex flex-col
-                                        ${plan.popular ? 'bg-background shadow-2xl shadow-violet-500/20' : 'bg-card/40 backdrop-blur-md border border-border/50 hover:border-violet-500/30'}
+                                        ${plan.popular ? 'bg-background shadow-2xl shadow-sky-500/20' : 'bg-card/40 backdrop-blur-md border border-border/50 hover:border-sky-500/30'}
                                     `}>
                                         {plan.popular && (
                                             <div className="absolute top-0 inset-x-0 -translate-y-1/2 flex justify-center">
-                                                 <div className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-wide">
+                                                 <div className="bg-gradient-to-r from-sky-600 to-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-wide">
                                                     <Star className="w-3 h-3 text-yellow-300 fill-yellow-300" />
                                                     Most Popular
                                                 </div>
@@ -335,7 +335,7 @@ const Pricing = () => {
                                         )}
 
                                         <div className="mb-8">
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${plan.popular ? 'bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-300' : 'bg-secondary text-muted-foreground'}`}>
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${plan.popular ? 'bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-300' : 'bg-secondary text-muted-foreground'}`}>
                                                 <Icon className="w-6 h-6" />
                                             </div>
                                             <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
@@ -413,7 +413,7 @@ const Pricing = () => {
                                                  disabled={isPaying}
                                                  className={`w-full h-12 rounded-xl text-sm font-bold transition-all duration-300 mb-8 border
                                                  ${plan.popular 
-                                                     ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] border-transparent' 
+                                                     ? 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:scale-[1.02] border-transparent' 
                                                      : 'bg-white/5 hover:bg-white/10 border-white/10 text-white hover:text-white'}`}
                                              >
                                                  {isPremium && plan.name === "Voke Elite" ? "Already Premium" : isPaying && plan.name === "Voke Elite" ? "Opening checkout..." : plan.cta}
@@ -428,7 +428,7 @@ const Pricing = () => {
                                             <ul className="space-y-3">
                                                 {plan.features.map(feature => (
                                                     <li key={feature} className="flex items-start gap-3 text-sm group/feature">
-                                                        <Check className={`w-4 h-4 mt-0.5 shrink-0 transition-colors ${plan.popular ? 'text-violet-500' : 'text-muted-foreground group-hover/feature:text-violet-500'}`} />
+                                                        <Check className={`w-4 h-4 mt-0.5 shrink-0 transition-colors ${plan.popular ? 'text-sky-500' : 'text-muted-foreground group-hover/feature:text-sky-500'}`} />
                                                         <span className="text-muted-foreground group-hover/feature:text-foreground transition-colors">
                                                             {feature}
                                                         </span>
@@ -471,7 +471,7 @@ const Pricing = () => {
                         ].map((faq, i) => (
                             <div key={i} className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6 hover:bg-card/50 transition-colors">
                                 <h3 className="font-bold text-foreground mb-2 flex items-start gap-2">
-                                    <HelpCircle className="w-4 h-4 mt-1 text-violet-500 shrink-0" />
+                                    <HelpCircle className="w-4 h-4 mt-1 text-sky-500 shrink-0" />
                                     {faq.q}
                                 </h3>
                                 <p className="text-sm text-muted-foreground leading-relaxed pl-6">
@@ -484,7 +484,7 @@ const Pricing = () => {
 
                  {/* Social Proof */}
                  <section className="container mx-auto px-4 py-16 text-center border-t border-border/40 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-violet-500/5 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-sky-500/5 pointer-events-none" />
                     
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
@@ -495,7 +495,7 @@ const Pricing = () => {
                          <div className="flex -space-x-4">
                             {[1,2,3,4,5].map(i => (
                                 <div key={i} className="relative group">
-                                    <div className="absolute inset-0 bg-violet-500 blur-md opacity-0 group-hover:opacity-50 transition-opacity rounded-full" />
+                                    <div className="absolute inset-0 bg-sky-500 blur-md opacity-0 group-hover:opacity-50 transition-opacity rounded-full" />
                                     <img 
                                         src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i+100}`} 
                                         className="w-12 h-12 rounded-full border-2 border-background relative z-10 transition-transform hover:scale-110 hover:z-20 shadow-lg" 

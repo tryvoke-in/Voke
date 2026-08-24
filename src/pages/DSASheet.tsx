@@ -133,7 +133,7 @@ const DSASheet = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-violet-500/30">
+        <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-sky-500/30">
             <Navbar />
             <div className="flex-1 flex w-full min-w-0 relative">
                 <Sidebar />
@@ -143,11 +143,11 @@ const DSASheet = () => {
                         {/* Header */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
                             <div>
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-500 text-sm font-medium border border-fuchsia-500/20 mb-4">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-sm font-medium border border-blue-500/20 mb-4">
                                     <Code2 className="w-4 h-4" />
                                     Shradha Ma'am's Sheet
                                 </div>
-                                <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 bg-clip-text text-transparent">
+                                <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
                                     Ultimate DSA Preparation
                                 </h1>
                                 <p className="text-muted-foreground mt-2 text-lg">
@@ -175,7 +175,7 @@ const DSASheet = () => {
                             <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                                 <Select value={selectedPlan} onValueChange={(val: any) => { setSelectedPlan(val); setCurrentDay(1); }}>
                                     <SelectTrigger className="w-[180px] bg-background">
-                                        <Calendar className="w-4 h-4 mr-2 text-violet-500" />
+                                        <Calendar className="w-4 h-4 mr-2 text-sky-500" />
                                         <SelectValue placeholder="Select Plan" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -204,7 +204,7 @@ const DSASheet = () => {
                             {viewMode === "topic" && (
                                 <Select value={selectedTopic} onValueChange={setSelectedTopic}>
                                     <SelectTrigger className="w-[200px] bg-background">
-                                        <Hash className="w-4 h-4 mr-2 text-fuchsia-500" />
+                                        <Hash className="w-4 h-4 mr-2 text-blue-500" />
                                         <SelectValue placeholder="Select Topic" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -227,7 +227,7 @@ const DSASheet = () => {
                                     Previous Day
                                 </Button>
                                 <div className="flex items-center gap-2 font-medium">
-                                    <div className="w-8 h-8 rounded-full bg-violet-500/10 text-violet-500 flex items-center justify-center border border-violet-500/20">
+                                    <div className="w-8 h-8 rounded-full bg-sky-500/10 text-sky-500 flex items-center justify-center border border-sky-500/20">
                                         {currentDay}
                                     </div>
                                     <span className="text-muted-foreground">of {planData.days} Days</span>
@@ -260,7 +260,7 @@ const DSASheet = () => {
                                         >
                                             <Card className={cn(
                                                 "h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group cursor-pointer border-l-4 border-y border-r border-border/60 backdrop-blur-sm overflow-hidden flex flex-col",
-                                                isSolved ? "bg-emerald-50/50 dark:bg-emerald-950/10 border-l-emerald-500 ring-1 ring-emerald-500/20" : "bg-card/50 border-l-violet-500"
+                                                isSolved ? "bg-emerald-50/50 dark:bg-emerald-950/10 border-l-emerald-500 ring-1 ring-emerald-500/20" : "bg-card/50 border-l-sky-500"
                                             )}>
                                                 <CardHeader className="pb-3 relative flex-none">
                                                     <div className="flex justify-between items-start mb-2">
@@ -283,7 +283,7 @@ const DSASheet = () => {
                                                             </Badge>
                                                         )}
                                                     </div>
-                                                    <CardTitle className="text-lg font-bold leading-tight group-hover:text-violet-500 transition-colors">
+                                                    <CardTitle className="text-lg font-bold leading-tight group-hover:text-sky-500 transition-colors">
                                                         {question.title}
                                                     </CardTitle>
                                                     {viewMode === 'daily' && (
@@ -316,7 +316,7 @@ const DSASheet = () => {
                                                             "w-full shadow-none font-semibold",
                                                             isSolved
                                                                 ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                                                                : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-lg shadow-indigo-500/20"
+                                                                : "bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white shadow-lg shadow-indigo-500/20"
                                                         )}
                                                         onClick={() => navigate(
                                                             `/playground?title=${encodeURIComponent(question.title)}&difficulty=${question.difficulty}&questionId=${question.id}&mode=problem`

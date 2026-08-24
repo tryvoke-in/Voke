@@ -155,7 +155,7 @@ export const WalkingProgressMascot: React.FC<WalkingProgressMascotProps> = ({
     determined: {
       color: "text-cyan-400",
       border: "border-cyan-400/80",
-      glow: "from-cyan-400/40 via-blue-400/30 to-violet-400/40",
+      glow: "from-cyan-400/40 via-blue-400/30 to-sky-400/40",
       eyeColor: "#22d3ee",
       label: "🎯 On Track",
     },

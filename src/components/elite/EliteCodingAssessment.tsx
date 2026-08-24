@@ -764,7 +764,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
             onClick={() => handleSectionChange('A_CODING')}
             className={`px-3 py-1 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
               currentSection === 'A_CODING'
-                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
+                ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -836,14 +836,14 @@ Section C: ${currentSystemDesignQuestion?.title}`;
             animate={{ opacity: 1, scale: 1 }}
             className="max-w-xl w-full bg-zinc-900 border border-white/15 rounded-3xl p-8 shadow-2xl space-y-6 relative overflow-hidden"
           >
-            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-violet-600/20 rounded-full blur-3xl" />
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-sky-600/20 rounded-full blur-3xl" />
 
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-violet-600/10 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-inner">
+              <div className="w-14 h-14 rounded-2xl bg-sky-600/10 border border-sky-500/30 flex items-center justify-center text-sky-400 shadow-inner">
                 <Code2 className="w-7 h-7" />
               </div>
               <div>
-                <Badge className="bg-violet-500/10 border-violet-500/30 text-violet-300 text-[10px] uppercase font-black tracking-wider mb-1">
+                <Badge className="bg-sky-500/10 border-sky-500/30 text-sky-300 text-[10px] uppercase font-black tracking-wider mb-1">
                   Technical Round 3
                 </Badge>
                 <h2 className="text-xl font-black text-white">
@@ -867,7 +867,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
               </div>
               <ul className="space-y-2 pl-2">
                 <li className="flex items-start gap-2">
-                  <span className="text-violet-400 font-bold">1. Section A (Coding):</span> Solve the algorithmic challenge on screen with instant test runs.
+                  <span className="text-sky-400 font-bold">1. Section A (Coding):</span> Solve the algorithmic challenge on screen with instant test runs.
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-amber-400 font-bold">2. Section B (Debugging):</span> Spot the bug root cause in the snippet and submit a working fix.
@@ -884,7 +884,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
 
             <Button
               onClick={handleStartSession}
-              className="w-full h-12 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-violet-600/30 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full h-12 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-sky-600/30 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Play className="w-4 h-4 fill-white" />
               Begin Round 3 Assessment
@@ -905,8 +905,8 @@ Section C: ${currentSystemDesignQuestion?.title}`;
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2.5 w-2.5">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isAiSpeaking ? 'bg-violet-400' : 'bg-emerald-400'}`} />
-                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isAiSpeaking ? 'bg-violet-500' : 'bg-emerald-500'}`} />
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isAiSpeaking ? 'bg-sky-400' : 'bg-emerald-400'}`} />
+                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isAiSpeaking ? 'bg-sky-500' : 'bg-emerald-500'}`} />
                 </span>
                 <span className="text-xs font-bold text-zinc-300">
                   {isAiSpeaking ? 'AI Interviewer Speaking...' : isUserSpeaking ? 'Listening to You...' : 'Voice AI Active'}
@@ -918,7 +918,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                 {[...Array(6)].map((_, i) => (
                   <div
                     key={i}
-                    className="w-1 bg-violet-500 rounded-full transition-all duration-75"
+                    className="w-1 bg-sky-500 rounded-full transition-all duration-75"
                     style={{
                       height: isUserSpeaking || isAiSpeaking ? `${Math.max(4, Math.sin(i + volume * 10) * 16 + 8)}px` : '4px',
                       opacity: isUserSpeaking || isAiSpeaking ? 1 : 0.3
@@ -951,8 +951,8 @@ Section C: ${currentSystemDesignQuestion?.title}`;
               </div>
 
               {/* AI Interviewer Avatar Card */}
-              <div className="relative aspect-video rounded-2xl bg-gradient-to-br from-violet-950/40 to-zinc-900 border border-violet-500/20 flex flex-col items-center justify-center p-3 text-center shadow-lg">
-                <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 mb-1">
+              <div className="relative aspect-video rounded-2xl bg-gradient-to-br from-sky-950/40 to-zinc-900 border border-sky-500/20 flex flex-col items-center justify-center p-3 text-center shadow-lg">
+                <div className="w-10 h-10 rounded-xl bg-sky-600/20 border border-sky-500/30 flex items-center justify-center text-sky-400 mb-1">
                   <Cpu className="w-5 h-5" />
                 </div>
                 <div className="text-xs font-bold text-white">Lead AI Interviewer</div>
@@ -966,7 +966,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                 phase === 'approach_explain' && !isEditorUnlocked
                   ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
                   : phase === 'coding' || isEditorUnlocked
-                  ? 'bg-violet-500/10 border-violet-500/30 text-violet-300'
+                  ? 'bg-sky-500/10 border-sky-500/30 text-sky-300'
                   : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
               }`}>
                 {phase === 'approach_explain' && !isEditorUnlocked && <><BookOpen className="w-3.5 h-3.5" /> Explain your approach to unlock the editor</>}
@@ -986,17 +986,17 @@ Section C: ${currentSystemDesignQuestion?.title}`;
               const displayMsg = lastAiMsg || logs[logs.length - 1];
 
               return (
-                <div className="p-3 rounded-2xl bg-zinc-950/90 border border-violet-500/30 text-xs text-zinc-100 shadow-xl space-y-2 backdrop-blur-md">
+                <div className="p-3 rounded-2xl bg-zinc-950/90 border border-sky-500/30 text-xs text-zinc-100 shadow-xl space-y-2 backdrop-blur-md">
                   <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-violet-400 animate-ping" />
-                      <span className="text-violet-400 font-extrabold tracking-wide uppercase text-[10px]">AI Interviewer Question</span>
+                      <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
+                      <span className="text-sky-400 font-extrabold tracking-wide uppercase text-[10px]">AI Interviewer Question</span>
                     </div>
                     {lastUserMsg && (
                       <span className="text-[10px] text-zinc-400 font-mono">Live Sync</span>
                     )}
                   </div>
-                  <div className="max-h-36 overflow-y-auto pr-1 text-xs text-zinc-200 leading-relaxed font-sans whitespace-pre-wrap selection:bg-violet-600 selection:text-white">
+                  <div className="max-h-36 overflow-y-auto pr-1 text-xs text-zinc-200 leading-relaxed font-sans whitespace-pre-wrap selection:bg-sky-600 selection:text-white">
                     {displayMsg?.text || 'Listening for your response...'}
                   </div>
                 </div>
@@ -1021,7 +1021,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                           setCode(problems[0] ? getStarterCode(problems[0] as ProblemDefinition, selectedLanguage) : '');
                         }}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          selectedProblemIndex === 0 ? 'bg-violet-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'
+                          selectedProblemIndex === 0 ? 'bg-sky-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'
                         }`}
                       >
                         Problem 1
@@ -1029,7 +1029,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                       <button
                         onClick={handleMoveToProblem2}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-                          selectedProblemIndex === 1 ? 'bg-violet-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'
+                          selectedProblemIndex === 1 ? 'bg-sky-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'
                         }`}
                       >
                         Problem 2
@@ -1041,7 +1041,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                     {selectedProblemIndex === 0 ? (
                       <button
                         onClick={handleMoveToProblem2}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-violet-600/30 transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-sky-600/30 transition-all cursor-pointer"
                       >
                         <span>Next Question (Problem 2)</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -1060,13 +1060,13 @@ Section C: ${currentSystemDesignQuestion?.title}`;
 
                 {/* Follow-up / Post-Test Call-To-Action Banner */}
                 {phase === 'followup' && selectedProblemIndex === 0 && (
-                  <div className="p-3 rounded-2xl bg-gradient-to-r from-violet-950/80 to-indigo-950/80 border border-violet-500/40 shadow-xl flex items-center justify-between gap-3 animate-pulse">
-                    <div className="text-xs text-violet-200">
+                  <div className="p-3 rounded-2xl bg-gradient-to-r from-sky-950/80 to-indigo-950/80 border border-sky-500/40 shadow-xl flex items-center justify-between gap-3 animate-pulse">
+                    <div className="text-xs text-sky-200">
                       <strong className="text-white">✓ Tests Passed!</strong> Answer interviewer follow-ups, then proceed:
                     </div>
                     <button
                       onClick={handleMoveToProblem2}
-                      className="px-3.5 py-1.5 bg-violet-600 hover:bg-violet-500 text-white font-black text-xs rounded-xl shadow-lg flex items-center gap-1.5 shrink-0 cursor-pointer"
+                      className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs rounded-xl shadow-lg flex items-center gap-1.5 shrink-0 cursor-pointer"
                     >
                       <span>Problem 2 →</span>
                     </button>
@@ -1234,14 +1234,14 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                   <div className="grid grid-cols-1 gap-2">
                     {systemDesignQuestions[0]?.keyDiscussionPoints.map((pt, i) => (
                       <div key={i} className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-zinc-300 flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                         <span>{pt}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-violet-600/10 border border-violet-500/20 text-xs text-violet-300">
+                <div className="p-3 rounded-xl bg-sky-600/10 border border-sky-500/20 text-xs text-sky-300">
                   💡 <strong>Voice Evaluation Active:</strong> Speak through your architectural decisions, caching layers, and Time/Space complexity ($O(N)$ Big-O analysis).
                 </div>
               </div>
@@ -1249,7 +1249,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
           </div>
         </Panel>
 
-        <PanelResizeHandle className="w-1.5 bg-zinc-800 hover:bg-violet-500 transition-colors cursor-col-resize active:bg-violet-600 shadow-[inset_0_0_4px_rgba(0,0,0,0.5)] z-10" />
+        <PanelResizeHandle className="w-1.5 bg-zinc-800 hover:bg-sky-500 transition-colors cursor-col-resize active:bg-sky-600 shadow-[inset_0_0_4px_rgba(0,0,0,0.5)] z-10" />
 
         {/* RIGHT COLUMN: Monaco Code Editor & Live Test Execution Terminal */}
         <Panel defaultSize={60} minSize={30} className="flex flex-col bg-zinc-900/50">
@@ -1261,7 +1261,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
               <select
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value as any)}
-                className="bg-zinc-900 border border-white/10 text-white text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:border-violet-500 font-semibold"
+                className="bg-zinc-900 border border-white/10 text-white text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:border-sky-500 font-semibold"
               >
                 <option value="typescript">TypeScript</option>
                 <option value="javascript">JavaScript</option>
@@ -1373,7 +1373,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                     activeTab === 'console' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
-                  <Terminal className="w-3.5 h-3.5 text-violet-400" />
+                  <Terminal className="w-3.5 h-3.5 text-sky-400" />
                   Console & Test Output
                 </button>
               </div>
@@ -1556,7 +1556,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
                     setVerdict(null);
                     setHasStartedSession(false);
                   }}
-                  className="flex-1 h-11 bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-violet-600/25"
+                  className="flex-1 h-11 bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-sky-600/25"
                 >
                   Retry Round 3 Assessment
                 </Button>

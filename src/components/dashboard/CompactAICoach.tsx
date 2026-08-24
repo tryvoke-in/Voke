@@ -411,7 +411,7 @@ export const CompactAICoach: React.FC<CompactAICoachProps> = ({
               ? "bg-amber-500/20 border border-amber-500/40 animate-pulse"
               : sadActive
               ? "bg-blue-500/10 border border-blue-500/20"
-              : "bg-violet-500/10 border border-violet-500/20"
+              : "bg-sky-500/10 border border-sky-500/20"
           } pointer-events-none transition-colors duration-500`}
         />
 
@@ -492,7 +492,7 @@ export const CompactAICoach: React.FC<CompactAICoachProps> = ({
                     ? "border-amber-400/60 dark:border-amber-500/50 shadow-amber-500/10 text-amber-950 dark:text-amber-200"
                     : sadActive
                     ? "border-sky-400/60 dark:border-sky-500/40 shadow-sky-500/10 text-sky-950 dark:text-sky-200"
-                    : "border-border/80 dark:border-violet-500/30 text-slate-800 dark:text-slate-100"
+                    : "border-border/80 dark:border-sky-500/30 text-slate-800 dark:text-slate-100"
                 } cursor-pointer pointer-events-auto text-center`}
                 onClick={handleMascotClick}
               >
@@ -602,7 +602,7 @@ export const CompactAICoach: React.FC<CompactAICoachProps> = ({
                     ? "border-amber-300/90 shadow-amber-500/20"
                     : sadActive
                     ? "border-sky-400/60 shadow-sky-500/10"
-                    : "border-violet-300/80"
+                    : "border-sky-300/80"
                 } shadow-xl flex items-center justify-center overflow-hidden p-0.5 transition-colors duration-300`}
               >
                 {/* Cat-Ear Headphone Pods */}
@@ -806,7 +806,7 @@ export const CompactAICoach: React.FC<CompactAICoachProps> = ({
                     ? "border-amber-400/80"
                     : sadActive
                     ? "border-sky-400/60"
-                    : "border-violet-400/60"
+                    : "border-sky-400/60"
                 } shadow-md flex items-center justify-center -mt-0.5`}
               >
                 {/* Mini Power Reactor */}
@@ -848,7 +848,7 @@ export const CompactAICoach: React.FC<CompactAICoachProps> = ({
                     repeat: Infinity,
                     ease: "easeInOut",
                   }}
-                  className="absolute -left-2 top-0.5 w-1.5 h-3.5 rounded-full bg-violet-500 border border-white/50 flex items-end justify-center pb-0.5 shadow-xs"
+                  className="absolute -left-2 top-0.5 w-1.5 h-3.5 rounded-full bg-sky-500 border border-white/50 flex items-end justify-center pb-0.5 shadow-xs"
                 >
                   <div
                     className={`w-1 h-1 rounded-full ${
@@ -883,7 +883,7 @@ export const CompactAICoach: React.FC<CompactAICoachProps> = ({
                     repeat: Infinity,
                     ease: "easeInOut",
                   }}
-                  className="absolute -right-2 top-0.5 w-1.5 h-3.5 rounded-full bg-violet-500 border border-white/50 flex items-end justify-center pb-0.5 shadow-xs"
+                  className="absolute -right-2 top-0.5 w-1.5 h-3.5 rounded-full bg-sky-500 border border-white/50 flex items-end justify-center pb-0.5 shadow-xs"
                 >
                   <div
                     className={`w-1 h-1 rounded-full ${

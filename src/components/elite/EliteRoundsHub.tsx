@@ -69,7 +69,7 @@ export const EliteRoundsHub: React.FC<EliteRoundsHubProps> = ({
       {/* Modern Glass Hero Card */}
       <div className="relative overflow-hidden rounded-3xl bg-zinc-950 border border-white/15 p-7 md:p-9 shadow-2xl">
         {/* Ambient Gradient Orbs */}
-        <div className="absolute top-0 right-0 -mt-16 -mr-16 w-80 h-80 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 -mt-16 -mr-16 w-80 h-80 bg-sky-600/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-80 h-80 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -95,7 +95,7 @@ export const EliteRoundsHub: React.FC<EliteRoundsHubProps> = ({
                 <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-[10px] font-black px-2.5 py-0.5">
                   {interviewType.title}
                 </Badge>
-                <Badge variant="outline" className="border-violet-500/40 bg-violet-500/10 text-violet-300 text-[10px] font-black px-2.5 py-0.5">
+                <Badge variant="outline" className="border-sky-500/40 bg-sky-500/10 text-sky-300 text-[10px] font-black px-2.5 py-0.5">
                   {role.level}
                 </Badge>
               </div>
@@ -270,7 +270,7 @@ export const EliteRoundsHub: React.FC<EliteRoundsHubProps> = ({
                                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     <div className="bg-zinc-950 p-2.5 rounded-xl border border-white/10 text-center">
                                       <div className="text-[9px] font-bold text-zinc-400 uppercase">Communication</div>
-                                      <div className="text-xs font-black text-violet-300 mt-0.5">{roundProgress.feedbackDetails.communicationScore}%</div>
+                                      <div className="text-xs font-black text-sky-300 mt-0.5">{roundProgress.feedbackDetails.communicationScore}%</div>
                                     </div>
                                     <div className="bg-zinc-950 p-2.5 rounded-xl border border-white/10 text-center">
                                       <div className="text-[9px] font-bold text-zinc-400 uppercase">Confidence</div>
@@ -350,7 +350,7 @@ export const EliteRoundsHub: React.FC<EliteRoundsHubProps> = ({
                           <Button
                             size="lg"
                             onClick={() => navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`)}
-                            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-black text-sm px-7 h-12 rounded-2xl shadow-xl shadow-purple-600/25 hover:scale-[1.03] active:scale-[0.97] transition-all"
+                            className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-black text-sm px-7 h-12 rounded-2xl shadow-xl shadow-blue-600/25 hover:scale-[1.03] active:scale-[0.97] transition-all"
                           >
                             <Sparkles className="w-4 h-4 mr-2 text-amber-300" />
                             View Score & Analysis

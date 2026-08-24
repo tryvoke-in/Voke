@@ -136,7 +136,7 @@ export const EliteNotebookLMMindMap: React.FC<EliteNotebookLMMindMapProps> = ({
       {/* ANIMATED AMBIENT GLOW BACKGROUND ORBS */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute top-10 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-indigo-600/15 via-blue-500/10 to-transparent rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-10 right-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-amber-500/15 via-violet-600/10 to-transparent rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-10 right-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-amber-500/15 via-sky-600/10 to-transparent rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
         {/* Subtle Dots Grid Overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff0a_1px,transparent_1px)] [background-size:28px_28px] opacity-70" />
       </div>
@@ -155,7 +155,7 @@ export const EliteNotebookLMMindMap: React.FC<EliteNotebookLMMindMapProps> = ({
               }}
               className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-300"
             />
-            <span className="font-extrabold text-xl bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
+            <span className="font-extrabold text-xl bg-gradient-to-r from-sky-400 via-blue-400 to-blue-400 bg-clip-text text-transparent">
               Voke Elite
             </span>
           </div>
@@ -522,9 +522,9 @@ export const EliteNotebookLMMindMap: React.FC<EliteNotebookLMMindMapProps> = ({
                                     toast.info(`Round ${roundDef.roundNumber} Result: ${roundProgress?.reason || (isPassed ? 'Passed' : 'Failed with score ' + (roundProgress?.score || 0) + '%')}`);
                                   }
                                 }}
-                                className="h-9 px-4 rounded-xl font-bold text-xs flex items-center gap-2 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 hover:text-violet-100 border border-violet-500/30 hover:border-violet-500/50 backdrop-blur-md shadow-sm shadow-violet-500/10 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap shrink-0"
+                                className="h-9 px-4 rounded-xl font-bold text-xs flex items-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 hover:text-sky-100 border border-sky-500/30 hover:border-sky-500/50 backdrop-blur-md shadow-sm shadow-sky-500/10 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap shrink-0"
                               >
-                                <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                                <Sparkles className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                                 <span className="whitespace-nowrap">View Feedback</span>
                               </button>
                             )}

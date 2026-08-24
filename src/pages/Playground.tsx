@@ -515,7 +515,7 @@ const Playground = () => {
             }}
             className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               mode === "problem"
-                ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                 : "text-slate-400 hover:text-slate-200 hover:bg-[#182035]"
             }`}
           >
@@ -528,7 +528,7 @@ const Playground = () => {
             }}
             className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               mode === "free"
-                ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                 : "text-slate-400 hover:text-slate-200 hover:bg-[#182035]"
             }`}
           >
@@ -541,7 +541,7 @@ const Playground = () => {
           {/* Live Countdown Timer Dropdown (Solve a Problem Mode) */}
           {mode === "problem" && (
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#121827] border border-slate-800 text-xs font-mono text-slate-200 cursor-pointer hover:border-slate-700 transition-colors">
-              <Clock className="w-3.5 h-3.5 text-purple-400" />
+              <Clock className="w-3.5 h-3.5 text-blue-400" />
               <span className="font-bold">{formatTimer(secondsRemaining)}</span>
               <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
             </div>
@@ -556,10 +556,10 @@ const Playground = () => {
           {/* User Initials Avatar Circle */}
           <Avatar
             onClick={() => navigate('/profile')}
-            className="w-8 h-8 border border-purple-500/40 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all relative"
+            className="w-8 h-8 border border-blue-500/40 cursor-pointer hover:ring-2 hover:ring-blue-500/50 transition-all relative"
           >
             <AvatarImage src={userProfile?.avatar_url} />
-            <AvatarFallback className="bg-purple-600 text-white text-xs font-bold">
+            <AvatarFallback className="bg-blue-600 text-white text-xs font-bold">
               {userProfile?.full_name ? userProfile.full_name.slice(0, 2).toUpperCase() : "PJ"}
             </AvatarFallback>
             <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#0b0f19]" />
@@ -593,9 +593,9 @@ const Playground = () => {
 
               {/* Progress Bar Dots */}
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-purple-500" />
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 ring-4 ring-purple-500/20" />
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 ring-4 ring-blue-500/20" />
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
               </div>
@@ -606,7 +606,7 @@ const Playground = () => {
                   setIsBookmarked(!isBookmarked);
                   toast.success(isBookmarked ? "Removed bookmark" : "Bookmarked problem!");
                 }}
-                className={`p-1 rounded-md transition-colors ${isBookmarked ? "text-purple-400" : "hover:text-white"}`}
+                className={`p-1 rounded-md transition-colors ${isBookmarked ? "text-blue-400" : "hover:text-white"}`}
               >
                 <Bookmark className="w-4 h-4" />
               </button>
@@ -629,7 +629,7 @@ const Playground = () => {
                   onClick={() => setProblemTab("description")}
                   className={`pb-2 font-semibold transition-colors ${
                     problemTab === "description"
-                      ? "text-purple-300 border-b-2 border-purple-500"
+                      ? "text-blue-300 border-b-2 border-blue-500"
                       : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
@@ -639,7 +639,7 @@ const Playground = () => {
                   onClick={() => setProblemTab("examples")}
                   className={`pb-2 font-semibold transition-colors ${
                     problemTab === "examples"
-                      ? "text-purple-300 border-b-2 border-purple-500"
+                      ? "text-blue-300 border-b-2 border-blue-500"
                       : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
@@ -649,7 +649,7 @@ const Playground = () => {
                   onClick={() => setProblemTab("constraints")}
                   className={`pb-2 font-semibold transition-colors ${
                     problemTab === "constraints"
-                      ? "text-purple-300 border-b-2 border-purple-500"
+                      ? "text-blue-300 border-b-2 border-blue-500"
                       : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
@@ -661,7 +661,7 @@ const Playground = () => {
             {/* Problem Statement Content */}
             <div className="p-4 space-y-4 text-xs text-slate-300 leading-relaxed flex-1">
               <p className="text-slate-200">
-                Given an integer array <code className="bg-[#121827] px-1.5 py-0.5 rounded text-purple-300 font-mono">nums</code> and an integer <code className="bg-[#121827] px-1.5 py-0.5 rounded text-purple-300 font-mono">k</code>, return the length of the <span className="underline decoration-slate-600 underline-offset-4">longest subarray</span> whose sum equals <code className="bg-[#121827] px-1.5 py-0.5 rounded text-purple-300 font-mono">k</code>. If no such subarray exists, return <code className="bg-[#121827] px-1.5 py-0.5 rounded text-purple-300 font-mono">0</code>.
+                Given an integer array <code className="bg-[#121827] px-1.5 py-0.5 rounded text-blue-300 font-mono">nums</code> and an integer <code className="bg-[#121827] px-1.5 py-0.5 rounded text-blue-300 font-mono">k</code>, return the length of the <span className="underline decoration-slate-600 underline-offset-4">longest subarray</span> whose sum equals <code className="bg-[#121827] px-1.5 py-0.5 rounded text-blue-300 font-mono">k</code>. If no such subarray exists, return <code className="bg-[#121827] px-1.5 py-0.5 rounded text-blue-300 font-mono">0</code>.
               </p>
 
               <p className="italic text-slate-400 text-[11.5px]">
@@ -683,7 +683,7 @@ const Playground = () => {
                 <span className="text-[11px] font-semibold text-slate-400">Tags</span>
                 <div className="flex flex-wrap gap-1.5">
                   <span className="px-2.5 py-1 rounded-lg bg-[#121827] border border-emerald-500/20 text-emerald-300 text-[11px] font-medium">Array</span>
-                  <span className="px-2.5 py-1 rounded-lg bg-[#121827] border border-purple-500/20 text-purple-300 text-[11px] font-medium">Prefix Sum</span>
+                  <span className="px-2.5 py-1 rounded-lg bg-[#121827] border border-blue-500/20 text-blue-300 text-[11px] font-medium">Prefix Sum</span>
                   <span className="px-2.5 py-1 rounded-lg bg-[#121827] border border-blue-500/20 text-blue-300 text-[11px] font-medium">Hash Map</span>
                 </div>
               </div>
@@ -709,9 +709,9 @@ const Playground = () => {
 
                 <Button
                   onClick={() => toast.info("Hint 2: Store prefix sum in hashmap: prefix_sum -> index")}
-                  className="w-full bg-[#161c2d] hover:bg-[#1e2740] text-purple-300 hover:text-white border border-purple-500/30 rounded-xl text-xs font-semibold h-8 flex items-center justify-center gap-2 transition-all mt-2"
+                  className="w-full bg-[#161c2d] hover:bg-[#1e2740] text-blue-300 hover:text-white border border-blue-500/30 rounded-xl text-xs font-semibold h-8 flex items-center justify-center gap-2 transition-all mt-2"
                 >
-                  <Eye className="w-3.5 h-3.5 text-purple-400" />
+                  <Eye className="w-3.5 h-3.5 text-blue-400" />
                   <span>Reveal next hint</span>
                 </Button>
               </div>
@@ -747,7 +747,7 @@ const Playground = () => {
                   </SelectContent>
                 </Select>
 
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#182035] text-xs font-semibold text-slate-100 border border-purple-500/30">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#182035] text-xs font-semibold text-slate-100 border border-blue-500/30">
                   <FileCode className="w-3.5 h-3.5 text-emerald-400" />
                   <span>solution.py</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1" />
@@ -782,7 +782,7 @@ const Playground = () => {
                   size="sm"
                   onClick={handleSubmitSolution}
                   disabled={isRunningTests}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white h-7 text-xs font-semibold px-3 rounded-lg flex items-center gap-1.5 shadow-md shadow-purple-600/30"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white h-7 text-xs font-semibold px-3 rounded-lg flex items-center gap-1.5 shadow-md shadow-blue-600/30"
                 >
                   <Rocket className="w-3.5 h-3.5" />
                   <span>Submit solution</span>
@@ -829,13 +829,13 @@ const Playground = () => {
                 </div>
 
                 <div className="flex items-center gap-4 text-xs pt-1">
-                  <button onClick={() => setTestDrawerTab("visible")} className={`font-semibold pb-0.5 ${testDrawerTab === "visible" ? "text-purple-300 border-b-2 border-purple-500" : "text-slate-400"}`}>
+                  <button onClick={() => setTestDrawerTab("visible")} className={`font-semibold pb-0.5 ${testDrawerTab === "visible" ? "text-blue-300 border-b-2 border-blue-500" : "text-slate-400"}`}>
                     Visible tests
                   </button>
-                  <button onClick={() => setTestDrawerTab("custom")} className={`font-semibold pb-0.5 ${testDrawerTab === "custom" ? "text-purple-300 border-b-2 border-purple-500" : "text-slate-400"}`}>
+                  <button onClick={() => setTestDrawerTab("custom")} className={`font-semibold pb-0.5 ${testDrawerTab === "custom" ? "text-blue-300 border-b-2 border-blue-500" : "text-slate-400"}`}>
                     Custom input
                   </button>
-                  <button onClick={() => setTestDrawerTab("history")} className={`font-semibold pb-0.5 ${testDrawerTab === "history" ? "text-purple-300 border-b-2 border-purple-500" : "text-slate-400"}`}>
+                  <button onClick={() => setTestDrawerTab("history")} className={`font-semibold pb-0.5 ${testDrawerTab === "history" ? "text-blue-300 border-b-2 border-blue-500" : "text-slate-400"}`}>
                     Submission history
                   </button>
                 </div>
@@ -904,7 +904,7 @@ const Playground = () => {
           <aside className="w-80 bg-[#0b0f19] flex flex-col shrink-0 overflow-y-auto no-scrollbar">
             <div className="p-3.5 border-b border-slate-800/90 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-400" />
+                <Sparkles className="w-4 h-4 text-blue-400" />
                 <span className="text-xs font-semibold text-slate-100">Interview Coach</span>
               </div>
               <button onClick={() => setIsAiCoachCollapsed(!isAiCoachCollapsed)} className="text-slate-400 hover:text-white p-1">
@@ -924,10 +924,10 @@ const Playground = () => {
                         <p className="text-[11px] text-slate-400">Restate the problem in your own words.</p>
                       </div>
                     </div>
-                    <div className="p-3 rounded-2xl bg-[#0e1322] border border-purple-500/40 flex items-start gap-2.5 shadow-md shadow-purple-600/10">
-                      <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold mt-0.5">2</div>
+                    <div className="p-3 rounded-2xl bg-[#0e1322] border border-blue-500/40 flex items-start gap-2.5 shadow-md shadow-blue-600/10">
+                      <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold mt-0.5">2</div>
                       <div>
-                        <p className="text-xs font-bold text-purple-200">Explain approach</p>
+                        <p className="text-xs font-bold text-blue-200">Explain approach</p>
                         <p className="text-[11px] text-slate-300">Walk through your high-level strategy.</p>
                       </div>
                     </div>
@@ -943,14 +943,14 @@ const Playground = () => {
                     <p className="text-xs font-bold text-slate-100">Why does this prefix map work?</p>
                     <p className="text-xs text-slate-300">Explain how storing the earliest index for each prefix sum helps us find the longest subarray.</p>
                   </div>
-                  <Button onClick={handleToggleVoiceRecording} className={`w-full rounded-xl text-xs font-semibold h-9 flex items-center justify-center gap-2 ${isRecordingAnswer ? "bg-red-600 text-white animate-pulse" : "bg-[#161c2d] text-purple-300 border border-purple-500/30"}`}>
+                  <Button onClick={handleToggleVoiceRecording} className={`w-full rounded-xl text-xs font-semibold h-9 flex items-center justify-center gap-2 ${isRecordingAnswer ? "bg-red-600 text-white animate-pulse" : "bg-[#161c2d] text-blue-300 border border-blue-500/30"}`}>
                     <Mic className="w-3.5 h-3.5" />
                     <span>{isRecordingAnswer ? "Stop recording..." : "Record answer"}</span>
                   </Button>
                 </div>
 
-                <Button onClick={() => toast.info("AI Coach is analyzing your explanation...")} className="w-full bg-[#121827] text-purple-300 border border-purple-500/30 rounded-xl h-10 text-xs font-semibold flex items-center justify-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-purple-400" />
+                <Button onClick={() => toast.info("AI Coach is analyzing your explanation...")} className="w-full bg-[#121827] text-blue-300 border border-blue-500/30 rounded-xl h-10 text-xs font-semibold flex items-center justify-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-blue-400" />
                   <span>Get feedback on my explanation</span>
                 </Button>
               </div>
@@ -996,7 +996,7 @@ const Playground = () => {
                 className="flex items-center gap-1.5 text-xs font-medium text-slate-300 cursor-pointer py-1 px-1 rounded-md hover:bg-slate-800/50"
               >
                 {openFolders.root ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
-                <Folder className="w-3.5 h-3.5 text-purple-400" />
+                <Folder className="w-3.5 h-3.5 text-blue-400" />
                 <span>My Free Code Workspace</span>
               </div>
 
@@ -1017,7 +1017,7 @@ const Playground = () => {
                         onClick={() => handleSelectFile("main.py")}
                         className={`flex items-center gap-2 text-xs py-1 px-2 rounded-md cursor-pointer transition-colors ${
                           activeFileName === "main.py"
-                            ? "bg-[#182035] text-purple-300 font-semibold border-l-2 border-purple-500"
+                            ? "bg-[#182035] text-blue-300 font-semibold border-l-2 border-blue-500"
                             : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
                         }`}
                       >
@@ -1029,7 +1029,7 @@ const Playground = () => {
                         onClick={() => handleSelectFile("utils.py")}
                         className={`flex items-center gap-2 text-xs py-1 px-2 rounded-md cursor-pointer transition-colors ${
                           activeFileName === "utils.py"
-                            ? "bg-[#182035] text-purple-300 font-semibold border-l-2 border-purple-500"
+                            ? "bg-[#182035] text-blue-300 font-semibold border-l-2 border-blue-500"
                             : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
                         }`}
                       >
@@ -1054,7 +1054,7 @@ const Playground = () => {
                         onClick={() => handleSelectFile("sample.csv")}
                         className={`flex items-center gap-2 text-xs py-1 px-2 rounded-md cursor-pointer transition-colors ${
                           activeFileName === "sample.csv"
-                            ? "bg-[#182035] text-purple-300 font-semibold border-l-2 border-purple-500"
+                            ? "bg-[#182035] text-blue-300 font-semibold border-l-2 border-blue-500"
                             : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
                         }`}
                       >
@@ -1068,7 +1068,7 @@ const Playground = () => {
                     onClick={() => handleSelectFile("README.md")}
                     className={`flex items-center gap-2 text-xs py-1 px-2 rounded-md cursor-pointer transition-colors ${
                       activeFileName === "README.md"
-                        ? "bg-[#182035] text-purple-300 font-semibold border-l-2 border-purple-500"
+                        ? "bg-[#182035] text-blue-300 font-semibold border-l-2 border-blue-500"
                         : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
                     }`}
                   >
@@ -1082,7 +1082,7 @@ const Playground = () => {
             {/* Section 2: Quick Start */}
             <div className="p-3.5 border-b border-slate-800/80 space-y-2.5">
               <div className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                 <span>Quick start</span>
               </div>
 
@@ -1096,7 +1096,7 @@ const Playground = () => {
                   }}
                   className="p-2.5 rounded-xl bg-[#121827] hover:bg-[#182035] border border-slate-800 flex flex-col items-center justify-center gap-1.5 transition-all group text-center"
                 >
-                  <FilePlus className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+                  <FilePlus className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
                   <span className="text-[10.5px] font-medium text-slate-300">New file</span>
                 </button>
 
@@ -1131,7 +1131,7 @@ const Playground = () => {
               <div className="space-y-1 text-[11.5px] text-slate-300">
                 {notes.map((note, idx) => (
                   <div key={idx} className="flex items-start gap-1.5">
-                    <span className="text-purple-400 font-bold">•</span>
+                    <span className="text-blue-400 font-bold">•</span>
                     <span>{note}</span>
                   </div>
                 ))}
@@ -1146,7 +1146,7 @@ const Playground = () => {
                     onKeyDown={(e) => { if (e.key === 'Enter') handleAddNote(); }}
                     className="h-7 bg-[#121827] border-slate-800 text-xs text-slate-200"
                   />
-                  <Button size="sm" onClick={handleAddNote} className="h-7 bg-purple-600 text-white text-xs px-2.5">
+                  <Button size="sm" onClick={handleAddNote} className="h-7 bg-blue-600 text-white text-xs px-2.5">
                     Add
                   </Button>
                 </div>
@@ -1157,7 +1157,7 @@ const Playground = () => {
             <div className="p-3.5 flex-1 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-300">Recent snippets</span>
-                <button className="text-[11px] text-purple-400 hover:text-purple-300">View all</button>
+                <button className="text-[11px] text-blue-400 hover:text-blue-300">View all</button>
               </div>
 
               <div className="space-y-1.5 pt-1">
@@ -1168,7 +1168,7 @@ const Playground = () => {
                     className="p-2 rounded-lg bg-[#121827]/60 hover:bg-[#182035] border border-slate-800/60 cursor-pointer flex items-center justify-between group transition-all"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <FileCode className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-400" />
+                      <FileCode className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-400" />
                       <span className="text-xs text-slate-300 truncate">{snip.title}</span>
                     </div>
                     <span className="text-[10px] text-slate-400 ml-1">{snip.timeAgo}</span>
@@ -1181,9 +1181,9 @@ const Playground = () => {
             <div className="p-3 border-t border-slate-800/90">
               <Button
                 onClick={() => { setMode("problem"); setCode(DEFAULT_LONGEST_SUBARRAY_PYTHON); }}
-                className="w-full bg-[#121827] hover:bg-[#1a233b] text-purple-300 hover:text-white border border-purple-500/30 rounded-xl py-4 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md"
+                className="w-full bg-[#121827] hover:bg-[#1a233b] text-blue-300 hover:text-white border border-blue-500/30 rounded-xl py-4 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md"
               >
-                <ArrowLeftRight className="w-4 h-4 text-purple-400" />
+                <ArrowLeftRight className="w-4 h-4 text-blue-400" />
                 <span>Switch to problem practice</span>
               </Button>
             </div>
@@ -1196,7 +1196,7 @@ const Playground = () => {
             {/* Top Toolbar */}
             <div className="h-10 bg-[#0b0f19] border-b border-slate-800/90 px-3 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#182035] text-xs font-semibold text-slate-100 border border-purple-500/30">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#182035] text-xs font-semibold text-slate-100 border border-blue-500/30">
                   <span>🐍</span>
                   <span>{activeFileName}</span>
                   <X className="w-3.5 h-3.5 text-slate-400 hover:text-white cursor-pointer ml-1" />
@@ -1243,7 +1243,7 @@ const Playground = () => {
                   size="sm"
                   onClick={handleRunWithAiReview}
                   disabled={isRunning || isAiThinking}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white h-7 text-xs font-semibold px-3 rounded-lg flex items-center gap-1.5 shadow-md shadow-purple-600/20"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white h-7 text-xs font-semibold px-3 rounded-lg flex items-center gap-1.5 shadow-md shadow-blue-600/20"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Run with AI review</span>
@@ -1276,13 +1276,13 @@ const Playground = () => {
             <div className={`border-t border-slate-800/90 bg-[#070a12] flex flex-col shrink-0 transition-all ${isConsoleExpanded ? 'h-64' : 'h-48'}`}>
               <div className="h-9 px-3 bg-[#0b0f19] border-b border-slate-800/80 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-4">
-                  <button onClick={() => setConsoleTab("console")} className={`font-semibold ${consoleTab === "console" ? "text-purple-300 border-b-2 border-purple-500 pb-1" : "text-slate-400"}`}>
+                  <button onClick={() => setConsoleTab("console")} className={`font-semibold ${consoleTab === "console" ? "text-blue-300 border-b-2 border-blue-500 pb-1" : "text-slate-400"}`}>
                     Console
                   </button>
-                  <button onClick={() => setConsoleTab("test_input")} className={`font-semibold ${consoleTab === "test_input" ? "text-purple-300 border-b-2 border-purple-500 pb-1" : "text-slate-400"}`}>
+                  <button onClick={() => setConsoleTab("test_input")} className={`font-semibold ${consoleTab === "test_input" ? "text-blue-300 border-b-2 border-blue-500 pb-1" : "text-slate-400"}`}>
                     Test input
                   </button>
-                  <button onClick={() => setConsoleTab("output")} className={`font-semibold ${consoleTab === "output" ? "text-purple-300 border-b-2 border-purple-500 pb-1" : "text-slate-400"}`}>
+                  <button onClick={() => setConsoleTab("output")} className={`font-semibold ${consoleTab === "output" ? "text-blue-300 border-b-2 border-blue-500 pb-1" : "text-slate-400"}`}>
                     Output
                   </button>
                 </div>
@@ -1333,7 +1333,7 @@ const Playground = () => {
           <aside className="w-80 bg-[#0b0f19] flex flex-col shrink-0 overflow-y-auto no-scrollbar">
             <div className="p-3.5 border-b border-slate-800/90 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-400" />
+                <Sparkles className="w-4 h-4 text-blue-400" />
                 <span className="text-xs font-semibold text-slate-100">AI Code Coach</span>
               </div>
               <button onClick={() => setIsAiCollapsed(!isAiCollapsed)} className="text-slate-400 hover:text-white p-1">
@@ -1373,11 +1373,11 @@ const Playground = () => {
                     <span>{aiSuggestion.title}</span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">{aiSuggestion.explanation}</p>
-                  <div className="p-2.5 rounded-xl bg-[#070a12] border border-slate-800 font-mono text-[11px] text-purple-300 break-all select-all">
+                  <div className="p-2.5 rounded-xl bg-[#070a12] border border-slate-800 font-mono text-[11px] text-blue-300 break-all select-all">
                     {aiSuggestion.snippet}
                   </div>
-                  <Button onClick={handleApplySuggestion} className="w-full bg-[#161c2d] hover:bg-[#1e2740] text-purple-300 hover:text-white border border-purple-500/30 rounded-xl text-xs font-semibold h-8 flex items-center justify-center gap-2">
-                    <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+                  <Button onClick={handleApplySuggestion} className="w-full bg-[#161c2d] hover:bg-[#1e2740] text-blue-300 hover:text-white border border-blue-500/30 rounded-xl text-xs font-semibold h-8 flex items-center justify-center gap-2">
+                    <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
                     <span>Apply suggestion</span>
                   </Button>
                 </div>
@@ -1385,11 +1385,11 @@ const Playground = () => {
                 {/* Quick Action Buttons */}
                 <div className="grid grid-cols-2 gap-2">
                   <button onClick={() => handleSendAiQuery("Please explain this code line-by-line.")} className="p-2.5 rounded-xl bg-[#0e1322] hover:bg-[#161d30] border border-slate-800 text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+                    <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
                     <span>Explain selection</span>
                   </button>
                   <button onClick={() => handleSendAiQuery("Please find any potential bugs or edge cases.")} className="p-2.5 rounded-xl bg-[#0e1322] hover:bg-[#161d30] border border-slate-800 text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                    <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                     <span>Find bugs</span>
                   </button>
                 </div>
@@ -1399,12 +1399,12 @@ const Playground = () => {
                   <span className="text-xs font-semibold text-slate-300">Ask the AI coach...</span>
                   <div className="flex-1 bg-[#070a12] border border-slate-800/80 rounded-2xl p-3 overflow-y-auto space-y-2.5 max-h-48 text-xs">
                     {aiChatMessages.map((msg, i) => (
-                      <div key={i} className={`p-2.5 rounded-xl leading-relaxed ${msg.role === 'user' ? 'bg-purple-600/20 text-purple-200 border border-purple-500/30 ml-4' : 'bg-[#101626] text-slate-300 border border-slate-800/80 mr-2'}`}>
+                      <div key={i} className={`p-2.5 rounded-xl leading-relaxed ${msg.role === 'user' ? 'bg-blue-600/20 text-blue-200 border border-blue-500/30 ml-4' : 'bg-[#101626] text-slate-300 border border-slate-800/80 mr-2'}`}>
                         {msg.content}
                       </div>
                     ))}
                     {isAiThinking && (
-                      <div className="flex items-center gap-2 text-purple-400 text-xs py-1">
+                      <div className="flex items-center gap-2 text-blue-400 text-xs py-1">
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                         <span>AI is thinking...</span>
                       </div>
@@ -1418,9 +1418,9 @@ const Playground = () => {
                       onChange={(e) => setAiPromptInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendAiQuery(); } }}
                       rows={2}
-                      className="w-full bg-[#070a12] border-slate-800 text-xs text-slate-100 rounded-xl pr-10 resize-none focus-visible:ring-purple-500 placeholder:text-slate-500"
+                      className="w-full bg-[#070a12] border-slate-800 text-xs text-slate-100 rounded-xl pr-10 resize-none focus-visible:ring-blue-500 placeholder:text-slate-500"
                     />
-                    <button onClick={() => handleSendAiQuery()} disabled={isAiThinking || !aiPromptInput.trim()} className="absolute right-2.5 bottom-2.5 p-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white">
+                    <button onClick={() => handleSendAiQuery()} disabled={isAiThinking || !aiPromptInput.trim()} className="absolute right-2.5 bottom-2.5 p-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white">
                       <Send className="w-3.5 h-3.5" />
                     </button>
                   </div>

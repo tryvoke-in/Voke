@@ -170,8 +170,8 @@ const TRAIT_DETAILS = {
         label: "MQ (Moral Quotient)",
         shortDesc: "Integrity, honesty, and fairness.",
         icon: Scale,
-        color: "text-purple-500",
-        bg: "bg-purple-500/10",
+        color: "text-blue-500",
+        bg: "bg-blue-500/10",
         highIndicators: [
             "Takes responsibility for group outcomes",
             "Acknowledges contributions of others",
@@ -234,7 +234,7 @@ const SixQAnalysis = ({ scores, cluster }: SixQAnalysisProps) => {
                 {/* Radar Chart */}
                 <Card className="bg-card/30 backdrop-blur-xl border-border/50 h-full flex flex-col justify-center min-h-[400px]">
                     <CardHeader>
-                        <CardTitle className="text-center text-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                        <CardTitle className="text-center text-xl bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
                             Personality Profile
                         </CardTitle>
                     </CardHeader>
@@ -263,7 +263,7 @@ const SixQAnalysis = ({ scores, cluster }: SixQAnalysisProps) => {
 
                 {/* Cluster & Summary */}
                 <div className="space-y-6">
-                    <Card className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20">
+                    <Card className="bg-gradient-to-br from-sky-500/10 to-blue-500/10 border-sky-500/20">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <span className="text-2xl">🌟</span>
@@ -310,7 +310,7 @@ const SixQAnalysis = ({ scores, cluster }: SixQAnalysisProps) => {
             {/* Detailed Breakdown */}
             <div>
                 <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                    <span className="w-8 h-1 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full"></span>
+                    <span className="w-8 h-1 bg-gradient-to-r from-sky-500 to-blue-500 rounded-full"></span>
                     Detailed 6Q Analysis
                 </h3>
                 <div className="grid gap-4">

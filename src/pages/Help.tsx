@@ -63,9 +63,9 @@ const Help = () => {
         {
             title: "Interview Practice",
             icon: Video,
-            color: "text-violet-500",
-            bg: "bg-violet-500/10",
-            border: "border-violet-500/20",
+            color: "text-sky-500",
+            bg: "bg-sky-500/10",
+            border: "border-sky-500/20",
             faqs: [
                 {
                     question: "How does the AI interviewer work?",
@@ -118,11 +118,11 @@ const Help = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-violet-500/30 overflow-x-hidden">
+        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-sky-500/30 overflow-x-hidden">
              {/* Background Ambience */}
             <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-[1000px] h-[600px] bg-violet-600/5 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-screen mix-blend-multiply" />
-                <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-fuchsia-600/5 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-screen mix-blend-multiply" />
+                <div className="absolute top-0 left-1/4 w-[1000px] h-[600px] bg-sky-600/5 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-screen mix-blend-multiply" />
+                <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-screen mix-blend-multiply" />
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] dark:opacity-[0.05]" />
             </div>
 
@@ -135,7 +135,7 @@ const Help = () => {
                         </Button>
                         <div className="flex items-center gap-2 cursor-pointer group" onClick={handleLogoClick}>
                              <div className="relative">
-                                <div className="absolute inset-0 bg-violet-500/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute inset-0 bg-sky-500/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <img
                                     src="/images/voke_logo.png"
                                     alt="Voke Logo"
@@ -160,12 +160,12 @@ const Help = () => {
                     className="text-center mb-16 space-y-6 max-w-3xl mx-auto"
                 >
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/30 border border-border/50 text-sm font-medium text-muted-foreground mb-4">
-                        <Sparkles className="w-4 h-4 text-violet-500" />
+                        <Sparkles className="w-4 h-4 text-sky-500" />
                         <span>Support & Documentation</span>
                     </div>
                     
                     <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-                        How can we <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-fuchsia-500">empower</span> you?
+                        How can we <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-blue-500">empower</span> you?
                     </h1>
                     
                     <p className="text-xl text-muted-foreground leading-relaxed">
@@ -174,16 +174,16 @@ const Help = () => {
 
                     {/* Search Bar */}
                     <div className="relative max-w-2xl mx-auto mt-8 group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="relative bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl shadow-lg flex items-center p-2 focus-within:border-violet-500/50 transition-colors">
-                            <Search className="ml-4 h-6 w-6 text-muted-foreground group-focus-within:text-violet-500 transition-colors" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-blue-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="relative bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl shadow-lg flex items-center p-2 focus-within:border-sky-500/50 transition-colors">
+                            <Search className="ml-4 h-6 w-6 text-muted-foreground group-focus-within:text-sky-500 transition-colors" />
                             <Input
                                 placeholder="Search for documentation, tutorials, or FAQs..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="border-0 bg-transparent text-lg h-12 focus-visible:ring-0 placeholder:text-muted-foreground/60"
                             />
-                            <Button className="rounded-xl px-6 bg-violet-600 hover:bg-violet-700 text-white">
+                            <Button className="rounded-xl px-6 bg-sky-600 hover:bg-sky-700 text-white">
                                 Search
                             </Button>
                         </div>
@@ -199,7 +199,7 @@ const Help = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 + (idx * 0.1) }}
                         >
-                            <Card className={`h-full bg-card/40 backdrop-blur-xl border-border/50 hover:border-violet-500/30 transition-all duration-300 group overflow-hidden`}>
+                            <Card className={`h-full bg-card/40 backdrop-blur-xl border-border/50 hover:border-sky-500/30 transition-all duration-300 group overflow-hidden`}>
                                 <CardHeader className="pb-4">
                                      <div className="flex items-center gap-4 mb-2">
                                         <div className={`p-3 rounded-xl ${category.bg} ${category.border} border`}>
@@ -212,7 +212,7 @@ const Help = () => {
                                     <Accordion type="single" collapsible className="w-full">
                                         {category.faqs.map((faq, faqIndex) => (
                                             <AccordionItem key={faqIndex} value={`item-${idx}-${faqIndex}`} className="border-border/40">
-                                                <AccordionTrigger className="text-sm font-medium text-muted-foreground hover:text-foreground hover:no-underline py-4 data-[state=open]:text-violet-500 transition-colors">
+                                                <AccordionTrigger className="text-sm font-medium text-muted-foreground hover:text-foreground hover:no-underline py-4 data-[state=open]:text-sky-500 transition-colors">
                                                     {faq.question}
                                                 </AccordionTrigger>
                                                 <AccordionContent className="text-muted-foreground leading-relaxed pl-1 pb-4">
@@ -234,10 +234,10 @@ const Help = () => {
                     transition={{ delay: 0.5 }}
                     className="mb-12"
                 >
-                    <Card className="bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-500/20 backdrop-blur-xl overflow-hidden relative p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />
+                    <Card className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 border-sky-500/20 backdrop-blur-xl overflow-hidden relative p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" />
                         <div className="space-y-2 max-w-xl">
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 text-xs font-bold text-violet-600 dark:text-violet-400">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-xs font-bold text-sky-600 dark:text-sky-400">
                                 <Sparkles className="w-3.5 h-3.5" />
                                 <span>Guided Tour</span>
                             </div>
@@ -248,7 +248,7 @@ const Help = () => {
                         </div>
                         <Button
                             onClick={handleReplayTour}
-                            className="bg-violet-600 hover:bg-violet-700 text-white shrink-0 shadow-lg shadow-violet-500/20 rounded-2xl h-11 px-6 font-bold"
+                            className="bg-sky-600 hover:bg-sky-700 text-white shrink-0 shadow-lg shadow-sky-500/20 rounded-2xl h-11 px-6 font-bold"
                         >
                             Start Welcome Tour
                             <ArrowRight className="w-4 h-4 ml-2" />
@@ -262,16 +262,16 @@ const Help = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
                 >
-                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-900/40 to-fuchsia-900/40 border border-white/10 p-8 md:p-12 text-center">
+                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-900/40 to-blue-900/40 border border-white/10 p-8 md:p-12 text-center">
                         <div className="absolute inset-0 bg-noise opacity-10 mix-blend-overlay" />
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/20 blur-[100px] rounded-full" />
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/20 blur-[100px] rounded-full" />
                         
                         <div className="relative z-10 max-w-2xl mx-auto space-y-6">
                             <div className="inline-flex p-3 rounded-full bg-white/5 border border-white/10 mb-2">
                                 <Mail className="w-6 h-6 text-white" />
                             </div>
                             <h2 className="text-3xl font-bold text-white">Still can't find what you're looking for?</h2>
-                            <p className="text-violet-200/80 text-lg">
+                            <p className="text-sky-200/80 text-lg">
                                 Our support team is always ready to help you navigate your interview journey.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">

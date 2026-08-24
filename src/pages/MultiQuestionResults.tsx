@@ -82,7 +82,7 @@ const MultiQuestionResults = () => {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
                     <p className="text-muted-foreground animate-pulse">Loading your results...</p>
                 </div>
             </div>
@@ -139,7 +139,7 @@ const MultiQuestionResults = () => {
                     <CardContent className="p-8">
                         <div className="grid md:grid-cols-4 gap-6">
                             <div className="text-center">
-                                <div className="text-5xl font-bold text-violet-500 mb-2">
+                                <div className="text-5xl font-bold text-sky-500 mb-2">
                                     {session.overall_score || "N/A"}
                                 </div>
                                 <div className="text-sm text-muted-foreground">Overall Score</div>
@@ -162,10 +162,10 @@ const MultiQuestionResults = () => {
 
                 {/* Overall Summary */}
                 <div className="grid md:grid-cols-3 gap-6 mb-8">
-                    <Card className="bg-purple-500/5 border-purple-500/20">
+                    <Card className="bg-blue-500/5 border-blue-500/20">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-base flex items-center gap-2">
-                                <Eye className="w-5 h-5 text-purple-500" />
+                                <Eye className="w-5 h-5 text-blue-500" />
                                 Eye Contact
                             </CardTitle>
                         </CardHeader>
@@ -223,7 +223,7 @@ const MultiQuestionResults = () => {
                             <CardHeader className="cursor-pointer" onClick={() => toggleAnswer(answer.id)}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex-1">
-                                        <div className="text-sm text-violet-500 font-semibold mb-1">
+                                        <div className="text-sm text-sky-500 font-semibold mb-1">
                                             Question {answer.question_number}
                                         </div>
                                         <div className="font-medium">{answer.question}</div>

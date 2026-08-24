@@ -236,7 +236,7 @@ const ElitePrep: React.FC = () => {
           <div className="relative w-full max-w-md bg-[#0d0e17] border border-white/10 rounded-2xl p-6 shadow-2xl text-center space-y-4 overflow-hidden">
             {/* Ambient Background Glow */}
             <div className="absolute -top-12 -left-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" />
 
             {/* Icon Header */}
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/10">
@@ -256,7 +256,7 @@ const ElitePrep: React.FC = () => {
             {/* Feature Chips */}
             <div className="grid grid-cols-2 gap-2 text-left pt-1">
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                 <span className="text-[11px] font-medium text-zinc-300">Live AI Engine</span>
               </div>
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-2">
@@ -270,7 +270,7 @@ const ElitePrep: React.FC = () => {
               <button
                 type="button"
                 onClick={handleAcknowledgeBeta}
-                className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-violet-600/25 transition-all cursor-pointer transform hover:scale-[1.01] active:scale-[0.99]"
+                className="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-sky-600/25 transition-all cursor-pointer transform hover:scale-[1.01] active:scale-[0.99]"
               >
                 Acknowledge
               </button>
@@ -283,7 +283,7 @@ const ElitePrep: React.FC = () => {
       {showFinalVerdictModal && finalVerdict && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in duration-500">
           <div className="relative w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-3xl p-8 shadow-2xl text-center overflow-hidden">
-            <div className="absolute -top-32 -left-32 w-64 h-64 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-32 -left-32 w-64 h-64 bg-sky-600/20 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-amber-600/20 rounded-full blur-3xl pointer-events-none" />
             
             <div className="relative z-10 space-y-6">

@@ -31,19 +31,19 @@ export const QuickFeedback = ({
             <div className="grid grid-cols-3 gap-4">
                 <Card className="bg-card/50 backdrop-blur-xl border-border/50">
                     <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-violet-500">{deliveryScore}</div>
+                        <div className="text-2xl font-bold text-sky-500">{deliveryScore}</div>
                         <div className="text-xs text-muted-foreground mt-1">Delivery</div>
                     </CardContent>
                 </Card>
                 <Card className="bg-card/50 backdrop-blur-xl border-border/50">
                     <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-purple-500">{bodyLanguageScore}</div>
+                        <div className="text-2xl font-bold text-blue-500">{bodyLanguageScore}</div>
                         <div className="text-xs text-muted-foreground mt-1">Body Language</div>
                     </CardContent>
                 </Card>
                 <Card className="bg-card/50 backdrop-blur-xl border-border/50">
                     <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-fuchsia-500">{confidenceScore}</div>
+                        <div className="text-2xl font-bold text-blue-500">{confidenceScore}</div>
                         <div className="text-xs text-muted-foreground mt-1">Confidence</div>
                     </CardContent>
                 </Card>
@@ -108,7 +108,7 @@ export const QuickFeedback = ({
                 <Button
                     onClick={onNext}
                     size="lg"
-                    className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg px-8"
+                    className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white shadow-lg px-8"
                 >
                     {isLastQuestion ? "View Overall Results" : "Next Question"}
                     <ArrowRight className="w-5 h-5 ml-2" />

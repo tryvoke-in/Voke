@@ -11,7 +11,7 @@ export const Contact: React.FC = () => {
 
       <main className="flex-1 pt-28 pb-20 container mx-auto px-4 md:px-6 max-w-4xl">
         <div className="mb-12 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-semibold uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-4">
             <Headphones className="w-3.5 h-3.5" />
             Support & Founder Contact
           </div>
@@ -24,7 +24,7 @@ export const Contact: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="border border-border/50 rounded-3xl p-8 bg-card/30 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400">
+              <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400">
                 <Mail className="w-5 h-5" />
               </div>
               <div>
@@ -34,7 +34,7 @@ export const Contact: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-fuchsia-500/10 flex items-center justify-center text-fuchsia-400">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
                 <MessageSquare className="w-5 h-5" />
               </div>
               <div>
@@ -58,17 +58,17 @@ export const Contact: React.FC = () => {
             <h3 className="font-bold text-lg">Send Us a Direct Message</h3>
             <div>
               <label className="text-xs text-muted-foreground block mb-1">Your Name</label>
-              <input type="text" placeholder="John Doe" className="w-full bg-background border border-border/60 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-violet-500" />
+              <input type="text" placeholder="John Doe" className="w-full bg-background border border-border/60 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sky-500" />
             </div>
             <div>
               <label className="text-xs text-muted-foreground block mb-1">Email Address</label>
-              <input type="email" placeholder="john@example.com" className="w-full bg-background border border-border/60 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-violet-500" />
+              <input type="email" placeholder="john@example.com" className="w-full bg-background border border-border/60 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sky-500" />
             </div>
             <div>
               <label className="text-xs text-muted-foreground block mb-1">Message</label>
-              <textarea rows={3} placeholder="How can we help your interview preparation?" className="w-full bg-background border border-border/60 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-violet-500" />
+              <textarea rows={3} placeholder="How can we help your interview preparation?" className="w-full bg-background border border-border/60 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sky-500" />
             </div>
-            <Button className="w-full bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl">
+            <Button className="w-full bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-xl">
               Send Message
             </Button>
           </div>

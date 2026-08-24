@@ -175,7 +175,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                         <button className="relative p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-colors">
                                             <Bell className="w-4 h-4" />
                                             {unreadCount > 0 && (
-                                                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-purple-500 ring-2 ring-[#090d16]" />
+                                                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-[#090d16]" />
                                             )}
                                         </button>
                                     </PopoverTrigger>
@@ -183,7 +183,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                         <div className="p-3 border-b border-slate-800 flex items-center justify-between">
                                             <span className="text-xs font-bold text-slate-200">Community Notifications</span>
                                             {unreadCount > 0 && (
-                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">
                                                     {unreadCount} new
                                                 </span>
                                             )}
@@ -197,7 +197,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                                         key={n.id}
                                                         onClick={() => markAsRead(n.id)}
                                                         className={`p-3 border-b border-slate-800/50 text-xs hover:bg-slate-800/30 cursor-pointer ${
-                                                            !n.read ? 'bg-purple-500/10' : ''
+                                                            !n.read ? 'bg-blue-500/10' : ''
                                                         }`}
                                                     >
                                                         <p className="font-semibold text-slate-200">{n.title || 'Community Update'}</p>
@@ -218,7 +218,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                 className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 hover:text-white hover:bg-slate-800/50 border border-slate-800 rounded-xl px-3 h-9"
                             >
                                 <span>Voke Interviews</span>
-                                <ArrowUpRight className="w-3.5 h-3.5 text-purple-400" />
+                                <ArrowUpRight className="w-3.5 h-3.5 text-blue-400" />
                             </Button>
 
                             {/* Theme Toggle */}
@@ -356,7 +356,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                         role="button"
                         tabIndex={0}
                         aria-label="Go to Voke Homepage"
-                        className="flex items-center gap-0 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-lg p-1"
+                        className="flex items-center gap-0 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-lg p-1"
                         onClick={handleLogoClick}
                         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleLogoClick(); }}
                     >
@@ -391,8 +391,8 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                     onClick={() => navigate(link.path)}
                                     className={`relative text-sm font-medium transition-all px-3 py-2 ${
                                         isActive
-                                            ? "text-violet-600 dark:text-violet-400 font-semibold after:absolute after:bottom-0 after:left-3 after:right-3 after:h-[2px] after:bg-gradient-to-r after:from-violet-500 after:to-purple-500 after:rounded-full"
-                                            : "text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50/50 dark:hover:bg-violet-950/30"
+                                            ? "text-sky-600 dark:text-sky-400 font-semibold after:absolute after:bottom-0 after:left-3 after:right-3 after:h-[2px] after:bg-gradient-to-r after:from-sky-500 after:to-blue-500 after:rounded-full"
+                                            : "text-gray-700 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50/50 dark:hover:bg-sky-950/30"
                                     }`}
                                 >
                                     {link.name}
@@ -412,7 +412,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                     size="icon"
                                     onClick={() => navigate("/profile")}
                                     aria-label="Settings and Profile"
-                                    className="text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-500/10 dark:hover:bg-violet-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center focus-visible:ring-2 focus-visible:ring-violet-500"
+                                    className="text-gray-700 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-500/10 dark:hover:bg-sky-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center focus-visible:ring-2 focus-visible:ring-sky-500"
                                     title="Settings"
                                 >
                                     <Settings className="w-5 h-5" aria-hidden="true" />
@@ -474,7 +474,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                                     alt={profile?.full_name || "Profile"}
                                                     className="object-cover"
                                                 />
-                                                <AvatarFallback className="bg-violet-100 dark:bg-violet-900/50 text-[10px] font-bold text-violet-600 dark:text-violet-300">
+                                                <AvatarFallback className="bg-sky-100 dark:bg-sky-900/50 text-[10px] font-bold text-sky-600 dark:text-sky-300">
                                                     {(profile?.full_name || "U")[0].toUpperCase()}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -500,7 +500,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                         {!userId && (
                             <Button
                                 onClick={() => navigate("/auth")}
-                                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 dark:from-violet-500 dark:to-purple-500 dark:hover:from-violet-600 dark:hover:to-purple-600 text-white shadow-lg shadow-violet-500/30 dark:shadow-violet-500/20 transition-all duration-300 hover:scale-105"
+                                className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 dark:from-sky-500 dark:to-blue-500 dark:hover:from-sky-600 dark:hover:to-blue-600 text-white shadow-lg shadow-sky-500/30 dark:shadow-sky-500/20 transition-all duration-300 hover:scale-105"
                             >
                                 Get Started
                             </Button>

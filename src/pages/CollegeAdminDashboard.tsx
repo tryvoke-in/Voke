@@ -1155,7 +1155,7 @@ const CollegeAdminDashboard = () => {
       {selectedStudentForReport && (
         <Dialog open={!!selectedStudentForReport} onOpenChange={() => setSelectedStudentForReport(null)}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border text-foreground p-0 rounded-2xl shadow-2xl">
-            <div className="p-6 border-b border-border bg-gradient-to-r from-blue-500/10 via-card to-purple-500/10">
+            <div className="p-6 border-b border-border bg-gradient-to-r from-blue-500/10 via-card to-blue-500/10">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-extrabold text-lg text-white shadow-lg shadow-blue-500/20">
@@ -1345,7 +1345,7 @@ const CollegeAdminDashboard = () => {
                       { name: "Technical Accuracy & Depth", score: studentReportData?.detailedScores.technicalAccuracy || 84, color: "bg-blue-500" },
                       { name: "DSA & Algorithmic Problem Solving", score: studentReportData?.detailedScores.dsa || 82, color: "bg-indigo-500" },
                       { name: "Communication & Articulation", score: studentReportData?.detailedScores.communication || 88, color: "bg-emerald-500" },
-                      { name: "System Design & Architecture", score: studentReportData?.detailedScores.systemDesign || 78, color: "bg-purple-500" },
+                      { name: "System Design & Architecture", score: studentReportData?.detailedScores.systemDesign || 78, color: "bg-blue-500" },
                       { name: "Confidence & Executive Delivery", score: studentReportData?.detailedScores.confidence || 85, color: "bg-amber-500" },
                       { name: "Logic & Analytical Reasoning", score: studentReportData?.detailedScores.problemSolving || 80, color: "bg-cyan-500" },
                     ].map(comp => (
@@ -1367,7 +1367,7 @@ const CollegeAdminDashboard = () => {
                   <div className="p-5 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border space-y-4">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-purple-500" />
+                        <Sparkles className="w-4 h-4 text-blue-500" />
                         6Q Intelligence Matrix (Cognitive & Behavioral Evaluation)
                       </h4>
                     </div>

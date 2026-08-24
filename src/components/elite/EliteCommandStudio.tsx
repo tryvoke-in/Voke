@@ -61,7 +61,7 @@ export const EliteCommandStudio: React.FC<EliteCommandStudioProps> = ({
       {/* TOP COMPACT STUDIO BANNER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-950/90 backdrop-blur-2xl border border-white/15 p-5 rounded-3xl shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-violet-600 p-0.5 shadow-xl shadow-amber-500/20 shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-sky-600 p-0.5 shadow-xl shadow-amber-500/20 shrink-0">
             <div className="w-full h-full bg-zinc-950 rounded-[14px] flex items-center justify-center">
               <Zap className="w-6 h-6 text-amber-400 fill-amber-400/20" />
             </div>
@@ -156,7 +156,7 @@ export const EliteCommandStudio: React.FC<EliteCommandStudioProps> = ({
           {/* COMPANY SEARCH & GRID */}
           <div className="space-y-3 pt-2 border-t border-white/10">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-extrabold uppercase tracking-wider text-violet-400 font-mono flex items-center gap-1.5">
+              <label className="text-[11px] font-extrabold uppercase tracking-wider text-sky-400 font-mono flex items-center gap-1.5">
                 <Building className="w-3.5 h-3.5" /> 3. Select Target Company
               </label>
               <span className="text-[10px] text-zinc-500 font-mono">{filteredCompanies.length} Companies</span>
@@ -182,8 +182,8 @@ export const EliteCommandStudio: React.FC<EliteCommandStudioProps> = ({
                     onClick={() => onSelectCompany(company)}
                     className={`p-3 rounded-2xl border bg-zinc-900 flex items-center gap-3 cursor-pointer transition-all hover:scale-[1.02] ${
                       isSelected
-                        ? 'border-violet-500 bg-violet-500/20 ring-1 ring-violet-500/40 shadow-xl shadow-violet-500/10'
-                        : 'border-white/10 hover:border-violet-500/40'
+                        ? 'border-sky-500 bg-sky-500/20 ring-1 ring-sky-500/40 shadow-xl shadow-sky-500/10'
+                        : 'border-white/10 hover:border-sky-500/40'
                     }`}
                   >
                     <div className="w-9 h-9 rounded-xl bg-white p-1.5 shadow-md shrink-0 border border-gray-200 overflow-hidden">
@@ -192,7 +192,7 @@ export const EliteCommandStudio: React.FC<EliteCommandStudioProps> = ({
                     <div className="min-w-0 flex-1">
                       <div className="font-extrabold text-xs text-white truncate flex items-center gap-1">
                         {company.name}
-                        {isSelected && <Check className="w-3 h-3 text-violet-400 shrink-0" />}
+                        {isSelected && <Check className="w-3 h-3 text-sky-400 shrink-0" />}
                       </div>
                       <span className="text-[10px] text-zinc-400 font-mono">{company.tier}</span>
                     </div>
@@ -339,7 +339,7 @@ export const EliteCommandStudio: React.FC<EliteCommandStudioProps> = ({
                           <Button
                             size="sm"
                             onClick={() => navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`)}
-                            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-black text-xs px-5 h-10 rounded-xl shadow-lg shadow-purple-600/20"
+                            className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-black text-xs px-5 h-10 rounded-xl shadow-lg shadow-blue-600/20"
                           >
                             <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-300" /> View Analysis
                           </Button>

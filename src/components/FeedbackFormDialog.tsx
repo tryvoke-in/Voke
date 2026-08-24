@@ -286,14 +286,14 @@ export const FeedbackFormDialog = ({
               className="space-y-6"
             >
               <DialogHeader>
-                <div className="mx-auto w-12 h-12 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center mb-2">
-                  <Sparkles className="w-6 h-6 text-violet-400 animate-pulse" />
+                <div className="mx-auto w-12 h-12 rounded-2xl bg-sky-600/10 border border-sky-500/20 flex items-center justify-center mb-2">
+                  <Sparkles className="w-6 h-6 text-sky-400 animate-pulse" />
                 </div>
                 <DialogTitle className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
                   Help Us Improve
                 </DialogTitle>
                 <DialogDescription className="text-zinc-400 text-xs text-center">
-                  Step {step} of 3 • Sharing feedback unlocks <strong className="text-violet-400">2 bonus mock interviews</strong> for free!
+                  Step {step} of 3 • Sharing feedback unlocks <strong className="text-sky-400">2 bonus mock interviews</strong> for free!
                 </DialogDescription>
               </DialogHeader>
 
@@ -303,7 +303,7 @@ export const FeedbackFormDialog = ({
                   <div
                     key={s}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      step === s ? "w-6 bg-violet-500" : "w-1.5 bg-zinc-800"
+                      step === s ? "w-6 bg-sky-500" : "w-1.5 bg-zinc-800"
                     }`}
                   />
                 ))}
@@ -346,7 +346,7 @@ export const FeedbackFormDialog = ({
                         Overall Technical Performance of the Platform *
                       </Label>
                       <Select value={technicalPerformance} onValueChange={setTechnicalPerformance}>
-                        <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-violet-500 h-10 text-sm">
+                        <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-sky-500 h-10 text-sm">
                           <SelectValue placeholder="Select performance rating..." />
                         </SelectTrigger>
                         <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-xl">
@@ -364,7 +364,7 @@ export const FeedbackFormDialog = ({
                         Difficulty Level of the Interview *
                       </Label>
                       <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
-                        <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-violet-500 h-10 text-sm">
+                        <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-sky-500 h-10 text-sm">
                           <SelectValue placeholder="Select difficulty level..." />
                         </SelectTrigger>
                         <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-xl">
@@ -381,7 +381,7 @@ export const FeedbackFormDialog = ({
                         Would you recommend Voke to a friend? *
                       </Label>
                       <Select value={recommended} onValueChange={setRecommended}>
-                        <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-violet-500 h-10 text-sm">
+                        <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-sky-500 h-10 text-sm">
                           <SelectValue placeholder="Select recommendation..." />
                         </SelectTrigger>
                         <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-xl">
@@ -413,7 +413,7 @@ export const FeedbackFormDialog = ({
                               id={`mode-${mode}`}
                               checked={modesPracticed.includes(mode)}
                               onCheckedChange={(checked) => handleModeChange(mode, !!checked)}
-                              className="border-white/20 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600 text-white rounded"
+                              className="border-white/20 data-[state=checked]:bg-sky-600 data-[state=checked]:border-sky-600 text-white rounded"
                             />
                             <Label
                               htmlFor={`mode-${mode}`}
@@ -432,7 +432,7 @@ export const FeedbackFormDialog = ({
                         How helpful was the AI feedback and score? *
                       </Label>
                       <Select value={feedbackHelpfulness} onValueChange={setFeedbackHelpfulness}>
-                        <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-violet-500 h-10 text-sm">
+                        <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-sky-500 h-10 text-sm">
                           <SelectValue placeholder="Select helpfulness..." />
                         </SelectTrigger>
                         <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-xl">
@@ -449,7 +449,7 @@ export const FeedbackFormDialog = ({
                         Which part of the feedback was most valuable? *
                       </Label>
                       <Select value={valuableFeedbackPart} onValueChange={setValuableFeedbackPart}>
-                        <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-violet-500 h-10 text-sm">
+                        <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl focus:ring-sky-500 h-10 text-sm">
                           <SelectValue placeholder="Select feedback part..." />
                         </SelectTrigger>
                         <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-xl">
@@ -476,7 +476,7 @@ export const FeedbackFormDialog = ({
                         placeholder="Realistic AI voices, detailed feedback, playground..."
                         value={liked}
                         onChange={(e) => setLiked(e.target.value)}
-                        className="bg-zinc-900/50 border-white/10 text-white focus-visible:ring-violet-500 rounded-xl resize-none h-16 text-sm"
+                        className="bg-zinc-900/50 border-white/10 text-white focus-visible:ring-sky-500 rounded-xl resize-none h-16 text-sm"
                       />
                     </div>
 
@@ -490,7 +490,7 @@ export const FeedbackFormDialog = ({
                         placeholder="Please add a timer for answers, more coding questions, etc."
                         value={improvements}
                         onChange={(e) => setImprovements(e.target.value)}
-                        className="bg-zinc-900/50 border-white/10 text-white focus-visible:ring-violet-500 rounded-xl resize-none h-16 text-sm"
+                        className="bg-zinc-900/50 border-white/10 text-white focus-visible:ring-sky-500 rounded-xl resize-none h-16 text-sm"
                       />
                     </div>
 
@@ -504,7 +504,7 @@ export const FeedbackFormDialog = ({
                         placeholder="Yes, the mic didn't pick up my voice properly in the 2nd question..."
                         value={inputIssues}
                         onChange={(e) => setInputIssues(e.target.value)}
-                        className="bg-zinc-900/50 border-white/10 text-white focus-visible:ring-violet-500 rounded-xl resize-none h-16 text-sm"
+                        className="bg-zinc-900/50 border-white/10 text-white focus-visible:ring-sky-500 rounded-xl resize-none h-16 text-sm"
                       />
                     </div>
 
@@ -518,7 +518,7 @@ export const FeedbackFormDialog = ({
                         placeholder="Describe any glitches or bugs you encountered..."
                         value={bugsFaced}
                         onChange={(e) => setBugsFaced(e.target.value)}
-                        className="bg-zinc-900/50 border-white/10 text-white focus-visible:ring-violet-500 rounded-xl resize-none h-16 text-sm"
+                        className="bg-zinc-900/50 border-white/10 text-white focus-visible:ring-sky-500 rounded-xl resize-none h-16 text-sm"
                       />
                     </div>
                   </div>
@@ -543,7 +543,7 @@ export const FeedbackFormDialog = ({
                   <Button
                     type="button"
                     onClick={nextStep}
-                    className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl h-11 shadow-lg shadow-violet-500/20 flex items-center justify-center gap-1.5"
+                    className="flex-1 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-semibold rounded-xl h-11 shadow-lg shadow-sky-500/20 flex items-center justify-center gap-1.5"
                   >
                     Continue
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -552,7 +552,7 @@ export const FeedbackFormDialog = ({
                   <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl h-11 shadow-lg shadow-violet-500/20 flex items-center justify-center gap-1.5"
+                    className="flex-1 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-semibold rounded-xl h-11 shadow-lg shadow-sky-500/20 flex items-center justify-center gap-1.5"
                   >
                     {isSubmitting ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -586,9 +586,9 @@ export const FeedbackFormDialog = ({
                 </p>
               </div>
 
-              <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-4 mx-4">
-                <p className="text-violet-300 font-bold text-lg flex items-center justify-center gap-2">
-                  <Sparkles className="w-5 h-5 fill-violet-300" />
+              <div className="bg-sky-500/10 border border-sky-500/20 rounded-2xl p-4 mx-4">
+                <p className="text-sky-300 font-bold text-lg flex items-center justify-center gap-2">
+                  <Sparkles className="w-5 h-5 fill-sky-300" />
                   +2 Free Mock Interviews
                 </p>
                 <p className="text-zinc-500 text-xs mt-1">

@@ -13,7 +13,7 @@ export const About: React.FC = () => {
       <main className="flex-1 pt-28 pb-20 container mx-auto px-4 md:px-6">
         {/* Hero Section */}
         <section className="max-w-4xl mx-auto text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-semibold uppercase tracking-wider mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-6">
             <Sparkles className="w-3.5 h-3.5" />
             E-E-A-T Verified Platform
           </div>
@@ -30,7 +30,7 @@ export const About: React.FC = () => {
           <div className="bg-card/40 border border-border/60 rounded-3xl p-8 md:p-12 backdrop-blur-xl relative overflow-hidden">
             <div className="grid md:grid-cols-12 gap-8 items-center">
               <div className="md:col-span-8 space-y-4">
-                <div className="flex items-center gap-2 text-violet-400 font-semibold text-sm">
+                <div className="flex items-center gap-2 text-sky-400 font-semibold text-sm">
                   <Award className="w-5 h-5" /> Founder Credibility & Engineering Lineage
                 </div>
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
@@ -41,11 +41,11 @@ export const About: React.FC = () => {
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4">
                   <div className="border border-border/40 rounded-2xl p-4 bg-background/50">
-                    <div className="text-2xl font-bold text-violet-400">10,000+</div>
+                    <div className="text-2xl font-bold text-sky-400">10,000+</div>
                     <div className="text-xs text-muted-foreground">Mock Interviews Evaluated</div>
                   </div>
                   <div className="border border-border/40 rounded-2xl p-4 bg-background/50">
-                    <div className="text-2xl font-bold text-fuchsia-400">98.4%</div>
+                    <div className="text-2xl font-bold text-blue-400">98.4%</div>
                     <div className="text-xs text-muted-foreground">Feedback Accuracy Rate</div>
                   </div>
                   <div className="border border-border/40 rounded-2xl p-4 bg-background/50">
@@ -55,9 +55,9 @@ export const About: React.FC = () => {
                 </div>
               </div>
               <div className="md:col-span-4 flex justify-center">
-                <div className="w-48 h-48 rounded-3xl bg-gradient-to-tr from-violet-600 to-fuchsia-600 p-1">
+                <div className="w-48 h-48 rounded-3xl bg-gradient-to-tr from-sky-600 to-blue-600 p-1">
                   <div className="w-full h-full bg-background rounded-[22px] flex flex-col items-center justify-center p-6 text-center">
-                    <Cpu className="w-12 h-12 text-violet-400 mb-3" />
+                    <Cpu className="w-12 h-12 text-sky-400 mb-3" />
                     <span className="font-bold text-sm">AI Evaluation Engine v2.4</span>
                     <span className="text-xs text-muted-foreground mt-1">Validated by Tech Lead Panel</span>
                   </div>
@@ -78,7 +78,7 @@ export const About: React.FC = () => {
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="border border-border/50 rounded-2xl p-6 bg-card/20 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400 font-bold">1</div>
+              <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 font-bold">1</div>
               <h3 className="text-lg font-semibold">Technical Correctness & Code Efficiency</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Evaluates algorithmic time complexity (Big-O), edge cases, and code structure against production standards.
@@ -86,7 +86,7 @@ export const About: React.FC = () => {
             </div>
 
             <div className="border border-border/50 rounded-2xl p-6 bg-card/20 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-fuchsia-500/10 flex items-center justify-center text-fuchsia-400 font-bold">2</div>
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold">2</div>
               <h3 className="text-lg font-semibold">Communication & Speech Pace</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Analyzes verbal clarity, structural articulation (STAR method), pacing, and filler word frequency.

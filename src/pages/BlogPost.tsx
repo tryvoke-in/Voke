@@ -111,7 +111,7 @@ const BlogPost = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="max-w-3xl mx-auto prose prose-lg dark:prose-invert prose-violet"
+          className="max-w-3xl mx-auto prose prose-lg dark:prose-invert prose-sky"
         >
           <div className="whitespace-pre-wrap leading-relaxed text-lg text-muted-foreground">
             {blog.content}

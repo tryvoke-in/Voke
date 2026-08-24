@@ -46,10 +46,10 @@ export const CollegeStudentBanner = ({ userEmail, userCollegeName }: CollegeStud
   return (
     <div className="mb-4">
       {/* Compact Institutional Status Pill */}
-      <div className="flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-violet-100/60 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-500/20 backdrop-blur-md text-xs">
+      <div className="flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-sky-100/60 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-500/20 backdrop-blur-md text-xs">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-6 h-6 rounded-lg bg-violet-100 dark:bg-violet-600/20 border border-violet-300 dark:border-violet-500/30 flex items-center justify-center shrink-0">
-            <GraduationCap className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+          <div className="w-6 h-6 rounded-lg bg-sky-100 dark:bg-sky-600/20 border border-sky-300 dark:border-sky-500/30 flex items-center justify-center shrink-0">
+            <GraduationCap className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
           </div>
           <span className="font-semibold text-foreground truncate text-xs">
             {matchedCollege.name}

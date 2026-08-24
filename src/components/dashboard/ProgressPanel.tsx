@@ -11,16 +11,16 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-slate-900 border border-violet-500/30 rounded-xl p-3 shadow-2xl text-xs space-y-1.5 z-50 text-white min-w-[170px]">
+      <div className="bg-slate-900 border border-sky-500/30 rounded-xl p-3 shadow-2xl text-xs space-y-1.5 z-50 text-white min-w-[170px]">
         <div className="font-semibold text-white border-b border-white/10 pb-1.5 flex items-center justify-between gap-3">
           <span>{data.fullDate || data.name}</span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30 font-medium">
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium">
             {data.type || 'Interview'}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3 pt-1">
           <span className="text-slate-400">Overall Score:</span>
-          <span className="font-bold text-violet-400 text-sm">{data.score}%</span>
+          <span className="font-bold text-sky-400 text-sm">{data.score}%</span>
         </div>
         {typeof data.confidence === 'number' && (
           <div className="flex items-center justify-between gap-3 text-[11px]">
@@ -256,14 +256,14 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         </div>
         {chartData.length === 0 ? (
           <div className="h-[160px] w-full flex flex-col items-center justify-center border border-dashed border-border/60 rounded-2xl bg-muted/10 p-4 mt-1 text-center">
-            <TrendingUp className="h-8 w-8 text-violet-500/70 mb-2 animate-bounce" />
+            <TrendingUp className="h-8 w-8 text-sky-500/70 mb-2 animate-bounce" />
             <span className="text-xs text-foreground font-semibold">No interview chart data yet</span>
             <span className="text-[11px] text-muted-foreground max-w-[200px] mt-1">
               Complete your first AI mock or question practice to visualize real score trends.
             </span>
             <button
               onClick={() => navigate("/interview/new")}
-              className="mt-3 px-3 py-1.5 bg-violet-600 text-white rounded-lg text-xs font-medium hover:bg-violet-700 transition-colors shadow-md"
+              className="mt-3 px-3 py-1.5 bg-sky-600 text-white rounded-lg text-xs font-medium hover:bg-sky-700 transition-colors shadow-md"
             >
               Start First Interview
             </button>

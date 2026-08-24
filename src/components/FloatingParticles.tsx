@@ -13,7 +13,7 @@ export const FloatingParticles = () => {
     // Create particles
     for (let i = 0; i < particleCount; i++) {
       const particle = document.createElement("div");
-      particle.className = "absolute rounded-full bg-violet-500/20 blur-xl";
+      particle.className = "absolute rounded-full bg-sky-500/20 blur-xl";
       
       // Random size between 20px and 100px
       const size = Math.random() * 80 + 20;

@@ -27,7 +27,7 @@ export const RecentMocks = ({ sessions }: RecentMocksProps) => {
           title: "AI Video Practice",
           path: `/video-interview/results/${session.id}`,
           icon: Play,
-          color: "text-fuchsia-500 bg-fuchsia-500/10 border-fuchsia-500/20",
+          color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
         };
       case "Peer":
         return {
@@ -59,12 +59,12 @@ export const RecentMocks = ({ sessions }: RecentMocksProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card className="border-0 shadow-lg bg-white dark:bg-slate-900/50 dark:bg-gradient-to-br dark:from-indigo-950/40 dark:to-purple-950/10 backdrop-blur-xl border-gray-100 dark:border-white/5 overflow-hidden">
+      <Card className="border-0 shadow-lg bg-white dark:bg-slate-900/50 dark:bg-gradient-to-br dark:from-indigo-950/40 dark:to-blue-950/10 backdrop-blur-xl border-gray-100 dark:border-white/5 overflow-hidden">
         <CardHeader className="pb-3 pt-4 px-4">
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="text-sm font-semibold tracking-tight flex items-center gap-1.5 text-gray-900 dark:text-white">
-                <Activity className="w-4 h-4 text-violet-500" />
+                <Activity className="w-4 h-4 text-sky-500" />
                 Recent Practice
               </CardTitle>
               <CardDescription className="text-[11px] text-gray-500 dark:text-gray-400">
@@ -75,7 +75,7 @@ export const RecentMocks = ({ sessions }: RecentMocksProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-[11px] h-7 px-2 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10"
+                className="text-[11px] h-7 px-2 text-sky-600 dark:text-sky-400 hover:bg-sky-500/10"
                 onClick={() => navigate("/progress-analytics")}
               >
                 View All
@@ -94,7 +94,7 @@ export const RecentMocks = ({ sessions }: RecentMocksProps) => {
                   <div
                     key={session.id || index}
                     onClick={() => navigate(details.path)}
-                    className="flex items-center justify-between p-2 rounded-lg border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/5 hover:border-violet-500/20 hover:bg-violet-500/5 transition-all duration-200 cursor-pointer group"
+                    className="flex items-center justify-between p-2 rounded-lg border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/5 hover:border-sky-500/20 hover:bg-sky-500/5 transition-all duration-200 cursor-pointer group"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className={`p-1.5 rounded-md border shrink-0 ${details.color}`}>
@@ -122,7 +122,7 @@ export const RecentMocks = ({ sessions }: RecentMocksProps) => {
                           "Completed"
                         )}
                       </Badge>
-                      <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all" />
+                      <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:text-sky-500 group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </div>
                 );
@@ -134,7 +134,7 @@ export const RecentMocks = ({ sessions }: RecentMocksProps) => {
               <Button
                 size="sm"
                 onClick={() => navigate("/interview/new")}
-                className="h-7 px-3 text-[11px] bg-violet-600 hover:bg-violet-700 text-white"
+                className="h-7 px-3 text-[11px] bg-sky-600 hover:bg-sky-700 text-white"
               >
                 Start AI Mock
               </Button>
