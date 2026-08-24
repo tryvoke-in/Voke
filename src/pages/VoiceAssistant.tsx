@@ -467,7 +467,8 @@ CRITICAL INTERVIEW GUIDELINES:
 
     connect({
       systemPrompt: context,
-      initialGreeting: greeting
+      initialGreeting: greeting,
+      enableAutoCodingTransition: true
     });
   };
 
