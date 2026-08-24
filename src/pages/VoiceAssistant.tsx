@@ -236,7 +236,7 @@ const VoiceAssistant: React.FC = () => {
       const lastMsg = logs[logs.length - 1];
       if (lastMsg.role === 'assistant') {
 
-        // Handle START_CODING
+        // Handle START_CODING — only this tag opens the code editor
         if (lastMsg.text.includes('[START_CODING]')) {
           if (interviewMode !== 'coding') {
             console.log("Transitioning to CODING mode");
@@ -266,6 +266,15 @@ const VoiceAssistant: React.FC = () => {
             setFeedback(feedbackContent);
             toast("💡 New interviewer feedback available!");
           }
+        }
+
+        // Handle VERDICT — AI signals interview is complete, auto-end after 3s
+        if (lastMsg.text.includes('[VERDICT:PASS]') || lastMsg.text.includes('[VERDICT:FAIL]')) {
+          const verdict = lastMsg.text.includes('[VERDICT:PASS]') ? 'PASS' : 'FAIL';
+          toast.success(`Interview complete! Verdict: ${verdict}. Saving results...`, { duration: 3000 });
+          setTimeout(() => {
+            handleEndInterview();
+          }, 3500);
         }
       }
     }
@@ -422,9 +431,15 @@ const VoiceAssistant: React.FC = () => {
     context += `\nINSTRUCTION: You are an expert lead interviewer at ${activeCompany}. You are conducting a realistic ${interviewType} for ${candidateProfileName} applying as a ${experienceLevel} ${activeRole} specializing in ${selectedDomain}.
 CRITICAL INTERVIEW GUIDELINES:
 1. STRICTLY CRISP & CONCISE: Ask maximum 1 to 2 short sentences (under 30 words total). No long speeches, no monologue, no repeating what the candidate said.
-2. DEEP RESUME & GITHUB PROJECT VERIFICATION: Ask questions targeting the candidate's real GitHub projects BY NAME and the technologies listed in their resume (architecture, concurrency, APIs, state management, database design, bottlenecks, trade-offs).
+2. DEEP RESUME & GITHUB PROJECT VERIFICATION: Ask questions targeting the candidate's real GitHub projects BY NAME and the technologies listed in their resume.
 3. SINGLE DIRECT QUESTION: Always end with exactly ONE clear, sharp technical question.
-4. LIVE CODING: When ready to evaluate coding, say "[START_CODING]" and present an algorithmic challenge tailored for a ${activeRole}.`;
+4. MANDATORY QUESTION PROGRESSION — Follow this STRICTLY in order:
+   - Questions 1 (intro): Ask candidate to introduce themselves and their background.
+   - Questions 2-4 (EASY): Ask easy conceptual/fundamentals questions (e.g. what is X, explain Y, how does Z work).
+   - Questions 5-6 (MEDIUM): Ask medium difficulty questions (e.g. system design trade-offs, debugging scenarios, architecture decisions from their projects).
+   - Questions 7-8 (HARD): Ask hard questions (e.g. deep internals, concurrency, performance optimization, complex algorithms verbally).
+   - Question 9+ (CODING): ONLY after at least 8 questions have been asked, say "[START_CODING]" and present a coding challenge appropriate for a ${activeRole}. Do NOT open coding before 8 questions.
+5. INTERVIEW LENGTH: After coding round is complete (candidate submits code or explains solution), give verdict with "[VERDICT:PASS]" or "[VERDICT:FAIL]" and end naturally.`;
 
     setUserContext(context);
 

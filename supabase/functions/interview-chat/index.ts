@@ -9,35 +9,22 @@ const corsHeaders = {
 // Extracted logic to build system prompt and contents
 function buildInterviewContext(payload: any) {
   const { messages, interviewType, resumeContent } = payload;
-  let systemPrompt = `You are a world-class Elite Technical Interviewer conducting a live voice interview.
+  let systemPrompt = ``;
+  const systemMsg = (messages || []).find((msg: any) => msg.role === 'system');
 
+  if (systemMsg && systemMsg.content) {
+    systemPrompt = systemMsg.content; // Strictly prioritize frontend's detailed instruction (with the 8-10 turn limit & START_CODING)
+  } else {
+    // Fallback if frontend didn't send a system prompt
+    systemPrompt = `You are a world-class Elite Technical Interviewer conducting a live voice interview.
 CRITICAL MANDATES:
 1. YOUR RESPONSE MUST END WITH A QUESTION MARK (?). You MUST ask exactly ONE interview question per turn.
 2. Keep your response to 1-3 sentences. A brief acknowledgment followed by your question.
-3. NO FLUFF: NEVER say "Congratulations", "That's awesome", "Great job". Move directly to the question.
-4. SINGLE FOCUSED QUESTION: Ask one specific, clear technical question. Never ask compound questions.
-5. NEVER REPEAT A PREVIOUS QUESTION. If the candidate answers poorly or with nonsense, acknowledge it briefly and move on to a COMPLETELY DIFFERENT topic.`;
-
-  if (interviewType === "technical") {
-    systemPrompt += "\n\nFocus on technical skills: data structures, algorithms, system design, and programming concepts.";
-  } else if (interviewType === "behavioral") {
-    systemPrompt += "\n\nFocus on behavioral questions using the STAR method (Situation, Task, Action, Result).";
-  } else if ((interviewType === "resume" || interviewType === "round1" || interviewType === "screening") && resumeContent) {
-    systemPrompt += `\n\nCRITICAL ROUND 1 / RESUME & GITHUB MANDATE:
-The candidate's resume and GitHub profile context:
-${resumeContent}
-
-STRICT QUESTIONING INSTRUCTION:
-- NEVER REPEAT A PREVIOUS QUESTION. If the candidate gives a nonsensical or incomplete answer, acknowledge it briefly and move on to a DIFFERENT question.
-- YOU MUST EXTRACT AND NAME SPECIFIC PROJECT NAMES, REPOSITORY NAMES, AND TECH STACK ITEMS DIRECTLY FROM THE CANDIDATE CONTEXT ABOVE.
-- ABSOLUTELY FORBIDDEN PHRASES (NEVER USE): "your resume project", "that project", "your primary project", "a project on your resume"
-- ALWAYS REPLACE THOSE WITH THE ACTUAL REAL PROJECT NAME: (e.g. HirePath, CodeCompass).
-- EXAMPLE CORRECT QUESTION: "In your project HirePath, what was the most challenging technical bottleneck you encountered and how did you resolve it?"`;
-  }
-
-  const systemMsg = (messages || []).find((msg: any) => msg.role === 'system');
-  if (systemMsg && systemMsg.content) {
-    systemPrompt = systemMsg.content;
+3. INTERVIEW PROGRESSION:
+   - Ask 4-5 conceptual questions.
+   - Say "[START_CODING]" and give a coding problem.
+4. ENDING: Once the candidate answers the coding question, finish the interview with "[VERDICT:PASS]" or "[VERDICT:FAIL]".
+5. NEVER REPEAT A PREVIOUS QUESTION.`;
   }
 
   const rawFiltered = (messages || []).filter((msg: any) => msg.role !== 'system');

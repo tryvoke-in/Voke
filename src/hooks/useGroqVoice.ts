@@ -598,9 +598,32 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             console.log('DEBUG: Sending to Groq...');
 
             const systemPromptContent = contextRef.current ? contextRef.current : SYSTEM_INSTRUCTION;
+            
+            // Calculate how many AI questions have been asked (excluding system/assistant greeting)
+            const aiQuestionCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
+            
+            let turnDirective = "";
+            if (aiQuestionCount >= 4 && aiQuestionCount < 6) {
+                turnDirective = "\n\n[SYSTEM NOTE: You have asked enough theoretical questions. In your next response, you MUST say '[START_CODING]' and give a coding problem.]";
+            } else if (aiQuestionCount >= 6) {
+                turnDirective = "\n\n[SYSTEM NOTE: The interview is over. You MUST end the interview NOW by saying '[VERDICT:PASS]' or '[VERDICT:FAIL]'. Do not ask any more questions.]";
+            }
+
+            // Create a copy of the history to inject the directive into the last message
+            const modifiedHistory = [...conversationHistoryRef.current];
+            if (turnDirective && modifiedHistory.length > 0) {
+                const lastMsg = modifiedHistory[modifiedHistory.length - 1];
+                if (lastMsg.role === 'user') {
+                    modifiedHistory[modifiedHistory.length - 1] = {
+                        ...lastMsg,
+                        content: lastMsg.content + turnDirective
+                    };
+                }
+            }
+
             const messages = [
                 { role: 'system', content: systemPromptContent },
-                ...conversationHistoryRef.current
+                ...modifiedHistory
             ];
 
             console.log('DEBUG: Full messages being sent:', JSON.stringify(messages, null, 2));
@@ -802,12 +825,23 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                 const recognition = new SpeechRecognition();
                 recognitionRef.current = recognition;
                 recognition.lang = 'en-US';
-                recognition.continuous = false;
+                recognition.continuous = true; // Use continuous mode to prevent cutoffs
                 recognition.interimResults = true;
                 recognition.maxAlternatives = 1;
 
                 let speechDetected = false;
                 let capturedTranscript = '';
+                let silenceTimer: NodeJS.Timeout | null = null;
+
+                const resetSilenceTimer = () => {
+                    if (silenceTimer) clearTimeout(silenceTimer);
+                    silenceTimer = setTimeout(() => {
+                        if (recognitionRef.current && isListeningRef.current) {
+                            console.log('[useGroqVoice] Silence detected. Stopping recognition manually.');
+                            try { recognitionRef.current.stop(); } catch (e) { }
+                        }
+                    }, 2500); // Wait 2.5s after last word before auto-submitting
+                };
 
                 recognition.onstart = () => {
                     console.log('[useGroqVoice] Native SpeechRecognition active (listening)...');
@@ -820,27 +854,32 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                     speechDetected = true;
                     setIsUserSpeaking(true);
                     setVolume(0.7);
+                    resetSilenceTimer();
                 };
 
                 recognition.onresult = (event: any) => {
-                    let currentTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        currentTranscript += event.results[i][0].transcript;
+                    let fullTranscript = '';
+                    // Loop from 0 to capture the ENTIRE sentence, not just the latest chunk
+                    for (let i = 0; i < event.results.length; ++i) {
+                        fullTranscript += event.results[i][0].transcript;
                     }
-                    if (currentTranscript && currentTranscript.trim().length > 0) {
-                        capturedTranscript = currentTranscript.trim();
+                    if (fullTranscript && fullTranscript.trim().length > 0) {
+                        capturedTranscript = fullTranscript.trim();
                         setIsUserSpeaking(true);
                         setVolume(0.8);
+                        resetSilenceTimer(); // Reset timer every time a new word is recognized
                     }
                 };
 
                 recognition.onspeechend = () => {
-                    console.log('[useGroqVoice] Native onspeechend: Candidate stopped talking. Cutting off instantly!');
+                    console.log('[useGroqVoice] Native onspeechend: Candidate stopped talking temporarily.');
                     setIsUserSpeaking(false);
                     setVolume(0);
+                    // Do not stop instantly here; let the silenceTimer or continuous mode handle it
                 };
 
                 recognition.onend = async () => {
+                    if (silenceTimer) clearTimeout(silenceTimer);
                     console.log('[useGroqVoice] Native SpeechRecognition cycle complete. Captured:', capturedTranscript);
                     isListeningRef.current = false;
                     setIsUserSpeaking(false);
