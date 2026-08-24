@@ -460,6 +460,8 @@ export const DevResetWidget = () => {
                   </Button>
                 </div>
               </div>
+            )}
+            
             {/* TAB 4: PRO INTERVIEW CONTROLS */}
             {activeTab === 'pro' && (
               <div className="space-y-2">
