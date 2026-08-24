@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { LiveStatus, MessageLog } from '../types/voice';
 import { toast } from 'sonner';
+import { useTokenCounter } from '../contexts/TokenContext';
 
 export type GroqVoiceConnectOptions = string | {
     systemPrompt?: string;
@@ -58,6 +59,7 @@ interface UseGroqVoiceProps {
 }
 
 export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
+    const { addTokens } = useTokenCounter();
     // 1. ALL useState hooks grouped at top to strictly preserve hook ordering across renders
     const [status, setStatus] = useState<LiveStatus>(LiveStatus.DISCONNECTED);
     const [isSilentMode, _setIsSilentMode] = useState<boolean>(false);
@@ -207,6 +209,10 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
                 const responseText = edgeData?.question || edgeData?.content || edgeData?.response;
                 const detectedLabel = edgeData?.apiLabel || edgeData?.providerInfo?.apiLabel;
+                const usage = edgeData?.usageMetadata || edgeData?.providerInfo?.usageMetadata;
+                if (usage) {
+                    addTokens(usage.promptTokenCount || 0, usage.candidatesTokenCount || 0);
+                }
                 if (detectedLabel) {
                     setApiLabel(detectedLabel);
                 }
@@ -255,6 +261,10 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                     if (res.ok) {
                         const json = await res.json();
                         const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                        const usage = json.usageMetadata;
+                        if (usage) {
+                            addTokens(usage.promptTokenCount || 0, usage.candidatesTokenCount || 0);
+                        }
                         if (text && text.trim().length > 0) {
                             aiText = text.trim();
                             setApiLabel(`(gemini ${model.replace('gemini-', '')})`);
@@ -294,6 +304,10 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                     });
                     if (res.ok) {
                         const groqData = await res.json();
+                        const usage = groqData.usage;
+                        if (usage) {
+                            addTokens(usage.prompt_tokens || 0, usage.completion_tokens || 0);
+                        }
                         if (groqData?.choices?.[0]?.message?.content) {
                             aiText = groqData.choices[0].message.content.trim();
                             setApiLabel('(groq 3.3 direct)');
@@ -503,30 +517,6 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
                 window.speechSynthesis.speak(utterance);
             }
-
-            utterance.onerror = (e) => {
-                console.warn('DEBUG: Speech synthesis event note:', e);
-                if (resumeTimerRef.current) {
-                    clearInterval(resumeTimerRef.current);
-                    resumeTimerRef.current = null;
-                }
-                activeUtteranceRef.current = null;
-                (window as any).__vokeUtterance = null;
-                setIsAiSpeaking(false);
-                setVolume(0);
-
-                if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && startListeningRef.current) {
-                    setTimeout(() => {
-                        if (!isSilentModeRef.current && statusRef.current === LiveStatus.CONNECTED && !isAiSpeakingRef.current) {
-                            startListeningRef.current?.();
-                        }
-                    }, 400);
-                }
-            };
-
-            window.speechSynthesis.speak(utterance);
-            window.speechSynthesis.resume();
-
         } catch (error) {
             console.error('DEBUG: Speech synthesis error:', error);
             setIsAiSpeaking(false);

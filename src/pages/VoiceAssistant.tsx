@@ -970,6 +970,18 @@ CRITICAL INTERVIEW GUIDELINES:
                         <span className="hidden sm:inline">{isCameraOn ? "Camera On" : "Camera Off"}</span>
                       </Button>
 
+                      {/* 3.5 Toggle Editor */}
+                      <Button
+                        onClick={() => setShowCodeEditor(!showCodeEditor)}
+                        variant="outline"
+                        size="sm"
+                        className="h-10 rounded-xl border-border font-semibold text-xs gap-1.5 transition-all"
+                        title="Toggle Code Editor"
+                      >
+                        <Code2 className="w-3.5 h-3.5 text-blue-500" />
+                        <span className="hidden sm:inline">{showCodeEditor ? "Hide Editor" : "Show Editor"}</span>
+                      </Button>
+
                       {/* 4. Cancel / Exit */}
                       <Button
                         onClick={disconnect}
@@ -1247,6 +1259,14 @@ CRITICAL INTERVIEW GUIDELINES:
                       className="rounded-xl text-xs font-semibold bg-primary/10 text-primary border-primary/30"
                     >
                       <Send className="w-3 h-3 mr-1" /> Send Speech
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowCodeEditor(false)}
+                      className="rounded-xl text-xs font-semibold bg-primary/10 text-primary border-primary/30"
+                    >
+                      <Code2 className="w-3.5 h-3.5 mr-1" /> Close Editor
                     </Button>
                     <Button
                       size="sm"
