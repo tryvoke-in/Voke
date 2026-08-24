@@ -471,6 +471,9 @@ Disallow: /waitlist
 # Block Protected User Dashboards & Admin Portals
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /college/dashboard
+Disallow: /college/assessment
+Disallow: /college/drives
 
 # Block Internal APIs & Server Endpoint Proxies
 Disallow: /api/
@@ -495,17 +498,7 @@ Disallow: /playground
 Disallow: /resume-builder
 
 # -------------------------------------------------------------------
-# 2. Google-Specific Crawler Directives
-# -------------------------------------------------------------------
-User-agent: Googlebot
-Allow: /
-Disallow: /auth
-Disallow: /dashboard
-Disallow: /admin
-Disallow: /api/
-
-# -------------------------------------------------------------------
-# 3. AI & Search Answer Engines (GPTBot, PerplexityBot, ClaudeBot)
+# 2. AI & Search Answer Engines (GPTBot, PerplexityBot, ClaudeBot)
 # Allow AI agents to index public marketing pages & company questions
 # while protecting private endpoints.
 # -------------------------------------------------------------------
@@ -514,6 +507,8 @@ Allow: /
 Disallow: /auth
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /profile
+Disallow: /interview
 Disallow: /api/
 
 User-agent: PerplexityBot
@@ -521,6 +516,8 @@ Allow: /
 Disallow: /auth
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /profile
+Disallow: /interview
 Disallow: /api/
 
 User-agent: ClaudeBot
@@ -528,10 +525,12 @@ Allow: /
 Disallow: /auth
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /profile
+Disallow: /interview
 Disallow: /api/
 
 # -------------------------------------------------------------------
-# 4. XML Sitemap Index Location & LLM Discoverability
+# 3. XML Sitemap Index Location & LLM Discoverability
 # -------------------------------------------------------------------
 Sitemap: ${SITE_URL}/sitemap.xml
 # LLM Context: ${SITE_URL}/llms.txt`;

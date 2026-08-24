@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Building2, GraduationCap, Sparkles, ShieldCheck, ArrowRight,
-  CheckCircle2, Users, BarChart3, Bot, Key, Mail, Lock, Phone, MapPin
+  CheckCircle2, Users, BarChart3, Bot, Key, Mail, Lock, Phone, MapPin,
+  Eye, EyeOff, ShieldAlert
 } from "lucide-react";
-import { collegeService, DEFAULT_COLLEGES, College } from "@/services/collegeService";
+import { collegeService, College } from "@/services/collegeService";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -23,6 +24,7 @@ const CollegeAuth = () => {
   // Sign In state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Registration state
@@ -31,26 +33,47 @@ const CollegeAuth = () => {
   const [regDomain, setRegDomain] = useState("");
   const [regAdminName, setRegAdminName] = useState("");
   const [regAdminEmail, setRegAdminEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [regLocation, setRegLocation] = useState("");
   const [regSlots, setRegSlots] = useState(500);
 
   useEffect(() => {
-    // Check if college session already exists
-    const session = collegeService.getCollegeSession();
-    if (session) {
-      navigate("/college/dashboard");
+    const requestedMode = searchParams.get("mode") || searchParams.get("tab");
+    if (requestedMode === "register" || requestedMode === "new") {
+      setActiveTab("register");
+      return;
     }
 
-    const requestedCollegeSlug = searchParams.get("college");
-    if (requestedCollegeSlug) {
-      const matched = DEFAULT_COLLEGES.find(c => c.slug === requestedCollegeSlug);
-      if (matched) {
-        setEmail(matched.adminEmail);
-      }
+    const requestedCollegeParam = searchParams.get("college") || searchParams.get("id");
+    if (requestedCollegeParam) {
+      collegeService.getCollegesAsync().then(list => {
+        const matched = list.find(c => 
+          c.slug === requestedCollegeParam || 
+          c.id === requestedCollegeParam || 
+          c.shortName?.toLowerCase() === requestedCollegeParam.toLowerCase()
+        );
+        if (matched) {
+          setEmail(matched.adminEmail);
+          const currentSession = collegeService.getCollegeSession();
+          if (currentSession && currentSession.id === matched.id) {
+            navigate(`/college/dashboard?college=${matched.id}`);
+          }
+        }
+      });
+      return;
+    }
+
+    // Only redirect to dashboard if no specific college was requested and an active session exists
+    const session = collegeService.getCollegeSession();
+    if (session) {
+      navigate(`/college/dashboard?college=${session.id}`);
     }
   }, [navigate, searchParams]);
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       toast.error("Please enter your college administrator email.");
@@ -58,16 +81,19 @@ const CollegeAuth = () => {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      const res = collegeService.authenticateCollegeAdmin(email, password);
-      setIsLoading(false);
+    try {
+      const res = await collegeService.authenticateCollegeAdminAsync(email, password);
       if (res.success && res.college) {
         toast.success(`Welcome back, ${res.college.name} Placement Cell!`);
         navigate("/college/dashboard");
       } else {
-        toast.error(res.error || "Authentication failed.");
+        toast.error(res.error || "Authentication failed. Please verify your credentials.");
       }
-    }, 400);
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred during authentication.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleQuickDemoSignIn = (college: College) => {
@@ -76,34 +102,48 @@ const CollegeAuth = () => {
     navigate("/college/dashboard");
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regCollegeName.trim() || !regAdminEmail.trim() || !regDomain.trim()) {
       toast.error("Please fill in College Name, Official Email Domain, and Admin Email.");
       return;
     }
 
+    if (!regPassword || regPassword.trim().length < 6) {
+      toast.error("Password must be at least 6 characters long for security.");
+      return;
+    }
+
+    if (regPassword !== regConfirmPassword) {
+      toast.error("Passwords do not match. Please re-enter your password.");
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
+    try {
       const cleanDomains = regDomain
         .split(",")
         .map(d => d.trim().replace(/^@/, ""))
         .filter(Boolean);
 
-      const newCollege = collegeService.registerCollege({
+      const newCollege = await collegeService.registerCollegeAsync({
         name: regCollegeName.trim(),
         shortName: regShortName.trim() || regCollegeName.slice(0, 4).toUpperCase(),
         domains: cleanDomains.length > 0 ? cleanDomains : [`${regCollegeName.toLowerCase().replace(/\s+/g, '')}.edu.in`],
         adminEmail: regAdminEmail.trim(),
         adminName: regAdminName.trim() || "Placement Cell Head",
+        password: regPassword.trim(),
         location: regLocation.trim() || "Campus Location",
         totalStudentSlots: Number(regSlots) || 500
       });
 
-      setIsLoading(false);
       toast.success(`Institutional partnership registered for ${newCollege.name}! Welcome to Voke.`);
       navigate("/college/dashboard");
-    }, 600);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to register institution.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -149,7 +189,7 @@ const CollegeAuth = () => {
               <TabsList className="grid grid-cols-2 bg-muted/50 dark:bg-muted/30 border border-border p-1 rounded-full h-auto">
                 <TabsTrigger
                   value="signin"
-                  className="relative rounded-full data-[state=active]:text-white font-medium text-xs md:text-sm py-2"
+                  className="relative rounded-full data-[state=active]:text-white font-medium text-xs md:text-sm py-2 cursor-pointer"
                 >
                   {activeTab === "signin" && (
                     <motion.div
@@ -165,7 +205,7 @@ const CollegeAuth = () => {
                 </TabsTrigger>
                 <TabsTrigger
                   value="register"
-                  className="relative rounded-full data-[state=active]:text-white font-medium text-xs md:text-sm py-2"
+                  className="relative rounded-full data-[state=active]:text-white font-medium text-xs md:text-sm py-2 cursor-pointer"
                 >
                   {activeTab === "register" && (
                     <motion.div
@@ -209,63 +249,58 @@ const CollegeAuth = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Partner Security Key / Password
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Administrator Password
+                      </Label>
+                    </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/50" />
                       <Input
-                        type="password"
-                        placeholder="••••••••••••"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter your administrator password"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
-                        className="pl-9 text-sm focus:border-blue-500"
+                        className="pl-9 pr-10 text-sm focus:border-blue-500"
+                        required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer p-0.5"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                     <p className="text-[11px] text-muted-foreground/70">
-                      Demo mode enabled: Password optional for verified partner accounts.
+                      Use the secure password set during institutional onboarding. (For demo partner accounts, click 1-click test below).
                     </p>
                   </div>
 
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-5 shadow-lg shadow-blue-600/20 dark:shadow-blue-600/30 transition-all text-sm"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-5 shadow-lg shadow-blue-600/20 dark:shadow-blue-600/30 transition-all text-sm cursor-pointer"
                   >
                     {isLoading ? "Authenticating College Admin..." : "Access College Admin Dashboard"}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </form>
 
-                {/* 1-Click Quick Demo Sign-Ins */}
-                <div className="pt-4 border-t border-border">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      Instant Partner Demo Access:
-                    </span>
-                    <span className="text-[11px] text-muted-foreground/70">1-click test</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {DEFAULT_COLLEGES.map(college => (
-                      <button
-                        key={college.id}
-                        type="button"
-                        onClick={() => handleQuickDemoSignIn(college)}
-                        className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-muted/30 dark:bg-muted/20 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:border-blue-500/50 transition-all text-left group"
-                      >
-                        <div className="truncate">
-                          <div className="text-xs font-semibold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-300 truncate">
-                            {college.shortName}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground truncate">
-                            {college.name}
-                          </div>
-                        </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
-                      </button>
-                    ))}
-                  </div>
+                <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                  <span>New university / institution?</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("register")}
+                    className="text-blue-600 dark:text-blue-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    Onboard your campus <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </TabsContent>
 
@@ -274,7 +309,7 @@ const CollegeAuth = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">Onboard Your University / Institution</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Register your institution's email domain to auto-map students and unlock bulk mock assessment drives.
+                    Register your institution with official credentials to auto-map students and unlock bulk mock assessment drives.
                   </p>
                 </div>
 
@@ -282,7 +317,7 @@ const CollegeAuth = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="md:col-span-2 space-y-1.5">
                       <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        College / University Name
+                        College / University Name <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         placeholder="e.g. Newton School of Technology"
@@ -307,7 +342,7 @@ const CollegeAuth = () => {
 
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Official Student Email Domain(s)
+                      Official Student Email Domain(s) <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       placeholder="nst.rishihood.edu.in, university.ac.in (no @ needed)"
@@ -335,7 +370,7 @@ const CollegeAuth = () => {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Admin Email
+                        Admin Login Email <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         type="email"
@@ -345,6 +380,69 @@ const CollegeAuth = () => {
                         className="text-sm"
                         required
                       />
+                    </div>
+                  </div>
+
+                  {/* Password & Confirm Password */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Admin Password <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/50" />
+                        <Input
+                          type={showRegPassword ? "text" : "password"}
+                          placeholder="Min. 6 characters"
+                          value={regPassword}
+                          onChange={e => setRegPassword(e.target.value)}
+                          className="pl-9 pr-10 text-sm"
+                          required
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegPassword(!showRegPassword)}
+                          className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer p-0.5"
+                          tabIndex={-1}
+                        >
+                          {showRegPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Confirm Password <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/50" />
+                        <Input
+                          type={showRegConfirmPassword ? "text" : "password"}
+                          placeholder="Confirm password"
+                          value={regConfirmPassword}
+                          onChange={e => setRegConfirmPassword(e.target.value)}
+                          className="pl-9 pr-10 text-sm"
+                          required
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                          className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer p-0.5"
+                          tabIndex={-1}
+                        >
+                          {showRegConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -377,7 +475,7 @@ const CollegeAuth = () => {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-5 shadow-lg shadow-blue-600/20 dark:shadow-blue-600/30 text-sm mt-2"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-5 shadow-lg shadow-blue-600/20 dark:shadow-blue-600/30 text-sm mt-2 cursor-pointer"
                   >
                     {isLoading ? "Registering Institution..." : "Register & Launch College Portal"}
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -395,7 +493,7 @@ const CollegeAuth = () => {
             <button
               type="button"
               onClick={() => navigate("/auth")}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-semibold underline underline-offset-4"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-semibold underline underline-offset-4 cursor-pointer"
             >
               Sign In to Student Account →
             </button>
@@ -413,3 +511,4 @@ const CollegeAuth = () => {
 };
 
 export default CollegeAuth;
+

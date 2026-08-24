@@ -207,7 +207,7 @@ const ResumeBuilder = () => {
       body.model || "llama-3.3-70b-versatile",
       "gemma2-9b-it",
       "mixtral-8x7b-32768",
-      "llama-3.2-3b-preview"
+      "llama3-8b-8192"
     ];
 
     let lastError = null;
@@ -241,17 +241,19 @@ const ResumeBuilder = () => {
               continue; // Retry same model
             }
           } else {
-            // For non-429 errors (like 400 Bad Request), don't retry, just throw
-            throw new Error(`Groq API Error ${res.status}: ${lastError}`);
+            // For non-429 errors (like 400 Bad Request), don't retry, just break to next model
+            break;
           }
         } catch (e: any) {
           lastError = e.message;
+          // If it's a fetch failure (network error), we might want to retry, but for now we break
+          break;
         }
       }
 
-      // If we exhausted retries on the current model due to 429, we'll loop to the next fallback model
-      if (lastStatus === 429 && i < models.length - 1) {
-        toast.info(`Rate limit hit. Switching to fallback model: ${models[i + 1]}...`);
+      // If we exhausted retries on the current model due to 429 or 400, we'll loop to the next fallback model
+      if (lastStatus !== 200 && i < models.length - 1) {
+        toast.info(`Model ${currentModel} failed (${lastStatus}). Switching to fallback model: ${models[i + 1]}...`);
       }
     }
 
@@ -782,11 +784,12 @@ ${sanitized}`;
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: extractPrompt }],
         temperature: 0.1,
-        response_format: { type: "json_object" },
       });
       if (!res.ok) throw new Error("Failed to extract JD keywords.");
       const d = await res.json();
-      const extracted = JSON.parse(d.choices?.[0]?.message?.content || '{}');
+      const aiContent = d.choices?.[0]?.message?.content || '{}';
+      const cleanJson = aiContent.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim();
+      const extracted = JSON.parse(cleanJson);
       setJdKeywords(extracted);
       toast.success(`Extracted ${(extracted.hard_skills || []).length} hard skills from JD!`);
     } catch (err: any) {
@@ -927,7 +930,6 @@ ${resumeText}${jdContext}`;
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: analysisPrompt }],
         temperature: 0.3,
-        response_format: { type: "json_object" },
       });
 
       if (!response.ok) throw new Error("Failed to fetch analysis from AI.");
@@ -1049,14 +1051,14 @@ IMPORTANT:
           { role: "user", content: text }
         ],
         temperature: 0.1,
-        response_format: { type: "json_object" },
       });
 
       const resData = await response.json();
       const aiContent = resData.choices?.[0]?.message?.content;
       if (!aiContent) throw new Error("Empty response from AI");
 
-      const parsedData = JSON.parse(aiContent);
+      const cleanJson = aiContent.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim();
+      const parsedData = JSON.parse(cleanJson);
 
       setData(prev => ({
         ...prev,
@@ -1091,7 +1093,7 @@ IMPORTANT:
     { id: "education", label: "Education", desc: "Degrees & school info", icon: GraduationCap, isComplete: data.education.length > 0 },
     { id: "projects", label: "Projects", desc: "Best work showcase", icon: LayoutTemplate, isComplete: data.projects.length > 0 },
     { id: "skills", label: "Skills", desc: "Tech stacks & tools", icon: Code, isComplete: !!data.skills },
-    { id: "leadership", label: "Leadership & Extra", desc: "Activities & certificates", icon: Sparkles, isComplete: data.leadership.length > 0 }
+    { id: "leadership", label: "Leadership & Extra", desc: "Activities & certificates", icon: LayoutTemplate, isComplete: data.leadership.length > 0 }
   ];
 
   // --- Resume Document Templates Renderers ---
@@ -1407,7 +1409,7 @@ IMPORTANT:
     return (
       <div className="font-serif text-zinc-900 leading-snug">
         {/* Top Indigo Header Banner */}
-        <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-5 -mx-[10mm] -mt-[10mm] mb-5 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-slate-900 text-white p-5 -mx-[10mm] -mt-[10mm] mb-5 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-wide text-white">{data.fullName || "YOUR NAME"}</h1>
             <p className="text-[9.5pt] font-medium uppercase tracking-widest text-indigo-300 mt-1 font-sans">{data.experience[0]?.role || "Executive Professional"}</p>
@@ -1614,7 +1616,7 @@ IMPORTANT:
   };
 
   return (
-    <div className="min-h-screen bg-[#030303] text-foreground flex flex-col font-sans selection:bg-sky-500/30 overflow-hidden relative">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-sky-500/30 overflow-hidden relative">
       <style>
         {`
           @media print {
@@ -1630,7 +1632,6 @@ IMPORTANT:
               margin: 0 !important;
               padding: 0 !important;
               background: white !important;
-              /* NO height or overflow constraints — let the scaled container handle sizing */
             }
 
             /* Show ONLY the print-container */
@@ -1653,9 +1654,6 @@ IMPORTANT:
               box-shadow: none !important;
               border: none !important;
               background: white !important;
-              
-              /* transform:scale is applied via beforeprint JS event for reliability */
-              /* transform-origin must be top-left so content stays in top-left corner */
               transform-origin: top left !important;
             }
             
@@ -1674,56 +1672,52 @@ IMPORTANT:
             background: transparent;
           }
           .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(120, 120, 120, 0.2);
             border-radius: 10px;
           }
           .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.16);
+            background: rgba(120, 120, 120, 0.35);
           }
         `}
       </style>
 
-      {/* Decorative Background Pulsing Glows - Sky/Blue Voke Signature theme */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden no-print z-0 bg-[#030303]">
-        <div className="absolute top-[-30%] left-[-20%] w-[80%] h-[80%] bg-gradient-to-br from-sky-600/15 via-blue-600/5 to-transparent rounded-full blur-[140px] animate-pulse duration-[8000ms]" />
-        <div className="absolute bottom-[-30%] right-[-20%] w-[80%] h-[80%] bg-gradient-to-tl from-blue-600/10 via-pink-600/5 to-transparent rounded-full blur-[140px] animate-pulse duration-[10000ms]" />
-        <div className="absolute top-[35%] left-[20%] w-[450px] h-[450px] bg-indigo-600/5 rounded-full blur-[130px]" />
-      </div>
+      {/* Clean Solid Background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden no-print z-0 bg-background" />
 
       {/* Voke Themed Header */}
-      <header className="h-16 border-b border-white/5 bg-zinc-950/40 backdrop-blur-xl flex items-center justify-between px-6 z-20 no-print sticky top-0">
+      <header className="h-16 border-b border-border/70 bg-card/80 dark:bg-card/40 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 z-20 no-print sticky top-0">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/dashboard')}
-            className="hover:bg-white/5 text-zinc-400 hover:text-white transition-all rounded-xl h-9 w-9"
+            className="hover:bg-muted text-muted-foreground hover:text-foreground transition-all rounded-xl h-9 w-9"
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div className="flex items-center gap-2.5">
-            <div className="bg-gradient-to-tr from-sky-500/20 to-blue-500/20 p-2 rounded-xl border border-sky-500/20 shadow-md shadow-sky-500/5">
-              <FileText className="w-4 h-4 text-sky-400" />
+            <div className="bg-muted p-2 rounded-xl border border-border text-muted-foreground">
+              <FileText className="w-4 h-4" />
             </div>
             <div>
-              <h1 className="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
+              <h1 className="font-bold text-sm tracking-tight text-foreground flex items-center gap-1.5">
                 Resume Workspace
               </h1>
-              <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">AI Copilot Active</p>
+              {/* <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">AI Copilot Active</p> */}
             </div>
           </div>
         </div>
 
-        {/* Strength Progress Area - Sky/Blue Gradient */}
+        {/* Strength Progress Area */}
         <div className="hidden md:flex items-center gap-4 w-1/4">
           <div className="flex-1">
-            <div className="flex justify-between text-[11px] mb-1 font-semibold text-zinc-400">
+            <div className="flex justify-between text-[11px] mb-1 font-semibold text-muted-foreground">
               <span>Builder Progress</span>
-              <span className={progress === 100 ? "text-emerald-400" : "text-sky-400"}>{progress}%</span>
+              <span className={progress === 100 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-sky-600 dark:text-sky-400 font-bold"}>{progress}%</span>
             </div>
-            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 p-[1px]">
+            <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden border border-border/40 p-[1px]">
               <div
-                className="h-full bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-500 transition-all duration-1000 ease-out rounded-full"
+                className="h-full bg-sky-600 dark:bg-sky-500 transition-all duration-700 ease-out rounded-full"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -1740,27 +1734,27 @@ IMPORTANT:
             onChange={handleImportResume}
           />
           <Button
+            variant="outline"
             onClick={handleImportClick}
             disabled={importing}
-            className="bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/5 transition-all text-xs h-9 rounded-xl"
+            className="bg-background hover:bg-muted border-border/70 text-foreground transition-all text-xs h-9 rounded-xl font-semibold"
           >
-            {importing ? <Sparkles className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Upload className="w-3.5 h-3.5 mr-1.5" />}
+            {importing ? <></> : <Upload className="w-3.5 h-3.5 mr-1.5" />}
             Import PDF
           </Button>
 
           <Button
             onClick={handleAnalyzeResume}
             disabled={analyzing}
-            className="bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 hover:text-sky-200 border border-sky-500/20 transition-all text-xs h-9 rounded-xl font-semibold"
+            className="bg-sky-600 hover:bg-sky-700 text-white transition-all text-xs h-9 rounded-xl font-bold"
           >
-            <Sparkles className={`w-3.5 h-3.5 mr-1.5 ${analyzing ? 'animate-spin' : ''}`} />
             ATS Audit
           </Button>
 
           <Button
             variant="ghost"
             onClick={handlePrint}
-            className="text-zinc-400 hover:text-white hover:bg-white/5 text-xs h-9 rounded-xl transition-all"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted text-xs h-9 rounded-xl transition-all font-semibold hidden sm:flex"
           >
             <Printer className="w-3.5 h-3.5 mr-1.5" />
             Print
@@ -1768,7 +1762,7 @@ IMPORTANT:
 
           <Button
             onClick={handlePrint}
-            className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs h-9 rounded-xl shadow-lg shadow-sky-500/10 transition-all hover:scale-[1.02] border-0"
+            className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs h-9 rounded-xl shadow-xs transition-all border-0"
           >
             <Download className="w-3.5 h-3.5 mr-1.5" />
             Export PDF
@@ -1784,11 +1778,11 @@ IMPORTANT:
         <main className="flex-1 flex overflow-hidden z-10 relative">
 
         {/* LEFT PANEL: Sidebar Tab workflow and Editor Content */}
-        <div className="w-[45%] border-r border-white/5 bg-zinc-950/20 backdrop-blur-md flex no-print">
-          {/* Vertical Form Sections Sidebar - Sky active accents */}
-          <div className="w-52 border-r border-white/5 bg-zinc-950/40 flex flex-col p-3 gap-1.5 shrink-0 justify-between">
+        <div className="w-[45%] lg:w-[42%] xl:w-[38%] border-r border-border/70 bg-card/50 dark:bg-card/20 backdrop-blur-md flex no-print">
+          {/* Vertical Form Sections Sidebar */}
+          <div className="w-48 sm:w-52 border-r border-border/70 bg-card/70 dark:bg-card/30 flex flex-col p-3 gap-1.5 shrink-0 justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] uppercase font-bold text-zinc-500 px-3.5 py-2 tracking-wider">Sections</span>
+              <span className="text-[10px] uppercase font-bold text-muted-foreground px-3.5 py-2 tracking-wider">Sections</span>
               {sections.map((sec) => {
                 const Icon = sec.icon;
                 const active = activeTab === sec.id;
@@ -1796,74 +1790,68 @@ IMPORTANT:
                   <button
                     key={sec.id}
                     onClick={() => setActiveTab(sec.id)}
-                    className={`w-full text-left px-3.5 py-3 rounded-xl flex items-center justify-between gap-3 group transition-all duration-300 ${active
-                        ? 'bg-gradient-to-r from-sky-500/10 to-blue-500/5 border-l-2 border-sky-500 text-white bg-zinc-900/60'
-                        : 'text-zinc-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
+                    className={`w-full text-left px-3.5 py-3 rounded-xl flex items-center justify-between gap-3 group transition-all duration-200 cursor-pointer ${active
+                        ? 'bg-muted border-l-2 border-primary text-foreground font-bold'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border-l-2 border-transparent font-medium'
                       }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-sky-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+                      <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
                       <div className="min-w-0">
-                        <div className="text-xs font-bold truncate leading-tight">{sec.label}</div>
-                        <div className="text-[9px] text-zinc-500 truncate leading-tight group-hover:text-zinc-400 transition-colors mt-0.5">{sec.desc}</div>
+                        <div className="text-xs truncate leading-tight">{sec.label}</div>
+                        <div className="text-[9px] text-muted-foreground truncate leading-tight group-hover:text-foreground/70 transition-colors mt-0.5">{sec.desc}</div>
                       </div>
                     </div>
                     {sec.isComplete ? (
                       <div className="h-4 w-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                        <Check className="w-2.5 h-2.5 text-emerald-400" />
+                        <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
                       </div>
                     ) : (
-                      <div className="h-1.5 w-1.5 rounded-full bg-zinc-700 shrink-0 group-hover:bg-zinc-500 transition-colors" />
+                      <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30 shrink-0 group-hover:bg-muted-foreground/60 transition-colors" />
                     )}
                   </button>
                 );
               })}
             </div>
 
-            {/* Quick Status / Developer Card */}
-            <div className="p-3 bg-white/5 rounded-2xl border border-white/5 flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-zinc-400 text-xs font-semibold">
-                <BadgeAlert className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                <span>ATS Quality Standard</span>
-              </div>
-              <p className="text-[9px] text-zinc-500 leading-normal">Your draft complies with single-page layout standards.</p>
-            </div>
+            {/* Quick Status / Quality Card */}
+            
           </div>
 
-          {/* Form Content Scroll Pane - Sky focus accents */}
-          <ScrollArea className="flex-1 custom-scrollbar bg-black/10">
+          {/* Form Content Scroll Pane */}
+          <ScrollArea className="flex-1 custom-scrollbar bg-muted/10">
             <div className="p-6 max-w-xl mx-auto space-y-6 pb-24">
 
               {/* Personal Information form fields */}
               {activeTab === "personal" && (
-                <Card className="bg-zinc-900/40 border border-white/10 text-white backdrop-blur-xl shadow-[0_8px_32px_0_rgba(124,58,237,0.02)] rounded-2xl">
+                <Card className="bg-card border border-border/70 text-card-foreground rounded-2xl shadow-xs">
                   <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center gap-2 text-base font-bold text-white">
-                      <User className="w-4 h-4 text-sky-400" />
+                    <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
+                      <User className="w-4 h-4 text-primary" />
                       Personal Information
                     </CardTitle>
-                    <CardDescription className="text-zinc-400 text-xs">Manage your brand info and contact channels.</CardDescription>
+                    <CardDescription className="text-muted-foreground text-xs">Manage your brand info and contact channels.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label className="text-zinc-400 text-xs font-medium">Full Name</Label>
+                        <Label className="text-foreground/80 dark:text-zinc-300 text-xs font-semibold">Full Name</Label>
                         <Input
                           placeholder="e.g. John Doe"
                           value={data.fullName}
                           onChange={(e) => handleChange('fullName', e.target.value)}
-                          className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                          className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-zinc-400 text-xs font-medium">Profile Image (Optional)</Label>
+                        <Label className="text-foreground/80 dark:text-zinc-300 text-xs font-semibold">Profile Image (Optional)</Label>
                         <div className="flex items-center gap-2">
-                          {data.photo && <img src={data.photo} alt="Preview" className="w-7 h-7 rounded-full object-cover border border-white/10" />}
+                          {data.photo && <img src={data.photo} alt="Preview" className="w-7 h-7 rounded-full object-cover border border-border" />}
                           <Input
                             type="file"
                             accept="image/*"
                             onChange={handlePhotoUpload}
-                            className="bg-white/5 border border-white/10 text-xs file:text-white file:bg-white/10 file:border-0 file:rounded-lg file:px-2 file:py-1 file:mr-2 text-zinc-500 h-9 p-1 rounded-xl focus:border-sky-500/40 transition-all duration-300"
+                            className="bg-muted/30 border-border/60 text-xs file:text-foreground file:bg-muted file:border-0 file:rounded-lg file:px-2 file:py-1 file:mr-2 text-muted-foreground h-9 p-1 rounded-xl focus:border-primary/60 transition-all"
                           />
                         </div>
                       </div>
@@ -1871,94 +1859,93 @@ IMPORTANT:
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label className="text-zinc-400 text-xs font-medium">Email Address</Label>
+                        <Label className="text-foreground/80 dark:text-zinc-300 text-xs font-semibold">Email Address</Label>
                         <Input
                           placeholder="john@example.com"
                           value={data.email}
                           onChange={(e) => handleChange('email', e.target.value)}
-                          className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                          className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-zinc-400 text-xs font-medium">Phone Number</Label>
+                        <Label className="text-foreground/80 dark:text-zinc-300 text-xs font-semibold">Phone Number</Label>
                         <Input
                           placeholder="+1 234 567 890"
                           value={data.phone}
                           onChange={(e) => handleChange('phone', e.target.value)}
-                          className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                          className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-zinc-400 text-xs font-medium">Location</Label>
+                      <Label className="text-foreground/80 dark:text-zinc-300 text-xs font-semibold">Location</Label>
                       <Input
                         placeholder="e.g. San Francisco, CA"
                         value={data.location}
                         onChange={(e) => handleChange('location', e.target.value)}
-                        className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                        className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                       />
                     </div>
 
                     <div className="space-y-2 pt-2">
-                      <Label className="text-zinc-400 text-xs font-medium block">Social Links & Portfolios</Label>
+                      <Label className="text-foreground/80 dark:text-zinc-300 text-xs font-semibold block">Social Links & Portfolios</Label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div className="relative">
-                          <Linkedin className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+                          <Linkedin className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
                           <Input
                             placeholder="LinkedIn URL"
                             value={data.linkedin}
                             onChange={(e) => handleChange('linkedin', e.target.value)}
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                            className="pl-9 bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                           />
                         </div>
                         <div className="relative">
-                          <Github className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+                          <Github className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
                           <Input
                             placeholder="GitHub URL"
                             value={data.github}
                             onChange={(e) => handleChange('github', e.target.value)}
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                            className="pl-9 bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                           />
                         </div>
                         <div className="relative">
-                          <Globe className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+                          <Globe className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
                           <Input
                             placeholder="Portfolio URL"
                             value={data.website}
                             onChange={(e) => handleChange('website', e.target.value)}
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                            className="pl-9 bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                           />
                         </div>
                         <div className="relative">
-                          <Code className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+                          <Code className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
                           <Input
                             placeholder="LeetCode URL"
                             value={data.leetcode}
                             onChange={(e) => handleChange('leetcode', e.target.value)}
-                            className="pl-9 bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 placeholder:text-white/10 transition-all duration-300"
+                            className="pl-9 bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                           />
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2 pt-3 border-t border-white/5">
+                    <div className="space-y-2 pt-3 border-t border-border/50">
                       <div className="flex justify-between items-center">
-                        <Label className="text-zinc-400 text-xs font-semibold">Professional Bio Summary</Label>
+                        <Label className="text-foreground/80 dark:text-zinc-300 text-xs font-semibold">Professional Bio Summary</Label>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className={`h-7 px-2.5 text-[10px] font-bold transition-all rounded-lg ${isAiEnhancing ? 'bg-sky-500/20 text-sky-400' : 'text-sky-400 hover:bg-sky-500/10'}`}
+                          className={`h-7 px-2.5 text-[10px] font-bold transition-all rounded-lg ${isAiEnhancing ? 'bg-muted text-primary' : 'text-primary hover:bg-muted'}`}
                           onClick={handleAiEnhance}
                           disabled={isAiEnhancing}
                         >
-                          <Sparkles className="w-3.5 h-3.5 mr-1" />
                           {isAiEnhancing ? "Refining..." : "AI Enhance"}
                         </Button>
                       </div>
                       <Textarea
                         placeholder="Briefly state your core background accomplishments..."
-                        className="h-28 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl placeholder:text-white/10 leading-relaxed custom-scrollbar transition-all duration-300"
+                        className="h-28 resize-none bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl leading-relaxed custom-scrollbar transition-all"
                         value={data.summary}
                         onChange={(e) => handleChange('summary', e.target.value)}
                       />
@@ -1972,13 +1959,13 @@ IMPORTANT:
                 <div className="space-y-4">
                   <div className="flex justify-between items-center mb-2">
                     <div>
-                      <h3 className="font-bold text-sm text-white">Work History</h3>
-                      <p className="text-[11px] text-zinc-500">Record your timeline of roles.</p>
+                      <h3 className="font-bold text-sm text-foreground">Work History</h3>
+                      <p className="text-[11px] text-muted-foreground">Record your timeline of roles.</p>
                     </div>
                     <Button
                       size="sm"
                       onClick={addExperience}
-                      className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs h-8 rounded-xl transition-all duration-300"
+                      className="bg-muted/60 hover:bg-muted text-foreground border border-border/70 text-xs h-8 rounded-xl font-semibold transition-all"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add Role
                     </Button>
@@ -1986,12 +1973,12 @@ IMPORTANT:
 
                   <div className="space-y-4">
                     {data.experience.map((exp) => (
-                      <Card key={exp.id} className="relative group bg-zinc-900/30 border border-white/10 text-white rounded-2xl overflow-hidden">
+                      <Card key={exp.id} className="relative group bg-card border border-border/70 text-card-foreground rounded-2xl overflow-hidden shadow-xs">
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
+                            className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg"
                             onClick={() => removeExperience(exp.id)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -2000,50 +1987,49 @@ IMPORTANT:
                         <CardContent className="pt-5 space-y-3">
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Company</Label>
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Company</Label>
                               <Input
                                 placeholder="e.g. Microsoft"
                                 value={exp.company}
                                 onChange={(e) => updateExperience(exp.id, 'company', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Job Role Title</Label>
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Job Role Title</Label>
                               <Input
                                 placeholder="e.g. Software Engineer"
                                 value={exp.role}
                                 onChange={(e) => updateExperience(exp.id, 'role', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Employment Period</Label>
+                            <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Employment Period</Label>
                             <Input
                               placeholder="e.g. Jun 2021 - Present"
                               value={exp.duration}
                               onChange={(e) => updateExperience(exp.id, 'duration', e.target.value)}
-                              className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                              className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                             />
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between mb-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Key Duties & Accomplishments</Label>
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Key Duties & Accomplishments</Label>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleAiEnhanceExperience(exp.id, exp.description)}
                                 disabled={enhancingExpId === exp.id}
-                                className="h-5 px-1.5 text-[9px] text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 gap-1 rounded-md transition-all font-semibold"
+                                className="h-5 px-1.5 text-[9px] text-primary hover:bg-muted gap-1 rounded-md transition-all font-semibold"
                               >
-                                <Sparkles className={`w-2.5 h-2.5 ${enhancingExpId === exp.id ? 'animate-spin' : ''}`} />
                                 {enhancingExpId === exp.id ? 'Enhancing...' : 'AI Enhance'}
                               </Button>
                             </div>
                             <Textarea
                               placeholder="Describe your achievements (each starting on a new line)..."
-                              className="h-24 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
+                              className="h-24 resize-none bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl custom-scrollbar transition-all"
                               value={exp.description}
                               onChange={(e) => updateExperience(exp.id, 'description', e.target.value)}
                             />
@@ -2054,8 +2040,8 @@ IMPORTANT:
                   </div>
 
                   {data.experience.length === 0 && (
-                    <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl bg-white/5 text-zinc-500 flex flex-col items-center justify-center gap-2">
-                      <Briefcase className="w-8 h-8 opacity-25" />
+                    <div className="text-center py-12 border border-dashed border-border/80 rounded-2xl bg-muted/20 text-muted-foreground flex flex-col items-center justify-center gap-2">
+                      <Briefcase className="w-8 h-8 opacity-40" />
                       <span className="text-xs">No experience added yet. Add your positions above.</span>
                     </div>
                   )}
@@ -2067,13 +2053,13 @@ IMPORTANT:
                 <div className="space-y-4">
                   <div className="flex justify-between items-center mb-2">
                     <div>
-                      <h3 className="font-bold text-sm text-white">Education History</h3>
-                      <p className="text-[11px] text-zinc-500">Record your academic credentials.</p>
+                      <h3 className="font-bold text-sm text-foreground">Education History</h3>
+                      <p className="text-[11px] text-muted-foreground">Record your academic credentials.</p>
                     </div>
                     <Button
                       size="sm"
                       onClick={addEducation}
-                      className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs h-8 rounded-xl transition-all duration-300"
+                      className="bg-muted/60 hover:bg-muted text-foreground border border-border/70 text-xs h-8 rounded-xl font-semibold transition-all"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add School
                     </Button>
@@ -2081,12 +2067,12 @@ IMPORTANT:
 
                   <div className="space-y-4">
                     {data.education.map((edu) => (
-                      <Card key={edu.id} className="relative group bg-zinc-900/30 border border-white/10 text-white rounded-2xl overflow-hidden">
+                      <Card key={edu.id} className="relative group bg-card border border-border/70 text-card-foreground rounded-2xl overflow-hidden shadow-xs">
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
+                            className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg"
                             onClick={() => removeEducation(edu.id)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -2095,49 +2081,49 @@ IMPORTANT:
                         <CardContent className="pt-5 space-y-3">
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Institution / School</Label>
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Institution / School</Label>
                               <Input
                                 placeholder="e.g. Stanford University"
                                 value={edu.school}
                                 onChange={(e) => updateEducation(edu.id, 'school', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Degree / Major</Label>
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Degree / Major</Label>
                               <Input
                                 placeholder="e.g. BS Computer Science"
                                 value={edu.degree}
                                 onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Year of Graduation</Label>
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Year of Graduation</Label>
                               <Input
                                 placeholder="e.g. 2018 - 2022"
                                 value={edu.year}
                                 onChange={(e) => updateEducation(edu.id, 'year', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Location</Label>
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Location</Label>
                               <Input
                                 placeholder="e.g. Stanford, CA"
                                 value={edu.location}
                                 onChange={(e) => updateEducation(edu.id, 'location', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Coursework (Optional)</Label>
+                            <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Coursework (Optional)</Label>
                             <Textarea
                               placeholder="Describe relevant study areas..."
-                              className="h-16 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
+                              className="h-16 resize-none bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl custom-scrollbar transition-all"
                               value={edu.coursework || ""}
                               onChange={(e) => updateEducation(edu.id, 'coursework', e.target.value)}
                             />
@@ -2148,8 +2134,8 @@ IMPORTANT:
                   </div>
 
                   {data.education.length === 0 && (
-                    <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl bg-white/5 text-zinc-500 flex flex-col items-center justify-center gap-2">
-                      <GraduationCap className="w-8 h-8 opacity-25" />
+                    <div className="text-center py-12 border border-dashed border-border/80 rounded-2xl bg-muted/20 text-muted-foreground flex flex-col items-center justify-center gap-2">
+                      <GraduationCap className="w-8 h-8 opacity-40" />
                       <span className="text-xs">No educational items logged. Add one above.</span>
                     </div>
                   )}
@@ -2161,13 +2147,13 @@ IMPORTANT:
                 <div className="space-y-4">
                   <div className="flex justify-between items-center mb-2">
                     <div>
-                      <h3 className="font-bold text-sm text-white">Projects</h3>
-                      <p className="text-[11px] text-zinc-500">Exhibit your development projects.</p>
+                      <h3 className="font-bold text-sm text-foreground">Projects</h3>
+                      <p className="text-[11px] text-muted-foreground">Exhibit your development projects.</p>
                     </div>
                     <Button
                       size="sm"
                       onClick={addProject}
-                      className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs h-8 rounded-xl transition-all duration-300"
+                      className="bg-muted/60 hover:bg-muted text-foreground border border-border/70 text-xs h-8 rounded-xl font-semibold transition-all"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add Project
                     </Button>
@@ -2175,12 +2161,12 @@ IMPORTANT:
 
                   <div className="space-y-4">
                     {data.projects.map((proj) => (
-                      <Card key={proj.id} className="relative group bg-zinc-900/30 border border-white/10 text-white rounded-2xl overflow-hidden">
+                      <Card key={proj.id} className="relative group bg-card border border-border/70 text-card-foreground rounded-2xl overflow-hidden shadow-xs">
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
+                            className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg"
                             onClick={() => removeProject(proj.id)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -2189,24 +2175,24 @@ IMPORTANT:
                         <CardContent className="pt-5 space-y-3">
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Project Name</Label>
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Project Name</Label>
                               <Input
                                 placeholder="e.g. AI Portfolio Suite"
                                 value={proj.name}
                                 onChange={(e) => updateProject(proj.id, 'name', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                             <div className="space-y-1">
                               <div className="flex items-center justify-between mb-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Project URL Link</Label>
+                                <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Project URL Link</Label>
                                 {proj.link && (proj.link.toLowerCase().includes('github.com') || (proj.link.split('/').length === 2 && !proj.link.includes('.'))) && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleFetchGitHubProject(proj.id, proj.link)}
                                     disabled={fetchingRepoId === proj.id}
-                                    className="h-5 px-1.5 text-[9px] text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 gap-1 rounded-md transition-all font-semibold"
+                                    className="h-5 px-1.5 text-[9px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 gap-1 rounded-md transition-all font-semibold"
                                   >
                                     <Github className={`w-2.5 h-2.5 ${fetchingRepoId === proj.id ? 'animate-spin' : ''}`} />
                                     {fetchingRepoId === proj.id ? 'Importing...' : 'Fetch & Write with AI'}
@@ -2217,27 +2203,26 @@ IMPORTANT:
                                 placeholder="e.g. github.com/owner/repo"
                                 value={proj.link}
                                 onChange={(e) => updateProject(proj.id, 'link', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between mb-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Project Details / Stack</Label>
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Project Details / Stack</Label>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleAiEnhanceProject(proj.id, proj.description)}
                                 disabled={enhancingProjId === proj.id}
-                                className="h-5 px-1.5 text-[9px] text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 gap-1 rounded-md transition-all font-semibold"
+                                className="h-5 px-1.5 text-[9px] text-primary hover:bg-muted gap-1 rounded-md transition-all font-semibold"
                               >
-                                <Sparkles className={`w-2.5 h-2.5 ${enhancingProjId === proj.id ? 'animate-spin' : ''}`} />
                                 {enhancingProjId === proj.id ? 'Enhancing...' : 'AI Enhance'}
                               </Button>
                             </div>
                             <Textarea
                               placeholder="Describe implementation details & key results..."
-                              className="h-20 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
+                              className="h-20 resize-none bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl custom-scrollbar transition-all"
                               value={proj.description}
                               onChange={(e) => updateProject(proj.id, 'description', e.target.value)}
                             />
@@ -2248,8 +2233,8 @@ IMPORTANT:
                   </div>
 
                   {data.projects.length === 0 && (
-                    <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl bg-white/5 text-zinc-500 flex flex-col items-center justify-center gap-2">
-                      <LayoutTemplate className="w-8 h-8 opacity-25" />
+                    <div className="text-center py-12 border border-dashed border-border/80 rounded-2xl bg-muted/20 text-muted-foreground flex flex-col items-center justify-center gap-2">
+                      <LayoutTemplate className="w-8 h-8 opacity-40" />
                       <span className="text-xs">No projects added yet. Click the button to add.</span>
                     </div>
                   )}
@@ -2258,34 +2243,34 @@ IMPORTANT:
 
               {/* Skills Tab Form */}
               {activeTab === "skills" && (
-                <Card className="bg-zinc-900/40 border border-white/10 text-white backdrop-blur-xl shadow-[0_8px_32px_0_rgba(124,58,237,0.02)] rounded-2xl">
+                <Card className="bg-card border border-border/70 text-card-foreground rounded-2xl shadow-xs">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base font-bold">
-                      <Code className="w-4 h-4 text-sky-400" />
+                    <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
+                      <Code className="w-4 h-4 text-primary" />
                       Skills & Tech Stack
                     </CardTitle>
-                    <CardDescription className="text-zinc-400 text-xs">Separate skills with commas to create tag badges.</CardDescription>
+                    <CardDescription className="text-muted-foreground text-xs">Separate skills with commas to create tag badges.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-5">
                     <div className="space-y-1.5">
-                      <Label className="text-zinc-400 text-xs font-semibold">Technical / Professional Skills</Label>
+                      <Label className="text-foreground/80 dark:text-zinc-300 text-xs font-semibold">Technical / Professional Skills</Label>
                       <Textarea
                         placeholder="e.g. React, Node.js, Python, PostgreSQL, AWS, Docker, Kubernetes..."
-                        className="h-32 bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl placeholder:text-white/10 custom-scrollbar leading-relaxed transition-all duration-300"
+                        className="h-32 bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl custom-scrollbar leading-relaxed transition-all"
                         value={data.skills}
                         onChange={(e) => handleChange('skills', e.target.value)}
                       />
                     </div>
                     <div className="pt-2">
-                      <Label className="mb-2 block text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Live Badges Preview</Label>
-                      <div className="flex flex-wrap gap-1.5 p-3.5 bg-zinc-950/40 rounded-xl border border-white/5 min-h-[4rem]">
+                      <Label className="mb-2 block text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Live Badges Preview</Label>
+                      <div className="flex flex-wrap gap-1.5 p-3.5 bg-muted/40 rounded-xl border border-border/60 min-h-[4rem]">
                         {data.skills.split(',').filter(s => s.trim()).map((skill, i) => (
-                          <Badge key={i} variant="secondary" className="bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border-sky-500/10 text-xs px-2.5 py-0.5 rounded-lg">
+                          <Badge key={i} variant="secondary" className="bg-muted text-foreground hover:bg-muted/80 text-xs px-2.5 py-0.5 rounded-lg">
                             {skill.trim()}
                           </Badge>
                         ))}
                         {data.skills.split(',').filter(s => s.trim()).length === 0 && (
-                          <span className="text-zinc-600 text-xs italic">Type skills above to view tags preview...</span>
+                          <span className="text-muted-foreground text-xs italic">Type skills above to view tags preview...</span>
                         )}
                       </div>
                     </div>
@@ -2298,13 +2283,13 @@ IMPORTANT:
                 <div className="space-y-4">
                   <div className="flex justify-between items-center mb-2">
                     <div>
-                      <h3 className="font-bold text-sm text-white">Activities / Honors / Certs</h3>
-                      <p className="text-[11px] text-zinc-500">Add extracurricular achievements.</p>
+                      <h3 className="font-bold text-sm text-foreground">Activities / Honors / Certs</h3>
+                      <p className="text-[11px] text-muted-foreground">Add extracurricular achievements.</p>
                     </div>
                     <Button
                       size="sm"
                       onClick={addLeadership}
-                      className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs h-8 rounded-xl transition-all duration-300"
+                      className="bg-muted/60 hover:bg-muted text-foreground border border-border/70 text-xs h-8 rounded-xl font-semibold transition-all"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add Item
                     </Button>
@@ -2312,12 +2297,12 @@ IMPORTANT:
 
                   <div className="space-y-4">
                     {data.leadership.map((item) => (
-                      <Card key={item.id} className="relative group bg-zinc-900/30 border border-white/10 text-white rounded-2xl overflow-hidden">
+                      <Card key={item.id} className="relative group bg-card border border-border/70 text-card-foreground rounded-2xl overflow-hidden shadow-xs">
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
+                            className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg"
                             onClick={() => removeLeadership(item.id)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -2325,12 +2310,12 @@ IMPORTANT:
                         </div>
                         <CardContent className="pt-5 space-y-3">
                           <div className="space-y-1.5">
-                            <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Item Type</Label>
+                            <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Item Type</Label>
                             <Select value={item.type} onValueChange={(value: any) => updateLeadership(item.id, 'type', value)}>
-                              <SelectTrigger className="bg-white/5 border border-white/10 text-white text-xs h-9 rounded-xl focus:border-sky-500/40 focus:ring-sky-500/10 transition-all duration-300">
+                              <SelectTrigger className="bg-muted/30 border-border/60 text-foreground text-xs h-9 rounded-xl focus:border-primary/60 focus:ring-primary/15 transition-all">
                                 <SelectValue placeholder="Select type" />
                               </SelectTrigger>
-                              <SelectContent className="bg-zinc-900 border border-white/10 text-white text-xs">
+                              <SelectContent className="bg-popover border border-border text-popover-foreground text-xs rounded-xl shadow-lg">
                                 <SelectItem value="Leadership">Leadership & Volunteering</SelectItem>
                                 <SelectItem value="Hackathon">Hackathon & Contest</SelectItem>
                                 <SelectItem value="Certificate">Professional Certificate</SelectItem>
@@ -2340,7 +2325,7 @@ IMPORTANT:
 
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">
                                 {item.type === 'Hackathon' ? 'Role / Placement' :
                                   item.type === 'Certificate' ? 'Certificate Name' : 'Role Title'}
                               </Label>
@@ -2351,11 +2336,11 @@ IMPORTANT:
                                 }
                                 value={item.role}
                                 onChange={(e) => updateLeadership(item.id, 'role', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">
                                 {item.type === 'Hackathon' ? 'Contest / Organizer' :
                                   item.type === 'Certificate' ? 'Issuer Organization' : 'Organization'}
                               </Label>
@@ -2366,28 +2351,28 @@ IMPORTANT:
                                 }
                                 value={item.organization}
                                 onChange={(e) => updateLeadership(item.id, 'organization', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                           </div>
 
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                              <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Period / Date Achieved</Label>
+                              <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Period / Date Achieved</Label>
                               <Input
                                 placeholder="e.g. 2021 - 2022"
                                 value={item.duration}
                                 onChange={(e) => updateLeadership(item.id, 'duration', e.target.value)}
-                                className="bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl h-9 transition-all duration-300"
+                                className="bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl h-9 transition-all"
                               />
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <Label className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Short Details (Optional)</Label>
+                            <Label className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Short Details (Optional)</Label>
                             <Textarea
                               placeholder="Brief description..."
-                              className="h-16 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl custom-scrollbar transition-all duration-300"
+                              className="h-16 resize-none bg-muted/30 border-border/60 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl custom-scrollbar transition-all"
                               value={item.description}
                               onChange={(e) => updateLeadership(item.id, 'description', e.target.value)}
                             />
@@ -2398,8 +2383,7 @@ IMPORTANT:
                   </div>
 
                   {data.leadership.length === 0 && (
-                    <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl bg-white/5 text-zinc-500 flex flex-col items-center justify-center gap-2">
-                      <Sparkles className="w-8 h-8 opacity-25" />
+                    <div className="text-center py-12 border border-dashed border-border/80 rounded-2xl bg-muted/20 text-muted-foreground flex flex-col items-center justify-center gap-2">
                       <span className="text-xs">No leadership or extracurricular credits logged.</span>
                     </div>
                   )}
@@ -2411,12 +2395,9 @@ IMPORTANT:
         </div>
 
         {/* RIGHT PANEL: Live Interactive Resume Preview (Canvas) */}
-        <div className="flex-1 bg-[#09090b] flex flex-col relative overflow-hidden h-[calc(100vh-4rem)] select-none print:bg-white print:h-auto print:overflow-visible">
-          {/* Subtle grid mesh overlay for canvas preview */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_80%,transparent_100%)] pointer-events-none z-0 print:hidden" />
-
+        <div className="flex-1 bg-muted/40 dark:bg-[#09090b] flex flex-col relative overflow-hidden h-[calc(100vh-4rem)] select-none print:bg-white print:h-auto print:overflow-visible">
           {/* Premium Floating Template Bar */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-full flex gap-1.5 shadow-xl shadow-black/40 print:hidden">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-card/90 dark:bg-zinc-900/90 backdrop-blur-md border border-border/80 px-2 py-1.5 rounded-full flex gap-1 shadow-lg shadow-black/5 dark:shadow-black/40 print:hidden">
             {[
               { id: 'minimalist', label: 'ATS Clean' },
               { id: 'slate', label: 'Modern Slate' },
@@ -2426,9 +2407,9 @@ IMPORTANT:
               <button
                 key={t.id}
                 onClick={() => setSelectedTemplate(t.id)}
-                className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${selectedTemplate === t.id
-                    ? 'bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-md shadow-sky-500/20 scale-105'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${selectedTemplate === t.id
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                   }`}
               >
                 {t.label}
@@ -2436,7 +2417,7 @@ IMPORTANT:
             ))}
           </div>
 
-          {/* Document container inside scroll view - with glowing Sky drop shadow around the paper */}
+          {/* Document container inside scroll view */}
           <ScrollArea className="flex-1 custom-scrollbar relative z-10 w-full print:overflow-visible print:h-auto">
             <div
               className="w-full flex justify-center py-10 md:py-20 transition-all duration-300 print:py-0 print:block print:h-auto print:!min-h-0"
@@ -2444,7 +2425,7 @@ IMPORTANT:
             >
               <div
                 ref={printContainerRef}
-                className="print-container bg-white shadow-[0_20px_50px_rgba(139,92,246,0.15)] border border-gray-100/60 w-[210mm] min-h-[297mm] p-[10mm] text-left relative transition-all duration-300 ease-in-out origin-top text-gray-900 print:shadow-none print:border-none print:!transform-none"
+                className="print-container bg-white shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-border/60 w-[210mm] min-h-[297mm] p-[10mm] text-left relative transition-all duration-300 ease-in-out origin-top text-gray-900 print:shadow-none print:border-none print:!transform-none"
                 style={{
                   transform: `scale(${zoom})`,
                   transformOrigin: 'top center',
@@ -2460,31 +2441,31 @@ IMPORTANT:
           </ScrollArea>
 
           {/* Floating Zoom Action Toolbar */}
-          <div className="absolute bottom-4 right-4 z-20 bg-zinc-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-xl shadow-black/40 print:hidden">
+          <div className="absolute bottom-4 right-4 z-20 bg-card/90 dark:bg-zinc-900/90 backdrop-blur-md border border-border/80 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-lg shadow-black/5 dark:shadow-black/40 print:hidden">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setZoom(prev => Math.max(0.5, prev - 0.05))}
-              className="h-7 w-7 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg shrink-0"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg shrink-0"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </Button>
-            <span className="text-[10px] font-bold font-mono text-zinc-300 w-11 text-center select-none shrink-0">{Math.round(zoom * 100)}%</span>
+            <span className="text-[10px] font-bold font-mono text-foreground w-11 text-center select-none shrink-0">{Math.round(zoom * 100)}%</span>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setZoom(prev => Math.min(1.25, prev + 0.05))}
-              className="h-7 w-7 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg shrink-0"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg shrink-0"
               title="Zoom In"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </Button>
-            <div className="w-px h-3.5 bg-white/10 shrink-0" />
+            <div className="w-px h-3.5 bg-border shrink-0" />
             <Button
               variant="ghost"
               onClick={() => setZoom(0.85)}
-              className="h-7 px-2 text-[10px] font-bold text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg flex items-center gap-1 shrink-0"
+              className="h-7 px-2 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg flex items-center gap-1 shrink-0"
               title="Reset Zoom"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -2498,30 +2479,29 @@ IMPORTANT:
 
       {/* ATS Evaluation Audit Dialog */}
       <Dialog open={analysisOpen} onOpenChange={setAnalysisOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-zinc-950 border border-white/10 text-white rounded-3xl custom-scrollbar no-print">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-card border border-border/80 text-foreground rounded-3xl custom-scrollbar no-print shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-sky-400 animate-pulse" />
+            <DialogTitle className="text-base font-bold flex items-center gap-2 text-foreground">
               Resume ATS Score &amp; Audit
             </DialogTitle>
           </DialogHeader>
 
           {/* ─── JD Input Panel (always visible at top) ─── */}
-          <div className="p-3.5 bg-zinc-900/60 border border-white/8 rounded-2xl space-y-2.5">
+          <div className="p-3.5 bg-muted/40 border border-border/70 rounded-2xl space-y-2.5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-white">🎯 Target Job Description (Optional but Powerful)</p>
-                <p className="text-[10px] text-zinc-500 mt-0.5">Paste JD → AI extracts exact required keywords → Analysis &amp; optimization targets that specific role</p>
+                <p className="text-xs font-bold text-foreground">🎯 Target Job Description (Optional but Powerful)</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Paste JD → AI extracts exact required keywords → Analysis &amp; optimization targets that specific role</p>
               </div>
               {jdKeywords && (
-                <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2 py-1 shrink-0">
+                <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2 py-1 shrink-0">
                   <Check className="w-2.5 h-2.5" /> {jdKeywords.hard_skills?.length || 0} skills extracted
                 </div>
               )}
             </div>
             <Textarea
               placeholder="Paste full job description here (LinkedIn, Naukri, etc.)..."
-              className="h-24 resize-none bg-white/5 border border-white/10 focus:border-sky-500/40 focus:ring-2 focus:ring-sky-500/10 text-xs rounded-xl custom-scrollbar transition-all"
+              className="h-24 resize-none bg-background border-border/70 focus:border-primary/60 focus:ring-2 focus:ring-primary/15 text-xs text-foreground placeholder:text-muted-foreground/60 rounded-xl custom-scrollbar transition-all"
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
             />
@@ -2530,18 +2510,17 @@ IMPORTANT:
                 size="sm"
                 onClick={handleExtractJdKeywords}
                 disabled={extractingJd || !jobDescription.trim()}
-                className="h-7 px-3 text-[10px] font-bold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/20 rounded-lg gap-1.5"
+                className="h-7 px-3 text-[10px] font-bold bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg gap-1.5"
               >
-                <Sparkles className={`w-3 h-3 ${extractingJd ? 'animate-spin' : ''}`} />
                 {extractingJd ? 'Extracting...' : 'Extract JD Keywords'}
               </Button>
               {jdKeywords && (
                 <div className="flex flex-wrap gap-1">
                   {jdKeywords.hard_skills?.slice(0, 5).map((k: string) => (
-                    <span key={k} className="text-[8px] font-bold bg-sky-500/10 text-sky-300 border border-sky-500/20 rounded-md px-1.5 py-0.5">{k}</span>
+                    <span key={k} className="text-[8px] font-bold bg-muted text-foreground border border-border rounded-md px-1.5 py-0.5">{k}</span>
                   ))}
                   {(jdKeywords.hard_skills?.length || 0) > 5 && (
-                    <span className="text-[8px] font-bold text-zinc-500">+{(jdKeywords.hard_skills?.length || 0) - 5} more</span>
+                    <span className="text-[8px] font-bold text-muted-foreground">+{(jdKeywords.hard_skills?.length || 0) - 5} more</span>
                   )}
                 </div>
               )}
@@ -2553,14 +2532,11 @@ IMPORTANT:
               <ResumeAnalysisDisplay analysis={analysisResult} />
 
               {/* ─── Make ATS Friendly CTA ─── */}
-              <div className="p-4 bg-gradient-to-br from-sky-950/60 to-blue-950/40 border border-sky-500/20 rounded-2xl flex flex-col gap-3">
+              <div className="p-4 bg-muted/40 border border-border/70 rounded-2xl flex flex-col gap-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-sky-500/20">
-                    <Sparkles className="w-4 h-4 text-white" />
-                  </div>
                   <div>
-                    <p className="text-sm font-bold text-white">Auto-Optimize Resume for ATS{jdKeywords ? ' + Job Match' : ''}</p>
-                    <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+                    <p className="text-sm font-bold text-foreground">Auto-Optimize Resume for ATS{jdKeywords ? ' + Job Match' : ''}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                       {jdKeywords
                         ? `JD-targeted: Rewrites your resume to match the exact keywords from the job description using verbatim injection — no hallucination, no keyword stuffing.`
                         : `One click — AI rewrites your summary, every work experience bullet, and every project description to be fully ATS-optimized with power verbs, metrics, and high-value keywords.`
@@ -2570,8 +2546,7 @@ IMPORTANT:
                 </div>
 
                 {makingAtsFriendly && atsFriendlyProgress && (
-                  <div className="flex items-center gap-2 text-xs text-sky-300 bg-sky-500/10 rounded-xl px-3 py-2 border border-sky-500/20">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin shrink-0" />
+                  <div className="flex items-center gap-2 text-xs text-primary bg-muted rounded-xl px-3 py-2 border border-border">
                     <span>{atsFriendlyProgress}</span>
                   </div>
                 )}
@@ -2579,35 +2554,34 @@ IMPORTANT:
                 <Button
                   onClick={handleMakeAtsFriendly}
                   disabled={makingAtsFriendly}
-                  className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold rounded-xl h-10 text-sm shadow-lg shadow-sky-500/20 transition-all disabled:opacity-60"
+                  className="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl h-10 text-sm shadow-xs transition-all disabled:opacity-60"
                 >
                   {makingAtsFriendly ? (
-                    <><Sparkles className="w-4 h-4 mr-2 animate-spin" />{atsFriendlyProgress || 'Optimizing...'}</>
+                    <>{atsFriendlyProgress || 'Optimizing...'}</>
                   ) : (
-                    <><Sparkles className="w-4 h-4 mr-2" />{jdKeywords ? 'Optimize Resume for This Job' : 'Make My Resume ATS Friendly'}</>
+                    <>{jdKeywords ? 'Optimize Resume for This Job' : 'Make My Resume ATS Friendly'}</>
                   )}
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="py-16 flex flex-col items-center justify-center text-zinc-500 gap-6 w-full max-w-md mx-auto">
+            <div className="py-16 flex flex-col items-center justify-center text-muted-foreground gap-6 w-full max-w-md mx-auto">
               <div className="relative flex items-center justify-center">
-                <Sparkles className="w-12 h-12 animate-spin text-sky-500 opacity-60 absolute" />
-                <div className="w-20 h-20 rounded-full border-4 border-sky-500/20 border-t-sky-500 animate-spin" />
+                <div className="w-20 h-20 rounded-full border-4 border-muted border-t-primary animate-spin" />
               </div>
               <div className="text-center space-y-2 w-full px-6">
-                <p className="text-sm font-semibold text-white">Running ATS Diagnostics...</p>
-                <p className="text-xs text-zinc-400">Parsing structure, evaluating keywords, and grading impact.</p>
+                <p className="text-sm font-semibold text-foreground">Running ATS Diagnostics...</p>
+                <p className="text-xs text-muted-foreground">Parsing structure, evaluating keywords, and grading impact.</p>
 
-                <div className="w-full bg-zinc-900 rounded-full h-2 mt-4 overflow-hidden border border-white/5 relative">
+                <div className="w-full bg-muted rounded-full h-2 mt-4 overflow-hidden border border-border/40 relative">
                   <div
-                    className="bg-gradient-to-r from-sky-600 to-blue-500 h-full rounded-full transition-all duration-300 ease-out"
+                    className="bg-sky-600 dark:bg-sky-500 h-full rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${Math.round(atsProgress)}%` }}
                   />
                 </div>
-                <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 mt-2 px-1">
+                <div className="flex justify-between items-center text-[10px] font-mono text-muted-foreground mt-2 px-1">
                   <span>{atsTimeElapsed}s elapsed</span>
-                  <span className="text-sky-400 font-bold">{Math.round(atsProgress)}%</span>
+                  <span className="text-primary font-bold">{Math.round(atsProgress)}%</span>
                 </div>
               </div>
             </div>

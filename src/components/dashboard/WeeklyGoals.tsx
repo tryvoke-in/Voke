@@ -18,10 +18,10 @@ interface GoalItem {
 }
 
 const DEFAULT_GOALS: GoalItem[] = [
-  { id: "goal-1", text: "Solve 5 coding questions", category: "coding", current: 3, target: 5, completed: false },
+  { id: "goal-1", text: "Solve 5 coding questions", category: "coding", current: 0, target: 5, completed: false },
   { id: "goal-2", text: "Complete 1 AI Voice mock interview", category: "voice", current: 0, target: 1, completed: false },
-  { id: "goal-3", text: "Conduct 1 Peer Match session", category: "peer", current: 1, target: 1, completed: true },
-  { id: "goal-4", text: "Optimize resume match score", category: "resume", current: 1, target: 1, completed: true },
+  { id: "goal-3", text: "Conduct 1 Peer Match session", category: "peer", current: 0, target: 1, completed: false },
+  { id: "goal-4", text: "Optimize resume match score", category: "resume", current: 0, target: 1, completed: false },
   { id: "goal-5", text: "Complete 1 Daily Coding Challenge", category: "coding", current: 0, target: 1, completed: false }
 ];
 

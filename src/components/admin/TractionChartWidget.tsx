@@ -192,13 +192,6 @@ export const TractionChartWidget: React.FC<TractionChartWidgetProps> = ({
               </span>
               <span className="font-bold text-white">{data.interviews}</span>
             </div>
-            <div className="flex justify-between items-center text-cyan-400 font-medium">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-cyan-500 inline-block" />
-                Waitlist:
-              </span>
-              <span className="font-bold text-white">{data.waitlist}</span>
-            </div>
           </div>
         </div>
       );
@@ -232,12 +225,6 @@ export const TractionChartWidget: React.FC<TractionChartWidgetProps> = ({
             <span className="font-medium">Interviews:</span>
             <span className="font-bold text-white">{chartDataResult.totalInterviews}</span>
           </div>
-
-          <div className="flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1.5 rounded-lg text-cyan-300">
-            <Mail className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-medium">Waitlist:</span>
-            <span className="font-bold text-white">{chartDataResult.totalWaitlist}</span>
-          </div>
         </div>
       </CardHeader>
 
@@ -249,10 +236,6 @@ export const TractionChartWidget: React.FC<TractionChartWidgetProps> = ({
                 <linearGradient id="colorUsersGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.45}/>
                   <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.02}/>
-                </linearGradient>
-                <linearGradient id="colorWaitlistGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.35}/>
-                  <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.01}/>
                 </linearGradient>
                 <linearGradient id="colorInterviewsGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.35}/>
@@ -295,16 +278,6 @@ export const TractionChartWidget: React.FC<TractionChartWidgetProps> = ({
                 fillOpacity={1} 
                 fill="url(#colorInterviewsGrad)"
                 activeDot={{ r: 5, stroke: '#10b981', strokeWidth: 2, fill: '#ffffff' }} 
-              />
-              <Area 
-                type="monotone" 
-                dataKey="waitlist" 
-                name="Waitlist Signups" 
-                stroke="#06b6d4" 
-                strokeWidth={2} 
-                fillOpacity={1} 
-                fill="url(#colorWaitlistGrad)"
-                activeDot={{ r: 5, stroke: '#06b6d4', strokeWidth: 2, fill: '#ffffff' }} 
               />
             </AreaChart>
           </ResponsiveContainer>

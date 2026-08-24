@@ -381,7 +381,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                     </div>
 
                     {/* Center Navigation Links */}
-                    <div className="hidden md:flex items-center gap-1">
+                    {/* <div className="hidden md:flex items-center gap-1">
                         {[
                             { name: "AI Practice", path: "/voice-assistant" },
                             { name: "Companies", path: "/companies" },
@@ -406,7 +406,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                 </Button>
                             );
                         })}
-                    </div>
+                    </div> */}
 
                     {/* Right Side - Theme Toggle & CTA */}
                     <div className="flex items-center gap-3.5">
@@ -414,17 +414,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                         <UpgradeButton />
                         {userId && (
                             <>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => navigate("/profile")}
-                                    aria-label="Settings and Profile"
-                                    className="text-gray-700 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-500/10 dark:hover:bg-sky-500/10 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center focus-visible:ring-2 focus-visible:ring-sky-500"
-                                    title="Settings"
-                                >
-                                    <Settings className="w-5 h-5" aria-hidden="true" />
-                                    <span className="sr-only">Settings</span>
-                                </Button>
+                                
 
                                 {/* Profile Strength - Circular Ring */}
                                 {(() => {
@@ -489,18 +479,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                     )
                                 })()}
 
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={async () => {
-                                        await supabase.auth.signOut();
-                                        navigate("/");
-                                    }}
-                                    className="text-red-500 hover:bg-red-500/10 hover:text-red-600 h-9 w-9 rounded-full ml-1 transition-colors flex items-center justify-center"
-                                    title="Logout"
-                                >
-                                    <LogOut className="w-5 h-5" />
-                                </Button>
+                                
                             </>
                         )}
                         <ThemeToggle />

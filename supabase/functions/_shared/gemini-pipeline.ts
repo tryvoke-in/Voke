@@ -84,6 +84,8 @@ export async function callGeminiPipeline(options: GeminiPipelineOptions, isStrea
             status: response.status,
             data,
             aiContent,
+            usageMetadata: data.usageMetadata || null,
+            modelName: currentModel,
             providerInfo: { provider: 'Google Gemini', model: currentModel, apiLabel: '(' + currentModel + ')' }
           };
         }

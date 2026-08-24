@@ -234,7 +234,7 @@ export default function JobRecommendations() {
       setRecommendations(items);
 
       if (items.length < 100) {
-        generateRecommendations(user.id);
+        generateRecommendations(user.id, false);
       }
     } catch (e) {
       console.error(e);
@@ -244,7 +244,7 @@ export default function JobRecommendations() {
     }
   };
 
-  const generateRecommendations = async (overrideUserId?: string) => {
+  const generateRecommendations = async (overrideUserId?: string, forceRefresh: boolean = false) => {
     setGenerating(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -252,7 +252,7 @@ export default function JobRecommendations() {
       if (!targetUid) return;
 
       const { data, error } = await supabase.functions.invoke("generate-job-recommendations", {
-        body: { userId: targetUid, forceRefresh: true },
+        body: { userId: targetUid, forceRefresh },
       });
       if (error) throw error;
       if (data?.crashError) {
@@ -444,7 +444,7 @@ export default function JobRecommendations() {
                 </Button>
 
                 <Button
-                  onClick={() => generateRecommendations()}
+                  onClick={() => generateRecommendations(undefined, true)}
                   disabled={generating}
                   size="sm"
                   className="rounded-lg text-xs font-medium h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs"
@@ -646,7 +646,7 @@ export default function JobRecommendations() {
                         : "Click 'Fetch Live Jobs' to discover real-time tailored role recommendations."}
                     </p>
                     <Button
-                      onClick={() => generateRecommendations()}
+                      onClick={() => generateRecommendations(undefined, true)}
                       disabled={generating}
                       size="sm"
                       className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs px-5"

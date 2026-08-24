@@ -34,7 +34,10 @@ const TOPICS = Array.from(new Set(DSA_QUESTIONS.map(q => q.topic)));
 
 const DSASheet = () => {
     const navigate = useNavigate();
-    const [selectedPlan, setSelectedPlan] = useState<keyof typeof PLANS>("2.5_months");
+    const [selectedPlan, setSelectedPlan] = useState<keyof typeof PLANS>(() => {
+        const saved = localStorage.getItem("voke_dsa_plan") as keyof typeof PLANS;
+        return saved && PLANS[saved] ? saved : "2.5_months";
+    });
     const [viewMode, setViewMode] = useState<"daily" | "topic">("daily");
     const [currentDay, setCurrentDay] = useState(1);
     const [selectedTopic, setSelectedTopic] = useState<string>(TOPICS[0]);
@@ -85,23 +88,35 @@ const DSASheet = () => {
         }
     };
 
-    const markQuestionAsSolved = async (questionId: number, title: string, difficulty: string, url: string) => {
-        if (!userId) return;
+    const toggleSolvedStatus = async (questionId: number, title: string, difficulty: string, url?: string) => {
+        if (!userId) {
+            toast.error("Please login to save your progress");
+            return;
+        }
 
-        // Optimistically update UI
-        setSolvedIds(prev => new Set([...prev, questionId]));
-
-        // Save to database
-        await supabase
-            .from('solved_questions' as any)
-            .insert({
+        const isCurrentlySolved = solvedIds.has(questionId);
+        if (isCurrentlySolved) {
+            setSolvedIds(prev => {
+                const next = new Set(prev);
+                next.delete(questionId);
+                return next;
+            });
+            await supabase.from('solved_questions' as any).delete().eq('user_id', userId).eq('question_id', questionId);
+            window.dispatchEvent(new Event("dsa_progress_updated"));
+            toast.info("Problem marked as un-solved");
+        } else {
+            setSolvedIds(prev => new Set([...prev, questionId]));
+            await supabase.from('solved_questions' as any).insert({
                 user_id: userId,
                 question_id: questionId,
                 question_title: title,
                 difficulty: difficulty,
-                platform_url: url
-            })
-            .select();
+                platform_url: url || `https://leetcode.com/problemset/all/?search=${encodeURIComponent(title)}`,
+                solved_at: new Date().toISOString()
+            });
+            window.dispatchEvent(new Event("dsa_progress_updated"));
+            toast.success("Problem marked as solved! 🎉");
+        }
     };
 
     const getDifficultyColor = (diff: string) => {
@@ -173,7 +188,15 @@ const DSASheet = () => {
                         {/* Controls */}
                         <div className="sticky top-20 z-30 mb-8 bg-card/80 backdrop-blur-md border border-border/50 p-4 rounded-xl shadow-lg flex flex-col md:flex-row gap-4 items-center justify-between">
                             <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                                <Select value={selectedPlan} onValueChange={(val: any) => { setSelectedPlan(val); setCurrentDay(1); }}>
+                                <Select 
+                                    value={selectedPlan} 
+                                    onValueChange={(val: any) => { 
+                                        setSelectedPlan(val); 
+                                        setCurrentDay(1); 
+                                        localStorage.setItem("voke_dsa_plan", val);
+                                        window.dispatchEvent(new Event("dsa_plan_changed"));
+                                    }}
+                                >
                                     <SelectTrigger className="w-[180px] bg-background">
                                         <Calendar className="w-4 h-4 mr-2 text-sky-500" />
                                         <SelectValue placeholder="Select Plan" />
@@ -273,15 +296,28 @@ const DSASheet = () => {
                                                                 size="icon"
                                                                 className={cn("w-8 h-8 rounded-full", isReviewed ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground")}
                                                                 onClick={(e) => { e.stopPropagation(); toggleReviewStatus(question.id); }}
+                                                                title={isReviewed ? "Remove from review" : "Save for review"}
                                                             >
                                                                 {isReviewed ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
                                                             </Button>
                                                         </div>
-                                                        {isSolved && (
-                                                            <Badge className="bg-emerald-500 text-white border-0">
-                                                                <CheckCircle2 className="w-3 h-3 mr-1" /> Solved
-                                                            </Badge>
-                                                        )}
+                                                        <Button
+                                                            variant={isSolved ? "default" : "outline"}
+                                                            size="sm"
+                                                            className={cn(
+                                                                "h-6 px-2 text-[11px] font-semibold rounded-md gap-1 transition-all",
+                                                                isSolved 
+                                                                    ? "bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-xs" 
+                                                                    : "border-border/60 text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/30"
+                                                            )}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleSolvedStatus(question.id, question.title, question.difficulty, question.link);
+                                                            }}
+                                                        >
+                                                            <CheckCircle2 className={cn("w-3 h-3", isSolved ? "text-white" : "text-muted-foreground")} />
+                                                            <span>{isSolved ? "Solved" : "Mark Solved"}</span>
+                                                        </Button>
                                                     </div>
                                                     <CardTitle className="text-lg font-bold leading-tight group-hover:text-sky-500 transition-colors">
                                                         {question.title}

@@ -8,6 +8,7 @@ export interface College {
   domains: string[]; // e.g. ["nst.rishihood.edu.in", "rishihood.edu.in", "nst.edu.in"]
   adminEmail: string;
   adminName: string;
+  adminPasswordHash?: string;
   logoUrl?: string;
   tier: string;
   contractPeriod: string;
@@ -15,6 +16,25 @@ export interface College {
   location: string;
   establishedYear?: number;
   contactPhone?: string;
+}
+
+export async function hashCollegePassword(password: string, salt: string = "voke_institution_salt_2025"): Promise<string> {
+  if (typeof crypto !== "undefined" && crypto.subtle) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(`${salt}:${password}`);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+  // Safe fallback for environments without crypto.subtle
+  let hash = 0;
+  const str = `${salt}:${password}`;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(16);
 }
 
 export interface CollegeStudent {
@@ -124,75 +144,17 @@ export interface CollegeAnalytics {
   topPerformers: CollegeStudent[];
 }
 
-// Default Partner Colleges configuration (institutional details, domain mapping, admin credentials)
-export const DEFAULT_COLLEGES: College[] = [
-  {
-    id: "college-nst",
-    name: "Newton School of Technology",
-    shortName: "NST",
-    slug: "nst",
-    domains: [
-      "nst.rishihood.edu.in", 
-      "rishihood.edu.in", 
-      "nst.edu.in", 
-      "newtonschool.edu.in", 
-      "newton.edu"
-    ],
-    adminEmail: "placement@nst.edu.in",
-    adminName: "Prof. Rajesh Verma (Placement Head)",
-    tier: "Enterprise Campus Partner",
-    contractPeriod: "2025 - 2026 Academic Year",
-    totalStudentSlots: 500,
-    location: "Rishihood University, Delhi NCR",
-    establishedYear: 2022,
-    contactPhone: "+91 98123 45678"
-  },
-  {
-    id: "college-dtu",
-    name: "Delhi Technological University",
-    shortName: "DTU",
-    slug: "dtu",
-    domains: ["dtu.ac.in", "dtu.edu"],
-    adminEmail: "tnp@dtu.ac.in",
-    adminName: "Dr. Alok Kumar (T&P Cell)",
-    tier: "Enterprise Campus Partner",
-    contractPeriod: "2025 - 2026 Academic Year",
-    totalStudentSlots: 1000,
-    location: "Rohini, New Delhi",
-    establishedYear: 1941,
-    contactPhone: "+91 98765 43210"
-  },
-  {
-    id: "college-iitd",
-    name: "Indian Institute of Technology Delhi",
-    shortName: "IITD",
-    slug: "iitd",
-    domains: ["iitd.ac.in", "cse.iitd.ac.in"],
-    adminEmail: "tnp@iitd.ac.in",
-    adminName: "Dr. Priya Sundaram",
-    tier: "Enterprise Campus Partner",
-    contractPeriod: "2025 - 2026 Academic Year",
-    totalStudentSlots: 800,
-    location: "Hauz Khas, New Delhi",
-    establishedYear: 1961,
-    contactPhone: "+91 99887 76655"
-  },
-  {
-    id: "college-vit",
-    name: "Vellore Institute of Technology",
-    shortName: "VIT",
-    slug: "vit",
-    domains: ["vit.ac.in", "vitstudent.ac.in"],
-    adminEmail: "placement@vit.ac.in",
-    adminName: "Dr. Samuel Rajan",
-    tier: "Enterprise Campus Partner",
-    contractPeriod: "2025 - 2026 Academic Year",
-    totalStudentSlots: 1500,
-    location: "Vellore, Tamil Nadu",
-    establishedYear: 1984,
-    contactPhone: "+91 98401 23456"
-  }
-];
+// Known legacy dummy IDs to prune so only real registered colleges remain
+const HARDCODED_COLLEGE_IDS = new Set([
+  "college-nst", "college-dtu", "college-iitd", "college-vit"
+]);
+
+const DUMMY_DEFAULT_EMAILS = new Set([
+  "placement@nst.edu.in", "tnp@dtu.ac.in", "tnp@iitd.ac.in", "placement@vit.ac.in"
+]);
+
+// Default Partner Colleges configuration (empty by default so only real registered colleges appear)
+export const DEFAULT_COLLEGES: College[] = [];
 
 const STORAGE_KEYS = {
   COLLEGES: "voke_partner_colleges",
@@ -218,6 +180,8 @@ export const getCollegeRealtimeChannel = () => {
   return sharedRosterChannel;
 };
 
+let _inMemoryColleges: College[] = [];
+
 // Fetch college registrations from Supabase and merge into localStorage
 let _collegesLoadedFromDb = false;
 async function ensureCollegesFromDb(): Promise<void> {
@@ -230,24 +194,40 @@ async function ensureCollegesFromDb(): Promise<void> {
       .eq('status', 'college_registration');
 
     if (dbColleges && dbColleges.length > 0) {
-      const stored = localStorage.getItem(STORAGE_KEYS.COLLEGES);
-      const existing: College[] = stored ? JSON.parse(stored) : [];
-      const allIds = new Set(existing.map(c => c.id));
-      const allSlugs = new Set(existing.map(c => c.slug));
+      const stored = typeof localStorage !== "undefined" && localStorage.getItem
+        ? localStorage.getItem(STORAGE_KEYS.COLLEGES)
+        : null;
+      let existing: College[] = stored ? JSON.parse(stored) : [];
+      // Clean legacy dummy colleges
+      existing = existing.filter(c => !HARDCODED_COLLEGE_IDS.has(c.id) && !DUMMY_DEFAULT_EMAILS.has(c.adminEmail));
 
       for (const row of dbColleges) {
         if (row.phone_number) {
           try {
             const college: College = JSON.parse(row.phone_number);
-            if (college && college.id && !allIds.has(college.id) && !allSlugs.has(college.slug)) {
-              existing.push(college);
-              allIds.add(college.id);
-              allSlugs.add(college.slug);
+            if (
+              college && 
+              (college.id || college.adminEmail) && 
+              !HARDCODED_COLLEGE_IDS.has(college.id) &&
+              !DUMMY_DEFAULT_EMAILS.has(college.adminEmail)
+            ) {
+              const existingIdx = existing.findIndex(c => 
+                c.id === college.id || 
+                (c.adminEmail && college.adminEmail && c.adminEmail.toLowerCase() === college.adminEmail.toLowerCase())
+              );
+              if (existingIdx >= 0) {
+                existing[existingIdx] = { ...existing[existingIdx], ...college };
+              } else {
+                existing.push(college);
+              }
             }
           } catch (pe) {}
         }
       }
-      localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(existing));
+      _inMemoryColleges = existing;
+      if (typeof localStorage !== "undefined" && localStorage.setItem) {
+        localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(existing));
+      }
     }
   } catch (e) {
     console.warn("Failed to load colleges from Supabase:", e);
@@ -255,21 +235,37 @@ async function ensureCollegesFromDb(): Promise<void> {
 }
 
 export const collegeService = {
-  // Retrieve all colleges (defaults merged with custom registrations)
+  // Retrieve all colleges (only real registered colleges)
   getColleges(): College[] {
     try {
-      const stored = localStorage.getItem(STORAGE_KEYS.COLLEGES);
-      if (stored) {
-        const parsed: College[] = JSON.parse(stored);
-        const missingDefaults = DEFAULT_COLLEGES.filter(
-          def => !parsed.some(c => c.id === def.id || c.slug === def.slug)
-        );
-        return [...parsed, ...missingDefaults];
+      let storedList: College[] = [];
+      if (typeof localStorage !== "undefined" && localStorage.getItem) {
+        const stored = localStorage.getItem(STORAGE_KEYS.COLLEGES);
+        if (stored) {
+          const raw: College[] = JSON.parse(stored);
+          storedList = raw.filter(c => !HARDCODED_COLLEGE_IDS.has(c.id) && !DUMMY_DEFAULT_EMAILS.has(c.adminEmail));
+          if (raw.length !== storedList.length && localStorage.setItem) {
+            localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(storedList));
+          }
+        }
       }
+
+      const combined = [...storedList];
+      for (const mem of _inMemoryColleges) {
+        if (HARDCODED_COLLEGE_IDS.has(mem.id) || DUMMY_DEFAULT_EMAILS.has(mem.adminEmail)) continue;
+        const idx = combined.findIndex(c => c.id === mem.id || c.adminEmail.toLowerCase() === mem.adminEmail.toLowerCase());
+        if (idx >= 0) {
+          combined[idx] = { ...combined[idx], ...mem };
+        } else {
+          combined.push(mem);
+        }
+      }
+
+      return combined.filter(c => !HARDCODED_COLLEGE_IDS.has(c.id) && !DUMMY_DEFAULT_EMAILS.has(c.adminEmail));
     } catch (e) {
       console.warn("Failed to load colleges from localStorage", e);
     }
-    return DEFAULT_COLLEGES;
+    return [];
   },
 
   // Async version that also loads from Supabase first
@@ -348,8 +344,13 @@ export const collegeService = {
     });
   },
 
-  // Authenticate College Admin
-  authenticateCollegeAdmin(email: string, _password?: string): { success: boolean; college?: College; error?: string } {
+  // Authenticate College Admin (Async with secure password validation)
+  async authenticateCollegeAdminAsync(email: string, password?: string): Promise<{ success: boolean; college?: College; error?: string }> {
+    if (!email || !email.includes("@")) {
+      return { success: false, error: "Please enter a valid administrator email address." };
+    }
+
+    await ensureCollegesFromDb();
     const cleanEmail = email.toLowerCase().trim();
     const colleges = this.getColleges();
 
@@ -359,14 +360,65 @@ export const collegeService = {
       const emailDomain = cleanEmail.split("@")[1];
       if (emailDomain) {
         matchedCollege = colleges.find(c => 
-          c.domains.some(d => emailDomain.toLowerCase().endsWith(d.toLowerCase()))
+          c.domains.some(d => emailDomain.toLowerCase() === d.toLowerCase() || emailDomain.toLowerCase().endsWith("." + d.toLowerCase()))
+        );
+      }
+    }
+
+    if (!matchedCollege) {
+      return { 
+        success: false, 
+        error: "College admin credentials not recognized. Check your email or onboard your university." 
+      };
+    }
+
+    // Verify Password if the college was registered with a password hash
+    if (matchedCollege.adminPasswordHash) {
+      if (!password || !password.trim()) {
+        return {
+          success: false,
+          error: "Please enter your administrator password to sign in."
+        };
+      }
+
+      const inputHash = await hashCollegePassword(password.trim());
+      if (inputHash !== matchedCollege.adminPasswordHash) {
+        return {
+          success: false,
+          error: "Incorrect administrator password. Please check your credentials."
+        };
+      }
+    }
+
+    // Create sanitized session object (never expose password hash in session storage)
+    const sanitizedCollege: College = { ...matchedCollege };
+    delete sanitizedCollege.adminPasswordHash;
+
+    this.setCollegeSession(sanitizedCollege);
+    return { success: true, college: sanitizedCollege };
+  },
+
+  // Synchronous version for backwards compatibility
+  authenticateCollegeAdmin(email: string, password?: string): { success: boolean; college?: College; error?: string } {
+    const cleanEmail = email.toLowerCase().trim();
+    const colleges = this.getColleges();
+
+    let matchedCollege = colleges.find(c => c.adminEmail.toLowerCase() === cleanEmail);
+
+    if (!matchedCollege) {
+      const emailDomain = cleanEmail.split("@")[1];
+      if (emailDomain) {
+        matchedCollege = colleges.find(c => 
+          c.domains.some(d => emailDomain.toLowerCase() === d.toLowerCase() || emailDomain.toLowerCase().endsWith("." + d.toLowerCase()))
         );
       }
     }
 
     if (matchedCollege) {
-      this.setCollegeSession(matchedCollege);
-      return { success: true, college: matchedCollege };
+      const sanitizedCollege: College = { ...matchedCollege };
+      delete sanitizedCollege.adminPasswordHash;
+      this.setCollegeSession(sanitizedCollege);
+      return { success: true, college: sanitizedCollege };
     }
 
     return { 
@@ -378,9 +430,11 @@ export const collegeService = {
   // Session management
   getCollegeSession(): College | null {
     try {
-      const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_SESSION);
-      if (stored) {
-        return JSON.parse(stored);
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined" && localStorage.getItem) {
+        const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_SESSION);
+        if (stored) {
+          return JSON.parse(stored);
+        }
       }
     } catch (e) {
       console.warn("Failed to parse college session", e);
@@ -390,7 +444,11 @@ export const collegeService = {
 
   setCollegeSession(college: College): void {
     try {
-      localStorage.setItem(STORAGE_KEYS.COLLEGE_SESSION, JSON.stringify(college));
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined" && localStorage.setItem) {
+        const sanitized = { ...college };
+        delete sanitized.adminPasswordHash;
+        localStorage.setItem(STORAGE_KEYS.COLLEGE_SESSION, JSON.stringify(sanitized));
+      }
     } catch (e) {
       console.warn("Failed to save college session", e);
     }
@@ -398,16 +456,19 @@ export const collegeService = {
 
   clearCollegeSession(): void {
     try {
-      localStorage.removeItem(STORAGE_KEYS.COLLEGE_SESSION);
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined" && localStorage.removeItem) {
+        localStorage.removeItem(STORAGE_KEYS.COLLEGE_SESSION);
+      }
     } catch (e) {
       console.warn("Failed to clear college session", e);
     }
   },
 
-  // Register a new partner college
-  registerCollege(collegeData: Partial<College>): College {
+  // Register a new partner college (Async with secure password hashing)
+  async registerCollegeAsync(collegeData: Partial<College> & { password?: string }): Promise<College> {
+    await ensureCollegesFromDb();
     const existingColleges = this.getColleges();
-    const cleanName = collegeData.name || "Partner University";
+    const cleanName = (collegeData.name || "Partner University").trim();
     const slug = cleanName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -417,25 +478,105 @@ export const collegeService = {
       ? collegeData.domains.map(d => d.trim().replace(/^@/, "").toLowerCase())
       : [`${slug}.edu.in`];
 
+    const adminEmail = (collegeData.adminEmail || `admin@${domains[0]}`).toLowerCase().trim();
+
+    let adminPasswordHash: string | undefined = undefined;
+    if (collegeData.password && collegeData.password.trim()) {
+      adminPasswordHash = await hashCollegePassword(collegeData.password.trim());
+    }
+
     const newCollege: College = {
       id: `college-${Date.now()}`,
       name: cleanName,
-      shortName: collegeData.shortName || cleanName.slice(0, 4).toUpperCase(),
+      shortName: collegeData.shortName?.trim() || cleanName.slice(0, 4).toUpperCase(),
       slug,
       domains,
-      adminEmail: collegeData.adminEmail || `admin@${domains[0]}`,
-      adminName: collegeData.adminName || "Placement Coordinator",
+      adminEmail,
+      adminName: collegeData.adminName?.trim() || "Placement Coordinator",
+      adminPasswordHash,
       tier: "Enterprise Campus Partner",
       contractPeriod: "2025 - 2026 Academic Year",
       totalStudentSlots: collegeData.totalStudentSlots || 500,
-      location: collegeData.location || "India",
+      location: collegeData.location?.trim() || "India",
       establishedYear: collegeData.establishedYear || new Date().getFullYear(),
       contactPhone: collegeData.contactPhone || "+91 98000 00000"
     };
 
-    const updated = [...existingColleges.filter(c => c.id !== newCollege.id), newCollege];
+    const updated = [
+      ...existingColleges.filter(c => c.id !== newCollege.id && c.adminEmail.toLowerCase() !== adminEmail),
+      newCollege
+    ];
+    _inMemoryColleges = updated;
+
     try {
-      localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(updated));
+      if (typeof localStorage !== "undefined" && localStorage.setItem) {
+        localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(updated));
+      }
+    } catch (e) {
+      console.warn("Failed to persist new college", e);
+    }
+
+    // Persist to Supabase for cross-device college discovery
+    try {
+      await supabase.from('waitlist').upsert({
+        email: newCollege.adminEmail,
+        college_name: newCollege.name,
+        phone_number: JSON.stringify(newCollege),
+        status: 'college_registration'
+      }, { onConflict: 'email' });
+    } catch (dbe) {
+      console.warn("College registration DB sync:", dbe);
+    }
+
+    const sanitizedCollege = { ...newCollege };
+    delete sanitizedCollege.adminPasswordHash;
+    this.setCollegeSession(sanitizedCollege);
+
+    return sanitizedCollege;
+  },
+
+  // Register a new partner college (Sync wrapper)
+  registerCollege(collegeData: Partial<College> & { password?: string }): College {
+    const existingColleges = this.getColleges();
+    const cleanName = (collegeData.name || "Partner University").trim();
+    const slug = cleanName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .slice(0, 20);
+
+    const domains = (collegeData.domains && collegeData.domains.length > 0)
+      ? collegeData.domains.map(d => d.trim().replace(/^@/, "").toLowerCase())
+      : [`${slug}.edu.in`];
+
+    const adminEmail = (collegeData.adminEmail || `admin@${domains[0]}`).toLowerCase().trim();
+
+    const newCollege: College = {
+      id: `college-${Date.now()}`,
+      name: cleanName,
+      shortName: collegeData.shortName?.trim() || cleanName.slice(0, 4).toUpperCase(),
+      slug,
+      domains,
+      adminEmail,
+      adminName: collegeData.adminName?.trim() || "Placement Coordinator",
+      adminPasswordHash: collegeData.adminPasswordHash,
+      tier: "Enterprise Campus Partner",
+      contractPeriod: "2025 - 2026 Academic Year",
+      totalStudentSlots: collegeData.totalStudentSlots || 500,
+      location: collegeData.location?.trim() || "India",
+      establishedYear: collegeData.establishedYear || new Date().getFullYear(),
+      contactPhone: collegeData.contactPhone || "+91 98000 00000"
+    };
+
+    const updated = [
+      ...existingColleges.filter(c => c.id !== newCollege.id && c.adminEmail.toLowerCase() !== adminEmail),
+      newCollege
+    ];
+    _inMemoryColleges = updated;
+
+    try {
+      if (typeof localStorage !== "undefined" && localStorage.setItem) {
+        localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(updated));
+      }
     } catch (e) {
       console.warn("Failed to persist new college", e);
     }
@@ -450,8 +591,82 @@ export const collegeService = {
       }, { onConflict: 'email' }).then(({ error }) => { if (error) console.warn('College reg upsert error:', error); }, e => console.warn('College reg upsert failed:', e));
     } catch (dbe) {}
 
-    this.setCollegeSession(newCollege);
-    return newCollege;
+    const sanitizedCollege = { ...newCollege };
+    delete sanitizedCollege.adminPasswordHash;
+    this.setCollegeSession(sanitizedCollege);
+
+    return sanitizedCollege;
+  },
+
+  // Delete / Deregister a partner college
+  async deleteCollegeAsync(collegeId: string): Promise<boolean> {
+    try {
+      await ensureCollegesFromDb();
+      const colleges = this.getColleges();
+      const targetCollege = colleges.find(c => c.id === collegeId || c.slug === collegeId);
+      
+      const updated = colleges.filter(c => c.id !== collegeId && c.slug !== collegeId);
+      _inMemoryColleges = updated;
+
+      if (typeof localStorage !== "undefined" && localStorage.setItem) {
+        localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(updated));
+      }
+
+      // If active session belongs to this college, clear it
+      const currentSession = this.getCollegeSession();
+      if (currentSession && (currentSession.id === collegeId || currentSession.slug === collegeId)) {
+        this.clearCollegeSession();
+      }
+
+      // Remove from Supabase waitlist table if it exists
+      if (targetCollege && targetCollege.adminEmail) {
+        try {
+          await supabase
+            .from('waitlist')
+            .delete()
+            .eq('status', 'college_registration')
+            .eq('email', targetCollege.adminEmail);
+        } catch (dbe) {
+          console.warn("Supabase college deletion warning:", dbe);
+        }
+      }
+
+      return true;
+    } catch (e) {
+      console.warn("Failed to delete college:", e);
+      return false;
+    }
+  },
+
+  deleteCollege(collegeId: string): boolean {
+    try {
+      const colleges = this.getColleges();
+      const targetCollege = colleges.find(c => c.id === collegeId || c.slug === collegeId);
+      const updated = colleges.filter(c => c.id !== collegeId && c.slug !== collegeId);
+      _inMemoryColleges = updated;
+
+      if (typeof localStorage !== "undefined" && localStorage.setItem) {
+        localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(updated));
+      }
+
+      const currentSession = this.getCollegeSession();
+      if (currentSession && (currentSession.id === collegeId || currentSession.slug === collegeId)) {
+        this.clearCollegeSession();
+      }
+
+      if (targetCollege && targetCollege.adminEmail) {
+        supabase
+          .from('waitlist')
+          .delete()
+          .eq('status', 'college_registration')
+          .eq('email', targetCollege.adminEmail)
+          .then().catch(() => {});
+      }
+      return true;
+    } catch (e) {
+      console.warn("Failed to delete college:", e);
+      return false;
+    }
   },
 
   // Record a real student registration or login event dynamically
@@ -829,8 +1044,8 @@ export const collegeService = {
           if (collegeDrives.length > 0) {
             return collegeDrives;
           }
-          // If no specific match but drives exist in storage, return all saved drives
-          return parsed;
+          // Do NOT fallback to returning other colleges' drives
+          return [];
         }
       }
     } catch (e) {
@@ -924,30 +1139,6 @@ export const collegeService = {
       const updated = [newDrive, ...existing];
       localStorage.setItem(STORAGE_KEYS.COLLEGE_DRIVES, JSON.stringify(updated));
 
-      // Also append to local calendar events
-      const calendarEvent = {
-        id: `college-drive-${newDrive.id}`,
-        title: newDrive.title,
-        type: "interview",
-        date: newDrive.scheduledDate,
-        time: newDrive.durationMinutes ? `${newDrive.durationMinutes} mins` : undefined,
-        company: driveData.collegeName,
-        collegeName: driveData.collegeName,
-        link: fullInterviewUrl,
-        notes: driveData.instructions || "",
-        completed: false,
-        isCollegeDrive: true
-      };
-
-      try {
-        const calSaved = localStorage.getItem("voke_user_calendar_events");
-        const existingCal = calSaved ? JSON.parse(calSaved) : [];
-        const filteredCal = existingCal.filter((c: any) => c.id !== calendarEvent.id);
-        localStorage.setItem("voke_user_calendar_events", JSON.stringify([calendarEvent, ...filteredCal]));
-      } catch (ce) {
-        console.warn("Failed to update local calendar store:", ce);
-      }
-
       // Persist across browsers via local sync endpoint
       try {
         fetch("/api/college-drives", {
@@ -969,8 +1160,7 @@ export const collegeService = {
 
       // Broadcast reliably to all active tabs and browsers
       this.broadcastCollegeEvent("college_drive_scheduled", {
-        drive: newDrive,
-        calendarEvent
+        drive: newDrive
       });
     } catch (e) {
       console.warn("Failed to save scheduled drive", e);
@@ -1258,46 +1448,93 @@ export const collegeService = {
           d.collegeId === college.id
         ))
       );
-      if (collegeDrives.length > 0) {
-        return collegeDrives;
-      }
-      return merged;
+      return collegeDrives;
     }
 
     return this.getCollegeDrives(collegeId);
+  },
+
+  // Check if a student is genuinely eligible to receive/view a college placement drive
+  isStudentEligibleForDrive(studentEmail: string, drive: CollegeScheduledDrive): boolean {
+    if (!studentEmail || !drive) return false;
+    const cleanEmail = studentEmail.toLowerCase().trim();
+    if (!cleanEmail.includes("@")) return false;
+
+    // 1. Explicit targeted candidate: student's exact email is in targetEmails
+    if (drive.targetEmails && Array.isArray(drive.targetEmails) && drive.targetEmails.length > 0) {
+      if (drive.targetEmails.some(e => e && e.toLowerCase().trim() === cleanEmail)) {
+        return true;
+      }
+    }
+
+    // 2. Institutional Drive Broadcast: Student must strictly belong to the partner college that created the drive
+    const studentCollege = this.getCollegeByEmail(cleanEmail);
+    if (!studentCollege) {
+      // Non-registered email, personal email (e.g. gmail.com, yahoo.com), or non-partner domain
+      return false;
+    }
+
+    const driveCollege = this.getCollegeById(drive.collegeId) ||
+      this.getColleges().find(c =>
+        c.name.toLowerCase() === (drive.collegeName || "").toLowerCase() ||
+        c.id === drive.collegeId ||
+        c.slug === drive.collegeId
+      );
+
+    if (!driveCollege || driveCollege.id !== studentCollege.id) {
+      // Drive was scheduled by a different college
+      return false;
+    }
+
+    // Drive belongs to student's college
+    if (drive.targetAudience === "all") {
+      return true;
+    }
+
+    if (drive.targetAudience === "branch") {
+      if (!drive.targetBranch || drive.targetBranch === "All Branches") {
+        return true;
+      }
+      return true;
+    }
+
+    return false;
   },
 
   // Student specific view
   getStudentDrives(studentEmail: string): CollegeScheduledDrive[] {
     if (!studentEmail) return [];
     const cleanEmail = studentEmail.toLowerCase().trim();
-    const college = this.getCollegeByEmail(cleanEmail);
-    if (!college) return [];
+    const studentCollege = this.getCollegeByEmail(cleanEmail);
+    
+    const allDrives: CollegeScheduledDrive[] = studentCollege 
+      ? this.getCollegeDrives(studentCollege.id)
+      : (() => {
+          try {
+            const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
+            return stored ? JSON.parse(stored) : [];
+          } catch {
+            return [];
+          }
+        })();
 
-    const allCollegeDrives = this.getCollegeDrives(college.id);
-    return allCollegeDrives.filter(drive => {
-      // Check if student has already completed this drive
+    return allDrives.filter(drive => {
       const cand = drive.candidates?.find(c => c.studentEmail.toLowerCase() === cleanEmail);
       if (cand && (cand.status === "Completed" || cand.selectionVerdict !== undefined || cand.score !== undefined)) {
-        return false; // Once completed/given, hide from upcoming calendar
+        return false;
       }
-      if (drive.targetAudience === "all") return true;
-      if (drive.targetEmails && drive.targetEmails.some(e => e.toLowerCase() === cleanEmail)) return true;
-      return false;
+      return this.isStudentEligibleForDrive(cleanEmail, drive);
     });
   },
 
   async getStudentDrivesAsync(studentEmail: string): Promise<CollegeScheduledDrive[]> {
     if (!studentEmail) return [];
     const cleanEmail = studentEmail.toLowerCase().trim();
-    const emailDomain = cleanEmail.split("@")[1];
 
     // Ensure colleges from Supabase are loaded first (cross-device discovery)
     await ensureCollegesFromDb();
 
-    const college = this.getCollegeByEmail(cleanEmail);
-
-    // Collect ALL drives from every source: Supabase DB + localStorage
+    // Collect ALL drives from Supabase DB + localStorage
     const allDrivesMap = new Map<string, CollegeScheduledDrive>();
 
     // 1. Fetch from Supabase (cross-device source of truth)
@@ -1331,33 +1568,16 @@ export const collegeService = {
       });
     } catch (e) {}
 
-    // 3. Filter: only drives that target this student
+    // 3. Filter: strictly only drives where this student is genuinely eligible
     const matchingDrives: CollegeScheduledDrive[] = [];
     for (const drive of allDrivesMap.values()) {
       // Check if student already completed this drive
       const cand = drive.candidates?.find(c => c.studentEmail.toLowerCase() === cleanEmail);
       if (cand && (cand.status === "Completed" || cand.selectionVerdict !== undefined || cand.score !== undefined)) {
-        continue; // Skip completed drives
+        continue;
       }
 
-      // Match: student is explicitly in targetEmails
-      const inTargetEmails = drive.targetEmails && drive.targetEmails.some(e => e.toLowerCase() === cleanEmail);
-      
-      // Match: drive targets "all" AND student's domain matches the college that created the drive
-      let domainMatchesCollege = false;
-      if (drive.targetAudience === "all" && emailDomain) {
-        // Check if this drive's college has the same domain
-        const driveCollege = this.getCollegeById(drive.collegeId);
-        if (driveCollege && driveCollege.domains.some(d => d.toLowerCase() === emailDomain)) {
-          domainMatchesCollege = true;
-        }
-        // Also check if drive's targetEmails contain same-domain emails (partial match)
-        if (!domainMatchesCollege && drive.targetEmails) {
-          domainMatchesCollege = drive.targetEmails.some(e => e.toLowerCase().endsWith("@" + emailDomain));
-        }
-      }
-
-      if (inTargetEmails || domainMatchesCollege) {
+      if (this.isStudentEligibleForDrive(cleanEmail, drive)) {
         matchingDrives.push(drive);
       }
     }
