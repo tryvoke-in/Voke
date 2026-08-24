@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
     ArrowLeft, Search, Filter, ExternalLink, Code2,
-    Briefcase, CheckCircle2, Star, Zap, Flame, Trophy,
-    ChevronDown, Check, ChevronsUpDown, Bookmark, BookmarkCheck,
-    Hash
+    Briefcase, CheckCircle2, Trophy,
+    Check, ChevronsUpDown, Bookmark, BookmarkCheck,
+    Hash, Play, Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Navbar } from "@/components/Navbar";
@@ -57,45 +57,49 @@ const QuestionPractice = () => {
     // Fetch user and solved questions
     useEffect(() => {
         const fetchUserAndSolvedQuestions = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                setUserId(user.id);
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    setUserId(user.id);
 
-                // Fetch solved questions
-                const { data: solvedQuestions } = await supabase
-                    .from('solved_questions' as any)
-                    .select('question_id')
-                    .eq('user_id', user.id);
+                    // Fetch solved questions
+                    const { data: solvedQuestions } = await supabase
+                        .from('solved_questions' as any)
+                        .select('question_id')
+                        .eq('user_id', user.id);
 
-                if (solvedQuestions) {
-                    setSolvedQuestionIds(new Set(solvedQuestions.map((q: any) => q.question_id)));
+                    if (solvedQuestions) {
+                        setSolvedQuestionIds(new Set(solvedQuestions.map((q: any) => q.question_id)));
+                    }
+
+                    // Fetch reviewed questions
+                    const { data: reviewedQuestions } = await supabase
+                        .from('review_questions' as any)
+                        .select('question_id')
+                        .eq('user_id', user.id);
+
+                    if (reviewedQuestions) {
+                        setReviewedQuestionIds(new Set(reviewedQuestions.map((q: any) => q.question_id)));
+                    }
                 }
-
-                // Fetch reviewed questions
-                const { data: reviewedQuestions } = await supabase
-                    .from('review_questions' as any)
-                    .select('question_id')
-                    .eq('user_id', user.id);
-
-                if (reviewedQuestions) {
-                    setReviewedQuestionIds(new Set(reviewedQuestions.map((q: any) => q.question_id)));
-                }
+            } catch (err) {
+                console.error("Failed to load user questions", err);
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchUserAndSolvedQuestions();
     }, []);
 
     useEffect(() => {
-        // Cycle through companies
         const interval = setInterval(() => {
             setLoadingPhase(p => p + 1);
-        }, 500);
+        }, 400);
 
-        // End loading
         const timer = setTimeout(() => {
             setIsLoading(false);
             clearInterval(interval);
-        }, 2500);
+        }, 1200);
 
         return () => {
             clearTimeout(timer);
@@ -134,42 +138,68 @@ const QuestionPractice = () => {
         setCurrentPage(1);
     }
 
-    const getDifficultyColor = (diff: string) => {
+    const getDifficultyBadgeStyle = (diff: string) => {
         switch (diff) {
-            case "Easy": return "text-emerald-500 bg-emerald-500/10 border-emerald-500/20";
-            case "Medium": return "text-amber-500 bg-amber-500/10 border-amber-500/20";
-            case "Hard": return "text-red-500 bg-red-500/10 border-red-500/20";
-            default: return "text-gray-500";
+            case "Easy":
+                return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 font-bold";
+            case "Medium":
+                return "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25 font-bold";
+            case "Hard":
+                return "bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/25 font-bold";
+            default:
+                return "bg-muted text-muted-foreground border border-border/50";
         }
     };
 
-    const getDifficultyBorder = (diff: string) => {
+    const getDifficultyCardBorder = (diff: string, isSolved: boolean, isReviewed: boolean) => {
+        if (isSolved) {
+            return "border-emerald-500/40 bg-emerald-500/[0.03] dark:bg-emerald-950/20 ring-1 ring-emerald-500/20 shadow-emerald-500/5";
+        }
+        if (isReviewed) {
+            return "border-amber-500/40 bg-amber-500/[0.02] dark:bg-amber-950/15 ring-1 ring-amber-500/20 shadow-amber-500/5";
+        }
         switch (diff) {
-            case "Easy": return "border-l-emerald-500";
-            case "Medium": return "border-l-amber-500";
-            case "Hard": return "border-l-red-500";
-            default: return "border-l-gray-500";
+            case "Easy":
+                return "border-border/70 hover:border-emerald-500/50 hover:shadow-emerald-500/10";
+            case "Medium":
+                return "border-border/70 hover:border-amber-500/50 hover:shadow-amber-500/10";
+            case "Hard":
+                return "border-border/70 hover:border-rose-500/50 hover:shadow-rose-500/10";
+            default:
+                return "border-border/70 hover:border-border";
         }
     };
 
-    // Mark question as solved
-    const markQuestionAsSolved = async (questionId: number, title: string, difficulty: string, url: string) => {
-        if (!userId) return;
+    // Toggle solved status
+    const toggleSolvedStatus = async (questionId: number, title: string, difficulty: string, url?: string) => {
+        if (!userId) {
+            toast.error("Please login to track your progress");
+            return;
+        }
 
-        // Optimistically update UI
-        setSolvedQuestionIds(prev => new Set([...prev, questionId]));
-
-        // Save to database
-        await supabase
-            .from('solved_questions' as any)
-            .insert({
+        const isCurrentlySolved = solvedQuestionIds.has(questionId);
+        if (isCurrentlySolved) {
+            setSolvedQuestionIds(prev => {
+                const next = new Set(prev);
+                next.delete(questionId);
+                return next;
+            });
+            await supabase.from('solved_questions' as any).delete().eq('user_id', userId).eq('question_id', questionId);
+            window.dispatchEvent(new Event("dsa_progress_updated"));
+            toast.info("Problem marked as un-solved");
+        } else {
+            setSolvedQuestionIds(prev => new Set([...prev, questionId]));
+            await supabase.from('solved_questions' as any).insert({
                 user_id: userId,
                 question_id: questionId,
                 question_title: title,
                 difficulty: difficulty,
-                platform_url: url
-            })
-            .select();
+                platform_url: url || `https://leetcode.com/problemset/all/?search=${encodeURIComponent(title)}`,
+                solved_at: new Date().toISOString()
+            });
+            window.dispatchEvent(new Event("dsa_progress_updated"));
+            toast.success("Problem marked as solved! 🎉");
+        }
     };
 
     // Toggle review status
@@ -194,6 +224,7 @@ const QuestionPractice = () => {
                 .delete()
                 .eq('user_id', userId)
                 .eq('question_id', questionId);
+            toast.info("Removed from review list");
         } else {
             // Add to review
             setReviewedQuestionIds(prev => new Set([...prev, questionId]));
@@ -204,6 +235,7 @@ const QuestionPractice = () => {
                     user_id: userId,
                     question_id: questionId
                 });
+            toast.success("Added to review list ⭐");
         }
     };
 
@@ -215,58 +247,60 @@ const QuestionPractice = () => {
         total: solvedQuestionIds.size
     };
 
+    const progressPercentage = Math.min(100, Math.round((solvedStats.total / QUESTIONS.length) * 100));
+
     if (isLoading) {
         const companies = [
-            { name: "GOOGLE", color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" },
-            { name: "AMAZON", color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20", logo: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Amazon_icon.svg", imgClass: "brightness-0 invert" },
-            { name: "META", color: "text-blue-400", bg: "bg-blue-600/10", border: "border-blue-600/20", logo: "https://upload.wikimedia.org/wikipedia/commons/a/ab/Meta-Logo.png" },
-            { name: "APPLE", color: "text-zinc-300", bg: "bg-zinc-500/10", border: "border-zinc-500/20", logo: "https://upload.wikimedia.org/wikipedia/commons/3/31/Apple_logo_white.svg" },
+            { name: "GOOGLE", color: "text-blue-500 dark:text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" },
+            { name: "AMAZON", color: "text-amber-500 dark:text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20", logo: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Amazon_icon.svg" },
+            { name: "META", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-600/10", border: "border-blue-600/20", logo: "https://upload.wikimedia.org/wikipedia/commons/a/ab/Meta-Logo.png" },
+            { name: "APPLE", color: "text-foreground", bg: "bg-muted/40", border: "border-border/60", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" },
             { name: "NETFLIX", color: "text-red-500", bg: "bg-red-600/10", border: "border-red-600/20", logo: "https://upload.wikimedia.org/wikipedia/commons/7/75/Netflix_icon.svg" },
-            { name: "MICROSOFT", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" },
+            { name: "MICROSOFT", color: "text-emerald-500 dark:text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" },
         ];
 
         const currentCompany = companies[loadingPhase % companies.length];
 
         return (
-            <div className="min-h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden font-sans">
-                {/* Grid Background */}
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]pointer-events-none" />
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden font-sans">
+                {/* Ambient glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-sky-500/10 rounded-full blur-[120px] pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col items-center">
-                    <div className="relative mb-12">
+                    <div className="relative mb-8">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={loadingPhase}
                                 initial={{ opacity: 0, scale: 0.9, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 1.1, y: -10 }}
-                                transition={{ duration: 0.4, ease: "easeOut" }}
+                                transition={{ duration: 0.35, ease: "easeOut" }}
                                 className={cn(
-                                    "w-64 h-64 rounded-3xl border flex flex-col items-center justify-center backdrop-blur-xl shadow-2xl gap-6",
+                                    "w-56 h-56 rounded-3xl border flex flex-col items-center justify-center backdrop-blur-xl shadow-2xl gap-5 bg-card/80",
                                     currentCompany.border,
                                     currentCompany.bg
                                 )}
                             >
-                                <div className="w-24 h-24 relative flex items-center justify-center">
+                                <div className="w-20 h-20 relative flex items-center justify-center">
                                     <img
                                         src={currentCompany.logo}
                                         alt={currentCompany.name}
-                                        className={cn("w-full h-full object-contain filter drop-shadow-lg", (currentCompany as any).imgClass)}
+                                        className="w-full h-full object-contain filter drop-shadow-md"
                                     />
                                 </div>
-                                <h2 className={cn("text-2xl font-bold tracking-widest", currentCompany.color)}>
+                                <h2 className={cn("text-xl font-extrabold tracking-widest", currentCompany.color)}>
                                     {currentCompany.name}
                                 </h2>
                             </motion.div>
                         </AnimatePresence>
                     </div>
 
-                    <div className="flex items-center gap-3 text-sm text-zinc-500 font-medium tracking-widest">
-                        <span className="relative flex h-3 w-3">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground font-semibold tracking-widest uppercase">
+                        <span className="relative flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
                         </span>
-                        CONNECTING_TO_DATABASE...
+                        Connecting to practice arena...
                     </div>
                 </div>
             </div>
@@ -281,296 +315,504 @@ const QuestionPractice = () => {
             <div className="flex-1 flex w-full min-w-0 relative">
                 <Sidebar />
                 <div className="flex-1 flex flex-col min-w-0">
-                    <main className="flex-1 pt-24 px-4 pb-12 container mx-auto max-w-7xl w-full">
+                    <main className="flex-1 pt-24 px-4 sm:px-6 lg:px-8 pb-16 container mx-auto max-w-7xl w-full">
 
-                {/* Hero Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="grid lg:grid-cols-3 gap-8 mb-12"
-                >
-                    {/* Main Welcome */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 text-sky-500 text-sm font-medium border border-sky-500/20">
-                            <Code2 className="w-4 h-4" />
-                            Interview Arena
-                        </div>
-                        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                            Master the Code. <br /> Crack the Interview.
-                        </h1>
-                        <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
-                            Over <span className="text-foreground font-semibold">1800+</span> curated questions from top tech companies.
-                            Practice daily to build your streak and confidence.
-                        </p>
-
-                        <div className="flex items-center gap-4 pt-2">
-                            <Button size="lg" className="rounded-full px-8 bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-500/20">
-                                Start Practicing
-                            </Button>
-                            <div className="flex -space-x-3">
-                                {[1, 2, 3, 4].map(i => (
-                                    <div key={i} className="w-10 h-10 rounded-full border-2 border-background bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground overflow-hidden">
-                                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 20}`} alt="User" />
-                                    </div>
-                                ))}
-                                <div className="w-10 h-10 rounded-full border-2 border-background bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center text-xs font-medium text-sky-600">
-                                    +2k
-                                </div>
-                            </div>
-                            <span className="text-sm text-muted-foreground font-medium">Joined by others</span>
-                        </div>
-                    </div>
-
-                    {/* Stats Card */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.2 }}
-                    >
-                        <Card className="h-full border-primary/10 bg-gradient-to-br from-sky-50/50 to-blue-50/50 dark:from-sky-950/10 dark:to-blue-950/10 backdrop-blur-sm relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Trophy className="w-5 h-5 text-amber-500" />
-                                        Your Progress
-                                    </CardTitle>
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        className="h-8 gap-2 bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-700"
-                                        onClick={() => navigate('/leaderboard')}
-                                    >
-                                        <Trophy className="w-3.5 h-3.5" />
-                                        Leaderboard
-                                    </Button>
-                                </div>
-                                <CardDescription>Keep pushing your limits!</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">Total Solved</span>
-                                        <span className="font-semibold">{solvedStats.total} / {QUESTIONS.length}</span>
-                                    </div>
-                                    <Progress value={(solvedStats.total / QUESTIONS.length) * 100} className="h-2 bg-muted/50" />
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="p-3 rounded-lg bg-background/50 border border-border/50 text-center">
-                                        <div className="text-2xl font-bold text-emerald-500">{solvedStats.easy}</div>
-                                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Easy</div>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-background/50 border border-border/50 text-center">
-                                        <div className="text-2xl font-bold text-amber-500">{solvedStats.medium}</div>
-                                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Med</div>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-background/50 border border-border/50 text-center">
-                                        <div className="text-2xl font-bold text-red-500">{solvedStats.hard}</div>
-                                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Hard</div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10 text-orange-600 border border-orange-500/20">
-                                        <div className="flex items-center gap-2">
-                                            <Flame className="w-4 h-4 fill-orange-600" />
-                                            <span className="text-sm font-semibold">Streak</span>
-                                        </div>
-                                        <span className="text-lg font-bold">3</span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                                        <div className="flex items-center gap-2">
-                                            <Bookmark className="w-4 h-4 fill-amber-600" />
-                                            <span className="text-sm font-semibold">Review</span>
-                                        </div>
-                                        <span className="text-lg font-bold">{reviewedQuestionIds.size}</span>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                </motion.div>
-
-                {/* Filtering Bar */}
-                <div className="sticky top-20 z-30 mb-8">
-                    <div className="bg-card/80 backdrop-blur-md border border-border/50 p-4 rounded-xl shadow-lg shadow-black/5 flex flex-col md:flex-row gap-4 items-center justify-between">
-
-                        {/* Search */}
-                        <div className="relative w-full md:max-w-md group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-sky-500 transition-colors" />
-                            <Input
-                                placeholder="Search by title, tag or topic..."
-                                className="pl-10 bg-background/50 border-transparent focus:border-sky-500/50 focus:bg-background transition-all"
-                                value={searchQuery}
-                                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                            />
-                        </div>
-
-                        {/* Filters */}
-                        <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
-
-                            {/* Difficulty Toggle */}
-                            <div className="bg-muted/50 p-1 rounded-lg flex items-center">
-                                {DIFFICULTIES.map(diff => (
-                                    <button
-                                        key={diff}
-                                        onClick={() => { setSelectedDifficulty(diff); setCurrentPage(1); }}
-                                        className={cn(
-                                            "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                                            selectedDifficulty === diff
-                                                ? "bg-background text-foreground shadow-sm"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                                        )}
-                                    >
-                                        {diff}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Company Select Popover */}
-                            <Popover open={openCompany} onOpenChange={setOpenCompany}>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        aria-expanded={openCompany}
-                                        className="justify-between min-w-[180px] bg-background/50"
-                                    >
-                                        {selectedCompany === "All" ? (
-                                            <span className="flex items-center gap-2 text-muted-foreground">
-                                                <Briefcase className="w-4 h-4" /> Filter Company
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-2 text-primary font-medium">
-                                                <Briefcase className="w-4 h-4" /> {selectedCompany}
-                                            </span>
-                                        )}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[200px] p-0">
-                                    <Command>
-                                        <CommandInput placeholder="Search company..." />
-                                        <CommandList>
-                                            <CommandEmpty>No company found.</CommandEmpty>
-                                            <CommandGroup>
-                                                <CommandItem
-                                                    value="All"
-                                                    onSelect={() => {
-                                                        setSelectedCompany("All");
-                                                        setOpenCompany(false);
-                                                        setCurrentPage(1);
-                                                    }}
-                                                >
-                                                    <Check
-                                                        className={cn(
-                                                            "mr-2 h-4 w-4",
-                                                            selectedCompany === "All" ? "opacity-100" : "opacity-0"
-                                                        )}
-                                                    />
-                                                    All Companies
-                                                </CommandItem>
-                                                {COMPANIES.filter(c => c !== "All").map((company) => (
-                                                    <CommandItem
-                                                        key={company}
-                                                        value={company}
-                                                        onSelect={(currentValue) => {
-                                                            // CommandItem passes lowercase value, need to match original case from COMPANIES array if needed, 
-                                                            // but state usually handles string directly. 
-                                                            // Let's ensure we set the proper case from the list.
-                                                            setSelectedCompany(company);
-                                                            setOpenCompany(false);
-                                                            setCurrentPage(1);
-                                                        }}
-                                                    >
-                                                        <Check
-                                                            className={cn(
-                                                                "mr-2 h-4 w-4",
-                                                                selectedCompany === company ? "opacity-100" : "opacity-0"
-                                                            )}
-                                                        />
-                                                        {company}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
-
-                            {/* Topic Select Popover */}
-                            <Popover open={openTopic} onOpenChange={setOpenTopic}>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        aria-expanded={openTopic}
-                                        className="justify-between min-w-[160px] bg-background/50"
-                                    >
-                                        {selectedTopic === "All" ? (
-                                            <span className="flex items-center gap-2 text-muted-foreground">
-                                                <Hash className="w-4 h-4" /> Filter Topic
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-2 text-primary font-medium">
-                                                <Hash className="w-4 h-4" /> {selectedTopic}
-                                            </span>
-                                        )}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[200px] p-0">
-                                    <Command>
-                                        <CommandInput placeholder="Search topic..." />
-                                        <CommandList>
-                                            <CommandEmpty>No topic found.</CommandEmpty>
-                                            <CommandGroup>
-                                                {TOPICS.map((topic) => (
-                                                    <CommandItem
-                                                        key={topic}
-                                                        value={topic}
-                                                        onSelect={() => {
-                                                            setSelectedTopic(topic);
-                                                            setOpenTopic(false);
-                                                            setCurrentPage(1);
-                                                        }}
-                                                    >
-                                                        <Check
-                                                            className={cn(
-                                                                "mr-2 h-4 w-4",
-                                                                selectedTopic === topic ? "opacity-100" : "opacity-0"
-                                                            )}
-                                                        />
-                                                        {topic === "All" ? "All Topics" : topic}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
-
-                            <Button
-                                variant={showOnlyReviewed ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => {
-                                    setShowOnlyReviewed(!showOnlyReviewed);
-                                    setCurrentPage(1);
-                                }}
-                                className={cn(
-                                    "gap-2 transition-all",
-                                    showOnlyReviewed ? "bg-amber-500 hover:bg-amber-600 border-amber-500 shadow-lg shadow-amber-500/20" : "hover:bg-amber-50 dark:hover:bg-amber-950/20"
-                                )}
+                        {/* Top Hero & Stats Row */}
+                        <div className="grid lg:grid-cols-3 gap-6 mb-8 items-stretch">
+                            {/* Main Header Card */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="lg:col-span-2 flex flex-col justify-center space-y-4 bg-gradient-to-br from-sky-500/5 via-indigo-500/5 to-transparent p-6 sm:p-8 rounded-3xl border border-border/70 shadow-xs backdrop-blur-xs relative overflow-hidden"
                             >
-                                <Bookmark className={cn("w-4 h-4", showOnlyReviewed && "fill-current")} />
-                                <span className="hidden sm:inline">My List</span>
-                            </Button>
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-[80px] pointer-events-none -translate-y-1/2 translate-x-1/3" />
 
-                            {(selectedCompany !== "All" || selectedDifficulty !== "All" || selectedTopic !== "All" || searchQuery || showOnlyReviewed) && (
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs font-semibold border border-sky-500/20 w-fit">
+                                    <Code2 className="w-3.5 h-3.5" />
+                                    <span>Coding Arena • 1,800+ Problems</span>
+                                </div>
+
+                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground leading-[1.15]">
+                                    Master the Code. <br className="hidden sm:inline" />
+                                    <span className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 dark:from-sky-400 dark:via-blue-400 dark:to-indigo-300 bg-clip-text text-transparent">
+                                        Crack Your Interviews.
+                                    </span>
+                                </h1>
+
+                                <p className="text-sm sm:text-base text-muted-foreground max-w-xl leading-relaxed">
+                                    Curated technical challenges with multi-company tagging, verified test cases, and real-time execution in our playground.
+                                </p>
+                            </motion.div>
+
+                            {/* Stats Card */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.15 }}
+                            >
+                                <Card className="h-full border border-border/70 bg-card text-card-foreground shadow-xs rounded-3xl p-6 flex flex-col justify-between space-y-5 relative overflow-hidden">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                                <Trophy className="w-4 h-4" />
+                                            </div>
+                                            <span className="font-bold text-base text-foreground">Your Progress</span>
+                                        </div>
+                                        <span className="text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">
+                                            {progressPercentage}% Completed
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-xs font-medium">
+                                            <span className="text-muted-foreground">Total Solved</span>
+                                            <span className="font-bold text-foreground">{solvedStats.total} / {QUESTIONS.length}</span>
+                                        </div>
+                                        <Progress value={progressPercentage} className="h-2 bg-muted/60" />
+                                    </div>
+
+                                    {/* 3 Difficulty Metric Boxes */}
+                                    <div className="grid grid-cols-3 gap-2.5">
+                                        <div className="p-3 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 text-center transition-transform hover:scale-[1.02]">
+                                            <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{solvedStats.easy}</div>
+                                            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700/80 dark:text-emerald-300/80 mt-0.5">Easy</div>
+                                        </div>
+                                        <div className="p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 text-center transition-transform hover:scale-[1.02]">
+                                            <div className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">{solvedStats.medium}</div>
+                                            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-700/80 dark:text-amber-300/80 mt-0.5">Med</div>
+                                        </div>
+                                        <div className="p-3 rounded-2xl bg-rose-500/10 dark:bg-rose-500/15 border border-rose-500/25 text-center transition-transform hover:scale-[1.02]">
+                                            <div className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">{solvedStats.hard}</div>
+                                            <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700/80 dark:text-rose-300/80 mt-0.5">Hard</div>
+                                        </div>
+                                    </div>
+                                </Card>
+                            </motion.div>
+                        </div>
+
+                        {/* Search & Filtering Bar */}
+                        <div className="mb-8">
+                            <div className="bg-card border border-border/70 p-3 sm:p-4 rounded-2xl shadow-xs flex flex-col xl:flex-row gap-3 items-center justify-between">
+
+                                {/* Search Input */}
+                                <div className="relative w-full xl:max-w-sm group shrink-0">
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-sky-500 transition-colors" />
+                                    <Input
+                                        placeholder="Search by title, topic, or keywords..."
+                                        className="pl-10 h-10 bg-muted/40 border-border/60 focus:border-sky-500 focus:bg-background rounded-xl text-xs sm:text-sm transition-all"
+                                        value={searchQuery}
+                                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                                    />
+                                </div>
+
+                                {/* Filter Controls */}
+                                <div className="flex items-center flex-wrap gap-2 w-full xl:w-auto overflow-x-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+
+                                    {/* Difficulty Toggle Pills */}
+                                    <div className="bg-muted/70 dark:bg-muted/40 p-1 rounded-xl flex items-center gap-1 border border-border/40 shrink-0">
+                                        {DIFFICULTIES.map(diff => {
+                                            const isActive = selectedDifficulty === diff;
+                                            return (
+                                                <button
+                                                    key={diff}
+                                                    onClick={() => { setSelectedDifficulty(diff); setCurrentPage(1); }}
+                                                    className={cn(
+                                                        "px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer",
+                                                        isActive
+                                                            ? (diff === "Easy"
+                                                                ? "bg-emerald-500 text-white shadow-xs"
+                                                                : diff === "Medium"
+                                                                    ? "bg-amber-500 text-white shadow-xs"
+                                                                    : diff === "Hard"
+                                                                        ? "bg-rose-500 text-white shadow-xs"
+                                                                        : "bg-primary text-primary-foreground shadow-xs")
+                                                            : "text-muted-foreground hover:text-foreground hover:bg-background/60"
+                                                    )}
+                                                >
+                                                    {diff}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Company Popover */}
+                                    <Popover open={openCompany} onOpenChange={setOpenCompany}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={openCompany}
+                                                className="h-9 px-3 text-xs bg-background/80 hover:bg-background border-border/70 rounded-xl justify-between min-w-[160px] font-semibold"
+                                            >
+                                                {selectedCompany === "All" ? (
+                                                    <span className="flex items-center gap-1.5 text-muted-foreground truncate">
+                                                        <Briefcase className="w-3.5 h-3.5 text-muted-foreground" /> Filter Company
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-1.5 text-foreground truncate">
+                                                        <Briefcase className="w-3.5 h-3.5 text-sky-500" /> {selectedCompany}
+                                                    </span>
+                                                )}
+                                                <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[200px] p-0 rounded-xl">
+                                            <Command>
+                                                <CommandInput placeholder="Search company..." />
+                                                <CommandList>
+                                                    <CommandEmpty>No company found.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        <CommandItem
+                                                            value="All"
+                                                            onSelect={() => {
+                                                                setSelectedCompany("All");
+                                                                setOpenCompany(false);
+                                                                setCurrentPage(1);
+                                                            }}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    selectedCompany === "All" ? "opacity-100" : "opacity-0"
+                                                                )}
+                                                            />
+                                                            All Companies
+                                                        </CommandItem>
+                                                        {COMPANIES.filter(c => c !== "All").map((company) => (
+                                                            <CommandItem
+                                                                key={company}
+                                                                value={company}
+                                                                onSelect={() => {
+                                                                    setSelectedCompany(company);
+                                                                    setOpenCompany(false);
+                                                                    setCurrentPage(1);
+                                                                }}
+                                                            >
+                                                                <Check
+                                                                    className={cn(
+                                                                        "mr-2 h-4 w-4",
+                                                                        selectedCompany === company ? "opacity-100" : "opacity-0"
+                                                                    )}
+                                                                />
+                                                                {company}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+
+                                    {/* Topic Popover */}
+                                    <Popover open={openTopic} onOpenChange={setOpenTopic}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={openTopic}
+                                                className="h-9 px-3 text-xs bg-background/80 hover:bg-background border-border/70 rounded-xl justify-between min-w-[150px] font-semibold"
+                                            >
+                                                {selectedTopic === "All" ? (
+                                                    <span className="flex items-center gap-1.5 text-muted-foreground truncate">
+                                                        <Hash className="w-3.5 h-3.5 text-muted-foreground" /> Filter Topic
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-1.5 text-foreground truncate">
+                                                        <Hash className="w-3.5 h-3.5 text-indigo-500" /> {selectedTopic}
+                                                    </span>
+                                                )}
+                                                <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[200px] p-0 rounded-xl">
+                                            <Command>
+                                                <CommandInput placeholder="Search topic..." />
+                                                <CommandList>
+                                                    <CommandEmpty>No topic found.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {TOPICS.map((topic) => (
+                                                            <CommandItem
+                                                                key={topic}
+                                                                value={topic}
+                                                                onSelect={() => {
+                                                                    setSelectedTopic(topic);
+                                                                    setOpenTopic(false);
+                                                                    setCurrentPage(1);
+                                                                }}
+                                                            >
+                                                                <Check
+                                                                    className={cn(
+                                                                        "mr-2 h-4 w-4",
+                                                                        selectedTopic === topic ? "opacity-100" : "opacity-0"
+                                                                    )}
+                                                                />
+                                                                {topic === "All" ? "All Topics" : topic}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+
+                                    {/* My List Bookmark Filter */}
+                                    <Button
+                                        variant={showOnlyReviewed ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => {
+                                            setShowOnlyReviewed(!showOnlyReviewed);
+                                            setCurrentPage(1);
+                                        }}
+                                        className={cn(
+                                            "h-9 px-3.5 text-xs rounded-xl font-semibold gap-1.5 transition-all",
+                                            showOnlyReviewed
+                                                ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-500 shadow-xs"
+                                                : "border-border/70 hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-500/30"
+                                        )}
+                                    >
+                                        <Bookmark className={cn("w-3.5 h-3.5", showOnlyReviewed && "fill-current")} />
+                                        <span>My List</span>
+                                    </Button>
+
+                                    {/* Clear Filters */}
+                                    {(selectedCompany !== "All" || selectedDifficulty !== "All" || selectedTopic !== "All" || searchQuery || showOnlyReviewed) && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                setSelectedCompany("All");
+                                                setSelectedDifficulty("All");
+                                                setSelectedTopic("All");
+                                                setSearchQuery("");
+                                                setShowOnlyReviewed(false);
+                                                setCurrentPage(1);
+                                            }}
+                                            className="h-9 px-2 text-xs text-muted-foreground hover:text-destructive font-semibold"
+                                            title="Clear all filters"
+                                        >
+                                            <Filter className="w-3.5 h-3.5 mr-1" />
+                                            <span>Reset</span>
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Questions Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <AnimatePresence mode="popLayout">
+                                {paginatedQuestions.map((question) => {
+                                    const isSolved = solvedQuestionIds.has(question.id);
+                                    const isReviewed = reviewedQuestionIds.has(question.id);
+
+                                    return (
+                                        <motion.div
+                                            key={question.id}
+                                            layout
+                                            initial={{ opacity: 0, scale: 0.96 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.96 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            <Card className={cn(
+                                                "h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-xl rounded-2xl p-5 flex flex-col justify-between group cursor-pointer border",
+                                                getDifficultyCardBorder(question.difficulty, isSolved, isReviewed)
+                                            )}>
+                                                <div className="space-y-4">
+                                                    {/* Top Row: Difficulty Pill + Bookmark + Solved Toggle */}
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge variant="outline" className={cn("rounded-lg px-2.5 py-0.5", getDifficultyBadgeStyle(question.difficulty))}>
+                                                                {question.difficulty}
+                                                            </Badge>
+
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className={cn(
+                                                                    "w-7 h-7 rounded-lg transition-all",
+                                                                    isReviewed
+                                                                        ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20"
+                                                                        : "text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10"
+                                                                )}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleReviewStatus(question.id);
+                                                                }}
+                                                                title={isReviewed ? "Remove from my list" : "Save to my list"}
+                                                            >
+                                                                {isReviewed ? (
+                                                                    <BookmarkCheck className="w-4 h-4 fill-current" />
+                                                                ) : (
+                                                                    <Bookmark className="w-4 h-4" />
+                                                                )}
+                                                            </Button>
+                                                        </div>
+
+                                                        {/* Solved Toggle & Platform Badge */}
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Button
+                                                                variant={isSolved ? "default" : "outline"}
+                                                                size="sm"
+                                                                className={cn(
+                                                                    "h-6.5 px-2 text-[11px] font-bold rounded-lg gap-1 transition-all",
+                                                                    isSolved
+                                                                        ? "bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-xs"
+                                                                        : "border-border/70 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/30"
+                                                                )}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleSolvedStatus(question.id, question.title, question.difficulty, question.url);
+                                                                }}
+                                                            >
+                                                                <CheckCircle2 className={cn("w-3 h-3", isSolved ? "text-white" : "text-muted-foreground")} />
+                                                                <span>{isSolved ? "Solved" : "Mark Solved"}</span>
+                                                            </Button>
+
+                                                            <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md border border-border/50">
+                                                                <img
+                                                                    src={
+                                                                        question.platform === "LeetCode"
+                                                                            ? "https://upload.wikimedia.org/wikipedia/commons/1/19/LeetCode_logo_black.png"
+                                                                            : question.platform === "Codeforces"
+                                                                                ? "https://cdn.iconscout.com/icon/free/png-256/free-code-forces-3628695-3029920.png"
+                                                                                : "/favicon.ico"
+                                                                    }
+                                                                    alt={question.platform}
+                                                                    className="w-3 h-3 object-contain opacity-80"
+                                                                />
+                                                                <span>{question.platform}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Title */}
+                                                    <h3 className="text-base sm:text-lg font-bold text-foreground group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors leading-snug line-clamp-2">
+                                                        {question.title}
+                                                    </h3>
+
+                                                    {/* Companies */}
+                                                    {question.companies.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {question.companies.slice(0, 3).map(company => (
+                                                                <span key={company} className="inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-muted/70 text-muted-foreground border border-border/40">
+                                                                    {company}
+                                                                </span>
+                                                            ))}
+                                                            {question.companies.length > 3 && (
+                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10.5px] font-semibold bg-muted/70 text-muted-foreground border border-border/40">
+                                                                    +{question.companies.length - 3}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Tags */}
+                                                    <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                                        {question.tags.slice(0, 3).map(tag => (
+                                                            <span key={tag} className="text-[10.5px] font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Action Buttons */}
+                                                <div className="pt-5 space-y-2">
+                                                    <Button
+                                                        className={cn(
+                                                            "w-full h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm",
+                                                            isSolved
+                                                                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20"
+                                                                : "bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-sky-500/20 group/btn"
+                                                        )}
+                                                        onClick={() => navigate(
+                                                            `/playground?title=${encodeURIComponent(question.title)}&difficulty=${question.difficulty}&questionId=${question.id}&mode=problem`
+                                                        )}
+                                                    >
+                                                        {isSolved ? (
+                                                            <>
+                                                                <CheckCircle2 className="w-4 h-4" />
+                                                                <span>Review in Playground</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Play className="w-4 h-4 fill-current" />
+                                                                <span>Solve in Playground</span>
+                                                                <ExternalLink className="w-3.5 h-3.5 opacity-80 group-hover/btn:translate-x-0.5 transition-transform" />
+                                                            </>
+                                                        )}
+                                                    </Button>
+
+                                                    {question.url && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="w-full h-8 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg gap-1"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                window.open(question.url, '_blank');
+                                                            }}
+                                                        >
+                                                            <span>Open on {question.platform}</span>
+                                                            <ExternalLink className="w-3 h-3 opacity-70" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </Card>
+                                        </motion.div>
+                                    );
+                                })}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {filteredQuestions.length > 0 && (
+                            <div className="flex justify-center items-center gap-4 mt-12">
                                 <Button
-                                    variant="ghost"
-                                    size="icon"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={currentPage === 1}
+                                    onClick={() => {
+                                        setCurrentPage(p => Math.max(1, p - 1));
+                                        window.scrollTo({ top: 250, behavior: 'smooth' });
+                                    }}
+                                    className="w-24 rounded-xl border-border/70 font-semibold"
+                                >
+                                    <ArrowLeft className="w-3.5 h-3.5 mr-1.5" /> Prev
+                                </Button>
+                                <span className="text-xs font-bold text-muted-foreground bg-muted/40 px-4 py-1.5 rounded-full border border-border/60">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={currentPage === totalPages}
+                                    onClick={() => {
+                                        setCurrentPage(p => Math.min(totalPages, p + 1));
+                                        window.scrollTo({ top: 250, behavior: 'smooth' });
+                                    }}
+                                    className="w-24 rounded-xl border-border/70 font-semibold"
+                                >
+                                    Next <ArrowLeft className="w-3.5 h-3.5 ml-1.5 rotate-180" />
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Empty State */}
+                        {filteredQuestions.length === 0 && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-center py-20 bg-muted/20 rounded-3xl border border-dashed border-border/80 mt-6"
+                            >
+                                <div className="w-14 h-14 bg-muted/60 rounded-2xl flex items-center justify-center mx-auto mb-4 text-muted-foreground">
+                                    <Search className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-lg font-bold mb-1 text-foreground">No matching questions</h3>
+                                <p className="text-xs text-muted-foreground mb-6">No questions found matching your filter criteria.</p>
+                                <Button
+                                    variant="outline"
                                     onClick={() => {
                                         setSelectedCompany("All");
                                         setSelectedDifficulty("All");
@@ -579,304 +821,12 @@ const QuestionPractice = () => {
                                         setShowOnlyReviewed(false);
                                         setCurrentPage(1);
                                     }}
-                                    className="text-muted-foreground hover:text-destructive transition-colors"
+                                    className="px-6 rounded-xl font-semibold text-xs"
                                 >
-                                    <Filter className="w-4 h-4" />
+                                    Reset Filters
                                 </Button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Questions Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <AnimatePresence mode="popLayout">
-                        {paginatedQuestions.map((question, idx) => (
-                            <motion.div
-                                key={question.id}
-                                layout
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <Card className={cn(
-                                    "h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group cursor-pointer border-l-4 border-y border-r border-border/60 backdrop-blur-sm overflow-hidden",
-                                    getDifficultyBorder(question.difficulty),
-                                    solvedQuestionIds.has(question.id)
-                                        ? "bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-500/50 ring-1 ring-emerald-500/20"
-                                        : (reviewedQuestionIds.has(question.id) ? "bg-amber-50/30 dark:bg-amber-950/5 border-amber-500/30 ring-1 ring-amber-500/10" : "bg-card/50")
-                                )}>
-                                    <CardHeader className="pb-3 relative">
-                                        {/* Accent Glow */}
-                                        <div className={cn(
-                                            "absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-10 transition-opacity group-hover:opacity-20 pointer-events-none",
-                                            solvedQuestionIds.has(question.id)
-                                                ? "bg-emerald-500"
-                                                : (question.difficulty === 'Easy' ? 'bg-emerald-500' : question.difficulty === 'Medium' ? 'bg-amber-500' : 'bg-red-500')
-                                        )} />
-
-                                        <div className="flex justify-between items-start mb-2 relative z-10">
-                                            <div className="flex items-center gap-2">
-                                                <Badge variant="outline" className={cn(
-                                                    "rounded-md border-0 px-2.5 py-0.5 font-semibold",
-                                                    solvedQuestionIds.has(question.id)
-                                                        ? "text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
-                                                        : getDifficultyColor(question.difficulty)
-                                                )}>
-                                                    {question.difficulty}
-                                                </Badge>
-
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className={cn(
-                                                        "w-8 h-8 rounded-full transition-all duration-300",
-                                                        reviewedQuestionIds.has(question.id)
-                                                            ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 shadow-sm shadow-amber-500/10"
-                                                            : "text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10"
-                                                    )}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleReviewStatus(question.id);
-                                                    }}
-                                                >
-                                                    {reviewedQuestionIds.has(question.id) ? (
-                                                        <BookmarkCheck className="w-4 h-4 fill-current" />
-                                                    ) : (
-                                                        <Bookmark className="w-4 h-4" />
-                                                    )}
-                                                </Button>
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                                {solvedQuestionIds.has(question.id) && (
-                                                    <Badge className="bg-emerald-500 text-white border-0 hover:bg-emerald-600 shadow-sm shadow-emerald-500/20">
-                                                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                                                        Verified Solved
-                                                    </Badge>
-                                                )}
-                                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/50 px-2 py-1 rounded-full border border-border/50">
-                                                    <img
-                                                        src={
-                                                            question.platform === "LeetCode"
-                                                                ? "https://upload.wikimedia.org/wikipedia/commons/1/19/LeetCode_logo_black.png"
-                                                                : question.platform === "Codeforces"
-                                                                    ? "https://cdn.iconscout.com/icon/free/png-256/free-code-forces-3628695-3029920.png"
-                                                                    : "/favicon.ico"
-                                                        }
-                                                        alt={question.platform}
-                                                        className="w-3 h-3 object-contain opacity-70"
-                                                    />
-                                                    {question.platform}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <CardTitle className={cn(
-                                            "text-xl font-bold transition-colors line-clamp-2 leading-tight",
-                                            solvedQuestionIds.has(question.id) ? "text-emerald-700 dark:text-emerald-400" : "group-hover:text-primary"
-                                        )}>
-                                            {question.title}
-                                        </CardTitle>
-                                    </CardHeader>
-
-                                    <CardContent className="space-y-4">
-                                        {/* Companies */}
-                                        {question.companies.length > 0 && (
-                                            <div className="flex flex-wrap gap-1.5 h-[26px] overflow-hidden">
-                                                {question.companies.slice(0, 3).map(company => (
-                                                    <span key={company} className={cn(
-                                                        "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
-                                                        solvedQuestionIds.has(question.id)
-                                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                                            : "bg-muted text-muted-foreground"
-                                                    )}>
-                                                        {company}
-                                                    </span>
-                                                ))}
-                                                {question.companies.length > 3 && (
-                                                    <span className={cn(
-                                                        "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
-                                                        solvedQuestionIds.has(question.id)
-                                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                                            : "bg-muted text-muted-foreground"
-                                                    )}>
-                                                        +{question.companies.length - 3}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Tags */}
-                                        <div className="flex flex-wrap gap-1.5 min-h-[48px] content-start">
-                                            {question.tags.slice(0, 4).map(tag => (
-                                                <span key={tag} className={cn(
-                                                    "text-[10px] px-2 py-0.5 rounded-full border",
-                                                    solvedQuestionIds.has(question.id)
-                                                        ? "text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 border-emerald-500/20"
-                                                        : "text-sky-600/80 dark:text-sky-300 bg-sky-50 dark:bg-sky-900/20 border-sky-100 dark:border-sky-800"
-                                                )}>
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-
-                                    <CardFooter className="pt-0 flex flex-col gap-2">
-                                        <Button
-                                            className={cn(
-                                                "w-full transition-all group/btn shadow-none",
-                                                solvedQuestionIds.has(question.id)
-                                                    ? "bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/20"
-                                                    : "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg hover:shadow-primary/20"
-                                            )}
-                                            onClick={() => {
-                                                window.open(question.url, '_blank');
-                                            }}
-                                        >
-                                            <span className="font-semibold">{solvedQuestionIds.has(question.id) ? 'Review Solution' : 'Solve Challenge'}</span>
-                                            <ExternalLink className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                                        </Button>
-
-                                        {!solvedQuestionIds.has(question.id) && (
-                                            <Button
-                                                variant="outline"
-                                                className="w-full border-dashed group/verify"
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    // This will be replaced by call to markQuestionAsVerified
-                                                    const { data: { user } } = await supabase.auth.getUser();
-                                                    if (!user) {
-                                                        alert("Please login to verify solutions");
-                                                        return;
-                                                    }
-
-                                                    const { data: profileData } = await supabase
-                                                        .from('profiles')
-                                                        .select('leetcode_id, codeforces_id')
-                                                        .eq('id', user.id)
-                                                        .single();
-
-                                                    const profile = profileData as any;
-
-                                                    if (!profile?.leetcode_id && !profile?.codeforces_id) {
-                                                        alert("Please add your LeetCode/Codeforces ID in profile to verify");
-                                                        return;
-                                                    }
-
-                                                    // Determine slug/identifier
-                                                    let identifier = "";
-                                                    if (question.platform === "LeetCode") {
-                                                        const urlParts = question.url.split('/');
-                                                        identifier = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2] || "";
-                                                    } else if (question.platform === "Codeforces") {
-                                                        // Example: https://codeforces.com/problemset/problem/1915/A
-                                                        const urlParts = question.url.split('/');
-                                                        const index = urlParts.pop();
-                                                        const contestId = urlParts.pop();
-                                                        identifier = contestId && index ? `${contestId}${index}` : question.title;
-                                                    }
-
-                                                    // Sanitize username if it's a URL
-                                                    let username = question.platform === "LeetCode" ? profile.leetcode_id : profile.codeforces_id;
-                                                    if (username) {
-                                                        // Remove trailing slash if exists
-                                                        if (username.endsWith('/')) {
-                                                            username = username.slice(0, -1);
-                                                        }
-                                                        
-                                                        // Extract from URL if it's a full URL
-                                                        if (username.includes("leetcode.com") || username.includes("codeforces.com")) {
-                                                            const parts = username.split('/');
-                                                            username = parts[parts.length - 1];
-                                                        }
-                                                    }
-
-                                                    try {
-                                                        const { data, error } = await supabase.functions.invoke('verify-question-solution', {
-                                                            body: {
-                                                                platform: question.platform,
-                                                                username: username,
-                                                                identifier: identifier || question.title
-                                                            }
-                                                        });
-
-                                                        if (data?.isSolved) {
-                                                            markQuestionAsSolved(question.id, question.title, question.difficulty, question.url);
-                                                        } else {
-                                                            alert("Solution not found on " + question.platform + ". Make sure you've solved it or added your public handle in profile.");
-                                                        }
-                                                    } catch (err) {
-                                                        console.error("Verification error:", err);
-                                                    }
-                                                }}
-                                            >
-                                                <CheckCircle2 className="w-4 h-4 mr-2 group-hover/verify:text-emerald-500" />
-                                                Verify Solution
-                                            </Button>
-                                        )}
-                                    </CardFooter>
-                                </Card>
                             </motion.div>
-                        ))}
-                    </AnimatePresence>
-                </div>
-
-                {/* Pagination Controls */}
-                {filteredQuestions.length > 0 && (
-                    <div className="flex justify-center items-center gap-4 mt-12">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={currentPage === 1}
-                            onClick={() => {
-                                setCurrentPage(p => Math.max(1, p - 1));
-                                window.scrollTo({ top: 300, behavior: 'smooth' });
-                            }}
-                            className="w-24 border-dashed"
-                        >
-                            <ArrowLeft className="w-4 h-4 mr-2" /> Prev
-                        </Button>
-                        <span className="text-sm font-medium text-muted-foreground bg-muted/30 px-4 py-1 rounded-full border border-border/50">
-                            Page {currentPage} of {totalPages}
-                        </span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={currentPage === totalPages}
-                            onClick={() => {
-                                setCurrentPage(p => Math.min(totalPages, p + 1));
-                                window.scrollTo({ top: 300, behavior: 'smooth' });
-                            }}
-                            className="w-24 border-dashed"
-                        >
-                            Next <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
-                        </Button>
-                    </div>
-                )}
-
-                {/* Simple Empty State */}
-                {filteredQuestions.length === 0 && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-center py-20 bg-muted/10 rounded-3xl border border-dashed border-border"
-                    >
-                        <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Search className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <h3 className="text-xl font-semibold mb-2">No matching questions</h3>
-                        <p className="text-muted-foreground mb-6">Seems like we couldn't find what you're looking for.</p>
-                        <Button
-                            variant="secondary"
-                            onClick={() => { setSearchQuery(""); setSelectedCompany("All"); setSelectedDifficulty("All"); setSelectedTopic("All"); setCurrentPage(1); }}
-                            className="px-8"
-                        >
-                            Clear Filters
-                        </Button>
-                    </motion.div>
-                )}
+                        )}
 
                     </main>
                 </div>

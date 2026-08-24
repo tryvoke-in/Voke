@@ -2,41 +2,119 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Code2, ArrowRight, Sparkles } from "lucide-react";
+import { Code2, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { DSA_QUESTIONS } from "@/data/dsaQuestions";
 import { motion } from "motion/react";
+
+const PLANS: Record<string, { label: string; days: number; questionsPerDay: number }> = {
+  "2_months": { label: "2 Months Plan", days: 60, questionsPerDay: Math.ceil(375 / 60) },
+  "2.5_months": { label: "2.5 Months Plan", days: 75, questionsPerDay: 5 },
+  "3_months": { label: "3 Months Plan", days: 90, questionsPerDay: Math.ceil(375 / 90) },
+  "4_months": { label: "4 Months Plan", days: 120, questionsPerDay: Math.ceil(375 / 120) },
+  "6_months": { label: "6 Months Plan", days: 180, questionsPerDay: Math.ceil(375 / 180) },
+};
 
 export const DSAPreparationBanner = () => {
   const navigate = useNavigate();
-  const [solvedCount, setSolvedCount] = useState<number>(19);
+  const [solvedCount, setSolvedCount] = useState<number>(0);
+  const [todaySolvedCount, setTodaySolvedCount] = useState<number>(0);
+  const [selectedPlanKey, setSelectedPlanKey] = useState<string>("2.5_months");
 
-  const TOTAL_DAYS = 75;
-  const TOTAL_QUESTIONS = 375;
-  const QUESTIONS_PER_DAY = 5;
+  const TOTAL_QUESTIONS = DSA_QUESTIONS.length || 375;
+  const currentPlan = PLANS[selectedPlanKey] || PLANS["2.5_months"];
+  const TOTAL_DAYS = currentPlan.days;
+  const QUESTIONS_PER_DAY = currentPlan.questionsPerDay;
+
+  const loadSolvedStats = async () => {
+    try {
+      const savedPlan = localStorage.getItem("voke_dsa_plan");
+      if (savedPlan && PLANS[savedPlan]) {
+        setSelectedPlanKey(savedPlan);
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setSolvedCount(0);
+        setTodaySolvedCount(0);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("solved_questions" as any)
+        .select("question_id, solved_at")
+        .eq("user_id", user.id);
+
+      if (!error && Array.isArray(data)) {
+        setSolvedCount(data.length);
+
+        const todayDateStr = new Date().toDateString();
+        const todayCount = data.filter((item: any) => {
+          if (!item.solved_at) return false;
+          const d = new Date(item.solved_at);
+          return !isNaN(d.getTime()) && d.toDateString() === todayDateStr;
+        }).length;
+
+        setTodaySolvedCount(todayCount);
+      } else {
+        setSolvedCount(0);
+        setTodaySolvedCount(0);
+      }
+    } catch {
+      setSolvedCount(0);
+      setTodaySolvedCount(0);
+    }
+  };
 
   useEffect(() => {
-    const loadSolvedStats = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { count, error } = await supabase
-            .from("solved_questions" as any)
-            .select("*", { count: "exact", head: true })
-            .eq("user_id", user.id);
-          if (!error && typeof count === "number" && count > 0) {
-            setSolvedCount(count);
-          }
-        }
-      } catch {
-        // Fallback gracefully
+    loadSolvedStats();
+
+    const handlePlanChange = () => {
+      const savedPlan = localStorage.getItem("voke_dsa_plan");
+      if (savedPlan && PLANS[savedPlan]) {
+        setSelectedPlanKey(savedPlan);
       }
     };
-    loadSolvedStats();
+
+    const handleProgressUpdate = () => {
+      loadSolvedStats();
+    };
+
+    window.addEventListener("dsa_plan_changed", handlePlanChange);
+    window.addEventListener("dsa_progress_updated", handleProgressUpdate);
+    window.addEventListener("storage", (e) => {
+      if (e.key === "voke_dsa_plan") handlePlanChange();
+    });
+
+    const channel = supabase
+      .channel("realtime_solved_questions_banner")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "solved_questions",
+        },
+        () => {
+          loadSolvedStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("dsa_plan_changed", handlePlanChange);
+      window.removeEventListener("dsa_progress_updated", handleProgressUpdate);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  const progressPercentage = Math.min(100, Math.round((solvedCount / TOTAL_QUESTIONS) * 100));
-  const currentDay = Math.max(1, Math.min(TOTAL_DAYS, Math.ceil((solvedCount + 1) / QUESTIONS_PER_DAY)));
-  const todaySolved = Math.max(1, solvedCount % QUESTIONS_PER_DAY === 0 && solvedCount > 0 ? 5 : solvedCount % QUESTIONS_PER_DAY || 4);
+  const progressPercentage = TOTAL_QUESTIONS > 0
+    ? Math.min(100, Math.round((solvedCount / TOTAL_QUESTIONS) * 100))
+    : 0;
+
+  const completedDays = Math.floor(solvedCount / QUESTIONS_PER_DAY);
+  const currentDay = Math.min(TOTAL_DAYS, Math.max(1, completedDays + 1));
+  const todayDone = Math.min(QUESTIONS_PER_DAY, todaySolvedCount);
 
   return (
     <motion.div
@@ -88,7 +166,7 @@ export const DSAPreparationBanner = () => {
             <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${Math.max(progressPercentage, 5)}%` }}
+                animate={{ width: `${progressPercentage}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="h-full bg-emerald-500 rounded-full"
               />
@@ -102,24 +180,28 @@ export const DSAPreparationBanner = () => {
                 Today's Goal ({QUESTIONS_PER_DAY} Problems)
               </span>
               <span className="font-bold text-emerald-400">
-                {todaySolved} / {QUESTIONS_PER_DAY} Done
+                {todaySolvedCount} / {QUESTIONS_PER_DAY} Done
               </span>
             </div>
 
-            {/* 5 Segmented Bars */}
-            <div className="grid grid-cols-5 gap-1.5">
+            {/* Segmented Bars */}
+            <div
+              className="grid gap-1.5"
+              style={{ gridTemplateColumns: `repeat(${QUESTIONS_PER_DAY}, minmax(0, 1fr))` }}
+            >
               {Array.from({ length: QUESTIONS_PER_DAY }).map((_, index) => {
-                const isFilled = index < todaySolved;
+                const isFilled = index < todayDone;
                 return (
                   <motion.div
                     key={index}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ delay: index * 0.08, duration: 0.3 }}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${isFilled
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      isFilled
                         ? "bg-emerald-500"
                         : "bg-muted/80"
-                      }`}
+                    }`}
                   />
                 );
               })}
@@ -141,4 +223,5 @@ export const DSAPreparationBanner = () => {
     </motion.div>
   );
 };
+
 

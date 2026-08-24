@@ -127,6 +127,17 @@ All colors MUST be HSL.
   .glass-card {
     @apply bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm;
   }
+
+  .no-scrollbar::-webkit-scrollbar,
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar,
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* Circular View Transition for Theme Toggle */
