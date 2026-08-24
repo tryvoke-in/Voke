@@ -204,15 +204,15 @@ const ResumeBuilder = () => {
     if (!token) throw new Error("You must be logged in to use AI features.");
 
     const models = [
-      body.model || "google/gemini-2.5-flash-lite",
-      "google/gemini-1.5-flash-8b",
-      "google/gemini-2.5-flash"
+      body.model || "gemini-3.5-flash-lite",
+      "gemini-3.1-flash-lite",
+      "gemini-2.5-flash-lite"
     ];
 
     let lastError = null;
     let lastStatus = 200;
 
-    for (let i = 0; i < models.length; i++) {
+    for (let i = 0; i < models.length; i++) { console.log('Trying model:', models[i]);
       const currentModel = models[i];
       const attemptBody = { ...body, model: currentModel };
 
@@ -302,7 +302,7 @@ const ResumeBuilder = () => {
       if (!apiKey) throw new Error("Missing API Key");
 
       const response = await fetchGroqWithRetry({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gemini-3.5-flash-lite",
         messages: [{ role: "user", content: `Rewrite the following resume summary to be highly professional, action-oriented, and bypass AI detectors by sounding very human and authentic. Keep it to 2-3 sentences max. Do NOT use generic AI words like "delve", "testament", or "tapestry". Here is the summary: ${data.summary}` }],
         temperature: 0.7,
       });
@@ -328,7 +328,7 @@ const ResumeBuilder = () => {
     try {
       const apiKey = "proxy-enabled";
       const response = await fetchGroqWithRetry({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gemini-3.5-flash-lite",
         messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
           role: "user", content: `Rewrite the following job duties into 2-3 elite, metric-driven bullet points. 
         
@@ -368,7 +368,7 @@ Original Text: ${description}`
     try {
       const apiKey = "proxy-enabled";
       const response = await fetchGroqWithRetry({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gemini-3.5-flash-lite",
         messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
           role: "user", content: `Rewrite the following project description into 2-3 elite, metric-driven bullet points. 
 
@@ -488,7 +488,7 @@ CRITICAL RULES:
 5. Output ONLY the 2 bullets. No introduction, no markdown backticks block, no outro.`;
 
       const response = await fetchGroqWithRetry({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gemini-3.5-flash-lite",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.5,
       });
@@ -534,7 +534,7 @@ CRITICAL RULES:
 
     const groqRewrite = async (systemMsg: string, userMsg: string): Promise<string> => {
       const res = await fetchGroqWithRetry({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gemini-3.5-flash-lite",
         messages: [{ role: "system", content: systemMsg }, { role: "user", content: userMsg }],
         temperature: 0.4,
       });
@@ -780,7 +780,7 @@ JOB DESCRIPTION:
 ${sanitized}`;
 
       const res = await fetchGroqWithRetry({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gemini-3.5-flash-lite",
         messages: [{ role: "user", content: extractPrompt }],
         temperature: 0.1,
       });
@@ -926,7 +926,7 @@ Structure & Readability (0-20 pts):
 ${resumeText}${jdContext}`;
 
       const response = await fetchGroqWithRetry({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gemini-3.5-flash-lite",
         messages: [{ role: "user", content: analysisPrompt }],
         temperature: 0.3,
       });
@@ -1044,7 +1044,7 @@ IMPORTANT:
 - Preserve original text formatting where possible (e.g. capitals).`;
 
       const response = await fetchGroqWithRetry({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gemini-3.5-flash-lite",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: text }
