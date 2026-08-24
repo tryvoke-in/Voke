@@ -76,9 +76,16 @@ const Dashboard = () => {
   const totalCredits = creditsElite + creditsVoice + creditsVideo;
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const isUnlimited = isPremium || creditsElite >= 999;
@@ -584,8 +591,8 @@ const Dashboard = () => {
       <div className="fixed bottom-20 left-10 w-[500px] h-[500px] bg-emerald-500/4 dark:bg-emerald-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-[100] border-b border-gray-200/50 dark:border-gray-800/50 bg-white/40 dark:bg-gray-950/40 backdrop-blur-xl transition-colors duration-300 w-full">
-        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+      <header className={`fixed z-[100] backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-white/60 dark:bg-gray-950/60 border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 left-0 right-0 bg-white/40 dark:bg-gray-950/40 border-b border-gray-200/50 dark:border-gray-800/50"}`}>
+        <div className={`container mx-auto px-4 flex items-center justify-between transition-all duration-500 ${isScrolled ? "py-1" : "py-2"}`}>
           <div className="flex items-center gap-0.5 cursor-pointer" onClick={() => navigate("/dashboard")}>
             <img
               src="/images/voke_logo.png"

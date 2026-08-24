@@ -44,6 +44,13 @@ const PeerInterviews = () => {
   const [sessions, setSessions] = useState<PeerSession[]>([]);
   const [userSessions, setUserSessions] = useState<PeerSession[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const { credits, hasGivenFeedback, isPremium, canTakeInterview, loading: creditsLoading, refreshCredits, grantFeedbackCredits } = useInterviewCredits('elite');
 
@@ -258,8 +265,8 @@ const PeerInterviews = () => {
        </div>
 
       {/* Header */}
-      <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <header className={`fixed z-50 backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-background/60 border border-white/10 rounded-full shadow-lg shadow-black/20" : "top-0 left-0 right-0 bg-background/60 border-b border-white/5"}`}>
+        <div className={`container mx-auto px-4 flex items-center justify-between transition-all duration-500 ${isScrolled ? "h-14" : "h-16"}`}>
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate("/dashboard")}>
              <div className="relative">
                 <div className="absolute inset-0 bg-sky-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

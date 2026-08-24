@@ -642,6 +642,34 @@ CRITICAL INTERVIEW GUIDELINES:
 
   const isConnected = status === LiveStatus.CONNECTED;
 
+  useEffect(() => {
+    if (isConnected) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(err => console.log("Fullscreen request failed", err));
+      }
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(err => console.log("Exit fullscreen failed", err));
+      }
+    }
+  }, [isConnected]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isConnected) {
+        toast.warning("Warning: Window changed", {
+          description: "Leaving the interview window is tracked. Please remain on this screen.",
+          duration: 6000,
+        });
+      }
+    };
+    
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isConnected]);
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden font-sans select-none">
 
@@ -660,7 +688,7 @@ CRITICAL INTERVIEW GUIDELINES:
             variant="ghost"
             size="sm"
             onClick={() => navigate('/dashboard')}
-            className="rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-medium hover:bg-secondary/70 text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5"
+            className="rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-medium hover:bg-[#D8D3C9] dark:hover:bg-[#D8D3C9]/10 text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Dashboard</span>
@@ -698,7 +726,7 @@ CRITICAL INTERVIEW GUIDELINES:
 
         {/* Center: Live Mode / Timer Status */}
         <div className="flex items-center gap-2">
-          
+
 
           {/* {isConnected && (
             <Badge variant="outline" className="hidden sm:inline-flex text-xs px-2.5 py-1 rounded-full bg-card/80 border-border font-medium text-muted-foreground">
@@ -808,20 +836,18 @@ CRITICAL INTERVIEW GUIDELINES:
 
                     {/* Dynamic AI Status Footer */}
                     <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
-                      <div className={`text-xs font-bold px-3.5 py-1 rounded-full border flex items-center gap-2 transition-all ${
-                        isAiSpeaking
-                          ? 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/40 shadow-xs'
+                      <div className={`text-xs font-bold px-3.5 py-1 rounded-full border flex items-center gap-2 transition-all ${isAiSpeaking
+                          ? 'bg-[#F5F1E9]/15 dark:bg-[#F5F1E9]/10 text-black dark:text-white border-[#D8D3C9] dark:border-[#BDB8AD]/30 shadow-xs'
                           : isUserSpeaking
-                          ? 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/40 shadow-xs'
-                          : 'bg-secondary/70 text-muted-foreground border-border/70'
-                      }`}>
-                        <div className={`w-2 h-2 rounded-full ${
-                          isAiSpeaking
+                            ? 'bg-[#F5F1E9]/15 dark:bg-[#F5F1E9]/10 text-black dark:text-white border-[#D8D3C9] dark:border-[#BDB8AD]/30 shadow-xs'
+                            : 'bg-[#F5F1E9] dark:bg-[#F5F1E9]/10 text-black dark:text-white border-[#D8D3C9] dark:border-[#BDB8AD]/30 shadow-xs'
+                        }`}>
+                        <div className={`w-2 h-2 rounded-full ${isAiSpeaking
                             ? 'bg-blue-500 animate-ping'
                             : isUserSpeaking
-                            ? 'bg-blue-500 animate-ping'
-                            : 'bg-emerald-500'
-                        }`} />
+                              ? 'bg-blue-500 animate-ping'
+                              : 'bg-emerald-500'
+                          }`} />
                         <span>
                           {isAiSpeaking ? "Interviewer Speaking..." : isUserSpeaking ? "Listening to you..." : isConnected ? "Ready & Listening" : "Standby • Click Start Below"}
                         </span>
@@ -870,7 +896,7 @@ CRITICAL INTERVIEW GUIDELINES:
                       />
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-3 p-8 text-center min-h-[320px]">
-                        <div className="w-16 h-16 rounded-2xl bg-secondary border border-border flex items-center justify-center text-muted-foreground">
+                        <div className="w-16 h-16 rounded-2xl bg-[#D8D3C9] dark:bg-[#D8D3C9]/10 border border-border flex items-center justify-center text-muted-foreground">
                           <VideoOff className="w-7 h-7" />
                         </div>
                         <p className="text-xs sm:text-sm font-semibold text-muted-foreground">
@@ -880,7 +906,7 @@ CRITICAL INTERVIEW GUIDELINES:
                           size="sm"
                           variant="outline"
                           onClick={startCamera}
-                          className="text-xs rounded-xl gap-2 font-semibold border-border bg-card hover:bg-secondary text-foreground"
+                          className="text-xs rounded-xl gap-2 font-semibold border-border bg-card text-foreground"
                         >
                           <Camera className="w-3.5 h-3.5 text-primary" /> Enable Camera
                         </Button>
@@ -888,12 +914,12 @@ CRITICAL INTERVIEW GUIDELINES:
                     )}
 
                     {/* Bottom Video Controls Overlay */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-background/90 backdrop-blur-md p-1.5 px-3 rounded-full border border-border/80 shadow-md">
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-background/90 hover:bg-[#D8D3C9] cursor-pointer backdrop-blur-md p-1.5 px-3 rounded-full border border-border/80 shadow-md">
                       <Button
                         size="icon"
                         variant="ghost"
                         onClick={toggleCamera}
-                        className="h-7 w-7 rounded-full text-foreground hover:bg-secondary"
+                        className="h-7 w-7 rounded-full text-foreground hover:bg-transparent hover:text-foreground"
                         title={isCameraOn ? "Turn Camera Off" : "Turn Camera On"}
                       >
                         {isCameraOn ? <Video className="w-4 h-4 text-emerald-500" /> : <VideoOff className="w-4 h-4 text-red-500" />}
@@ -937,7 +963,7 @@ CRITICAL INTERVIEW GUIDELINES:
                         onClick={toggleCamera}
                         variant="outline"
                         size="sm"
-                        className="h-10 rounded-xl bg-secondary/60 hover:bg-secondary text-foreground border-border font-semibold text-xs gap-1.5 transition-all"
+                        className="h-10 rounded-xl dark:bg-secondary/60 bg-[#E3DFD6] hover:bg-transparent text-foreground border-border font-semibold text-xs gap-1.5 transition-all"
                         title="Toggle Webcam"
                       >
                         {isCameraOn ? <Video className="w-3.5 h-3.5 text-emerald-500" /> : <VideoOff className="w-3.5 h-3.5 text-red-500" />}
@@ -956,16 +982,7 @@ CRITICAL INTERVIEW GUIDELINES:
                         <span className="hidden sm:inline">Cancel</span>
                       </Button>
 
-                      {/* 5. Finish & Score Button */}
-                      <Button
-                        onClick={handleEndInterview}
-                        size="sm"
-                        disabled={isSaving}
-                        className="h-10 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs gap-1.5 shadow-md shadow-red-500/25 transition-all hover:scale-105 active:scale-95"
-                      >
-                        <Award className="w-3.5 h-3.5" />
-                        <span>Finish & Score</span>
-                      </Button>
+
                     </div>
                   )}
                 </div>
@@ -973,7 +990,7 @@ CRITICAL INTERVIEW GUIDELINES:
                 {/* Live Conversation Transcript Drawer */}
                 <div className="w-full max-w-6xl mx-auto rounded-3xl bg-card/90 dark:bg-card/60 backdrop-blur-2xl border border-border/80 shadow-xl overflow-hidden">
                   <div
-                    className="p-3.5 px-5 flex items-center justify-between border-b border-border/60 cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors"
+                    className="p-3.5 px-5 flex items-center justify-between border-b border-border/60 cursor-pointer dark:bg-secondary/20 dark:hover:bg-secondary/40 bg-[#D8D3C9]/50 hover:bg-[#D8D3C9]/80 transition-colors"
                     onClick={() => setIsTranscriptOpen(!isTranscriptOpen)}
                   >
                     <span className="text-xs font-bold text-foreground flex items-center gap-2">
@@ -1003,7 +1020,7 @@ CRITICAL INTERVIEW GUIDELINES:
                               max-w-[85%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm shadow-xs flex items-start gap-2.5
                               ${log.role === 'user'
                                 ? 'bg-primary text-primary-foreground rounded-br-sm'
-                                : 'bg-secondary/70 dark:bg-zinc-800/80 text-foreground border border-border/70 rounded-bl-sm'
+                                : 'bg-[#E5E1DA]/70 dark:bg-zinc-800/80 text-foreground border border-border/70 rounded-bl-sm'
                               }
                             `}>
                               <div className="flex-1 leading-relaxed">
@@ -1037,7 +1054,7 @@ CRITICAL INTERVIEW GUIDELINES:
                 {/* Socratic Feedback Alert (if generated) */}
                 {feedback && (
                   <div className="w-full max-w-6xl mx-auto bg-card/90 dark:bg-card/60 border border-emerald-500/30 rounded-2xl p-4 shadow-xl animate-in slide-in-from-bottom-5">
-                    <h3 className="text-emerald-600 dark:text-emerald-400 font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-wider">
+                    <h3 className="text-emerald-600 dark:text-emerald-300 font-bold mb-2 flex items-center gap-2 text-xs uppercase tracking-wider">
                       <Sparkles className="w-4 h-4" /> Interviewer Assessment on Last Challenge
                     </h3>
                     <ScrollArea className="h-28 rounded-xl bg-secondary/30 dark:bg-black/20 p-3">

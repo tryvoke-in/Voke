@@ -57,6 +57,13 @@ export default function AdaptiveInterview() {
     duration: "15",
     mode: "voice"
   });
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const { credits, hasGivenFeedback, isPremium, canTakeInterview, loading: creditsLoading, refreshCredits, grantFeedbackCredits } = useInterviewCredits('elite');
 
@@ -131,8 +138,8 @@ export default function AdaptiveInterview() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-4">
+      <header className={`fixed z-50 backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-background/80 border border-border/60 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 left-0 right-0 bg-background/80 border-b border-border/40"}`}>
+        <div className={`container mx-auto px-4 transition-all duration-500 ${isScrolled ? "py-2" : "py-4"}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/dashboard")}>
               <img 

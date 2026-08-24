@@ -140,12 +140,11 @@ const Index = () => {
       {/* Thin mesh grid lines for aesthetics */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)] -z-20 pointer-events-none" />
 
-      {/* Navbar */}
       <nav 
-        className={`fixed left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed z-50 transition-all duration-500 ${
           isScrolled 
-            ? "top-3 mx-4 md:mx-8 bg-black/60 backdrop-blur-xl border border-white/10 py-3 rounded-full shadow-lg shadow-black/20" 
-            : "top-0 bg-transparent py-6"
+            ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-black/60 backdrop-blur-xl border border-white/10 py-2 rounded-full shadow-lg shadow-black/20" 
+            : "top-0 left-0 right-0 bg-transparent py-6"
         }`}
       >
         <div className="container mx-auto px-4 md:px-6">

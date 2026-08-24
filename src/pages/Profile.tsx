@@ -84,6 +84,13 @@ const Profile = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(location.state?.tab === "overview" ? "analytics" : (location.state?.tab || "analytics"));
   const [loading, setLoading] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   const [saving, setSaving] = useState(false);
   const [savingResume, setSavingResume] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -912,8 +919,8 @@ const Profile = () => {
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30">
       <div className="relative">
         {/* Navigation Bar */}
-        <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <header className={`fixed z-50 backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-[2%] right-[2%] bg-background/80 border border-border/60 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 left-0 right-0 bg-background/80 border-b border-border/40"}`}>
+          <div className={`container mx-auto px-4 flex items-center justify-between transition-all duration-500 ${isScrolled ? "h-14" : "h-16"}`}>
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
               <img
                 src="/images/voke_logo.png"
@@ -939,7 +946,7 @@ const Profile = () => {
         </header>
 
         {/* Main Content Layout */}
-        <div className="container mx-auto px-4 py-8 relative z-10">
+        <div className="container mx-auto px-4 pt-24 pb-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
             {/* Identity Sidebar */}
