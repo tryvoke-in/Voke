@@ -747,16 +747,28 @@ CRITICAL INTERVIEW GUIDELINES:
         <div className="flex items-center gap-2">
           <ThemeToggle />
           {isConnected && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEndInterview}
-              disabled={isSaving}
-              className="rounded-xl text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 shadow-xs transition-all flex items-center gap-1.5"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>End & Score</span>
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.location.reload()}
+                className="rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5"
+                title="Cancel Session & Start Over"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Cancel</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEndInterview}
+                disabled={isSaving}
+                className="rounded-xl text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 shadow-xs transition-all flex items-center gap-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>End & Score</span>
+              </Button>
+            </>
           )}
         </div>
       </header>
@@ -970,17 +982,7 @@ CRITICAL INTERVIEW GUIDELINES:
                         <span className="hidden sm:inline">{isCameraOn ? "Camera On" : "Camera Off"}</span>
                       </Button>
 
-                      {/* 4. Cancel / Exit */}
-                      <Button
-                        onClick={disconnect}
-                        variant="ghost"
-                        size="sm"
-                        className="h-10 rounded-xl text-muted-foreground hover:text-foreground font-semibold text-xs gap-1.5"
-                        title="Cancel Session"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Cancel</span>
-                      </Button>
+
 
 
                     </div>

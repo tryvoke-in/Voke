@@ -44,6 +44,10 @@ export interface CalendarEvent {
   isCollegeDrive?: boolean;
   collegeName?: string;
   source?: EventSource; // 'admin' (official, no mark done/edit/delete) or 'user'
+  durationMinutes?: number;
+  questionCountLimit?: number;
+  targetRole?: string;
+  passingScore?: number;
 }
 
 const EVENT_TYPE_CONFIG: Record<EventType, { 
@@ -239,7 +243,11 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
           notes: drive.instructions || "",
           completed: false,
           isCollegeDrive: true,
-          source: "admin"
+          source: "admin",
+          durationMinutes: drive.durationMinutes,
+          questionCountLimit: drive.questionCountLimit,
+          targetRole: drive.targetRole,
+          passingScore: drive.passingScore
         });
       }
 
@@ -272,9 +280,6 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
   const handleOpenEditDialog = (event: CalendarEvent) => {
     // Admin / College controlled events cannot be edited by user
     if (event.source === "admin" || event.isCollegeDrive) {
-      if (event.link) {
-        window.open(event.link, "_blank", "noopener,noreferrer");
-      }
       return;
     }
     setEditingEventId(event.id);
@@ -450,7 +455,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
           <Button
             size="sm"
             onClick={() => handleOpenAddDialog("interview")}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl h-8.5 px-4 shadow-xs mt-2 cursor-pointer"
+            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl h-9 px-4 py-2 shadow-xs mt-2 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 mr-1" /> Schedule an Interview
           </Button>
@@ -495,7 +500,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                       className={cn(
                         "p-4 rounded-xl sm:rounded-2xl border transition-all duration-200 flex flex-col justify-between space-y-3 group relative shadow-xs",
                         isAdminControlled
-                          ? "bg-blue-500/5 dark:bg-blue-950/20 border-blue-500/30 hover:border-blue-500/50"
+                          ? "bg-[#EDE9E1]/50 dark:bg-[#BDB8AD]/5 border-[#EDE9E1]/70 hover:border-[#CCC7BC]/80 dark:border-[#CCC7BC]/5 dark:hover:border-[#CCC7BC]/50"
                           : "bg-background/80 dark:bg-background/50 hover:bg-background border-border/60 hover:border-border cursor-pointer"
                       )}
                     >
@@ -519,8 +524,8 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                         </span>
                       </div>
 
-                      {/* Title & Company */}
-                      <div className="space-y-1">
+                      {/* Title & Company & Role */}
+                      <div className="space-y-1.5">
                         <h5 className="text-xs sm:text-sm font-bold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
                           {evt.title}
                         </h5>
@@ -530,21 +535,43 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                             <span className="truncate">{evt.company}</span>
                           </div>
                         )}
+                        {evt.targetRole && (
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                            <Briefcase className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
+                            <span className="truncate">Role: {evt.targetRole}</span>
+                          </div>
+                        )}
                       </div>
+
+                      {/* Details tags */}
+                      {isAdminControlled && (
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {evt.durationMinutes && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#E3DFD6] dark:bg-gray-900/90 text-foreground/80">
+                              {evt.durationMinutes} Mins
+                            </span>
+                          )}
+                          {evt.questionCountLimit && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#E3DFD6] dark:bg-gray-900/90 text-foreground/80">
+                              Max {evt.questionCountLimit} Qs
+                            </span>
+                          )}
+                          {evt.passingScore !== undefined && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                              Target {evt.passingScore}%
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       {/* Time & Notes */}
                       {(evt.time || evt.notes) && (
                         <div className="space-y-1 text-[11px] text-muted-foreground">
-                          {evt.time && (
-                            <div className="flex items-center gap-1.5 font-medium">
-                              <Clock className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
-                              <span>{evt.time}</span>
-                            </div>
-                          )}
                           {evt.notes && (
-                            <p className="text-[10px] text-muted-foreground/90 bg-muted/40 p-2 rounded-xl border border-border/40 line-clamp-2 mt-1">
-                              {evt.notes}
-                            </p>
+                            <div className="text-[11px] text-muted-foreground/90 bg-[#E3DFD6] dark:bg-gray-900/40 p-2.5 rounded-xl border border-border/40 mt-1.5">
+                              <span className="font-semibold block mb-0.5 text-foreground/80">Instructions:</span>
+                              <p className="whitespace-pre-wrap leading-relaxed">{evt.notes}</p>
+                            </div>
                           )}
                         </div>
                       )}
@@ -910,6 +937,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
           </form>
         </DialogContent>
       </Dialog>
+
     </Card>
   );
 };

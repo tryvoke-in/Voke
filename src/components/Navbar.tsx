@@ -145,7 +145,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
     // SPECIALIZED MINIMAL COMMUNITY NAVBAR FOR VOKE PULSE
     if (isCommunityPage) {
         return (
-            <nav aria-label="Community Navigation" className={`fixed z-50 backdrop-blur-2xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-[#090d16]/90 border border-slate-700/60 rounded-full shadow-lg shadow-black/20" : "top-0 left-0 right-0 bg-[#090d16]/90 border-b border-slate-800/80"}`}>
+            <nav aria-label="Community Navigation" className={`fixed z-40 backdrop-blur-2xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-[#090d16]/90 border border-slate-700/60 rounded-full shadow-lg shadow-black/20" : "top-0 left-0 right-0 bg-[#090d16]/90 border-b border-slate-800/80"}`}>
                 <div className="max-w-[1550px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className={`flex items-center justify-between transition-all duration-500 ${isScrolled ? "h-14" : "h-16"}`}>
                         {/* Logo/Brand */}
@@ -240,7 +240,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
     // SPECIALIZED MINIMAL NAVBAR FOR PRICING / APP WORKSPACE PAGES
     if (isMinimalMode) {
         return (
-            <nav aria-label="Navigation" className={`fixed z-50 backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-background/80 dark:bg-background/80 border border-border/80 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 left-0 right-0 bg-background/80 dark:bg-background/80 border-b border-border/80"}`}>
+            <nav aria-label="Navigation" className={`fixed z-40 backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-background/80 dark:bg-background/80 border border-border/80 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 left-0 right-0 bg-background/80 dark:bg-background/80 border-b border-border/80"}`}>
                 <div className="container mx-auto px-4">
                     <div className={`flex items-center justify-between transition-all duration-500 ${isScrolled ? "h-14" : "h-16"}`}>
                         {/* Logo/Brand */}
@@ -355,7 +355,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
     }
 
     return (
-        <nav aria-label="Main Navigation" className={`fixed z-50 backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-white/80 dark:bg-gray-950/80 border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 left-0 right-0 bg-white/80 dark:bg-gray-950/80 border-b border-gray-200/50 dark:border-gray-800/50"}`}>
+        <nav aria-label="Main Navigation" className={`fixed z-40 backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-white/80 dark:bg-gray-950/80 border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 left-0 right-0 bg-white/80 dark:bg-gray-950/80 border-b border-gray-200/50 dark:border-gray-800/50"}`}>
             <div className="container mx-auto px-4">
                 <div className={`flex items-center justify-between transition-all duration-500 ${isScrolled ? "h-14" : "h-16"}`}>
                     {/* Logo/Brand */}

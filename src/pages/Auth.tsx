@@ -179,12 +179,17 @@ const Auth = () => {
         const storedRef = localStorage.getItem("voke_pending_referral");
         if (newUser && storedRef) {
           // Fire-and-forget – don't block the UI
-          supabase.rpc("process_referral", {
-            ref_code: storedRef,
-            new_user_id: newUser.id
-          }).then(({ error }) => {
-            if (!error) localStorage.removeItem("voke_pending_referral");
-          }).catch(console.error);
+          (async () => {
+            try {
+              const { error } = await supabase.rpc("process_referral", {
+                ref_code: storedRef,
+                new_user_id: newUser.id
+              });
+              if (!error) localStorage.removeItem("voke_pending_referral");
+            } catch (err) {
+              console.error(err);
+            }
+          })();
         }
         
         setPassword("");
