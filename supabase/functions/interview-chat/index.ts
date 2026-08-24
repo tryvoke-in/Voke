@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { streamGeminiPipeline } from "../_shared/gemini-pipeline.ts";
+import { streamGeminiPipeline, callGeminiPipeline } from "../_shared/gemini-pipeline.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -140,38 +140,34 @@ serve(async (req) => {
     const { geminiContents, fullSystemPrompt } = buildInterviewContext(body);
     const recentContents = geminiContents.slice(-8);
     
-    const geminiRes = await streamGeminiPipeline({
+    const geminiRes = await callGeminiPipeline({
       geminiContents: recentContents,
       systemPrompt: fullSystemPrompt,
       temperature: 0.7,
     });
     
-    if (geminiRes.ok && geminiRes.stream) {
-      return new Response(geminiRes.stream, {
+    if (geminiRes.ok && geminiRes.aiContent) {
+      return new Response(JSON.stringify({
+        question: geminiRes.aiContent,
+        content: geminiRes.aiContent,
+        apiLabel: geminiRes.modelName
+      }), {
         headers: {
           ...corsHeaders,
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          "Connection": "keep-alive", // STEP 3: Keep-Alive
+          "Content-Type": "application/json",
         },
       });
     }
 
     // Emergency Fallback if AI fails completely
     const fallbackText = `[DEBUG ERROR: ${geminiRes.errorText || 'Unknown pipeline error'}] Could you tell me about a technical challenge you've solved recently?`;
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode(`data: {"candidates": [{"content": {"parts": [{"text": "${fallbackText}"}]}}]}\n\n`));
-        controller.close();
-      }
-    });
-
-    return new Response(stream, {
+    return new Response(JSON.stringify({
+      question: fallbackText,
+      content: fallbackText
+    }), {
       headers: {
         ...corsHeaders,
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        "Content-Type": "application/json",
       },
     });
 
