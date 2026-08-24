@@ -1,20 +1,18 @@
-// Shared Gemini API Pipeline with Automatic Rate-Limit Failover
-
 export function getGeminiApiKeys(): string[] {
-  const proKey = Deno.env.get("PRO_INTERVIEW_GEMINI_KEY") || Deno.env.get("GOOGLE_API_KEY_PRO") || "";
-  const primaryKey = Deno.env.get("GOOGLE_API_KEY") || Deno.env.get("GEMINI_API_KEY") || "";
-  const secondaryKey = Deno.env.get("GOOGLE_API_KEY1") || Deno.env.get("GEMINI_API_KEY_FALLBACK") || "";
-
-  const keys: string[] = [];
-  if (proKey) keys.push(proKey);
+  const dynamicKeysStr = Deno.env.get('GEMINI_API_KEYS') || '';
+  const dynamicKeys = dynamicKeysStr.split(',').map(k => k.trim()).filter(k => k.length > 0);
+  const proKey = Deno.env.get('PRO_INTERVIEW_GEMINI_KEY') || Deno.env.get('GOOGLE_API_KEY_PRO') || '';
+  const primaryKey = Deno.env.get('GOOGLE_API_KEY') || '';
+  
+  const keys: string[] = [...dynamicKeys];
+  if (proKey && !keys.includes(proKey)) keys.push(proKey);
   if (primaryKey && !keys.includes(primaryKey)) keys.push(primaryKey);
-  if (secondaryKey && !keys.includes(secondaryKey)) keys.push(secondaryKey);
 
   return keys;
 }
 
 export interface GeminiPipelineOptions {
-  modelName: string; // e.g. "gemini-3.1-flash-lite" or "gemini-2.5-flash"
+  modelName?: string;
   geminiContents: any[];
   systemPrompt: string;
   responseSchema?: any;
@@ -26,105 +24,82 @@ export interface GeminiPipelineResult {
   status: number;
   data?: any;
   aiContent?: string;
-  usedKeyIndex?: number;
-  providerInfo?: {
-    provider: string;
-    model: string;
-    keyLabel: string;
-    isFallbackKey: boolean;
-  };
+  stream?: any;
   errorText?: string;
+  providerInfo?: any;
 }
 
-export async function callGeminiPipeline({
-  modelName,
-  geminiContents,
-  systemPrompt,
-  responseSchema,
-  temperature = 0.6,
-}: GeminiPipelineOptions): Promise<GeminiPipelineResult> {
+export async function callGeminiPipeline(options: GeminiPipelineOptions, isStream = false): Promise<GeminiPipelineResult> {
   const keys = getGeminiApiKeys();
-  const modelsToTry = Array.from(new Set([
-    modelName || "gemini-3.1-flash-lite",
-    "gemini-3.1-flash-lite",
-    "gemini-3.5-flash-lite",
-    "gemini-flash-lite-latest",
-    "gemini-3.6-flash",
-  ]));
+  const modelsToTry = [
+    ...(options.modelName ? [options.modelName] : []),
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-1.5-flash'
+  ];
 
-  for (let m = 0; m < modelsToTry.length; m++) {
-    const currentModel = modelsToTry[m];
+  let allErrors: string[] = [];
 
-    for (let i = 0; i < keys.length; i++) {
-      const apiKey = keys[i];
-      const isFallbackKey = apiKey === (Deno.env.get("GEMINI_API_KEY_FALLBACK") || "") || i > 0;
-      const keyLabel = isFallbackKey ? "Secondary Fallback Key" : "Primary GOOGLE_API_KEY";
-
-      console.log(`[Gemini Pipeline] Trying model '${currentModel}' with API key index ${i} (${keyLabel})...`);
-
+  for (const currentModel of modelsToTry) {
+    let currentKeyIndex = 0;
+    while (currentKeyIndex < keys.length) {
+      const apiKey = keys[currentKeyIndex];
       try {
         const payload: any = {
-          contents: geminiContents,
-          systemInstruction: {
-            parts: [{ text: systemPrompt }],
-          },
-          generationConfig: {
-            temperature,
-            maxOutputTokens: responseSchema ? 800 : 800,
-          },
+          contents: options.geminiContents,
+          systemInstruction: { parts: [{ text: options.systemPrompt }] },
+          generationConfig: { temperature: options.temperature ?? 0.6 },
         };
 
-        if (responseSchema) {
-          payload.generationConfig.responseMimeType = "application/json";
-          payload.generationConfig.responseSchema = responseSchema;
+        if (options.responseSchema) {
+          payload.generationConfig.responseMimeType = 'application/json';
+          payload.generationConfig.responseSchema = options.responseSchema;
         }
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
+        const endpoint = isStream ? 'streamGenerateContent?alt=sse' : 'generateContent';
+        const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + currentModel + ':' + endpoint + (isStream ? '&key=' : '?key=') + apiKey;
+        
         const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
 
         if (response.ok) {
-          const data = await response.json();
-          let aiContent = "";
-
-          if (data.candidates && data.candidates[0]) {
-            aiContent = data.candidates[0].content?.parts?.[0]?.text || "";
-          }
-
-          // Only return success if we actually got content
-          if (aiContent && aiContent.trim().length > 0) {
-            const finishReason = data.candidates[0].finishReason || "unknown";
-            console.log(`[Gemini Pipeline] ✓ Success with model '${currentModel}' using ${keyLabel} (finishReason: ${finishReason}): "${aiContent.trim().slice(0, 120)}"`);
+          if (isStream) {
             return {
               ok: true,
               status: response.status,
-              data,
-              aiContent: aiContent.trim(),
-              usedKeyIndex: i,
-              providerInfo: {
-                provider: "Google Gemini REST API",
-                model: currentModel,
-                keyLabel,
-                isFallbackKey,
-                apiLabel: `(${isFallbackKey ? "secondary" : "primary"} ${currentModel.includes("3.1") ? "3.1" : (currentModel.includes("2.0") ? "2.0" : "flash")})`,
-              },
+              stream: response.body,
+              providerInfo: { provider: 'Google Gemini', model: currentModel, apiLabel: '(' + currentModel + ')' }
             };
-          } else {
-            console.warn(`[Gemini Pipeline] Model '${currentModel}' returned empty content. Trying next...`);
           }
+          const data = await response.json();
+          let aiContent = "";
+          if (data.candidates && data.candidates[0]) {
+            aiContent = data.candidates[0].content?.parts?.[0]?.text || "";
+          }
+          return {
+            ok: true,
+            status: response.status,
+            data,
+            aiContent,
+            providerInfo: { provider: 'Google Gemini', model: currentModel, apiLabel: '(' + currentModel + ')' }
+          };
         }
 
         const errorText = await response.text();
-        console.warn(
-          `[Gemini Pipeline] Model '${currentModel}', Key index ${i} (${keyLabel}) failed with status ${response.status}: ${errorText}`
-        );
+        allErrors.push('[' + currentModel + ' Key ' + currentKeyIndex + '] ' + response.status + ': ' + errorText.substring(0, 200));
+        
+        if (response.status === 429 || response.status === 403 || response.status < 500) {
+          currentKeyIndex++;
+          continue;
+        } else {
+          break; // 5xx error, switch to next model
+        }
       } catch (err: any) {
-        console.error(`[Gemini Pipeline] Network / execution error on model '${currentModel}', key index ${i} (${keyLabel}):`, err);
+        allErrors.push('[' + currentModel + ' Key ' + currentKeyIndex + '] Exception: ' + err.message);
+        break; // Network fail, try next model
       }
     }
   }
@@ -132,6 +107,10 @@ export async function callGeminiPipeline({
   return {
     ok: false,
     status: 500,
-    errorText: "All configured Gemini API keys and models failed or were rate-limited.",
+    errorText: 'Pipeline failed: ' + JSON.stringify(allErrors)
   };
+}
+
+export async function streamGeminiPipeline(options: GeminiPipelineOptions): Promise<GeminiPipelineResult> {
+  return callGeminiPipeline(options, true);
 }

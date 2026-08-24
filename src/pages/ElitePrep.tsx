@@ -21,10 +21,12 @@ import { loadUserProfileContext, ProfileContext } from '@/utils/profileContext';
 import { Crown, AlertTriangle, Sparkles, Wrench, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { usePrewarmInterviewChat } from '@/hooks/usePrewarmInterviewChat';
 
 type ViewMode = 'notebook_mindmap' | 'in_interview';
 
 const ElitePrep: React.FC = () => {
+  usePrewarmInterviewChat();
   const navigate = useNavigate();
   const { credits, isPremium, loading: creditsLoading, consumeCredit } = useInterviewCredits('elite');
 
