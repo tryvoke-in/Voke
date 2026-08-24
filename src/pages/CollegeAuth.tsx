@@ -225,12 +225,9 @@ const CollegeAuth = () => {
               <TabsContent value="signin" className="mt-6 space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">Sign In to College Admin Dashboard</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Access your student directory, schedule campus mock drives, and view placement readiness reports.
-                  </p>
                 </div>
 
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-6">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Official Institutional Email
@@ -239,7 +236,7 @@ const CollegeAuth = () => {
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/50" />
                       <Input
                         type="email"
-                        placeholder="placement@nst.edu.in or tnp@dtu.ac.in"
+                        placeholder="Enter your email"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         className="pl-9 text-sm focus:border-blue-500"
@@ -258,7 +255,7 @@ const CollegeAuth = () => {
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/50" />
                       <Input
                         type={showPassword ? "text" : "password"}
-                        placeholder="Enter your administrator password"
+                        placeholder="Enter your password"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                         className="pl-9 pr-10 text-sm focus:border-blue-500"
@@ -277,9 +274,6 @@ const CollegeAuth = () => {
                         )}
                       </button>
                     </div>
-                    <p className="text-[11px] text-muted-foreground/70">
-                      Use the secure password set during institutional onboarding. (For demo partner accounts, click 1-click test below).
-                    </p>
                   </div>
 
                   <Button
@@ -299,21 +293,18 @@ const CollegeAuth = () => {
                     onClick={() => setActiveTab("register")}
                     className="text-blue-600 dark:text-blue-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
                   >
-                    Onboard your campus <ArrowRight className="w-3.5 h-3.5" />
+                    Register <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </TabsContent>
 
               {/* Register Tab */}
-              <TabsContent value="register" className="mt-6 space-y-6">
+              <TabsContent value="register" className="mt-6 space-y-8">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">Onboard Your University / Institution</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Register your institution with official credentials to auto-map students and unlock bulk mock assessment drives.
-                  </p>
                 </div>
 
-                <form onSubmit={handleRegister} className="space-y-4">
+                <form onSubmit={handleRegister} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="md:col-span-2 space-y-1.5">
                       <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -345,15 +336,12 @@ const CollegeAuth = () => {
                       Official Student Email Domain(s) <span className="text-red-500">*</span>
                     </Label>
                     <Input
-                      placeholder="nst.rishihood.edu.in, university.ac.in (no @ needed)"
+                      placeholder="nst.edu.in (without @)"
                       value={regDomain}
                       onChange={e => setRegDomain(e.target.value)}
                       className="text-sm"
                       required
                     />
-                    <p className="text-[11px] text-muted-foreground/70">
-                      Enter without the <code className="text-blue-600 dark:text-blue-400 font-mono">@</code> symbol. Students registering with these domains will automatically appear in your roster.
-                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -362,7 +350,7 @@ const CollegeAuth = () => {
                         Placement Head / Admin Name
                       </Label>
                       <Input
-                        placeholder="Prof. / Dr. Name"
+                        placeholder="Enter your name"
                         value={regAdminName}
                         onChange={e => setRegAdminName(e.target.value)}
                         className="text-sm"
@@ -374,7 +362,7 @@ const CollegeAuth = () => {
                       </Label>
                       <Input
                         type="email"
-                        placeholder="placement@university.edu"
+                        placeholder="admin@nst.edu.in"
                         value={regAdminEmail}
                         onChange={e => setRegAdminEmail(e.target.value)}
                         className="text-sm"

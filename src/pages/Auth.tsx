@@ -508,9 +508,9 @@ const Auth = () => {
 
           {/* Custom Tabs */}
           {(authMode === "signin" || authMode === "signup") && (
-            <div className="bg-white/5 p-1 rounded-2xl flex relative">
+            <div className="bg-white/10 p-1 rounded-full flex relative">
               <motion.div
-                className="absolute top-1 bottom-1 bg-sky-600 rounded-xl shadow-lg"
+                className="absolute top-1 bottom-1 bg-sky-600 rounded-full shadow-lg"
                 initial={false}
                 animate={{
                   x: authMode === "signin" ? 0 : "100%",
@@ -520,7 +520,7 @@ const Auth = () => {
               />
               <button
                 onClick={() => setAuthMode("signin")}
-                className={`flex-1 py-3 text-sm font-medium rounded-xl relative z-10 transition-colors duration-200 ${authMode === "signin" ? "text-white" : "text-gray-400 hover:text-white"
+                className={`flex-1 py-3 text-sm font-medium rounded-full relative z-10 transition-colors duration-200 ${authMode === "signin" ? "text-white" : "text-gray-400 hover:text-white"
                   }`}
               >
                 Sign In

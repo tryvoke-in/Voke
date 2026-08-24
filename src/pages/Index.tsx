@@ -197,7 +197,7 @@ const Index = () => {
               </Button>
               <Button
                 onClick={handleAuthNavigation}
-                className="bg-white text-black hover:bg-zinc-200 rounded-full px-5 font-semibold transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.08)] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] hover:scale-105"
+                className="bg-white/80 text-black hover:bg-zinc-200 rounded-full px-5 font-semibold transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.08)] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] hover:scale-105"
               >
                 Get Started
               </Button>
