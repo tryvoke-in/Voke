@@ -611,9 +611,9 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             const aiQuestionCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
             
             let turnDirective = "";
-            if (aiQuestionCount >= 4 && aiQuestionCount < 6) {
+            if (aiQuestionCount >= 8 && aiQuestionCount < 11) {
                 turnDirective = "\n\n[SYSTEM NOTE: You have asked enough theoretical questions. In your next response, you MUST say '[START_CODING]' and give a coding problem.]";
-            } else if (aiQuestionCount >= 6) {
+            } else if (aiQuestionCount >= 11) {
                 turnDirective = "\n\n[SYSTEM NOTE: The interview is over. You MUST end the interview NOW by saying '[VERDICT:PASS]' or '[VERDICT:FAIL]'. Do not ask any more questions.]";
             }
 

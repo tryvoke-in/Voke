@@ -204,7 +204,7 @@ const ResumeBuilder = () => {
     if (!token) throw new Error("You must be logged in to use AI features.");
 
     const models = [
-      body.model || "llama3-70b-8192",
+      body.model || "llama-3.3-70b-versatile",
       "gemma2-9b-it",
       "mixtral-8x7b-32768",
       "llama3-8b-8192"
@@ -303,7 +303,7 @@ const ResumeBuilder = () => {
       if (!apiKey) throw new Error("Missing API Key");
 
       const response = await fetchGroqWithRetry({
-        model: "llama3-70b-8192",
+        model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: `Rewrite the following resume summary to be highly professional, action-oriented, and bypass AI detectors by sounding very human and authentic. Keep it to 2-3 sentences max. Do NOT use generic AI words like "delve", "testament", or "tapestry". Here is the summary: ${data.summary}` }],
         temperature: 0.7,
       });
@@ -329,7 +329,7 @@ const ResumeBuilder = () => {
     try {
       const apiKey = "proxy-enabled";
       const response = await fetchGroqWithRetry({
-        model: "llama3-70b-8192",
+        model: "llama-3.3-70b-versatile",
         messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
           role: "user", content: `Rewrite the following job duties into 2-3 elite, metric-driven bullet points. 
         
@@ -369,7 +369,7 @@ Original Text: ${description}`
     try {
       const apiKey = "proxy-enabled";
       const response = await fetchGroqWithRetry({
-        model: "llama3-70b-8192",
+        model: "llama-3.3-70b-versatile",
         messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
           role: "user", content: `Rewrite the following project description into 2-3 elite, metric-driven bullet points. 
 
@@ -489,7 +489,7 @@ CRITICAL RULES:
 5. Output ONLY the 2 bullets. No introduction, no markdown backticks block, no outro.`;
 
       const response = await fetchGroqWithRetry({
-        model: "llama3-70b-8192",
+        model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.5,
       });
@@ -535,7 +535,7 @@ CRITICAL RULES:
 
     const groqRewrite = async (systemMsg: string, userMsg: string): Promise<string> => {
       const res = await fetchGroqWithRetry({
-        model: "llama3-70b-8192",
+        model: "llama-3.3-70b-versatile",
         messages: [{ role: "system", content: systemMsg }, { role: "user", content: userMsg }],
         temperature: 0.4,
       });
@@ -781,7 +781,7 @@ JOB DESCRIPTION:
 ${sanitized}`;
 
       const res = await fetchGroqWithRetry({
-        model: "llama3-70b-8192",
+        model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: extractPrompt }],
         temperature: 0.1,
       });
@@ -927,7 +927,7 @@ Structure & Readability (0-20 pts):
 ${resumeText}${jdContext}`;
 
       const response = await fetchGroqWithRetry({
-        model: "llama3-70b-8192",
+        model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: analysisPrompt }],
         temperature: 0.3,
       });
