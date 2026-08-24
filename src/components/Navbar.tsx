@@ -24,6 +24,13 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [userId, setUserId] = useState<string | null>(null);
     const [profile, setProfile] = useState<any>(null);
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => setIsScrolled(window.scrollY > 50);
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     const isCommunityPage = location.pathname === '/community';
     const isPricingPage = location.pathname === '/pricing' || location.pathname.startsWith('/pricing');
@@ -138,7 +145,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
     // SPECIALIZED MINIMAL COMMUNITY NAVBAR FOR VOKE PULSE
     if (isCommunityPage) {
         return (
-            <nav aria-label="Community Navigation" className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800/80 bg-[#090d16]/90 backdrop-blur-2xl transition-colors duration-300">
+            <nav aria-label="Community Navigation" className={`fixed left-0 right-0 z-50 backdrop-blur-2xl transition-all duration-500 ${isScrolled ? "top-3 mx-4 md:mx-8 bg-[#090d16]/90 border border-slate-700/60 rounded-full shadow-lg shadow-black/20" : "top-0 bg-[#090d16]/90 border-b border-slate-800/80"}`}>
                 <div className="max-w-[1550px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         {/* Logo/Brand */}
@@ -233,7 +240,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
     // SPECIALIZED MINIMAL NAVBAR FOR PRICING / APP WORKSPACE PAGES
     if (isMinimalMode) {
         return (
-            <nav aria-label="Navigation" className="fixed top-0 left-0 right-0 z-50 border-b border-border/80 bg-background/80 dark:bg-background/80 backdrop-blur-xl transition-colors duration-300">
+            <nav aria-label="Navigation" className={`fixed left-0 right-0 z-50 backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-3 mx-4 md:mx-8 bg-background/80 dark:bg-background/80 border border-border/80 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 bg-background/80 dark:bg-background/80 border-b border-border/80"}`}>
                 <div className="container mx-auto px-4">
                     <div className="flex items-center justify-between h-16">
                         {/* Logo/Brand */}
@@ -348,7 +355,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
     }
 
     return (
-        <nav aria-label="Main Navigation" className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl transition-colors duration-300">
+        <nav aria-label="Main Navigation" className={`fixed left-0 right-0 z-50 backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-3 mx-4 md:mx-8 bg-white/80 dark:bg-gray-950/80 border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 bg-white/80 dark:bg-gray-950/80 border-b border-gray-200/50 dark:border-gray-800/50"}`}>
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo/Brand */}

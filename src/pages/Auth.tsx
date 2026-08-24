@@ -430,9 +430,9 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-black text-white overflow-y-auto">
-      {/* Left Side - Feature Showcase */}
-      <div className="hidden lg:flex w-1/2 relative items-center justify-center p-12 overflow-hidden">
+    <div className="min-h-screen w-full bg-black text-white">
+      {/* Left Side - Feature Showcase (fixed so it never moves) */}
+      <div className="hidden lg:flex w-1/2 fixed inset-y-0 left-0 items-center justify-center p-12 overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-black">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(124,58,237,0.1),transparent_70%)]" />
@@ -468,7 +468,7 @@ const Auth = () => {
       </div>
 
       {/* Right Side - Auth Form */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 relative bg-black/95 min-h-screen overflow-y-auto">
+      <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col items-center justify-center p-6 sm:p-12 relative bg-black/95 min-h-screen overflow-y-auto">
         <div className="absolute top-6 right-6 flex items-center gap-4">
           <Button
             variant="ghost"
