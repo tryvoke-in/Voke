@@ -139,29 +139,41 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
           loadCalendarEvents();
         }
       })
-      .on("broadcast", { event: "college_drive_scheduled" }, (payload: any) => {
+      .on("broadcast", { event: "college_drive_scheduled" }, async (payload: any) => {
         if (payload?.drive) {
           const stored = localStorage.getItem("voke_college_drives");
           const existing = stored ? JSON.parse(stored) : [];
           const filtered = existing.filter((d: any) => d.id !== payload.drive.id);
           localStorage.setItem("voke_college_drives", JSON.stringify([payload.drive, ...filtered]));
         }
+
+        let currentEmail = userEmail || "";
+        if (!currentEmail) {
+          const session = await supabase.auth.getSession();
+          currentEmail = session.data.session?.user?.email || "";
+        }
+
         loadCalendarEvents();
-        if (payload?.drive) {
-          toast.success(
-            `New Interview Scheduled by College: ${payload.drive.title}`,
-            {
-              description: `Organized by ${payload.drive.collegeName || "Placement Cell"}. Link added to your calendar!`,
-              action: {
-                label: "Start Mock",
-                onClick: () => {
-                  if (payload.drive.id) {
-                    window.location.href = `/college/assessment/${payload.drive.id}?role=${encodeURIComponent(payload.drive.targetRole || '')}`;
+
+        // ONLY toast if current student is genuinely targeted by this drive!
+        if (payload?.drive && currentEmail) {
+          const isEligible = collegeService.isStudentEligibleForDrive(currentEmail, payload.drive);
+          if (isEligible) {
+            toast.success(
+              `New Interview Scheduled by College: ${payload.drive.title}`,
+              {
+                description: `Organized by ${payload.drive.collegeName || "Placement Cell"}. Link added to your calendar!`,
+                action: {
+                  label: "Start Mock",
+                  onClick: () => {
+                    if (payload.drive.id) {
+                      window.location.href = `/college/assessment/${payload.drive.id}?role=${encodeURIComponent(payload.drive.targetRole || '')}`;
+                    }
                   }
                 }
               }
-            }
-          );
+            );
+          }
         }
       })
       .subscribe((status) => {
@@ -203,17 +215,24 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
       activeEmail = session.data.session?.user?.email || "";
     }
 
-    // Merge student's assigned college placement drives
+    // Filter out previous college drives & admin drives from base events to ensure latest verified drives render
+    const userOnlyEvents = baseEvents.filter(
+      e => !e.isCollegeDrive && 
+           !e.id.startsWith("college-drive-") && 
+           !DUMMY_IDS.includes(e.id) &&
+           e.source !== "admin"
+    );
+
+    // Merge student's assigned college placement drives strictly if eligible
     if (activeEmail) {
       const college = collegeService.getCollegeByEmail(activeEmail);
       if (college) {
         setMatchedCollegeName(college.name);
+      } else {
+        setMatchedCollegeName("");
       }
 
       const studentDrives = await collegeService.getStudentDrivesAsync(activeEmail);
-      
-      // Filter out previous college drives from base events to ensure latest drives render
-      const userOnlyEvents = baseEvents.filter(e => !e.isCollegeDrive && !e.id.startsWith("college-drive-") && !DUMMY_IDS.includes(e.id));
       const driveEvents: CalendarEvent[] = [];
 
       for (const drive of studentDrives) {
@@ -244,6 +263,9 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
       }
 
       baseEvents = [...driveEvents, ...userOnlyEvents];
+    } else {
+      setMatchedCollegeName("");
+      baseEvents = userOnlyEvents;
     }
 
     setEvents(baseEvents);

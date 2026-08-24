@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   LayoutDashboard, Users, Settings, LogOut, Activity, 
   Shield, AlertTriangle, Search, Bell, Database, TrendingUp,
-  MoreVertical, CheckCircle2, XCircle, Clock, FileText, Plus, Image as ImageIcon, Trash2, Edit, MessageSquare, Flag, Ban, Code2, Mail, MapPin
+  MoreVertical, CheckCircle2, XCircle, Clock, FileText, Plus, Image as ImageIcon, Trash2, Edit, MessageSquare, Flag, Ban, Code2, Mail, MapPin,
+  GraduationCap, Building2, ExternalLink, ShieldCheck
 } from "lucide-react";
+import { collegeService, College } from "@/services/collegeService";
 import {
   Table,
   TableBody,
@@ -92,6 +94,13 @@ const AdminDashboard = () => {
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   const [newUsersOnly, setNewUsersOnly] = useState(false);
 
+  // Partner Colleges State
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [isLoadingColleges, setIsLoadingColleges] = useState(false);
+  const [collegeSearchQuery, setCollegeSearchQuery] = useState("");
+  const [deletingCollegeId, setDeletingCollegeId] = useState<string | null>(null);
+  const [collegeToDelete, setCollegeToDelete] = useState<College | null>(null);
+
   const isNewUser = (userEmail?: string | null, userId?: string | null) => {
     if (!userEmail && !userId) return false;
     const foundUser = users.find(u => 
@@ -123,6 +132,18 @@ const AdminDashboard = () => {
     const phoneMatch = (item.phone_number || "").toLowerCase().includes(searchLower);
     const dateMatch = formatDate(item.created_at).toLowerCase().includes(searchLower);
     return emailMatch || collegeMatch || phoneMatch || dateMatch;
+  });
+
+  const filteredColleges = colleges.filter(item => {
+    const query = collegeSearchQuery.trim() || searchQuery.trim();
+    if (!query) return true;
+    const searchLower = query.toLowerCase();
+    const nameMatch = (item.name || "").toLowerCase().includes(searchLower);
+    const shortMatch = (item.shortName || "").toLowerCase().includes(searchLower);
+    const emailMatch = (item.adminEmail || "").toLowerCase().includes(searchLower);
+    const domainMatch = (item.domains || []).some(d => d.toLowerCase().includes(searchLower));
+    const locationMatch = (item.location || "").toLowerCase().includes(searchLower);
+    return nameMatch || shortMatch || emailMatch || domainMatch || locationMatch;
   });
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
@@ -159,6 +180,7 @@ const AdminDashboard = () => {
     fetchSessionStats();
     fetchAnalytics();
     fetchLocations();
+    fetchColleges();
 
     // Subscribe to new users in real-time
     const channel = supabase
@@ -302,6 +324,38 @@ const AdminDashboard = () => {
       toast.error("Failed to fetch waitlist entries");
     } finally {
       setIsLoadingWaitlist(false);
+    }
+  };
+
+  const fetchColleges = async () => {
+    setIsLoadingColleges(true);
+    try {
+      const list = await collegeService.getCollegesAsync();
+      setColleges(list);
+    } catch (error) {
+      console.error('Error fetching colleges:', error);
+      toast.error("Failed to fetch partner colleges");
+    } finally {
+      setIsLoadingColleges(false);
+    }
+  };
+
+  const handleDeleteCollege = async (college: College) => {
+    setDeletingCollegeId(college.id);
+    try {
+      const success = await collegeService.deleteCollegeAsync(college.id);
+      if (success) {
+        toast.success(`Removed ${college.name} successfully.`);
+        setColleges(prev => prev.filter(c => c.id !== college.id && c.slug !== college.slug));
+        setCollegeToDelete(null);
+      } else {
+        toast.error(`Failed to remove ${college.name}.`);
+      }
+    } catch (err: any) {
+      console.error('Error deleting college:', err);
+      toast.error(err.message || "Failed to delete college.");
+    } finally {
+      setDeletingCollegeId(null);
     }
   };
 
@@ -463,6 +517,7 @@ const AdminDashboard = () => {
 
   const stats = [
     { title: "Total Users", value: users.length.toString(), change: `Registered`, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", data: [40, 30, 45, 50, 65, 60, 70] },
+    { title: "Partner Colleges", value: colleges.length.toString(), change: "Active", icon: GraduationCap, color: "text-indigo-400", bg: "bg-indigo-500/10", data: [2, 3, 4, 6, 8, 10, colleges.length] },
     { title: "Interviews Conducted", value: totalSessions.toString(), change: "Active", icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10", data: [20, 40, 35, 50, 45, 60, 55] },
     { title: "System Health", value: "99.9%", change: "Stable", icon: Database, color: "text-sky-400", bg: "bg-sky-500/10", data: [80, 85, 82, 90, 88, 95, 99] },
     { title: "Waitlist Signups", value: waitlist.length.toString(), change: "Active", icon: Mail, color: "text-orange-400", bg: "bg-orange-500/10", data: [10, 15, 12, 20, 18, 15, 10] },
@@ -590,6 +645,7 @@ const AdminDashboard = () => {
         <nav className="flex-1 px-4 space-y-2">
           {[
             { id: "overview", label: "Overview", icon: LayoutDashboard },
+            { id: "colleges", label: "Partner Colleges", icon: GraduationCap },
             { id: "analytics", label: "Analytics", icon: TrendingUp },
             { id: "users", label: "User Management", icon: Users },
             { id: "waitlist", label: "Waitlist Signups", icon: Mail },
@@ -656,21 +712,27 @@ const AdminDashboard = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               <Input 
                 placeholder={
-                  activeTab === "waitlist" 
-                    ? "Search waitlist..." 
-                    : activeTab === "analytics"
-                      ? "Search activities..."
-                      : "Search by name, email..."
+                  activeTab === "colleges"
+                    ? "Search colleges, domains, admins..."
+                    : activeTab === "waitlist" 
+                      ? "Search waitlist..." 
+                      : activeTab === "analytics"
+                        ? "Search activities..."
+                        : "Search by name, email..."
                 } 
                 value={
-                  activeTab === "waitlist" 
-                    ? waitlistSearchQuery 
-                    : activeTab === "analytics"
-                      ? analyticsSearchQuery
-                      : searchQuery
+                  activeTab === "colleges"
+                    ? collegeSearchQuery
+                    : activeTab === "waitlist" 
+                      ? waitlistSearchQuery 
+                      : activeTab === "analytics"
+                        ? analyticsSearchQuery
+                        : searchQuery
                 }
                 onChange={(e) => {
-                  if (activeTab === "waitlist") {
+                  if (activeTab === "colleges") {
+                    setCollegeSearchQuery(e.target.value);
+                  } else if (activeTab === "waitlist") {
                     setWaitlistSearchQuery(e.target.value);
                   } else if (activeTab === "analytics") {
                     setAnalyticsSearchQuery(e.target.value);
@@ -859,6 +921,283 @@ const AdminDashboard = () => {
                     </Table>
                   </CardContent>
                 </Card>
+              </motion.div>
+            )}
+
+            {activeTab === "colleges" && (
+              <motion.div
+                key="colleges"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                {/* Stats Summary Strip */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-5 flex items-center gap-4">
+                    <div className="p-3.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      <GraduationCap className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Registered Colleges</p>
+                      <h3 className="text-2xl font-bold text-white mt-0.5">{colleges.length} Institutions</h3>
+                      <p className="text-[11px] text-blue-400/80 mt-0.5">Active Campus Partnerships</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-5 flex items-center gap-4">
+                    <div className="p-3.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <ShieldCheck className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Mapped Student Domains</p>
+                      <h3 className="text-2xl font-bold text-white mt-0.5">
+                        {colleges.reduce((acc, c) => acc + (c.domains?.length || 0), 0)} Domains
+                      </h3>
+                      <p className="text-[11px] text-emerald-400/80 mt-0.5">Auto-roster domain verification</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/5 border border-white/10 p-5 flex items-center gap-4">
+                    <div className="p-3.5 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Total Student Capacity</p>
+                      <h3 className="text-2xl font-bold text-white mt-0.5">
+                        {colleges.reduce((acc, c) => acc + (c.totalStudentSlots || 500), 0).toLocaleString()} Slots
+                      </h3>
+                      <p className="text-[11px] text-violet-400/80 mt-0.5">AI assessment drive quota</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* College Directory Card */}
+                <Card className="bg-white/5 border-white/10 backdrop-blur-sm overflow-hidden">
+                  <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Building2 className="w-5 h-5 text-blue-400" />
+                        Partner Colleges & Universities
+                        <span className="ml-2 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400 font-medium">
+                          {colleges.length} Total
+                        </span>
+                      </CardTitle>
+                      <p className="text-xs text-gray-400 mt-1">
+                        View registered institutions, verified email domains, admin login accounts, and manage campus access.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={fetchColleges}
+                        className="border border-white/10 hover:bg-white/5 text-gray-200 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                      >
+                        Refresh
+                      </button>
+                      <Button
+                        onClick={() => window.open("/college/auth?mode=register", "_blank")}
+                        className="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3.5 py-1.5 h-auto rounded-lg shadow-lg shadow-blue-600/20 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5 mr-1" />
+                        Onboard New College
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="rounded-xl border border-white/10 overflow-hidden">
+                      <Table>
+                        <TableHeader className="bg-white/5">
+                          <TableRow className="border-white/10 hover:bg-white/5">
+                            <TableHead className="text-gray-300">College / University</TableHead>
+                            <TableHead className="text-gray-300">Official Email Domains</TableHead>
+                            <TableHead className="text-gray-300">Admin Account</TableHead>
+                            <TableHead className="text-gray-300">Location & Scale</TableHead>
+                            <TableHead className="text-gray-300">Partnership Tier</TableHead>
+                            <TableHead className="text-right text-gray-300">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {isLoadingColleges ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-12 text-gray-400">
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                  <GraduationCap className="w-6 h-6 animate-pulse text-blue-400" />
+                                  <p className="text-sm">Loading partner colleges...</p>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ) : filteredColleges.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-12 text-gray-400">
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                  <Building2 className="w-8 h-8 text-gray-600" />
+                                  <p className="text-sm font-medium">No matching colleges found</p>
+                                  <p className="text-xs text-gray-500">
+                                    {collegeSearchQuery ? "Try a different search query." : "No partner colleges registered yet."}
+                                  </p>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filteredColleges.map((college) => (
+                              <TableRow
+                                key={college.id}
+                                className="border-white/10 hover:bg-white/5 transition-colors group"
+                              >
+                                <TableCell className="font-medium text-gray-200">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 flex items-center justify-center text-blue-300 font-bold text-xs shrink-0">
+                                      {college.shortName ? college.shortName.slice(0, 3) : "COL"}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-semibold text-white truncate">{college.name}</span>
+                                        {college.shortName && (
+                                          <Badge variant="outline" className="bg-white/5 border-white/10 text-[10px] text-gray-300 py-0 px-1.5">
+                                            {college.shortName}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                                        <span className="font-mono text-[11px] text-gray-500">slug: {college.slug}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                    {college.domains && college.domains.length > 0 ? (
+                                      college.domains.map((d, i) => (
+                                        <Badge
+                                          key={i}
+                                          variant="secondary"
+                                          className="bg-blue-500/10 text-blue-300 border border-blue-500/20 text-[10px] py-0 px-1.5 font-mono"
+                                        >
+                                          @{d}
+                                        </Badge>
+                                      ))
+                                    ) : (
+                                      <span className="text-xs text-gray-500">No domains</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div>
+                                    <p className="text-xs font-medium text-gray-200">{college.adminName || "Placement Coordinator"}</p>
+                                    <p className="text-xs text-gray-400 font-mono mt-0.5">{college.adminEmail}</p>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div>
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-300">
+                                      <Users className="w-3.5 h-3.5 text-gray-500" />
+                                      <span>{(college.totalStudentSlots || 500).toLocaleString()} Slots</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
+                                      <MapPin className="w-3.5 h-3.5 text-gray-500" />
+                                      <span className="truncate max-w-[140px]">{college.location || "India"}</span>
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div>
+                                    <Badge className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[11px] font-normal">
+                                      {college.tier || "Enterprise Campus Partner"}
+                                    </Badge>
+                                    <p className="text-[10px] text-gray-500 mt-1">
+                                      {college.contractPeriod || "2025 - 2026 Academic Year"}
+                                    </p>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell className="text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-2.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 text-xs cursor-pointer"
+                                      onClick={() => {
+                                        collegeService.setCollegeSession(college);
+                                        window.open(`/college/dashboard?college=${college.id}`, "_blank");
+                                      }}
+                                      title="Open College Dashboard"
+                                    >
+                                      <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                                      Portal
+                                    </Button>
+
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                      onClick={() => setCollegeToDelete(college)}
+                                      disabled={deletingCollegeId === college.id}
+                                      title="Delete College"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Delete College Confirmation Modal */}
+                {collegeToDelete && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-zinc-900 border border-white/10 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                          <Trash2 className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">Delete Registered College?</h3>
+                          <p className="text-xs text-gray-400">This action cannot be undone.</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2 text-sm text-gray-300">
+                        <p>
+                          You are about to remove <strong className="text-white">{collegeToDelete.name}</strong> ({collegeToDelete.shortName || collegeToDelete.slug}) from the Voke University Network.
+                        </p>
+                        <ul className="text-xs text-gray-400 space-y-1 list-disc list-inside">
+                          <li>Admin account: <code className="text-gray-300 font-mono">{collegeToDelete.adminEmail}</code></li>
+                          <li>Domains: <code className="text-gray-300 font-mono">@{collegeToDelete.domains?.join(", @")}</code></li>
+                          <li>Students from this domain will no longer be auto-rostered to this college.</li>
+                        </ul>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-3 pt-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setCollegeToDelete(null)}
+                          disabled={deletingCollegeId === collegeToDelete.id}
+                          className="hover:bg-white/5 text-gray-300 hover:text-white text-xs cursor-pointer"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => handleDeleteCollege(collegeToDelete)}
+                          disabled={deletingCollegeId === collegeToDelete.id}
+                          className="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-4 cursor-pointer"
+                        >
+                          {deletingCollegeId === collegeToDelete.id ? "Deleting Institution..." : "Confirm & Delete College"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 

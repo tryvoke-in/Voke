@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 const CollegeAdminDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [college, setCollege] = useState<College | null>(null);
   const [students, setStudents] = useState<CollegeStudent[]>([]);
   const [drives, setDrives] = useState<CollegeScheduledDrive[]>([]);
@@ -128,17 +129,36 @@ const CollegeAdminDashboard = () => {
     if (showLoading) setLoading(true);
     setRefreshing(true);
 
-    const session = collegeService.getCollegeSession();
-    if (!session) {
+    const requestedCollegeParam = searchParams.get("college") || searchParams.get("id");
+    let activeCollege: College | null = null;
+
+    if (requestedCollegeParam) {
+      const allColleges = await collegeService.getCollegesAsync();
+      const found = allColleges.find(c => 
+        c.id === requestedCollegeParam || 
+        c.slug === requestedCollegeParam || 
+        c.shortName?.toLowerCase() === requestedCollegeParam.toLowerCase()
+      );
+      if (found) {
+        activeCollege = found;
+        collegeService.setCollegeSession(found);
+      }
+    }
+
+    if (!activeCollege) {
+      activeCollege = collegeService.getCollegeSession();
+    }
+
+    if (!activeCollege) {
       navigate("/college/auth");
       return;
     }
 
-    setCollege(session);
+    setCollege(activeCollege);
     try {
-      const studentList = await collegeService.getCollegeStudents(session.id);
-      const drivesList = collegeService.getCollegeDrives(session.id);
-      const analyticsData = await collegeService.getCollegeAnalytics(session.id);
+      const studentList = await collegeService.getCollegeStudents(activeCollege.id);
+      const drivesList = collegeService.getCollegeDrives(activeCollege.id);
+      const analyticsData = await collegeService.getCollegeAnalytics(activeCollege.id);
 
       setStudents(studentList);
       setDrives(drivesList);
