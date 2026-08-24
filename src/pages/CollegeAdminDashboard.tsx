@@ -11,12 +11,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Building2, GraduationCap, Users, Calendar, Plus, Download,
   Search, Award, Sparkles, LogOut, CheckCircle2, Clock, AlertCircle,
   ChevronRight, ExternalLink, Bot, Video, Code, Layers, Mail, Phone,
   TrendingUp, BarChart3, ShieldCheck, Filter, ArrowUpRight, Trophy, RefreshCw, UserPlus,
-  Copy, Link, Play, BookOpen, Check, X, FileText
+  Copy, Link, Play, BookOpen, Check, X, FileText, User
 } from "lucide-react";
 import {
   College, CollegeStudent, CollegeScheduledDrive, CollegeAnalytics,
@@ -296,23 +297,19 @@ const CollegeAdminDashboard = () => {
           <div className="flex items-center gap-3">
             <div
               onClick={() => navigate("/")}
-              className="flex items-center gap-2 cursor-pointer group"
+              className="flex items-center gap-0 cursor-pointer group rounded-lg"
             >
               <img
                 src="/images/voke_logo.png"
                 alt="Voke Logo"
-                className="w-8 h-8 object-contain group-hover:rotate-12 transition-transform duration-300"
+                width={48}
+                height={48}
+                decoding="async"
+                className="w-11 h-11 object-contain group-hover:scale-105 transition-transform duration-200"
               />
-              <span className="text-xl font-bold tracking-tight text-foreground">
-                Voke <span className="text-xs text-blue-600 dark:text-blue-300 font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">Institutional</span>
+              <span className="text-2xl font-bold tracking-tight text-foreground">
+                Voke
               </span>
-            </div>
-            <div className="h-4 w-px bg-border hidden sm:block" />
-            <div className="hidden sm:flex items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">{college.name}</span>
-              <Badge className="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30 text-[10px] px-2 py-0.5">
-                {college.tier}
-              </Badge>
             </div>
           </div>
 
@@ -329,27 +326,6 @@ const CollegeAdminDashboard = () => {
             </Button>
 
             <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setAddStudentOpen(true)}
-              className="border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 text-xs h-9 px-3 hidden md:flex items-center"
-            >
-              <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-              Enroll Student
-            </Button>
-
-            <Button
-              onClick={() => {
-                setPreSelectedEmailsForSchedule([]);
-                setScheduleModalOpen(true);
-              }}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-xs md:text-sm px-3.5 md:px-4 py-2 shadow-lg shadow-blue-600/15 dark:shadow-blue-600/25 h-9"
-            >
-              <Plus className="w-4 h-4 mr-1.5" />
-              Schedule Interview
-            </Button>
-
-            <Button
               variant="outline"
               size="sm"
               onClick={handleExportCSV}
@@ -361,15 +337,14 @@ const CollegeAdminDashboard = () => {
 
             <ThemeToggle />
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 text-xs h-9"
-            >
-              <LogOut className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </Button>
+            <div className="relative flex items-center justify-center w-9 h-9 cursor-pointer group ml-1" onClick={() => navigate('/college/profile')}>
+              <Avatar className="w-8 h-8 transition-transform group-hover:scale-105 border border-border">
+                <AvatarImage src={college?.logoUrl} alt={college?.name || "Profile"} className="object-cover" />
+                <AvatarFallback className="bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-300">
+                  {(college?.name || "U")[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
           </div>
         </div>
       </header>
@@ -548,11 +523,10 @@ const CollegeAdminDashboard = () => {
 
               <Button
                 size="sm"
-                variant="outline"
                 onClick={() => setAddStudentOpen(true)}
-                className="border-border bg-muted/40 dark:bg-muted/30 hover:bg-muted/50 text-foreground text-xs h-8"
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8 rounded-full px-4 shadow-sm"
               >
-                <UserPlus className="w-3.5 h-3.5 mr-1 text-blue-600 dark:text-blue-300" />
+                <UserPlus className="w-3.5 h-3.5 mr-1.5" />
                 Enroll Student
               </Button>
             </div>
@@ -637,14 +611,7 @@ const CollegeAdminDashboard = () => {
                         <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
                           Students with authorized college email domains will automatically appear here once they sign up, or you can enroll them directly.
                         </p>
-                        <Button
-                          size="sm"
-                          onClick={() => setAddStudentOpen(true)}
-                          className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
-                        >
-                          <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-                          Enroll Student
-                        </Button>
+
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -749,10 +716,10 @@ const CollegeAdminDashboard = () => {
                   setPreSelectedEmailsForSchedule([]);
                   setScheduleModalOpen(true);
                 }}
-                className="bg-blue-600 hover:bg-blue-500 text-white text-xs"
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-full"
               >
                 <Plus className="w-3.5 h-3.5 mr-1" />
-                Schedule New Drive
+                Schedule Interview
               </Button>
             </div>
 
@@ -763,17 +730,6 @@ const CollegeAdminDashboard = () => {
                 <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-4">
                   Schedule customized mock interviews and placement drives for your college students.
                 </p>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setPreSelectedEmailsForSchedule([]);
-                    setScheduleModalOpen(true);
-                  }}
-                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
-                >
-                  <Plus className="w-3.5 h-3.5 mr-1.5" />
-                  Schedule First Placement Drive
-                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

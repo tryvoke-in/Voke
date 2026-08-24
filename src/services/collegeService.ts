@@ -598,6 +598,41 @@ export const collegeService = {
     return sanitizedCollege;
   },
 
+  async updateCollegeAsync(collegeId: string, updates: Partial<College>): Promise<College | null> {
+    await ensureCollegesFromDb();
+    const existingColleges = this.getColleges();
+    const index = existingColleges.findIndex(c => c.id === collegeId);
+    
+    if (index === -1) return null;
+    
+    const updatedCollege = { ...existingColleges[index], ...updates };
+    const updatedList = [
+      ...existingColleges.slice(0, index),
+      updatedCollege,
+      ...existingColleges.slice(index + 1)
+    ];
+    
+    _inMemoryColleges = updatedList;
+    try {
+      if (typeof localStorage !== "undefined" && localStorage.setItem) {
+        localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(updatedList));
+        
+        // Also update the session if this is the active college
+        const sessionStr = localStorage.getItem(STORAGE_KEYS.COLLEGE_SESSION);
+        if (sessionStr) {
+          const session = JSON.parse(sessionStr);
+          if (session.id === collegeId) {
+            localStorage.setItem(STORAGE_KEYS.COLLEGE_SESSION, JSON.stringify(updatedCollege));
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to update college in local storage", e);
+    }
+    
+    return updatedCollege;
+  },
+
   // Delete / Deregister a partner college
   async deleteCollegeAsync(collegeId: string): Promise<boolean> {
     try {

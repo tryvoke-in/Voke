@@ -250,7 +250,10 @@ const InterviewAnalytics = ({ userId }: InterviewAnalyticsProps) => {
                             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                             <XAxis dataKey="type" className="text-xs" />
                             <YAxis domain={[0, 100]} className="text-xs" />
-                            <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
+                            <Tooltip 
+                                cursor={{ fill: 'hsl(var(--foreground))', opacity: 0.1 }}
+                                contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} 
+                            />
                             <Legend />
                             <Bar dataKey="avgScore" fill="hsl(var(--primary))" name="Average Score" />
                         </BarChart>

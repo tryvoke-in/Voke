@@ -143,7 +143,7 @@ const Index = () => {
       <nav 
         className={`fixed z-50 transition-all duration-500 ${
           isScrolled 
-            ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-black/60 backdrop-blur-xl border border-white/10 py-2 rounded-full shadow-lg shadow-black/20" 
+            ? "top-1 left-3 right-3 md:left-8 md:right-8 bg-black/60 backdrop-blur-xl border border-white/10 py-2 rounded-full shadow-lg shadow-black/20" 
             : "top-0 left-0 right-0 bg-transparent py-6"
         }`}
       >

@@ -474,13 +474,6 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
               Add your upcoming technical screens, mock interviews, or online assessments to stay organized.
             </p>
           </div>
-          <Button
-            size="sm"
-            onClick={() => handleOpenAddDialog("interview")}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl h-9 px-4 py-2 shadow-xs mt-2 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5 mr-1" /> Schedule an Interview
-          </Button>
         </div>
       ) : (
         <div className="space-y-6">
