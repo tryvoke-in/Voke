@@ -150,7 +150,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         question: geminiRes.aiContent,
         content: geminiRes.aiContent,
-        apiLabel: geminiRes.modelName
+        apiLabel: geminiRes.modelName,
+        usageMetadata: geminiRes.usageMetadata
       }), {
         headers: {
           ...corsHeaders,
