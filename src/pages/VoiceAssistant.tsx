@@ -230,6 +230,18 @@ const VoiceAssistant: React.FC = () => {
     }
   }, [status]);
 
+  // Dev Tool override
+  useEffect(() => {
+    const handleForceOpenEditor = () => {
+      console.log("Dev Tool: Forcing Code Editor Open");
+      setInterviewMode('coding');
+      setProblemStatement("DEV OVERRIDE: Write a function to reverse a string. (This is a dev tool override, no real prompt was given by AI)");
+      toast.success("💻 Dev Override: Code Editor Unlocked!");
+    };
+    window.addEventListener('dev:force-open-editor', handleForceOpenEditor);
+    return () => window.removeEventListener('dev:force-open-editor', handleForceOpenEditor);
+  }, []);
+
   // Monitor logs for transition tokens and feedback
   useEffect(() => {
     if (logs.length > 0) {
