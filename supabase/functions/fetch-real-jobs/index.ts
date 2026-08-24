@@ -45,13 +45,13 @@ serve(async (req) => {
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-        // 1. Wipe all job recommendations to prevent Foreign Key constraint errors!
-        console.log("Wiping job recommendations...");
-        await supabase.from('job_recommendations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        
+        console.log("Cleaning up old job recommendations...");
+        await supabase.from('job_recommendations').delete().lt('created_at', thirtyDaysAgo);
 
-        // 2. Wipe ALL old job postings so the DB is completely fresh!
-        console.log("Wiping job postings...");
-        await supabase.from('job_postings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        console.log("Cleaning up old job postings...");
+        await supabase.from('job_postings').delete().lt('created_at', thirtyDaysAgo);
 
         // 3. Fetch monitored locations
         const { data: locationsData } = await supabase

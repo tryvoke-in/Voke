@@ -140,7 +140,7 @@ serve(async (req) => {
             .order('posted_date', { ascending: false })
             .limit(1500)
 
-        if (!liveJobs || liveJobs.length < 10 || forceRefresh) {
+        if (!liveJobs || liveJobs.length < 10) {
             console.log("Triggering fetch-real-jobs to pull fresh jobs from free APIs...");
             try {
                 const fetchRes = await fetch(`${supabaseUrl}/functions/v1/fetch-real-jobs`, {

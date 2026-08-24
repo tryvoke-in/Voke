@@ -576,8 +576,16 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         }
     };
 
-    const handleUserMessage = async (text: string) => {
-        if (!text.trim()) return;
+    const handleUserMessage = async (message: string) => {
+        if (!message || message.trim() === '') return;
+
+        if (statusRef.current !== LiveStatus.CONNECTED) {
+            console.log('[useGroqVoice] Ignored user message because status is not CONNECTED.');
+            return;
+        }
+
+        const text = message;
+        console.log('DEBUG: User said:', text);
 
         // If candidate is actively coding (isSilentMode is true), do NOT call AI or log
         if (isSilentModeRef.current) {
@@ -1035,6 +1043,13 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         try {
             window.speechSynthesis.cancel();
         } catch (e) { }
+        
+        if (recognitionRef.current) {
+            try {
+                recognitionRef.current.stop();
+            } catch (e) { }
+            recognitionRef.current = null;
+        }
 
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
             try {

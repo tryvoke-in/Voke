@@ -204,10 +204,10 @@ const ResumeBuilder = () => {
     if (!token) throw new Error("You must be logged in to use AI features.");
 
     const models = [
-      body.model || "llama-3.3-70b-versatile",
+      body.model || "llama3-70b-8192",
       "gemma2-9b-it",
       "mixtral-8x7b-32768",
-      "llama-3.2-3b-preview"
+      "llama3-8b-8192"
     ];
 
     let lastError = null;
@@ -241,17 +241,19 @@ const ResumeBuilder = () => {
               continue; // Retry same model
             }
           } else {
-            // For non-429 errors (like 400 Bad Request), don't retry, just throw
-            throw new Error(`Groq API Error ${res.status}: ${lastError}`);
+            // For non-429 errors (like 400 Bad Request), don't retry, just break to next model
+            break;
           }
         } catch (e: any) {
           lastError = e.message;
+          // If it's a fetch failure (network error), we might want to retry, but for now we break
+          break;
         }
       }
 
-      // If we exhausted retries on the current model due to 429, we'll loop to the next fallback model
-      if (lastStatus === 429 && i < models.length - 1) {
-        toast.info(`Rate limit hit. Switching to fallback model: ${models[i + 1]}...`);
+      // If we exhausted retries on the current model due to 429 or 400, we'll loop to the next fallback model
+      if (lastStatus !== 200 && i < models.length - 1) {
+        toast.info(`Model ${currentModel} failed (${lastStatus}). Switching to fallback model: ${models[i + 1]}...`);
       }
     }
 
@@ -301,7 +303,7 @@ const ResumeBuilder = () => {
       if (!apiKey) throw new Error("Missing API Key");
 
       const response = await fetchGroqWithRetry({
-        model: "llama-3.3-70b-versatile",
+        model: "llama3-70b-8192",
         messages: [{ role: "user", content: `Rewrite the following resume summary to be highly professional, action-oriented, and bypass AI detectors by sounding very human and authentic. Keep it to 2-3 sentences max. Do NOT use generic AI words like "delve", "testament", or "tapestry". Here is the summary: ${data.summary}` }],
         temperature: 0.7,
       });
@@ -327,7 +329,7 @@ const ResumeBuilder = () => {
     try {
       const apiKey = "proxy-enabled";
       const response = await fetchGroqWithRetry({
-        model: "llama-3.3-70b-versatile",
+        model: "llama3-70b-8192",
         messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
           role: "user", content: `Rewrite the following job duties into 2-3 elite, metric-driven bullet points. 
         
@@ -367,7 +369,7 @@ Original Text: ${description}`
     try {
       const apiKey = "proxy-enabled";
       const response = await fetchGroqWithRetry({
-        model: "llama-3.3-70b-versatile",
+        model: "llama3-70b-8192",
         messages: [{ role: "system", content: "You are an elite executive resume writer for FAANG engineers." }, {
           role: "user", content: `Rewrite the following project description into 2-3 elite, metric-driven bullet points. 
 
@@ -487,7 +489,7 @@ CRITICAL RULES:
 5. Output ONLY the 2 bullets. No introduction, no markdown backticks block, no outro.`;
 
       const response = await fetchGroqWithRetry({
-        model: "llama-3.3-70b-versatile",
+        model: "llama3-70b-8192",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.5,
       });
@@ -533,7 +535,7 @@ CRITICAL RULES:
 
     const groqRewrite = async (systemMsg: string, userMsg: string): Promise<string> => {
       const res = await fetchGroqWithRetry({
-        model: "llama-3.3-70b-versatile",
+        model: "llama3-70b-8192",
         messages: [{ role: "system", content: systemMsg }, { role: "user", content: userMsg }],
         temperature: 0.4,
       });
@@ -779,14 +781,15 @@ JOB DESCRIPTION:
 ${sanitized}`;
 
       const res = await fetchGroqWithRetry({
-        model: "llama-3.3-70b-versatile",
+        model: "llama3-70b-8192",
         messages: [{ role: "user", content: extractPrompt }],
         temperature: 0.1,
-        response_format: { type: "json_object" },
       });
       if (!res.ok) throw new Error("Failed to extract JD keywords.");
       const d = await res.json();
-      const extracted = JSON.parse(d.choices?.[0]?.message?.content || '{}');
+      const aiContent = d.choices?.[0]?.message?.content || '{}';
+      const cleanJson = aiContent.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim();
+      const extracted = JSON.parse(cleanJson);
       setJdKeywords(extracted);
       toast.success(`Extracted ${(extracted.hard_skills || []).length} hard skills from JD!`);
     } catch (err: any) {
@@ -924,10 +927,9 @@ Structure & Readability (0-20 pts):
 ${resumeText}${jdContext}`;
 
       const response = await fetchGroqWithRetry({
-        model: "llama-3.3-70b-versatile",
+        model: "llama3-70b-8192",
         messages: [{ role: "user", content: analysisPrompt }],
         temperature: 0.3,
-        response_format: { type: "json_object" },
       });
 
       if (!response.ok) throw new Error("Failed to fetch analysis from AI.");
@@ -1049,14 +1051,14 @@ IMPORTANT:
           { role: "user", content: text }
         ],
         temperature: 0.1,
-        response_format: { type: "json_object" },
       });
 
       const resData = await response.json();
       const aiContent = resData.choices?.[0]?.message?.content;
       if (!aiContent) throw new Error("Empty response from AI");
 
-      const parsedData = JSON.parse(aiContent);
+      const cleanJson = aiContent.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim();
+      const parsedData = JSON.parse(cleanJson);
 
       setData(prev => ({
         ...prev,

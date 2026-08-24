@@ -270,6 +270,8 @@ const VoiceAssistant: React.FC = () => {
 
         // Handle VERDICT — AI signals interview is complete, auto-end after 3s
         if (lastMsg.text.includes('[VERDICT:PASS]') || lastMsg.text.includes('[VERDICT:FAIL]')) {
+          if (isEndingRef.current) return;
+          isEndingRef.current = true;
           const verdict = lastMsg.text.includes('[VERDICT:PASS]') ? 'PASS' : 'FAIL';
           toast.success(`Interview complete! Verdict: ${verdict}. Saving results...`, { duration: 3000 });
           setTimeout(() => {
@@ -287,6 +289,7 @@ const VoiceAssistant: React.FC = () => {
 
   const [duration, setDuration] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isEndingRef = useRef(false);
 
   useEffect(() => {
     if (status === LiveStatus.CONNECTED) {
@@ -368,6 +371,7 @@ const VoiceAssistant: React.FC = () => {
   };
 
   const handleStartConfiguredInterview = async () => {
+    isEndingRef.current = false;
     // Auto-start token tracking fresh every interview
     resetCounter();
     startTracking();
