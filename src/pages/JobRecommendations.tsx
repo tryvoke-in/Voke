@@ -443,10 +443,6 @@ export default function JobRecommendations() {
             ══════════════════════════════════════════════════════════════════ */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 pb-6 border-b border-border/60">
               <div>
-                {/* <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-muted text-foreground text-[11px] font-semibold uppercase tracking-wider border border-border/70 mb-2">
-                  <Compass className="w-3 h-3 text-primary" />
-                  Live Career Matching
-                </div> */}
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
                   Job Recommendations
                 </h1>
@@ -471,7 +467,7 @@ export default function JobRecommendations() {
                   onClick={() => generateRecommendations(undefined, true)}
                   disabled={generating}
                   size="sm"
-                  className="rounded-xl text-xs font-semibold h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs"
+                  className="rounded-xl text-xs font-semibold h-9 px-4 bg-sky-600 hover:bg-sky-700 text-white shadow-xs transition-all border-0"
                 >
                   {generating ? (
                     <>
@@ -494,39 +490,49 @@ export default function JobRecommendations() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
               
               {/* Stat 1: Match Score */}
-              <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3">
+              <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3 transition-transform hover:scale-[1.01]">
                 <div className="min-w-0">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block truncate">
-                    Average Fit
-                  </span>
-                  <div className="text-xl font-bold text-foreground mt-0.5">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
+                      Average Fit
+                    </span>
+                  </div>
+                  <div className="text-2xl font-black text-foreground">
                     {dynamicMatchScore}%
                   </div>
-                  <span className="text-[11px] text-muted-foreground truncate block">
+                  <span className="text-[11px] font-medium text-sky-600 dark:text-sky-400 truncate block mt-0.5">
                     {dynamicMatchScore >= 80 ? "Strong alignment" : "Moderate alignment"}
                   </span>
                 </div>
-                <MatchRing score={dynamicMatchScore} size={46} />
+                <div className="p-1 rounded-xl bg-sky-500/10 border border-sky-500/20 shrink-0">
+                  <MatchRing score={dynamicMatchScore} size={44} />
+                </div>
               </div>
 
               {/* Stat 2: Total Opportunities */}
               <div 
                 onClick={() => setActiveTab("all")}
                 className={cn(
-                  "bg-card border border-border/80 rounded-2xl p-4 shadow-2xs cursor-pointer transition-all hover:border-border",
-                  activeTab === "all" && "border-primary/50 ring-1 ring-primary/20"
+                  "bg-card border border-border/80 rounded-2xl p-4 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-blue-500/40",
+                  activeTab === "all" && "border-blue-500/60 ring-2 ring-blue-500/15"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
-                    Total Scouted
-                  </span>
-                  <Briefcase className="w-4 h-4 text-muted-foreground" />
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      Total Scouted
+                    </span>
+                  </div>
+                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20">
+                    <Briefcase className="w-3.5 h-3.5" />
+                  </div>
                 </div>
-                <div className="text-xl font-bold text-foreground mt-0.5">
+                <div className="text-2xl font-black text-foreground">
                   {counts.all}
                 </div>
-                <span className="text-[11px] text-muted-foreground block">
+                <span className="text-[11px] font-medium text-muted-foreground block mt-0.5">
                   Active role matches
                 </span>
               </div>
@@ -535,20 +541,25 @@ export default function JobRecommendations() {
               <div 
                 onClick={() => setActiveTab("high")}
                 className={cn(
-                  "bg-card border border-border/80 rounded-2xl p-4 shadow-2xs cursor-pointer transition-all hover:border-border",
-                  activeTab === "high" && "border-emerald-500/50 ring-1 ring-emerald-500/20"
+                  "bg-card border border-border/80 rounded-2xl p-4 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-emerald-500/40",
+                  activeTab === "high" && "border-emerald-500/60 ring-2 ring-emerald-500/15"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
-                    High Fit (80%+)
-                  </span>
-                  <Award className="w-4 h-4 text-emerald-500" />
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      High Fit (80%+)
+                    </span>
+                  </div>
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                    <Award className="w-3.5 h-3.5" />
+                  </div>
                 </div>
-                <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                   {counts.high}
                 </div>
-                <span className="text-[11px] text-muted-foreground block">
+                <span className="text-[11px] font-medium text-emerald-700/80 dark:text-emerald-300/80 block mt-0.5">
                   Top resume matches
                 </span>
               </div>
@@ -557,20 +568,25 @@ export default function JobRecommendations() {
               <div 
                 onClick={() => setActiveTab("remote")}
                 className={cn(
-                  "bg-card border border-border/80 rounded-2xl p-4 shadow-2xs cursor-pointer transition-all hover:border-border",
-                  activeTab === "remote" && "border-primary/50 ring-1 ring-primary/20"
+                  "bg-card border border-border/80 rounded-2xl p-4 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-purple-500/40",
+                  activeTab === "remote" && "border-purple-500/60 ring-2 ring-purple-500/15"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
-                    Remote Openings
-                  </span>
-                  <Globe className="w-4 h-4 text-muted-foreground" />
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      Remote Openings
+                    </span>
+                  </div>
+                  <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20">
+                    <Globe className="w-3.5 h-3.5" />
+                  </div>
                 </div>
-                <div className="text-xl font-bold text-foreground mt-0.5">
+                <div className="text-2xl font-black text-foreground">
                   {counts.remote}
                 </div>
-                <span className="text-[11px] text-muted-foreground block">
+                <span className="text-[11px] font-medium text-muted-foreground block mt-0.5">
                   Flexible work location
                 </span>
               </div>
@@ -580,24 +596,24 @@ export default function JobRecommendations() {
             {/* ══════════════════════════════════════════════════════════════════
                 3. INTEGRATED SEARCH & SMART FILTER TOOLBAR
             ══════════════════════════════════════════════════════════════════ */}
-            <div className="bg-card border border-border/80 rounded-2xl p-3 shadow-2xs mb-6 space-y-3">
+            <div className="bg-card border border-border/80 rounded-2xl p-3 sm:p-3.5 shadow-xs mb-6 space-y-3">
               
               {/* Row 1: Search Box & Dropdown Selects */}
               <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
                 
                 {/* Search Input */}
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Search by job title, company name, or technology..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9 pr-8 h-9 border-border/70 bg-muted/30 text-xs sm:text-sm rounded-xl focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-all"
+                    className="pl-9 pr-8 h-9 border-border/70 bg-muted/40 text-xs sm:text-sm rounded-xl focus:border-sky-500 focus:bg-background focus:ring-2 focus:ring-sky-500/15 transition-all font-medium placeholder:text-muted-foreground/70"
                   />
                   {search && (
                     <button
                       onClick={() => setSearch("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-md"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -609,11 +625,11 @@ export default function JobRecommendations() {
                   
                   {/* Location Filter */}
                   <Select value={filterLocation} onValueChange={setFilterLocation}>
-                    <SelectTrigger className="h-9 w-[120px] text-xs font-semibold rounded-xl bg-muted/30 border-border/70 hover:bg-muted/60 transition-colors">
-                      <MapPin className="w-3 h-3 text-muted-foreground mr-1" />
+                    <SelectTrigger className="h-9 w-[125px] text-xs font-semibold rounded-xl bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
+                      <MapPin className="w-3 h-3 text-sky-500 mr-1" />
                       <SelectValue placeholder="Location" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl">
                       <SelectItem value="all">All Locations</SelectItem>
                       <SelectItem value="remote">Remote Only</SelectItem>
                     </SelectContent>
@@ -621,11 +637,11 @@ export default function JobRecommendations() {
 
                   {/* Experience Level Filter */}
                   <Select value={filterLevel} onValueChange={setFilterLevel}>
-                    <SelectTrigger className="h-9 w-[125px] text-xs font-semibold rounded-xl bg-muted/30 border-border/70 hover:bg-muted/60 transition-colors">
-                      <Layers className="w-3 h-3 text-muted-foreground mr-1" />
+                    <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
+                      <Layers className="w-3 h-3 text-indigo-500 mr-1" />
                       <SelectValue placeholder="Experience" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl">
                       <SelectItem value="all">All Levels</SelectItem>
                       <SelectItem value="entry">Entry Level</SelectItem>
                       <SelectItem value="mid">Mid Level</SelectItem>
@@ -635,11 +651,11 @@ export default function JobRecommendations() {
 
                   {/* Sort By Select */}
                   <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl bg-muted/30 border-border/70 hover:bg-muted/60 transition-colors">
+                    <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
                       <span className="text-muted-foreground mr-1">Sort:</span>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl">
                       <SelectItem value="match">Best Match</SelectItem>
                       <SelectItem value="newest">Newest Roles</SelectItem>
                       <SelectItem value="company">Company A-Z</SelectItem>
@@ -651,7 +667,7 @@ export default function JobRecommendations() {
                       variant="ghost"
                       size="sm"
                       onClick={clearAllFilters}
-                      className="h-9 px-2.5 text-xs text-muted-foreground hover:text-foreground rounded-xl"
+                      className="h-9 px-2.5 text-xs text-muted-foreground hover:text-foreground font-semibold rounded-xl"
                     >
                       Reset
                     </Button>
@@ -661,35 +677,44 @@ export default function JobRecommendations() {
               </div>
 
               {/* Row 2: Segmented Tabs Filter */}
-              <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50 overflow-x-auto no-scrollbar">
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50 overflow-x-auto no-scrollbar">
                 <div className="flex items-center gap-1.5">
                   {[
-                    { id: "all" as const, label: "All Opportunities", count: counts.all },
-                    { id: "high" as const, label: "High Fit (80%+)", count: counts.high },
-                    { id: "remote" as const, label: "Remote Only", count: counts.remote },
-                    { id: "saved" as const, label: "Saved Roles", count: counts.saved },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={cn(
-                        "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer",
-                        activeTab === tab.id
-                          ? "bg-muted text-foreground border border-border"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      )}
-                    >
-                      <span>{tab.label}</span>
-                      <span className={cn(
-                        "text-[10px] px-1.5 py-0.2 rounded-md font-mono",
-                        activeTab === tab.id
-                          ? "bg-background text-foreground border border-border/60"
-                          : "text-muted-foreground"
-                      )}>
-                        {tab.count}
-                      </span>
-                    </button>
-                  ))}
+                    { id: "all" as const, label: "All Opportunities", count: counts.all, color: "sky" },
+                    { id: "high" as const, label: "High Fit (80%+)", count: counts.high, color: "emerald" },
+                    { id: "remote" as const, label: "Remote Only", count: counts.remote, color: "purple" },
+                    { id: "saved" as const, label: "Saved Roles", count: counts.saved, color: "amber" },
+                  ].map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer border",
+                          isActive
+                            ? tab.color === "emerald"
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                              : tab.color === "purple"
+                                ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                                : tab.color === "amber"
+                                  ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                                  : "bg-sky-600 text-white border-sky-600 shadow-xs"
+                            : "bg-muted/40 text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted/80"
+                        )}
+                      >
+                        <span>{tab.label}</span>
+                        <span className={cn(
+                          "text-[10px] px-1.5 py-0.2 rounded-md font-mono font-bold",
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          {tab.count}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div className="text-[11px] text-muted-foreground font-medium shrink-0 hidden sm:block pr-1">
@@ -711,10 +736,10 @@ export default function JobRecommendations() {
 
                 {/* Empty State */}
                 {filteredRecs.length === 0 && (
-                  <div className="bg-card border border-border/80 rounded-2xl p-12 text-center shadow-2xs">
+                  <div className="bg-card border border-border/80 rounded-2xl p-12 text-center shadow-xs">
                     <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-3 border border-border/60">
                       {generating ? (
-                        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                        <Loader2 className="w-6 h-6 text-sky-600 animate-spin" />
                       ) : (
                         <Briefcase className="w-6 h-6 text-muted-foreground" />
                       )}
@@ -742,7 +767,7 @@ export default function JobRecommendations() {
                         onClick={() => generateRecommendations(undefined, true)}
                         disabled={generating}
                         size="sm"
-                        className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs h-9 px-4"
+                        className="rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs h-9 px-4"
                       >
                         {generating ? "Scouting..." : "Fetch Live Jobs"}
                       </Button>
@@ -769,7 +794,7 @@ export default function JobRecommendations() {
                           transition={{ delay: Math.min(i * 0.02, 0.2) }}
                           layout
                         >
-                          <Card className="group bg-card hover:bg-card/90 border border-border/80 hover:border-border transition-all duration-150 rounded-2xl shadow-2xs overflow-hidden">
+                          <Card className="group bg-card hover:bg-card/90 border border-border/80 hover:border-sky-500/40 transition-all duration-150 rounded-2xl shadow-xs hover:shadow-md overflow-hidden">
                             <CardContent className="p-4 sm:p-5 space-y-3.5">
                               
                               {/* Card Header Row: Logo, Title, Meta, Match Badge & Bookmark */}
@@ -781,27 +806,27 @@ export default function JobRecommendations() {
                                   <div className="min-w-0">
                                     <h3
                                       onClick={() => setSelectedRec(rec)}
-                                      className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors cursor-pointer leading-snug truncate"
+                                      className="text-sm sm:text-base font-bold text-foreground group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors cursor-pointer leading-snug truncate"
                                       title={title}
                                     >
                                       {title}
                                     </h3>
 
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap font-medium">
-                                      <span className="font-semibold text-foreground">{company}</span>
+                                      <span className="font-bold text-foreground">{company}</span>
                                       <span>•</span>
                                       <span className="flex items-center gap-1">
-                                        <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
+                                        <MapPin className="w-3 h-3 text-sky-500 shrink-0" />
                                         {job?.location || "Remote"}
                                       </span>
                                       {job?.experience_level && (
                                         <>
                                           <span>•</span>
-                                          <span className="capitalize">{job.experience_level}</span>
+                                          <span className="capitalize font-semibold text-foreground/80">{job.experience_level}</span>
                                         </>
                                       )}
                                       <span>•</span>
-                                      <span className="text-[11px]">{timeAgo(job?.posted_date)}</span>
+                                      <span className="text-[11px] text-muted-foreground">{timeAgo(job?.posted_date)}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -810,13 +835,13 @@ export default function JobRecommendations() {
                                 <div className="flex items-center gap-2 shrink-0">
                                   <span
                                     className={cn(
-                                      "px-2.5 py-1 rounded-lg text-xs font-bold border flex items-center gap-1",
+                                      "px-2.5 py-1 rounded-xl text-xs font-bold border flex items-center gap-1 shadow-2xs",
                                       isHighFit
-                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                        : "bg-muted text-foreground border-border/70"
+                                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                                        : "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/30"
                                     )}
                                   >
-                                    <Zap className={cn("w-3 h-3", isHighFit ? "text-emerald-500" : "text-primary")} />
+                                    <Zap className={cn("w-3.5 h-3.5", isHighFit ? "text-emerald-600 dark:text-emerald-400" : "text-sky-600 dark:text-sky-400")} />
                                     {rec.match_score}% Match
                                   </span>
 
@@ -847,10 +872,10 @@ export default function JobRecommendations() {
                                         key={idx}
                                         onClick={() => setSearch(skillName)}
                                         className={cn(
-                                          "px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors cursor-pointer",
+                                          "px-2.5 py-0.5 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer",
                                           isUserSkill
-                                            ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/15"
-                                            : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted"
+                                            ? "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25 hover:bg-sky-500/20"
+                                            : "bg-muted/60 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground"
                                         )}
                                         title={`Filter by ${skillName}`}
                                       >
@@ -871,10 +896,10 @@ export default function JobRecommendations() {
 
                               {/* AI Match Rationale Strip */}
                               {rec.match_reasons && rec.match_reasons.length > 0 && (
-                                <div className="p-2.5 rounded-xl bg-muted/30 border border-border/60 flex items-start gap-2 text-xs text-muted-foreground">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                                <div className="p-2.5 rounded-xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 flex items-start gap-2 text-xs text-muted-foreground">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
                                   <span className="line-clamp-1">
-                                    <strong className="text-foreground font-semibold">Match Rationale:</strong> {decode(rec.match_reasons[0])}
+                                    <strong className="text-emerald-900 dark:text-emerald-300 font-bold">Match Rationale:</strong> {decode(rec.match_reasons[0])}
                                   </span>
                                 </div>
                               )}
@@ -888,9 +913,9 @@ export default function JobRecommendations() {
                                     size="sm"
                                     variant="outline"
                                     onClick={() => createCareerPlan(rec)}
-                                    className="rounded-xl text-xs font-semibold h-8 px-3 border-border/80 hover:bg-muted gap-1.5"
+                                    className="rounded-xl text-xs font-bold h-8 px-3 border-sky-500/30 text-sky-700 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 gap-1.5"
                                   >
-                                    <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                                    <TrendingUp className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                                     30-Day Prep Roadmap
                                   </Button>
 
@@ -899,7 +924,7 @@ export default function JobRecommendations() {
                                     <Button
                                       size="sm"
                                       asChild
-                                      className="rounded-xl text-xs font-semibold h-8 px-3.5 bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-2xs"
+                                      className="rounded-xl text-xs font-bold h-8 px-3.5 bg-sky-600 hover:bg-sky-700 text-white gap-1.5 shadow-2xs"
                                     >
                                       <a href={job.application_url} target="_blank" rel="noopener noreferrer">
                                         Apply <ExternalLink className="w-3 h-3" />
@@ -935,29 +960,29 @@ export default function JobRecommendations() {
               <div className="lg:col-span-4 space-y-4 sticky top-24">
 
                 {/* Widget 1: Your Target Skill Graph */}
-                <Card className="bg-card border border-border/80 shadow-2xs rounded-2xl overflow-hidden">
+                <Card className="bg-card border border-border/80 shadow-xs rounded-2xl overflow-hidden">
                   <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-xs sm:text-sm font-bold flex items-center justify-between text-foreground">
                       <span className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-primary" />
+                        <Target className="w-4 h-4 text-sky-500" />
                         Target Role Profile
                       </span>
                       <button
                         onClick={() => navigate("/profile")}
-                        className="text-[11px] font-semibold text-primary hover:underline"
+                        className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline"
                       >
                         Edit
                       </button>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 pt-1 space-y-3">
-                    <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Target Role</span>
-                      <p className="text-xs font-bold text-foreground mt-0.5 truncate">{targetRoleTitle}</p>
+                    <div className="p-3 rounded-xl bg-sky-500/5 dark:bg-sky-950/20 border border-sky-500/20">
+                      <span className="text-[10px] uppercase font-bold text-sky-700/80 dark:text-sky-400/80 tracking-wider block">Target Role</span>
+                      <p className="text-xs font-black text-foreground mt-0.5 truncate">{targetRoleTitle}</p>
                     </div>
 
                     <div>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block mb-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-2">
                         Your Parsed Key Skills
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -965,7 +990,7 @@ export default function JobRecommendations() {
                           <span
                             key={i}
                             onClick={() => setSearch(sk)}
-                            className="px-2 py-1 rounded-md text-xs font-medium bg-muted text-foreground border border-border/60 hover:bg-muted/80 transition-colors cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-500/20 hover:bg-sky-500/20 transition-colors cursor-pointer"
                             title={`Filter roles by ${sk}`}
                           >
                             {sk}
@@ -977,7 +1002,7 @@ export default function JobRecommendations() {
                 </Card>
 
                 {/* Widget 2: High Demand Skill Gaps */}
-                <Card className="bg-card border border-border/80 shadow-2xs rounded-2xl overflow-hidden">
+                <Card className="bg-card border border-border/80 shadow-xs rounded-2xl overflow-hidden">
                   <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-xs sm:text-sm font-bold flex items-center gap-2 text-foreground">
                       <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -993,7 +1018,7 @@ export default function JobRecommendations() {
                         <span
                           key={i}
                           onClick={() => setSearch(sk)}
-                          className="px-2.5 py-1 rounded-md text-xs font-medium bg-muted/60 text-foreground border border-border/60 hover:bg-muted transition-colors cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors cursor-pointer"
                           title={`Click to filter jobs for ${sk}`}
                         >
                           + {sk}
@@ -1001,20 +1026,20 @@ export default function JobRecommendations() {
                       ))}
                     </div>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Adding these skills to your resume or projects can increase your match score up to +25%.
+                      Adding these skills to your resume or projects can increase your match score up to <strong className="text-emerald-600 dark:text-emerald-400">+25%</strong>.
                     </p>
                   </CardContent>
                 </Card>
 
                 {/* Widget 3: Quick Filter Presets */}
-                <Card className="bg-card border border-border/80 shadow-2xs rounded-2xl overflow-hidden">
+                <Card className="bg-card border border-border/80 shadow-xs rounded-2xl overflow-hidden">
                   <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
                     <CardTitle className="text-xs sm:text-sm font-bold flex items-center gap-2 text-foreground">
-                      <Bookmark className="w-4 h-4 text-primary" />
+                      <Bookmark className="w-4 h-4 text-indigo-500" />
                       Quick Role Presets
                     </CardTitle>
                     {hasActiveFilters && (
-                      <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground font-semibold">
+                      <button onClick={clearAllFilters} className="text-xs text-sky-600 dark:text-sky-400 hover:underline font-bold">
                         Clear
                       </button>
                     )}
@@ -1027,9 +1052,9 @@ export default function JobRecommendations() {
                           if (s.tab) setActiveTab(s.tab);
                           else if (s.tag) setSearch(s.tag);
                         }}
-                        className="p-2.5 rounded-xl border border-border/60 hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer group"
+                        className="p-2.5 rounded-xl border border-border/60 hover:border-sky-500/40 hover:bg-muted/40 transition-all flex items-center justify-between cursor-pointer group"
                       >
-                        <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                        <p className="text-xs font-semibold text-foreground group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors truncate">
                           {s.query}
                         </p>
                         <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
@@ -1039,13 +1064,13 @@ export default function JobRecommendations() {
                 </Card>
 
                 {/* Widget 4: Career Plan Promo Card */}
-                <div className="p-4 rounded-2xl bg-muted/40 border border-border/70 space-y-2.5">
-                  <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-                    <Sparkles className="w-4 h-4 text-primary" />
+                <div className="p-4 rounded-2xl bg-indigo-500/5 dark:bg-indigo-950/20 border border-indigo-500/20 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-indigo-950 dark:text-indigo-200">
+                    <Sparkles className="w-4 h-4 text-indigo-500" />
                     Interview Roadmap Generator
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Click <strong>30-Day Prep Roadmap</strong> on any role to generate personalized DSA, System Design, and behavioral study milestones.
+                    Click <strong className="text-foreground">30-Day Prep Roadmap</strong> on any role to generate personalized DSA, System Design, and behavioral study milestones.
                   </p>
                 </div>
 
@@ -1084,7 +1109,7 @@ export default function JobRecommendations() {
                           <span className="font-bold text-foreground">{company}</span>
                           <span>•</span>
                           <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-muted-foreground" />
+                            <MapPin className="w-3 h-3 text-sky-500" />
                             {job?.location || "Remote"}
                           </span>
                           <span>•</span>
@@ -1094,10 +1119,10 @@ export default function JobRecommendations() {
                     </div>
 
                     <div className={cn(
-                      "px-3 py-1 rounded-xl text-xs font-bold border shrink-0",
+                      "px-3 py-1 rounded-xl text-xs font-bold border shrink-0 shadow-2xs",
                       isHighFit
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                        : "bg-muted text-foreground border-border/70"
+                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                        : "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/30"
                     )}>
                       {selectedRec.match_score}% Fit
                     </div>
@@ -1106,9 +1131,9 @@ export default function JobRecommendations() {
 
                 {/* Match Rationale Breakdown */}
                 {selectedRec.match_reasons && selectedRec.match_reasons.length > 0 && (
-                  <div className="p-4 rounded-2xl bg-muted/40 border border-border/60 space-y-2">
-                    <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" /> 
+                  <div className="p-4 rounded-2xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 space-y-2">
+                    <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> 
                       AI Match Assessment
                     </h4>
                     <ul className="space-y-1.5 pl-5 list-disc text-xs text-muted-foreground">
@@ -1127,7 +1152,7 @@ export default function JobRecommendations() {
                     </h4>
                     <div className="flex flex-wrap gap-1.5">
                       {job.skills_required.map((s, idx) => (
-                        <span key={idx} className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-muted text-foreground border border-border/60">
+                        <span key={idx} className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-500/20">
                           {decode(s)}
                         </span>
                       ))}
@@ -1140,7 +1165,7 @@ export default function JobRecommendations() {
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
                     Role Description
                   </h4>
-                  <div className="p-4 rounded-2xl bg-muted/20 border border-border/50 text-xs leading-relaxed text-muted-foreground whitespace-pre-line max-h-60 overflow-y-auto custom-scrollbar">
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-border/60 text-xs leading-relaxed text-muted-foreground whitespace-pre-line max-h-60 overflow-y-auto custom-scrollbar font-normal">
                     {decode(job?.description || "Full job description available on the application page.")}
                   </div>
                 </div>
@@ -1150,14 +1175,14 @@ export default function JobRecommendations() {
                   <Button
                     onClick={() => createCareerPlan(selectedRec)}
                     variant="outline"
-                    className="flex-1 rounded-xl text-xs font-semibold h-9 gap-1.5 border-border/80 hover:bg-muted"
+                    className="flex-1 rounded-xl text-xs font-bold h-9 gap-1.5 border-sky-500/30 text-sky-700 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20"
                   >
-                    <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                    <TrendingUp className="w-3.5 h-3.5 text-sky-600" />
                     Generate 30-Day Roadmap
                   </Button>
 
                   {job?.application_url && (
-                    <Button asChild className="flex-1 rounded-xl text-xs font-semibold h-9 bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-2xs">
+                    <Button asChild className="flex-1 rounded-xl text-xs font-bold h-9 bg-sky-600 hover:bg-sky-700 text-white gap-1.5 shadow-xs border-0">
                       <a href={job.application_url} target="_blank" rel="noopener noreferrer">
                         Apply on Partner Portal <ExternalLink className="w-3.5 h-3.5" />
                       </a>
@@ -1183,29 +1208,29 @@ export default function JobRecommendations() {
           </DialogHeader>
           <div className="space-y-4 text-xs text-muted-foreground leading-relaxed pt-2">
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-lg bg-muted text-foreground font-bold flex items-center justify-center shrink-0 text-xs border border-border/60">
+              <div className="w-6 h-6 rounded-lg bg-sky-500/10 text-sky-700 dark:text-sky-400 font-bold flex items-center justify-center shrink-0 text-xs border border-sky-500/20">
                 1
               </div>
               <div>
-                <p className="font-semibold text-foreground mb-0.5">Resume & Profile Parsing</p>
+                <p className="font-bold text-foreground mb-0.5">Resume & Profile Parsing</p>
                 We continuously parse your uploaded resume, target role, and technical practice history to create your live skill graph.
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-lg bg-muted text-foreground font-bold flex items-center justify-center shrink-0 text-xs border border-border/60">
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 text-xs border border-emerald-500/20">
                 2
               </div>
               <div>
-                <p className="font-semibold text-foreground mb-0.5">Live Job Scouting</p>
+                <p className="font-bold text-foreground mb-0.5">Live Job Scouting</p>
                 Our system aggregates active openings from vetted global providers, filtering out duplicates and expired roles.
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-lg bg-muted text-foreground font-bold flex items-center justify-center shrink-0 text-xs border border-border/60">
+              <div className="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-400 font-bold flex items-center justify-center shrink-0 text-xs border border-purple-500/20">
                 3
               </div>
               <div>
-                <p className="font-semibold text-foreground mb-0.5">Match Scoring & Prep Roadmaps</p>
+                <p className="font-bold text-foreground mb-0.5">Match Scoring & Prep Roadmaps</p>
                 Every opportunity receives an AI match score and lets you generate an instant 30-day interview prep plan with DSA & system design milestones.
               </div>
             </div>
