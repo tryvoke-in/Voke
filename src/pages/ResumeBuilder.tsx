@@ -22,6 +22,7 @@ import ResumeAnalysisDisplay from "@/components/ResumeAnalysisDisplay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ADMIN_EMAIL } from "@/config/admin";
 import { Sidebar } from "@/components/Sidebar";
+import { useTokenCounter } from "@/contexts/TokenContext";
 
 // --- Types ---
 interface Experience {
@@ -77,6 +78,7 @@ interface ResumeData {
 }
 
 const ResumeBuilder = () => {
+  const { addTokens } = useTokenCounter();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('voke_resume_activeTab') || "personal";
@@ -225,6 +227,13 @@ const ResumeBuilder = () => {
           });
 
           if (res.ok) {
+            res.clone().json().then((data: any) => {
+              if (data?.usageMetadata) {
+                addTokens(data.usageMetadata.promptTokenCount || 0, data.usageMetadata.candidatesTokenCount || 0);
+              } else if (data?.usage) {
+                addTokens(data.usage.prompt_tokens || 0, data.usage.completion_tokens || 0);
+              }
+            }).catch(e => console.error("Error parsing tokens:", e));
             return res;
           }
 
