@@ -41,3 +41,30 @@ supabase.auth.signOut = async (...args) => {
     }
   }
 };
+
+// Wrap functions.invoke to globally track AI tokens
+const originalInvoke = supabase.functions.invoke.bind(supabase.functions);
+supabase.functions.invoke = async (functionName: string, options?: any) => {
+  const result = await originalInvoke(functionName, options);
+  try {
+    if (result.data && typeof window !== 'undefined') {
+      let inputTokens = 0;
+      let outputTokens = 0;
+      if (result.data.usageMetadata) {
+        inputTokens = result.data.usageMetadata.promptTokenCount || 0;
+        outputTokens = result.data.usageMetadata.candidatesTokenCount || 0;
+      } else if (result.data.usage) {
+        inputTokens = result.data.usage.prompt_tokens || 0;
+        outputTokens = result.data.usage.completion_tokens || 0;
+      }
+      if (inputTokens > 0 || outputTokens > 0) {
+        window.dispatchEvent(new CustomEvent('voke:add-tokens', {
+          detail: { input: inputTokens, output: outputTokens }
+        }));
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse tokens from invoke result:', e);
+  }
+  return result;
+};

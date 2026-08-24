@@ -202,11 +202,6 @@ const DailyChallenge = () => {
         if (data?.response) {
             setHints(prev => [...prev, data.response]);
             toast.success("New hint generated!");
-            if (data.usageMetadata) {
-                addTokens(data.usageMetadata.promptTokenCount || 0, data.usageMetadata.candidatesTokenCount || 0);
-            } else if (data.usage) {
-                addTokens(data.usage.prompt_tokens || 0, data.usage.completion_tokens || 0);
-            }
         }
     } catch (error) {
         console.error("Error generating hint:", error);

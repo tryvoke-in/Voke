@@ -586,11 +586,6 @@ const GlobalAIChatbot = () => {
           });
           if (!error && data?.response) {
             assistantText = data.response;
-            if (data?.usageMetadata) {
-              addTokens(data.usageMetadata.promptTokenCount || 0, data.usageMetadata.candidatesTokenCount || 0);
-            } else if (data?.usage) {
-              addTokens(data.usage.prompt_tokens || 0, data.usage.completion_tokens || 0);
-            }
           }
         } catch (e) {
           console.warn("Supabase edge function failed:", e);
