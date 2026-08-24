@@ -54,6 +54,28 @@ const formatDuration = (totalSeconds: number) => {
   return `${hours}h`;
 };
 
+const formatRelativeTime = (dateString?: string | null) => {
+  if (!dateString) return "Never";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  
+  if (isNaN(date.getTime())) return "Never";
+  if (diffMs < 0 || diffMs < 45000) return "Just now";
+  
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHour < 24) return `${diffHour}h ago`;
+  if (diffDay === 1) return "Yesterday";
+  if (diffDay < 7) return `${diffDay}d ago`;
+  if (diffDay < 30) return `${Math.floor(diffDay / 7)}w ago`;
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
@@ -100,6 +122,26 @@ const AdminDashboard = () => {
   const [collegeSearchQuery, setCollegeSearchQuery] = useState("");
   const [deletingCollegeId, setDeletingCollegeId] = useState<string | null>(null);
   const [collegeToDelete, setCollegeToDelete] = useState<College | null>(null);
+
+  const getUserActivitySummary = (user: any) => {
+    const userActs = activities.filter(a => a.user_id === user.id || (user.email && a.user_email === user.email));
+    const sessionIds = new Set(userActs.map(a => a.session_id).filter(Boolean));
+    const latestActivity = userActs[0];
+    const lastSeenDate = latestActivity?.created_at || user.updated_at || user.created_at;
+    const hasRevisited = sessionIds.size > 1;
+    const isOnlineNow = latestActivity?.created_at && (Date.now() - new Date(latestActivity.created_at).getTime() < 5 * 60 * 1000);
+
+    return {
+      lastSeenDate,
+      sessionsCount: sessionIds.size || 1,
+      pageViews: userActs.length || 0,
+      hasRevisited,
+      isOnlineNow,
+      location: latestActivity?.action_details?.ip_city 
+        ? `${latestActivity.action_details.ip_city}, ${latestActivity.action_details.ip_country || ''}`
+        : (user.college_name || "Unknown")
+    };
+  };
 
   const isNewUser = (userEmail?: string | null, userId?: string | null) => {
     if (!userEmail && !userId) return false;
@@ -386,7 +428,8 @@ const AdminDashboard = () => {
       const { data, error } = await supabase
         .from('user_activities')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10000);
       
       if (error) throw error;
       setActivities(data || []);
@@ -520,7 +563,6 @@ const AdminDashboard = () => {
     { title: "Partner Colleges", value: colleges.length.toString(), change: "Active", icon: GraduationCap, color: "text-indigo-400", bg: "bg-indigo-500/10", data: [2, 3, 4, 6, 8, 10, colleges.length] },
     { title: "Interviews Conducted", value: totalSessions.toString(), change: "Active", icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10", data: [20, 40, 35, 50, 45, 60, 55] },
     { title: "System Health", value: "99.9%", change: "Stable", icon: Database, color: "text-sky-400", bg: "bg-sky-500/10", data: [80, 85, 82, 90, 88, 95, 99] },
-    { title: "Waitlist Signups", value: waitlist.length.toString(), change: "Active", icon: Mail, color: "text-orange-400", bg: "bg-orange-500/10", data: [10, 15, 12, 20, 18, 15, 10] },
   ];
 
   const getChartData = () => {
@@ -648,7 +690,6 @@ const AdminDashboard = () => {
             { id: "colleges", label: "Partner Colleges", icon: GraduationCap },
             { id: "analytics", label: "Analytics", icon: TrendingUp },
             { id: "users", label: "User Management", icon: Users },
-            { id: "waitlist", label: "Waitlist Signups", icon: Mail },
             { id: "community", label: "Community", icon: MessageSquare },
             { id: "challenges", label: "Daily Challenges", icon: Code2 },
             { id: "locations", label: "Job Locations", icon: MapPin },
@@ -714,26 +755,20 @@ const AdminDashboard = () => {
                 placeholder={
                   activeTab === "colleges"
                     ? "Search colleges, domains, admins..."
-                    : activeTab === "waitlist" 
-                      ? "Search waitlist..." 
-                      : activeTab === "analytics"
-                        ? "Search activities..."
-                        : "Search by name, email..."
+                    : activeTab === "analytics"
+                      ? "Search activities..."
+                      : "Search by name, email..."
                 } 
                 value={
                   activeTab === "colleges"
                     ? collegeSearchQuery
-                    : activeTab === "waitlist" 
-                      ? waitlistSearchQuery 
-                      : activeTab === "analytics"
-                        ? analyticsSearchQuery
-                        : searchQuery
+                    : activeTab === "analytics"
+                      ? analyticsSearchQuery
+                      : searchQuery
                 }
                 onChange={(e) => {
                   if (activeTab === "colleges") {
                     setCollegeSearchQuery(e.target.value);
-                  } else if (activeTab === "waitlist") {
-                    setWaitlistSearchQuery(e.target.value);
                   } else if (activeTab === "analytics") {
                     setAnalyticsSearchQuery(e.target.value);
                   } else {
@@ -860,8 +895,8 @@ const AdminDashboard = () => {
                         <TableRow className="border-white/10 hover:bg-white/5">
                           <TableHead className="text-gray-400">User</TableHead>
                           <TableHead className="text-gray-400">Status</TableHead>
+                          <TableHead className="text-gray-400">Last Seen / Revisits</TableHead>
                           <TableHead className="text-gray-400">Location</TableHead>
-                          <TableHead className="text-gray-400">Role</TableHead>
                           <TableHead className="text-gray-400">Joined</TableHead>
                           <TableHead className="text-right text-gray-400">Action</TableHead>
                         </TableRow>
@@ -869,54 +904,71 @@ const AdminDashboard = () => {
                       <TableBody>
                         {isLoadingUsers ? (
                           <TableRow>
-                            <TableCell colSpan={5} className="text-center py-8 text-gray-400">Loading...</TableCell>
+                            <TableCell colSpan={6} className="text-center py-8 text-gray-400">Loading...</TableCell>
                           </TableRow>
                         ) : users.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={5} className="text-center py-8 text-gray-400">No recent registrations</TableCell>
+                            <TableCell colSpan={6} className="text-center py-8 text-gray-400">No recent registrations</TableCell>
                           </TableRow>
                         ) : (
-                          users.slice(0, 5).map((user) => (
-                          <TableRow 
-                            key={user.id} 
-                            className="border-white/10 hover:bg-white/5 cursor-pointer transition-colors"
-                            onClick={() => navigate(`/admin/users/${user.id}`)}
-                          >
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8 border border-white/10">
-                                  <AvatarFallback className="bg-sky-500/20 text-sky-300">{(user.full_name || "U")[0]}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="font-medium text-gray-200">{user.full_name || "Unknown User"}</p>
-                                  <p className="text-xs text-gray-500">{user.email}</p>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant="outline" 
-                                className="bg-green-500/10 text-green-400 border-0"
+                          users.slice(0, 5).map((user) => {
+                            const summary = getUserActivitySummary(user);
+                            return (
+                              <TableRow 
+                                key={user.id} 
+                                className="border-white/10 hover:bg-white/5 cursor-pointer transition-colors"
+                                onClick={() => navigate(`/admin/users/${user.id}`)}
                               >
-                                <CheckCircle2 className="w-3 h-3 mr-1" />
-                                Active
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-gray-400">
-                              {(() => {
-                                const userActivity = activities.find(a => (a.user_id === user.id || a.user_email === user.email) && a.action_details?.ip_city);
-                                return userActivity ? `${userActivity.action_details.ip_city}, ${userActivity.action_details.ip_country}` : "Unknown";
-                              })()}
-                            </TableCell>
-                            <TableCell className="text-gray-400">User</TableCell>
-                            <TableCell className="text-gray-400">{formatDate(user.created_at)}</TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        )))}
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <Avatar className="h-8 w-8 border border-white/10">
+                                      <AvatarFallback className="bg-sky-500/20 text-sky-300">{(user.full_name || "U")[0]}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <p className="font-medium text-gray-200">{user.full_name || "Unknown User"}</p>
+                                      <p className="text-xs text-gray-500">{user.email}</p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge 
+                                    variant="outline" 
+                                    className="bg-green-500/10 text-green-400 border-0"
+                                  >
+                                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                                    Active
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="space-y-0.5">
+                                    <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-200">
+                                      <span className={`w-2 h-2 rounded-full ${summary.isOnlineNow ? "bg-emerald-400 animate-pulse" : "bg-gray-500"}`} />
+                                      <span>{formatRelativeTime(summary.lastSeenDate)}</span>
+                                    </div>
+                                    <div className="text-[10px] text-gray-400">
+                                      {summary.hasRevisited ? (
+                                        <span className="text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                          Revisited ({summary.sessionsCount} visits)
+                                        </span>
+                                      ) : (
+                                        <span className="text-gray-500">1 visit</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-gray-400">
+                                  {summary.location}
+                                </TableCell>
+                                <TableCell className="text-gray-400">{formatDate(user.created_at)}</TableCell>
+                                <TableCell className="text-right">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
+                        )}
                       </TableBody>
                     </Table>
                   </CardContent>
@@ -1444,12 +1496,14 @@ const AdminDashboard = () => {
 
                 {/* User Engagement Summary (Visits Breakdown) */}
                 <Card className="bg-white/5 border-white/10 shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-bold flex items-center gap-2">
-                      <Users className="w-5 h-5 text-emerald-400" />
-                      User Engagement Summary
-                    </CardTitle>
-                    <p className="text-xs text-gray-400">List of users, their total visits (sessions), page views/actions, and last activity time</p>
+                  <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-lg font-bold flex items-center gap-2">
+                        <Users className="w-5 h-5 text-emerald-400" />
+                        User Engagement Summary
+                      </CardTitle>
+                      <p className="text-xs text-gray-400">Complete list of registered users and visitors, total visits (sessions), page views/actions, and last active time</p>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto">
@@ -1467,30 +1521,75 @@ const AdminDashboard = () => {
                         <TableBody>
                           {(() => {
                             const breakdown = (() => {
-                              const userStats: Record<string, { email: string; userId: string | null; sessions: Set<string>; pageViews: number; totalDuration: number; lastActive: string; location: string | null }> = {};
+                              const userStats: Record<string, { 
+                                name: string | null;
+                                email: string; 
+                                userId: string | null; 
+                                sessions: Set<string>; 
+                                pageViews: number; 
+                                totalDuration: number; 
+                                lastActive: string; 
+                                location: string | null;
+                                isRegistered: boolean;
+                              }> = {};
 
+                              // 1. Seed all registered users from profiles table
+                              users.forEach(u => {
+                                const email = u.email || `User #${u.id.slice(0, 6)}`;
+                                userStats[email] = {
+                                  name: u.full_name || null,
+                                  email: email,
+                                  userId: u.id,
+                                  sessions: new Set<string>(),
+                                  pageViews: 0,
+                                  totalDuration: 0,
+                                  lastActive: u.updated_at || u.created_at || new Date().toISOString(),
+                                  location: u.college_name || null,
+                                  isRegistered: true
+                                };
+                              });
+
+                              // 2. Process all activities and merge into userStats
                               activities.forEach(activity => {
-                                const identifier = activity.user_email || "Guest (Anonymous)";
+                                let targetKey: string | null = null;
+
+                                if (activity.user_id) {
+                                  const matchingUser = users.find(u => u.id === activity.user_id);
+                                  if (matchingUser?.email && userStats[matchingUser.email]) {
+                                    targetKey = matchingUser.email;
+                                  }
+                                }
+
+                                if (!targetKey && activity.user_email && userStats[activity.user_email]) {
+                                  targetKey = activity.user_email;
+                                }
+
+                                const identifier = targetKey || activity.user_email || "Guest (Anonymous)";
                                 if (!userStats[identifier]) {
                                   userStats[identifier] = {
+                                    name: null,
                                     email: identifier,
                                     userId: activity.user_id || null,
                                     sessions: new Set<string>(),
                                     pageViews: 0,
                                     totalDuration: 0,
                                     lastActive: activity.created_at,
-                                    location: null
+                                    location: null,
+                                    isRegistered: Boolean(activity.user_id)
                                   };
                                 }
+
                                 if (activity.user_id && !userStats[identifier].userId) {
                                   userStats[identifier].userId = activity.user_id;
                                 }
                                 
-                                if (!userStats[identifier].location && activity.action_details?.ip_city && activity.action_details?.ip_country) {
+                                if (activity.action_details?.ip_city && activity.action_details?.ip_country) {
                                   userStats[identifier].location = `${activity.action_details.ip_city}, ${activity.action_details.ip_country}`;
                                 }
 
-                                userStats[identifier].sessions.add(activity.session_id);
+                                if (activity.session_id) {
+                                  userStats[identifier].sessions.add(activity.session_id);
+                                }
                                 userStats[identifier].pageViews += 1;
                                 
                                 if (activity.event_type === "page_leave" && activity.action_details) {
@@ -1505,24 +1604,40 @@ const AdminDashboard = () => {
                                 }
                               });
 
-                              return Object.values(userStats)
-                                .map(stat => ({
-                                  email: stat.email,
-                                  userId: stat.userId,
-                                  visitCount: stat.sessions.size,
-                                  pageViews: stat.pageViews,
-                                  totalDuration: stat.totalDuration,
-                                  lastActive: stat.lastActive,
-                                  location: stat.location
-                                }))
-                                .sort((a, b) => b.visitCount - a.visitCount);
+                              let list = Object.values(userStats).map(stat => ({
+                                name: stat.name,
+                                email: stat.email,
+                                userId: stat.userId,
+                                visitCount: stat.sessions.size > 0 ? stat.sessions.size : (stat.isRegistered ? 1 : 0),
+                                pageViews: stat.pageViews > 0 ? stat.pageViews : (stat.isRegistered ? 1 : 0),
+                                totalDuration: stat.totalDuration,
+                                lastActive: stat.lastActive,
+                                location: stat.location,
+                                isRegistered: stat.isRegistered
+                              }));
+
+                              if (analyticsSearchQuery.trim()) {
+                                const q = analyticsSearchQuery.toLowerCase();
+                                list = list.filter(u => 
+                                  u.email.toLowerCase().includes(q) ||
+                                  (u.name && u.name.toLowerCase().includes(q)) ||
+                                  (u.location && u.location.toLowerCase().includes(q))
+                                );
+                              }
+
+                              return list.sort((a, b) => {
+                                if (b.visitCount !== a.visitCount) {
+                                  return b.visitCount - a.visitCount;
+                                }
+                                return new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime();
+                              });
                             })();
 
                             if (breakdown.length === 0) {
                               return (
                                 <TableRow>
-                                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                                    No user activity recorded yet
+                                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                    No users found
                                   </TableCell>
                                 </TableRow>
                               );
@@ -1533,11 +1648,13 @@ const AdminDashboard = () => {
                                 <TableCell className="font-medium text-gray-300">
                                   {userBreakdown.userId ? (() => {
                                     const profile = users.find(u => u.id === userBreakdown.userId);
-                                    const displayName = profile?.full_name ? `${profile.full_name} (${userBreakdown.email})` : userBreakdown.email;
+                                    const displayName = profile?.full_name 
+                                      ? `${profile.full_name} (${userBreakdown.email})` 
+                                      : (userBreakdown.name ? `${userBreakdown.name} (${userBreakdown.email})` : userBreakdown.email);
                                     return (
                                       <button
                                         onClick={() => navigate(`/admin/users/${userBreakdown.userId}`)}
-                                        className="text-sky-400 hover:text-sky-300 hover:underline font-semibold text-left transition-colors"
+                                        className="text-sky-400 hover:text-sky-300 hover:underline font-semibold text-left transition-colors cursor-pointer"
                                       >
                                         {displayName}
                                       </button>
@@ -1547,7 +1664,14 @@ const AdminDashboard = () => {
                                   )}
                                 </TableCell>
                                 <TableCell className="font-bold text-sky-400">
-                                  {userBreakdown.visitCount} visits
+                                  <div className="space-y-0.5">
+                                    <div className="text-sky-300 font-bold">{userBreakdown.visitCount} visits</div>
+                                    {userBreakdown.visitCount > 1 && (
+                                      <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 text-[10px] border-0 py-0 px-1.5 font-medium">
+                                        Revisited
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </TableCell>
                                 <TableCell className="text-gray-300 text-sm">
                                   {userBreakdown.pageViews} hits
@@ -1559,7 +1683,19 @@ const AdminDashboard = () => {
                                   {formatDuration(userBreakdown.totalDuration)}
                                 </TableCell>
                                 <TableCell className="text-gray-400 text-sm">
-                                  {new Date(userBreakdown.lastActive).toLocaleString('en-GB')}
+                                  <div className="space-y-0.5">
+                                    <div className="flex items-center gap-1.5 font-medium">
+                                      <span className={`w-2 h-2 rounded-full ${
+                                        Date.now() - new Date(userBreakdown.lastActive).getTime() < 5 * 60 * 1000 
+                                          ? "bg-emerald-400 animate-pulse" 
+                                          : "bg-gray-500"
+                                      }`} />
+                                      <span className="text-gray-200">{formatRelativeTime(userBreakdown.lastActive)}</span>
+                                    </div>
+                                    <div className="text-[11px] text-gray-500 font-mono">
+                                      {new Date(userBreakdown.lastActive).toLocaleString('en-GB')}
+                                    </div>
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             ));
@@ -1770,6 +1906,7 @@ const AdminDashboard = () => {
                             <TableHead className="text-gray-300 cursor-pointer hover:text-white" onClick={() => requestSort('created_at')}>
                               Joined Date {sortConfig?.key === 'created_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                             </TableHead>
+                            <TableHead className="text-gray-300">Last Seen & Retention</TableHead>
                             <TableHead className="text-gray-300">Location</TableHead>
                             <TableHead className="text-gray-300">Status</TableHead>
                             <TableHead className="text-right text-gray-300">Actions</TableHead>
@@ -1778,137 +1915,65 @@ const AdminDashboard = () => {
                         <TableBody>
                           {isLoadingUsers ? (
                             <TableRow>
-                              <TableCell colSpan={5} className="text-center py-8 text-gray-400">
+                              <TableCell colSpan={7} className="text-center py-8 text-gray-400">
                                 Loading users...
                               </TableCell>
                             </TableRow>
                           ) : sortedUsers.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={5} className="text-center py-8 text-gray-400">
+                              <TableCell colSpan={7} className="text-center py-8 text-gray-400">
                                 {searchQuery ? "No matching users found" : "No users found"}
                               </TableCell>
                             </TableRow>
                           ) : (
-                            sortedUsers.map((user) => (
-                              <TableRow 
-                                key={user.id} 
-                                className="border-white/10 hover:bg-white/5 cursor-pointer transition-colors"
-                                onClick={() => navigate(`/admin/users/${user.id}`)}
-                              >
-                                <TableCell className="font-medium text-gray-200">
-                                  {user.full_name || "N/A"}
-                                </TableCell>
-                                <TableCell className="text-gray-400">{user.email || "N/A"}</TableCell>
-                                <TableCell className="text-gray-400">
-                                  {formatDate(user.created_at)}
-                                </TableCell>
-                                <TableCell className="text-gray-400">
-                                  {(() => {
-                                    const userActivity = activities.find(a => (a.user_id === user.id || a.user_email === user.email) && a.action_details?.ip_city);
-                                    return userActivity ? `${userActivity.action_details.ip_city}, ${userActivity.action_details.ip_country}` : "Unknown";
-                                  })()}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-0">
-                                    Active
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-red-400">
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {activeTab === "waitlist" && (
-              <motion.div
-                key="waitlist"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <Mail className="w-5 h-5 text-sky-400" />
-                      Waitlist Signups
-                      <span className="ml-2 px-2.5 py-0.5 rounded-full bg-white/10 text-xs text-gray-400 font-normal">
-                        {waitlist.length}
-                      </span>
-                    </CardTitle>
-                    <div className="flex items-center gap-2">
-                      <button onClick={fetchWaitlist} className="border border-white/10 hover:bg-white/5 text-gray-200 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
-                        Refresh List
-                      </button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="rounded-md border border-white/10 overflow-hidden">
-                      <Table>
-                        <TableHeader className="bg-white/5">
-                          <TableRow className="border-white/10 hover:bg-white/5">
-                            <TableHead className="text-gray-300">Email</TableHead>
-                            <TableHead className="text-gray-300">College / University</TableHead>
-                            <TableHead className="text-gray-300">Phone Number</TableHead>
-                            <TableHead className="text-gray-300">Signed Up Date</TableHead>
-                            <TableHead className="text-gray-300">Status</TableHead>
-                            <TableHead className="text-right text-gray-300">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {isLoadingWaitlist ? (
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-center py-8 text-gray-400">
-                                Loading waitlist entries...
-                              </TableCell>
-                            </TableRow>
-                          ) : filteredWaitlist.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-center py-8 text-gray-400">
-                                {waitlistSearchQuery ? "No matching entries found" : "No waitlist entries found"}
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            filteredWaitlist.map((entry) => (
-                              <TableRow 
-                                key={entry.id} 
-                                className="border-white/10 hover:bg-white/5 transition-colors"
-                              >
-                                <TableCell className="font-medium text-gray-200">
-                                  {entry.email}
-                                </TableCell>
-                                <TableCell className="text-gray-400">{entry.college_name || "N/A"}</TableCell>
-                                <TableCell className="text-gray-400">{entry.phone_number || "N/A"}</TableCell>
-                                <TableCell className="text-gray-400">
-                                  {formatDate(entry.created_at)}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="bg-sky-500/10 text-sky-400 border-0">
-                                    {entry.status || "Pending"}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 hover:text-red-400"
-                                    onClick={() => handleDeleteWaitlist(entry.id)}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))
+                            sortedUsers.map((user) => {
+                              const summary = getUserActivitySummary(user);
+                              return (
+                                <TableRow 
+                                  key={user.id} 
+                                  className="border-white/10 hover:bg-white/5 cursor-pointer transition-colors"
+                                  onClick={() => navigate(`/admin/users/${user.id}`)}
+                                >
+                                  <TableCell className="font-medium text-gray-200">
+                                    {user.full_name || "N/A"}
+                                  </TableCell>
+                                  <TableCell className="text-gray-400">{user.email || "N/A"}</TableCell>
+                                  <TableCell className="text-gray-400">
+                                    {formatDate(user.created_at)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="space-y-0.5">
+                                      <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-200">
+                                        <span className={`w-2 h-2 rounded-full ${summary.isOnlineNow ? "bg-emerald-400 animate-pulse" : "bg-gray-500"}`} />
+                                        <span>{formatRelativeTime(summary.lastSeenDate)}</span>
+                                      </div>
+                                      <div className="text-[10px] text-gray-400">
+                                        {summary.hasRevisited ? (
+                                          <span className="text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                            Revisited ({summary.sessionsCount} visits)
+                                          </span>
+                                        ) : (
+                                          <span className="text-gray-500">1 visit</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-gray-400">
+                                    {summary.location}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-0">
+                                      Active
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-red-400">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })
                           )}
                         </TableBody>
                       </Table>
