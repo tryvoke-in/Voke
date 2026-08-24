@@ -11,6 +11,8 @@ import { ProfileCompletionGuard } from "./components/ProfileCompletionGuard";
 import { WaitlistGuard } from "./components/WaitlistGuard";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import SEO from "./components/SEO";
+import { TokenProvider } from "./contexts/TokenContext";
+import { TokenCounterWidget } from "./components/TokenCounterWidget";
 
 const queryClient = new QueryClient();
 
@@ -19,19 +21,22 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <OnlinePresenceProvider>
-        <BrowserRouter>
-          <SEO />
-          <AnalyticsTracker />
-          <WaitlistGuard>
-            <ProfileCompletionGuard>
-              <AppRoutes />
-            </ProfileCompletionGuard>
-          </WaitlistGuard>
-          <DevResetWidget />
-          <SessionRequestNotifier />
-        </BrowserRouter>
-      </OnlinePresenceProvider>
+      <TokenProvider>
+        <OnlinePresenceProvider>
+          <BrowserRouter>
+            <SEO />
+            <AnalyticsTracker />
+            <WaitlistGuard>
+              <ProfileCompletionGuard>
+                <AppRoutes />
+              </ProfileCompletionGuard>
+            </WaitlistGuard>
+            <DevResetWidget />
+            <SessionRequestNotifier />
+            <TokenCounterWidget />
+          </BrowserRouter>
+        </OnlinePresenceProvider>
+      </TokenProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

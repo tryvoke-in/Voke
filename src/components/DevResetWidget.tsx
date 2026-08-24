@@ -34,14 +34,7 @@ import {
 import { getInterviewRounds } from "@/data/eliteInterviewData";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
-const AUTHORIZED_EMAILS = [
-  "anurag50434411@gmail.com",
-  "nikhilbhor201@gmail.com",
-  "priyanshu.sharmaiia@gmail.com",
-  "24_nikhil.bhor@ges-coengg.org",
-  "ompawar396@gmail.com"
-];
+import { AUTHORIZED_EMAILS, isLocalhost } from "@/utils/devTools";
 
 export const DevResetWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -98,13 +91,6 @@ export const DevResetWidget = () => {
       window.removeEventListener('voke-dev-unlock-change', handleUnlockChange);
     };
   }, []);
-
-  const isLocalhost =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname.includes('ngrok') ||
-      localStorage.getItem('voke_dev_mode') === 'true');
 
   const isAuthorized = isLocalhost || (userEmail && AUTHORIZED_EMAILS.includes(userEmail.toLowerCase()));
 

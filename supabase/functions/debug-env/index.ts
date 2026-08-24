@@ -1,0 +1,1 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'; serve(() => { return new Response(JSON.stringify({ keys: Deno.env.get('GEMINI_API_KEYS') }), { headers: { 'Content-Type': 'application/json' } }); });
