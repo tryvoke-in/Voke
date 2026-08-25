@@ -695,7 +695,7 @@ export const collegeService = {
           .delete()
           .eq('status', 'college_registration')
           .eq('email', targetCollege.adminEmail)
-          .then().catch(() => {});
+          .then(() => {}, () => {});
       }
       return true;
     } catch (e) {
