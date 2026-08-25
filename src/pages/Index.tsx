@@ -280,7 +280,6 @@ const Index = () => {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.1]"
               >
-                Realistic AI Mock Interviews.<br />
                 <span className="bg-gradient-to-r from-white via-sky-300 to-blue-400 bg-clip-text text-transparent">
                   Master Tech Rounds & Secure the Offer.
                 </span>

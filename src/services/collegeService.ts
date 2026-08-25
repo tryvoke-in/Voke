@@ -1383,7 +1383,7 @@ export const collegeService = {
 
       // Immediately purge or mark completed in user's calendar events
       try {
-        const calKey = "voke_user_calendar_events";
+        const calKey = "voke_user_calendar_events_v2";
         const calSaved = localStorage.getItem(calKey);
         if (calSaved) {
           const calEvents: any[] = JSON.parse(calSaved);

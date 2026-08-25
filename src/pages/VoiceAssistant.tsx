@@ -508,7 +508,7 @@ CRITICAL INTERVIEW GUIDELINES:
         });
 
         try {
-          const calSaved = localStorage.getItem("voke_user_calendar_events");
+          const calSaved = localStorage.getItem("voke_user_calendar_events_v2");
           if (calSaved) {
             const calEvents = JSON.parse(calSaved);
             const filteredCal = calEvents.filter((e: any) =>
@@ -516,7 +516,7 @@ CRITICAL INTERVIEW GUIDELINES:
               e.id !== collegeDrive.id &&
               (!e.link || !e.link.includes(collegeDrive.id))
             );
-            localStorage.setItem("voke_user_calendar_events", JSON.stringify(filteredCal));
+            localStorage.setItem("voke_user_calendar_events_v2", JSON.stringify(filteredCal));
           }
         } catch (e) { }
       } catch (colErr) {

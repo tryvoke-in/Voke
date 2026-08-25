@@ -112,7 +112,7 @@ export const ScheduleInterviewModal = ({
     "Candidate must achieve >= 75% overall score on the custom question set to qualify for the placement shortlist."
   );
   const [instructions, setInstructions] = useState(
-    "Focus on Core Data Structures, Dynamic Programming, Time-Space Complexity Analysis, and Clear Technical Articulation."
+    "Focus on DSA, DP, and Clear Articulation."
   );
   const [targetCompaniesInput] = useState("Google, Amazon, Microsoft, Uber");
   
