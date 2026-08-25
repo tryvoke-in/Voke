@@ -55,9 +55,10 @@ interface JobRecommendation {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function decode(s: string) {
+function decode(s: unknown): string {
   if (!s) return "";
-  return s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+  const str = typeof s === "string" ? s : String(s);
+  return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 }
 
