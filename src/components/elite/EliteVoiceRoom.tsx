@@ -53,7 +53,12 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
     logs,
     apiLabel
   } = useGroqVoice();
-  const { violationCount, AntiCheatOverlay } = useAntiCheat();
+  const { violationCount, AntiCheatOverlay } = useAntiCheat({
+    onTerminate: () => {
+      disconnect();
+      onCompleteRound('FAILED');
+    }
+  });
 
   // Video & Audio state
   const videoRef = useRef<HTMLVideoElement>(null);

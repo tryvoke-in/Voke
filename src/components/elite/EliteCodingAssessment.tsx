@@ -172,7 +172,12 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
 }) => {
   const navigate = useNavigate();
   const { status, connect, disconnect, isUserSpeaking, isAiSpeaking, volume, logs, sendHiddenContext, isSilentMode, setIsSilentMode } = useGroqVoice();
-  const { violationCount, AntiCheatOverlay } = useAntiCheat();
+  const { violationCount, AntiCheatOverlay } = useAntiCheat({
+    onTerminate: () => {
+      disconnect();
+      onCompleteRound();
+    }
+  });
 
   // Section State
   const [currentSection, setCurrentSection] = useState<CodingSection>('A_CODING');

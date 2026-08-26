@@ -90,7 +90,12 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
     volume,
     logs
   } = useGroqVoice();
-  const { violationCount, AntiCheatOverlay } = useAntiCheat();
+  const { violationCount, AntiCheatOverlay } = useAntiCheat({
+    onTerminate: () => {
+      disconnect();
+      onCompleteRound('FAILED');
+    }
+  });
 
   // Video & Audio state — camera is shown for realism, but no video analysis
   const videoRef = useRef<HTMLVideoElement>(null);
