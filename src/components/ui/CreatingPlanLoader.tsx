@@ -1,58 +1,49 @@
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
+import { Loader2, TrendingUp, Sparkles } from "lucide-react";
 
 export function CreatingPlanLoader() {
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
-            <div className="relative flex flex-col items-center justify-center">
-                {/* Expanding Waves */}
-                {[0, 1, 2].map((index) => (
-                    <motion.div
-                        key={index}
-                        initial={{ opacity: 0.5, scale: 0.8 }}
-                        animate={{ opacity: 0, scale: 2.5 }}
-                        transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            delay: index * 0.6,
-                            ease: "easeOut",
-                        }}
-                        className="absolute w-32 h-32 rounded-full border border-sky-500/30 bg-sky-500/5 shadow-[0_0_30px_rgba(139,92,246,0.2)]"
-                    />
-                ))}
-
-                {/* Central Core */}
-                <div className="relative z-10 w-24 h-24 rounded-full bg-black border border-sky-500/50 flex items-center justify-center shadow-[0_0_50px_rgba(139,92,246,0.4)]">
-                    <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-0 rounded-full border-t-2 border-r-2 border-sky-400 opacity-80"
-                    />
-                    <motion.div
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-12 h-12 rounded-full bg-sky-600 blur-md opacity-60"
-                    />
-                </div>
-
-                {/* Text */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="mt-12 text-center"
-                >
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent mb-2">
-                        Creating Career Plan
-                    </h2>
-                    <motion.p
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="text-zinc-400 text-sm tracking-widest uppercase"
-                    >
-                        Analyzing Trajectory...
-                    </motion.p>
-                </motion.div>
-            </div>
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.2 }}
+        className="bg-card border border-border/80 rounded-2xl p-6 sm:p-7 shadow-xl max-w-sm w-full flex flex-col items-center text-center space-y-4"
+      >
+        {/* Minimal Spinner / Icon */}
+        <div className="relative flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
+            <TrendingUp className="w-6 h-6" />
+          </div>
+          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-card border border-border flex items-center justify-center">
+            <Loader2 className="w-3 h-3 text-sky-600 dark:text-sky-400 animate-spin" />
+          </div>
         </div>
-    );
+
+        {/* Text */}
+        <div className="space-y-1">
+          <h3 className="text-base font-bold text-foreground">
+            Creating Career Plan
+          </h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Analyzing role requirements and tailoring your 30-day interview milestones...
+          </p>
+        </div>
+
+        {/* Subtle indeterminate progress bar */}
+        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden border border-border/40 relative">
+          <motion.div
+            className="h-full bg-sky-600 dark:bg-sky-500 rounded-full w-1/3"
+            animate={{ x: ["-100%", "300%"] }}
+            transition={{
+              repeat: Infinity,
+              duration: 1.4,
+              ease: "easeInOut",
+            }}
+          />
+        </div>
+      </motion.div>
+    </div>
+  );
 }

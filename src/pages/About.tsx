@@ -1,7 +1,7 @@
 import React from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck, Cpu, Award, Lock, Users, Sparkles, CheckCircle2, Terminal, BookOpen, HeartHandshake } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -14,7 +14,7 @@ export const About: React.FC = () => {
         {/* Hero Section */}
         <section className="max-w-4xl mx-auto text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
+            
             E-E-A-T Verified Platform
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">

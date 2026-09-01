@@ -14,6 +14,66 @@ import { FloatingParticles } from "@/components/FloatingParticles";
 import { WAITLIST_CONFIG } from "@/config/waitlist";
 import { ReactLenis } from "lenis/react";
 import "lenis/dist/lenis.css";
+import { AccordionGallery, AccordionGalleryItem } from "@/components/AccordionGallery";
+import { ScrollStack, ScrollStackItem } from "@/components/ScrollStack";
+import { RippleGrid } from "@/components/RippleGrid";
+
+const VOKE_FEATURES: AccordionGalleryItem[] = [
+  {
+    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=75&w=700&auto=format&fit=crop",
+    label: "AI Video & Voice Mock",
+    badge: "Real-Time Simulation",
+    description: "Practice face-to-face with an adaptive AI coach. Real-time webcam tracking, speech cadence analysis, and immediate conversational feedback.",
+    link: "/voice-assistant",
+    ctaText: "Launch AI Mock",
+    accentColor: "#38bdf8"
+  },
+  {
+    image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=75&w=700&auto=format&fit=crop",
+    label: "Monaco Code IDE & DSA",
+    badge: "Real-Time Compiler",
+    description: "Multi-language in-browser sandbox with curated DSA sheets, automated test case execution, complexity analyzers, and live algorithmic hints.",
+    link: "/dsa-sheet",
+    ctaText: "Explore Code Sandbox",
+    accentColor: "#818cf8"
+  },
+  {
+    image: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=75&w=700&auto=format&fit=crop",
+    label: "ATS Resume Intelligence",
+    badge: "Smart ATS Scorer",
+    description: "Extract key competencies, calculate role match scores, generate tailored interview questions, and rewrite bullet points for high-tier ATS passes.",
+    link: "/resume-builder",
+    ctaText: "Score Resume",
+    accentColor: "#60a5fa"
+  },
+  {
+    image: "https://images.unsplash.com/photo-1618401471353-b98aedd04e11?q=75&w=700&auto=format&fit=crop",
+    label: "GitHub Architecture Grilling",
+    badge: "Commit & Code Parser",
+    description: "Connect your GitHub repositories for automated codebase parsing and real-world system design questions based on your own actual code.",
+    link: "/interview/new",
+    ctaText: "Connect Repository",
+    accentColor: "#c084fc"
+  },
+  {
+    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=75&w=700&auto=format&fit=crop",
+    label: "Body Language & Biometrics",
+    badge: "Cognitive Radar",
+    description: "Track eye contact stability, filler pause frequency, posture cues, facial tension, and confidence scorecards with deep diagnostic telemetry.",
+    link: "/progress-analytics",
+    ctaText: "View Diagnostics",
+    accentColor: "#34d399"
+  },
+  {
+    image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=75&w=700&auto=format&fit=crop",
+    label: "Campus Placement Drives",
+    badge: "Enterprise Suite",
+    description: "Comprehensive institutional portal for universities with automated student email verification, custom batch tests, and T&P cell analytics.",
+    link: "/college/auth",
+    ctaText: "Access College Portal",
+    accentColor: "#fbbf24"
+  }
+];
 
 const Index = () => {
   const navigate = useNavigate();
@@ -111,28 +171,22 @@ const Index = () => {
       {/* Base Solid Background beneath all negative layers */}
       <div className="absolute inset-0 bg-[#030305] -z-30 pointer-events-none" />
 
-      <style>{`
-        @keyframes drift {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.05); }
-          66% { transform: translate(-20px, 20px) scale(0.95); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-      `}</style>
-
-      {/* Dynamic mesh backgrounds with rich drifting glow auras */}
-      <div 
-        className="absolute top-0 left-1/4 w-[300px] md:w-[900px] h-[300px] md:h-[900px] bg-gradient-to-r from-sky-600/25 via-blue-600/20 to-indigo-600/15 rounded-full blur-[140px] -z-10 pointer-events-none" 
-        style={{ animation: 'drift 15s infinite ease-in-out' }}
-      />
-      <div 
-        className="absolute top-[35%] right-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-gradient-to-br from-blue-600/22 via-sky-600/18 to-transparent rounded-full blur-[130px] -z-10 pointer-events-none" 
-        style={{ animation: 'drift 20s infinite ease-in-out 2s' }}
-      />
-      <div 
-        className="absolute top-[65%] left-[-10%] w-[300px] md:w-[850px] h-[300px] md:h-[850px] bg-gradient-to-tr from-sky-600/22 via-indigo-600/18 to-transparent rounded-full blur-[150px] -z-10 pointer-events-none" 
-        style={{ animation: 'drift 18s infinite ease-in-out 4s' }}
-      />
+      {/* Interactive RippleGrid WebGL Shader Background */}
+      <div className="absolute inset-0 h-[100vh] min-h-[750px] max-h-[1100px] -z-10 overflow-hidden pointer-events-none opacity-70 [mask-image:radial-gradient(ellipse_85%_75%_at_50%_40%,#000_50%,transparent_100%)]">
+        <RippleGrid
+          gridColor="#0284c7"
+          rippleIntensity={0.045}
+          gridSize={10.0}
+          gridThickness={22.0}
+          fadeDistance={1.3}
+          vignetteStrength={2.5}
+          glowIntensity={0.18}
+          opacity={0.75}
+          mouseInteraction={true}
+          mouseInteractionRadius={1.1}
+          enableRainbow={false}
+        />
+      </div>
 
       {/* Floating Particles globally mounted in background */}
       <FloatingParticles />
@@ -160,54 +214,49 @@ const Index = () => {
                 height={40}
                 loading="eager"
                 decoding="async"
-                className="w-10 h-10 object-contain group-hover:rotate-[15deg] transition-transform duration-300"
+                className="h-8 w-auto object-contain transition-transform group-hover:scale-105" 
               />
-              <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/50">
-                Voke
-              </span>
+              <span className="font-extrabold text-xl tracking-tight text-white group-hover:text-sky-300 transition-colors">Voke</span>
             </div>
 
-            {/* Desktop Nav */}
-            <div className="hidden md:flex items-center gap-8">
-              {["Features", "Job Matching", "How it Works", "Pricing"].map((item) => (
-                <a 
-                  key={item} 
-                  href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
-                  className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group"
-                >
-                  {item}
-                  <span className="absolute bottom-[-4px] left-0 w-0 h-[1px] bg-sky-400 transition-all duration-300 group-hover:w-full" />
-                </a>
-              ))}
+            {/* Desktop Navigation Links */}
+            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
+              <a href="#features" className="hover:text-white transition-colors">Features</a>
+              <a href="#job-matching" className="hover:text-white transition-colors">Job Matching</a>
+              <a href="#how-it-works" className="hover:text-white transition-colors">How it Works</a>
+              <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
             </div>
 
-            <div className="hidden md:flex items-center gap-3">
+            {/* Action Buttons */}
+            <div className="hidden md:flex items-center gap-4">
               <Button 
                 onClick={() => navigate("/college/auth")}
-                className="text-sky-300 hover:text-white bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 rounded-full px-4 h-10 flex items-center gap-1.5 transition-all text-xs font-semibold shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+                variant="ghost" 
+                className="border border-sky-500/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 hover:text-white text-xs px-4 h-9 rounded-full flex items-center gap-1.5 transition-all duration-300 shadow-sm"
               >
-                <GraduationCap className="w-4 h-4 text-sky-400" />
+                <GraduationCap className="w-3.5 h-3.5 text-sky-400" />
                 Sign in as College
               </Button>
               <Button 
                 onClick={handleAuthNavigation}
-                className="text-gray-300 hover:text-white bg-transparent hover:bg-white/5 rounded-full px-4 h-10 flex items-center justify-center transition-all border-0 shadow-none font-medium text-sm"
+                variant="ghost" 
+                className="text-gray-300 hover:text-white text-xs font-semibold px-4 h-9 rounded-full transition-colors"
               >
                 Sign In
               </Button>
-              <Button
+              <Button 
                 onClick={handleAuthNavigation}
-                className="bg-white/80 text-black hover:bg-zinc-200 rounded-full px-5 font-semibold transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.08)] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] hover:scale-105"
+                className="bg-white text-black hover:bg-sky-400 hover:text-black font-semibold text-xs px-5 h-9 rounded-full transition-all duration-300 shadow-sm"
               >
                 Get Started
               </Button>
             </div>
 
-            {/* Mobile Menu Toggle */}
-            <button 
-              aria-label="Toggle Navigation Menu"
-              className="md:hidden text-white p-2"
+            {/* Mobile Menu Toggle Button */}
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden text-gray-300 hover:text-white p-2"
+              aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -278,10 +327,13 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.1]"
+                className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.1]"
               >
-                <span className="bg-gradient-to-r from-white via-sky-300 to-blue-400 bg-clip-text text-transparent">
-                  Master Tech Rounds & Secure the Offer.
+                <span className="text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
+                  Master Tech Rounds & <br />
+                </span>
+                <span className="bg-gradient-to-r from-sky-300 via-cyan-200 to-white bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(56,189,248,0.45)]">
+                  Secure the Offer.
                 </span>
               </motion.h1>
 
@@ -289,7 +341,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-base md:text-lg text-gray-400 leading-relaxed max-w-xl"
+                className="text-base md:text-lg text-slate-200/90 font-normal leading-relaxed max-w-xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]"
               >
                 Practice realistic technical, coding, and behavioral AI mock interviews with real-time audio-video feedback, 
                 ATS resume analyses, and GitHub repo integrations. Get verified and matched with top tech jobs.
@@ -496,21 +548,47 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Bento Grid Features Section (Lucide Card Icons Removed as requested) */}
-      <section id="features" className="py-24 md:py-32 relative border-t border-white/5 bg-[#050508]/40">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
+      {/* Features Section with React Bits AccordionGallery */}
+      <section id="features" className="py-24 md:py-32 relative border-t border-white/5 bg-[#050508]/40 overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[450px] bg-sky-600/10 rounded-full blur-[160px] pointer-events-none -z-10" />
+
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            
             <motion.h2 
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="text-3xl md:text-5xl font-extrabold tracking-tight"
             >
-              Master Every <span className="bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">Interview Dimension</span>
+              Master Every <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-300 bg-clip-text text-transparent">Interview Dimension</span>
             </motion.h2>
             <p className="text-base md:text-lg text-gray-400 leading-relaxed">
-              Explore the detailed visual tools built directly into Voke to measure and optimize your interview performance.
+              Explore the interactive AI mock interview suite, live code compilers, and deep diagnostic tools powering Voke.
             </p>
+          </div>
+
+          {/* 3D Interactive Accordion Gallery */}
+          <div className="max-w-6xl mx-auto mb-20">
+            <AccordionGallery 
+              items={VOKE_FEATURES}
+              defaultIndex={0}
+              height={480}
+              gap={12}
+              radius={22}
+              expandRatio={0.46}
+              accentColor="#38bdf8"
+              overlayColor="#05050a"
+              trigger="hover"
+              tilt={6}
+              parallax={0.6}
+              onItemClick={(item) => {
+                if (item.link) {
+                  navigate(item.link);
+                }
+              }}
+            />
           </div>
 
           {/* Bento Grid */}
@@ -745,44 +823,43 @@ const Index = () => {
       </section>
 
       {/* Job Match & Verified Score Placement */}
-      <section id="job-matching" className="py-24 bg-[#08080c] relative border-y border-white/5 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(124,58,237,0.03),transparent_60%)] pointer-events-none" />
+      <section id="job-matching" className="py-24 md:py-32 bg-[#08080c] relative border-y border-white/5 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(56,189,248,0.04),transparent_60%)] pointer-events-none" />
         
         <div className="container mx-auto px-4 md:px-6 relative z-10 max-w-6xl">
-          <div className="grid lg:grid-cols-12 gap-12 items-center">
-            {/* Left Content Column */}
-            <div className="lg:col-span-5 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs font-semibold uppercase tracking-wider">
-                <Users className="w-3.5 h-3.5" /> Job Alignment
-              </div>
-              <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
-                Discover Jobs Based on <br />
-                <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-white bg-clip-text text-transparent">
-                  Your Interview Scores
-                </span>
-              </h2>
-              <p className="text-base md:text-lg text-gray-400 leading-relaxed">
-                Voke doesn't provide jobs directly or guarantee placements. Instead, we show you active industry roles and their target benchmarks, allowing you to see how your mock interview performance stacks up against real-world position requirements.
-              </p>
-              
-              <div className="space-y-4 pt-4 text-left max-w-md mx-auto lg:mx-0">
-                <div className="flex items-start gap-3.5 text-sm text-gray-300">
-                  <div className="w-5 h-5 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-sky-400" />
-                  </div>
-                  <p><strong>Role Compatibility Benchmarks</strong> – Compare your scores against standard performance baselines expected for target technical roles.</p>
-                </div>
-                <div className="flex items-start gap-3.5 text-sm text-gray-300">
-                  <div className="w-5 h-5 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-sky-400" />
-                  </div>
-                  <p><strong>Targeted Prep Insights</strong> – Instantly identify which modules you need to focus on to match hiring expectations.</p>
-                </div>
-              </div>
+          {/* Centered Heading */}
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs font-semibold uppercase tracking-wider">
+              <Users className="w-3.5 h-3.5" /> Job Alignment
             </div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight"
+            >
+              Discover Jobs Based on <br />
+              <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-white bg-clip-text text-transparent">
+                Your Interview Scores
+              </span>
+            </motion.h2>
+            <p className="text-base md:text-lg text-gray-400 leading-relaxed max-w-2xl mx-auto">
+              Compare your mock interview scores against active industry role benchmarks and track your hiring readiness in real time.
+            </p>
+          </div>
 
-            {/* Right Job Cards Column (Fixed button colors to prevent blackout) */}
-            <div className="lg:col-span-7 grid sm:grid-cols-2 gap-4">
+          {/* Full-width Stack of Job Cards with Page Scroll */}
+          <div className="w-full max-w-3xl mx-auto relative">
+            <ScrollStack
+              useWindowScroll={true}
+              itemDistance={80}
+              itemScale={0.03}
+              itemStackDistance={22}
+              stackPosition="18%"
+              scaleEndPosition="6%"
+              baseScale={0.88}
+              rotationAmount={0.5}
+            >
               {[
                 {
                   role: "Software Engineer III",
@@ -790,7 +867,10 @@ const Index = () => {
                   location: "Remote, US",
                   salary: "$140k - $170k",
                   score: 88,
-                  logoBg: "bg-zinc-800"
+                  level: "L5 Senior",
+                  logoBg: "bg-zinc-800 text-white",
+                  tags: ["System Design", "Distributed Systems", "TypeScript", "PostgreSQL"],
+                  description: "Build ultra-fast project intelligence tools. Requires deep mastery of optimistic UI updates and high-concurrency database indexing."
                 },
                 {
                   role: "Frontend Specialist",
@@ -798,73 +878,119 @@ const Index = () => {
                   location: "Remote, Global",
                   salary: "$130k - $160k",
                   score: 90,
-                  logoBg: "bg-white text-black"
+                  level: "Staff Specialist",
+                  logoBg: "bg-white text-black",
+                  tags: ["Next.js", "Web Performance", "React Server Components", "Edge Runtimes"],
+                  description: "Architect cutting-edge developer tooling, Next.js server components, and sub-millisecond edge rendering pipelines."
                 },
                 {
-                  role: "Product Manager",
+                  role: "AI / ML Infrastructure Engineer",
+                  company: "OpenAI",
+                  location: "San Francisco, CA",
+                  salary: "$170k - $215k",
+                  score: 93,
+                  level: "Research Infra",
+                  logoBg: "bg-emerald-600 text-white",
+                  tags: ["PyTorch", "GPU Clusters", "Distributed Training", "CUDA"],
+                  description: "Scale large-scale model inference, GPU memory partitioning, and low-latency transformer pipeline orchestration."
+                },
+                {
+                  role: "Technical Product Manager",
                   company: "Stripe",
                   location: "San Francisco, CA",
                   salary: "$150k - $185k",
                   score: 86,
-                  logoBg: "bg-sky-600"
+                  level: "Senior TPM",
+                  logoBg: "bg-sky-600 text-white",
+                  tags: ["API Architecture", "Payments Infra", "Developer Experience", "Risk Systems"],
+                  description: "Lead API standardization and real-time payment reliability across global merchant infrastructure."
                 },
                 {
-                  role: "Infrastructure Engineer",
+                  role: "Backend Systems Engineer",
                   company: "Supabase",
                   location: "Remote, SG",
                   salary: "$120k - $150k",
                   score: 87,
-                  logoBg: "bg-emerald-600"
+                  level: "L4 Engineer",
+                  logoBg: "bg-emerald-500 text-black",
+                  tags: ["PostgreSQL", "Go", "Realtime Elixir", "Database Replication"],
+                  description: "Optimize open-source database backends, write WAL replication plugins, and scale multi-tenant database clusters."
+                },
+                {
+                  role: "Distributed Cloud Architect",
+                  company: "Datadog",
+                  location: "Remote, US",
+                  salary: "$160k - $195k",
+                  score: 91,
+                  level: "Principal",
+                  logoBg: "bg-purple-600 text-white",
+                  tags: ["Kubernetes", "eBPF", "High Throughput", "Observability"],
+                  description: "Design massive-scale event ingestion systems handling billions of logs and telemetry spans per second."
                 }
               ].map((job, idx) => (
-                <motion.div
-                  key={idx}
-                  whileHover={{ y: -6, scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="bg-[#0c0c12] border border-white/5 rounded-3xl p-5 space-y-4 hover:border-sky-500/20 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex gap-3 min-w-0 flex-1">
-                      <div className={`w-8 h-8 rounded-lg ${job.logoBg} flex items-center justify-center font-bold text-xs shrink-0`}>
-                        {job.company[0]}
+                <ScrollStackItem key={idx}>
+                  <div className="space-y-4">
+                    {/* Header row */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-11 h-11 rounded-2xl ${job.logoBg} flex items-center justify-center font-bold text-base shadow-md shrink-0 border border-white/10`}>
+                          {job.company[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-bold text-base md:text-lg text-gray-100 truncate">{job.role}</h4>
+                            <span className="text-[10px] font-semibold text-gray-300 bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-full">
+                              {job.level}
+                            </span>
+                          </div>
+                          <p className="text-xs text-sky-400 font-medium">{job.company}</p>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-bold text-sm text-gray-200 truncate">{job.role}</h4>
-                        <p className="text-xs text-gray-500">{job.company}</p>
+
+                      <span className="text-xs font-extrabold text-sky-300 bg-sky-950/70 border border-sky-500/30 px-3.5 py-1.5 rounded-full whitespace-nowrap shrink-0 shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+                        Score &ge; {job.score}+
+                      </span>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-xs md:text-sm text-gray-300 leading-relaxed">
+                      {job.description}
+                    </p>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {job.tags.map((tag) => (
+                        <span key={tag} className="text-[10px] px-2.5 py-1 bg-white/[0.04] border border-white/[0.08] rounded-lg text-gray-300 font-mono">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Footer with metadata & CTA */}
+                    <div className="flex items-center justify-between pt-4 border-t border-white/10 flex-wrap gap-3">
+                      <div className="flex items-center gap-5 text-xs text-gray-400">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <span>{job.location}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <DollarSign className="w-4 h-4 text-gray-500" />
+                          <span className="font-semibold text-gray-200">{job.salary}</span>
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-[10px] font-bold text-sky-400 bg-sky-950/40 border border-sky-500/25 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
-                      Full-time
-                    </span>
-                  </div>
 
-                  <div className="space-y-1.5 text-xs text-gray-400">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-gray-600" />
-                      <span>{job.location}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <DollarSign className="w-3.5 h-3.5 text-gray-600" />
-                      <span>{job.salary}</span>
+                      <Button 
+                        onClick={handleAuthNavigation}
+                        className="bg-white/10 text-white border border-white/15 hover:bg-sky-500 hover:border-sky-500 hover:text-black rounded-xl text-xs px-5 h-9 flex items-center gap-2 transition-all duration-300 font-bold shadow-md group"
+                      >
+                        <span>Check Match</span>
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                    <div className="text-[10px]">
-                      <p className="text-gray-500 uppercase font-bold">BENCHMARK SCORE</p>
-                      <p className="text-xs font-extrabold text-sky-300">Score &ge; {job.score}+</p>
-                    </div>
-                    
-                    <Button 
-                      onClick={handleAuthNavigation}
-                      className="bg-white/10 text-white border border-white/10 hover:bg-sky-600 hover:border-sky-600 hover:text-white rounded-xl text-xs px-4 h-9 flex items-center justify-center transition-all duration-300 font-semibold"
-                    >
-                      Check Fit
-                    </Button>
-                  </div>
-                </motion.div>
+                </ScrollStackItem>
               ))}
-            </div>
+            </ScrollStack>
           </div>
         </div>
       </section>

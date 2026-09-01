@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  Mic, FileText, Users, Sparkles, ChevronRight, 
-  ChevronLeft, CheckCircle, ArrowRight, Compass, X,
-  MessageSquare, Play, Zap, Bot, Video, Crown
+  Check, ArrowRight, Compass, X,
+  Bot, Video, Crown, User
 } from "lucide-react";
 
 interface TourStep {
@@ -15,8 +17,7 @@ interface TourStep {
   title: string;
   description: string;
   position: "top" | "bottom" | "left" | "right";
-  icon: any;
-  color: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 interface InteractiveTourProps {
@@ -42,40 +43,35 @@ const TOUR_STEPS: TourStep[] = [
     title: "Text Interview",
     description: "Practice mock interviews in a chat-like format. Our AI dynamically changes and adapts its follow-up questions to assess your depth of knowledge.",
     position: "bottom",
-    icon: Bot,
-    color: "text-sky-500"
+    icon: Bot
   },
   {
     targetId: "tour-voice-agent",
     title: "Pro Interview",
     description: "Practice real-time speech interviews verbally. Speak naturally and get immediate grading on communication skills, delivery tone, and clarity.",
     position: "bottom",
-    icon: Video,
-    color: "text-pink-500"
+    icon: Video
   },
   {
     targetId: "tour-job-matches",
     title: "Personalized Job Matches",
     description: "Voke tracks your interview performance metrics to match you automatically with real-world job roles matching your capabilities.",
     position: "bottom",
-    icon: Compass,
-    color: "text-blue-500"
+    icon: Compass
   },
   {
     targetId: "tour-elite-prep",
     title: "Elite Prep",
     description: "Unlock advanced structures, standard system design preparation, and elite mock resources to target premium positions.",
     position: "bottom",
-    icon: Crown,
-    color: "text-amber-500"
+    icon: Crown
   },
   {
     targetId: "tour-profile",
-    title: "Complete Your Profile settings",
-    description: "Click your avatar in the navbar to configure settings. Be sure to link your GitHub profile and upload your Resume to customize mock questions and unlock ATS auditing recommendations.",
+    title: "Complete Your Profile Settings",
+    description: "Click your avatar in the navbar to configure settings. Link your GitHub profile and upload your Resume to customize mock questions and unlock ATS auditing recommendations.",
     position: "bottom",
-    icon: Compass,
-    color: "text-sky-500"
+    icon: User
   }
 ];
 
@@ -126,7 +122,6 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
         });
       };
 
-      // Shorter, snappier delay for fast rendering
       const timer = setTimeout(updateRect, 250);
 
       window.addEventListener("scroll", updateRect, { passive: true });
@@ -171,7 +166,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
       }
       localStorage.setItem(`voke_tour_seen_${userId}`, "true");
       localStorage.setItem(`voke_checklist_dismissed_${userId}`, "true");
-      toast.success("guided tour complete! You are ready to excel.");
+      toast.success("Guided tour complete! You're ready to start.");
       onClose();
     } catch (err) {
       console.error("Error finishing tour:", err);
@@ -185,86 +180,94 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
   if (step === 0) {
     return (
       <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleFinish(); }}>
-        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-background border-border/80 rounded-2xl shadow-2xl z-50">
-          <DialogTitle className="sr-only">Voke Setup</DialogTitle>
-          <DialogDescription className="sr-only">Step 1: Setup preferences</DialogDescription>
-          
-          <div className="h-32 bg-gradient-to-r from-sky-600 via-indigo-600 to-blue-600 relative flex items-center justify-between px-8 text-white select-none">
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.08]" />
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
-            <div className="z-10 flex items-center gap-3">
-              <div className="p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
-                <Sparkles className="w-6 h-6 text-yellow-300 fill-yellow-300 animate-pulse" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold tracking-tight">Voke Interactive Tour</h3>
-                <p className="text-xs text-white/80">Guided platform walkthrough</p>
-              </div>
+        <DialogContent className="max-w-2xl p-6 sm:p-8 bg-card text-card-foreground border-border rounded-2xl shadow-xl z-50">
+          <DialogHeader className="space-y-2 pb-1 text-left">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="font-medium text-[11px] px-2.5 py-0.5 text-muted-foreground border-border">
+                Guided Tour
+              </Badge>
             </div>
-          </div>
+            <DialogTitle className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              Welcome to Voke{name ? `, ${name}` : ""}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
+              Personalize your prep. Select your target track so we can highlight the most relevant practice modules and recommendations.
+            </DialogDescription>
+          </DialogHeader>
 
-          <div className="p-6 sm:p-8 space-y-6">
-            <div className="text-center sm:text-left space-y-2">
-              <h4 className="text-2xl font-bold text-foreground">
-                Welcome to Voke, <span className="text-sky-500 font-extrabold">{name || "Scholar"}</span>!
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Let's personalize your prep. Tell us what you are preparing for so we can highlight the best features for your goals.
-              </p>
+          <div className="space-y-5 pt-2">
+            <div className="space-y-1.5 max-w-sm">
+              <Label htmlFor="tour-name" className="text-xs font-medium text-muted-foreground">
+                Your Name
+              </Label>
+              <Input
+                id="tour-name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
+                className="h-9 text-sm rounded-lg bg-background border-input focus-visible:ring-1 focus-visible:ring-ring"
+              />
             </div>
 
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3 items-center">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider shrink-0">Your Name:</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your name"
-                  className="w-full sm:max-w-xs px-3.5 py-1.5 rounded-xl border border-border bg-muted/30 focus:bg-background focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none text-sm transition-all"
-                />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Select Your Career Track
+                </Label>
+                <span className="text-[11px] text-muted-foreground">
+                  Required
+                </span>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                {CAREER_TRACKS.map((track) => (
-                  <div
-                    key={track.id}
-                    onClick={() => setSelectedTrack(track.id)}
-                    className={`p-4 rounded-2xl border text-left cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
-                      selectedTrack === track.id
-                        ? "bg-sky-500/10 border-sky-500 shadow-md shadow-sky-500/5"
-                        : "bg-card/50 hover:bg-muted/40 border-border/60"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <h5 className="font-bold text-sm text-foreground">{track.label}</h5>
-                      {selectedTrack === track.id && (
-                        <div className="w-4 h-4 rounded-full bg-sky-500 flex items-center justify-center text-white">
-                          <CheckCircle className="w-3.5 h-3.5 fill-sky-500" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {CAREER_TRACKS.map((track) => {
+                  const isSelected = selectedTrack === track.id;
+                  return (
+                    <div
+                      key={track.id}
+                      onClick={() => setSelectedTrack(track.id)}
+                      className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all duration-150 relative group ${
+                        isSelected
+                          ? "bg-accent/80 border-foreground/40 shadow-sm"
+                          : "bg-background/50 hover:bg-accent/30 border-border/70 hover:border-border"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-medium text-sm text-foreground">{track.label}</div>
+                        <div
+                          className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                            isSelected
+                              ? "bg-foreground text-background"
+                              : "border border-muted-foreground/30 group-hover:border-muted-foreground/60"
+                          }`}
+                        >
+                          {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                         </div>
-                      )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 leading-snug">
+                        {track.description}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-snug">
-                      {track.description}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
-            <div className="flex items-center justify-between border-t border-border/40 pt-6">
+            <div className="flex items-center justify-between border-t border-border pt-4 mt-2">
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={handleFinish}
                 className="text-xs text-muted-foreground hover:text-foreground"
               >
                 Skip Tour
               </Button>
               <Button
+                size="sm"
                 onClick={handleNext}
-                className="gap-1.5 text-xs font-bold rounded-xl bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-500/20 hover:scale-[1.02] transition-all"
+                className="text-xs font-semibold gap-1.5 rounded-lg px-4 h-9"
               >
-                Start Guided Tour <ArrowRight className="w-4 h-4" />
+                Start Guided Tour <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </div>
           </div>
@@ -331,32 +334,25 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                   y={highlightRect.top - 4}
                   width={highlightRect.width + 8}
                   height={highlightRect.height + 8}
-                  rx="16"
+                  rx="12"
                   fill="black"
                   className="transition-all duration-300 ease-out"
                 />
               </mask>
             </defs>
             <rect width="100%" height="100%" fill="black" opacity="0.65" mask="url(#spotlight-mask)" />
-            {/* Spotlight Glowing Border */}
+            {/* Minimal Spotlight Border */}
             <rect
-              x={highlightRect.left - 6}
-              y={highlightRect.top - 6}
-              width={highlightRect.width + 12}
-              height={highlightRect.height + 12}
-              rx="18"
+              x={highlightRect.left - 4}
+              y={highlightRect.top - 4}
+              width={highlightRect.width + 8}
+              height={highlightRect.height + 8}
+              rx="12"
               fill="none"
-              stroke="url(#glowing-gradient)"
-              strokeWidth="3.5"
-              className="animate-pulse transition-all duration-300 ease-out"
+              stroke="rgba(255, 255, 255, 0.75)"
+              strokeWidth="2"
+              className="transition-all duration-300 ease-out"
             />
-            <defs>
-              <linearGradient id="glowing-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#8b5cf6" />
-                <stop offset="50%" stopColor="#d946ef" />
-                <stop offset="100%" stopColor="#3b82f6" />
-              </linearGradient>
-            </defs>
           </svg>
         )}
       </div>
@@ -366,27 +362,27 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
         {activeStep && (
           <motion.div
             key={step}
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, scale: 0.96, y: -8 }}
+            transition={{ duration: 0.18 }}
             style={getTooltipStyle()}
-            className="bg-card/95 dark:bg-zinc-900/95 border border-border/80 backdrop-blur-md rounded-2xl p-5 shadow-2xl pointer-events-auto select-none transition-all duration-300 ease-out"
+            className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-xl pointer-events-auto select-none transition-all duration-300 ease-out"
           >
             {/* Header */}
-            <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-sky-500/10 rounded-lg">
-                  <activeStep.icon className={`w-4 h-4 ${activeStep.color}`} />
+                <div className="p-1.5 bg-muted rounded-md text-foreground">
+                  <activeStep.icon className="w-4 h-4" />
                 </div>
-                <h5 className="font-extrabold text-sm text-foreground">{activeStep.title}</h5>
+                <h5 className="font-semibold text-sm text-foreground">{activeStep.title}</h5>
               </div>
               <button 
                 onClick={handleFinish} 
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted"
                 title="Exit Tour"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -396,16 +392,17 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
             </p>
 
             {/* Controls footer */}
-            <div className="flex items-center justify-between border-t border-border/30 pt-3 mt-1.5">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+            <div className="flex items-center justify-between border-t border-border pt-3">
+              <span className="text-[11px] font-medium text-muted-foreground">
                 {step} of {TOUR_STEPS.length}
               </span>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 {step > 1 && (
                   <Button
+                    variant="outline"
                     size="sm"
                     onClick={handlePrev}
-                    className="h-7 px-3 text-xs font-semibold rounded-lg bg-transparent border border-border/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-foreground transition-colors"
+                    className="h-7 px-2.5 text-xs font-medium"
                   >
                     Back
                   </Button>
@@ -414,7 +411,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                   <Button
                     size="sm"
                     onClick={handleNext}
-                    className="h-7 px-3 text-xs font-bold rounded-lg bg-sky-600 hover:bg-sky-700 text-white shadow-md shadow-sky-500/20"
+                    className="h-7 px-3 text-xs font-medium"
                   >
                     Next
                   </Button>
@@ -422,7 +419,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                   <Button
                     size="sm"
                     onClick={handleFinish}
-                    className="h-7 px-3 text-xs font-bold rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-90 text-white shadow-md"
+                    className="h-7 px-3 text-xs font-medium"
                   >
                     Finish
                   </Button>
