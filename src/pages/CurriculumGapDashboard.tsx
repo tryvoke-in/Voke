@@ -4,32 +4,22 @@ import {
   GraduationCap,
   ArrowLeft,
   Download,
-  Share2,
-  TrendingDown,
   AlertTriangle,
   CheckCircle2,
   Clock,
   Building2,
   Layers,
-  Code2,
-  Cpu,
-  Database,
-  Cloud,
-  Brain,
-  Sparkles,
   Search,
   Filter,
-  ArrowUpRight,
   Target,
   FileSpreadsheet,
-  ChevronRight,
   BookOpen,
   Info,
   Calendar,
   Zap,
   Printer
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -37,10 +27,10 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 
-// Comprehensive Gap Matrix Data (Academic University Syllabus vs 2025/2026 Tech Hiring Demands)
+// Gap Matrix Data (Academic University Syllabus vs 2025/2026 Tech Hiring Demands)
 interface GapItem {
   id: string;
   subject: string;
@@ -238,40 +228,36 @@ const ROLE_PROFILES: RoleProfile[] = [
 // Turnkey Bridge Modules for Colleges
 const BRIDGE_MODULES = [
   {
-    code: "VOKE-BM01",
+    code: "BM-01",
     title: "Production Cloud & Containerization Sprint",
     duration: "3 Weeks (12 Contact Hours)",
     targetSemester: "5th / 6th Semester",
     outcome: "Every student builds, containerizes with Docker, and automates CI/CD to cloud with secrets.",
-    modulesCount: 6,
-    industryMentorSupported: true
+    modulesCount: 6
   },
   {
-    code: "VOKE-BM02",
+    code: "BM-02",
     title: "Practical System Design & Scalability Lab",
     duration: "4 Weeks (16 Contact Hours)",
     targetSemester: "6th / 7th Semester",
     outcome: "Hands-on implementation of Redis caching, Rate Limiters, Message Queues, and load balancers.",
-    modulesCount: 8,
-    industryMentorSupported: true
+    modulesCount: 8
   },
   {
-    code: "VOKE-BM03",
+    code: "BM-03",
     title: "Applied Generative AI & Vector Search",
     duration: "3 Weeks (12 Contact Hours)",
     targetSemester: "6th / 7th Semester",
     outcome: "Students deploy working RAG pipelines, API-driven agents, and embeddings on modern datasets.",
-    modulesCount: 5,
-    industryMentorSupported: true
+    modulesCount: 5
   },
   {
-    code: "VOKE-BM04",
+    code: "BM-04",
     title: "Elite DSA & Live Machine Coding Accelerator",
     duration: "4 Weeks (20 Contact Hours)",
     targetSemester: "5th / 6th / 7th Semester",
     outcome: "Intensive focus on DP, Graphs, Trees, and timed machine coding rounds for Tier-1 placements.",
-    modulesCount: 10,
-    industryMentorSupported: true
+    modulesCount: 10
   }
 ];
 
@@ -312,118 +298,136 @@ export default function CurriculumGapDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 transition-colors pb-16">
-      {/* Top Breadcrumb & Actions Bar */}
-      <header className="sticky top-0 z-30 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-[#090d16]/80 backdrop-blur-xl">
+    <div className="min-h-screen bg-white dark:bg-[#090d16] text-slate-900 dark:text-slate-100 transition-colors pb-16">
+      {/* Top Header with Voke Logo, Breadcrumbs, ThemeToggle, and Quick Actions */}
+      <header className="sticky top-0 z-30 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-[#090d16]/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          {/* Top Left: Voke Logo & Section Label */}
           <div className="flex items-center gap-3">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate("/dashboard")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") navigate("/dashboard");
+              }}
+              className="flex items-center gap-2.5 cursor-pointer group focus:outline-none"
+              title="Return to Dashboard"
+            >
+              <img
+                src="/images/voke_logo.png"
+                alt="Voke Logo"
+                className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
+              />
+              <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 dark:from-white dark:via-white dark:to-slate-400 bg-clip-text text-transparent">
+                Voke
+              </span>
+            </div>
+
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
+
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <GraduationCap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="font-medium text-slate-700 dark:text-slate-200">Curriculum Gap</span>
+              <span className="hidden sm:inline text-slate-400">/ Institutions</span>
+            </div>
+          </div>
+
+          {/* Top Right: Theme Toggle & Actions */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/dashboard")}
-              className="gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Dashboard</span>
+              <ArrowLeft className="w-3.5 h-3.5 mr-1" />
+              <span className="hidden sm:inline">Dashboard</span>
             </Button>
-            <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                <GraduationCap className="w-4 h-4" />
-              </span>
-              <span className="font-semibold text-sm tracking-tight">Institutional Intelligence</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <Badge variant="outline" className="hidden sm:inline-flex items-center gap-1.5 py-1 px-3 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              2025/2026 Hiring Benchmark
-            </Badge>
 
             <Button
               variant="outline"
               size="sm"
               onClick={() => setExportModalOpen(true)}
-              className="gap-2 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="text-xs border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
-              <span className="hidden sm:inline">Export BoS Report</span>
+              <FileSpreadsheet className="w-3.5 h-3.5 mr-1 text-emerald-600 dark:text-emerald-400" />
+              <span>Export</span>
             </Button>
 
             <Button
               size="sm"
               onClick={handlePrint}
-              className="gap-2 bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/20"
+              className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white"
             >
-              <Printer className="w-4 h-4" />
-              <span>Print Brief</span>
+              <Printer className="w-3.5 h-3.5 mr-1" />
+              <span>Print</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        {/* Hero Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-7">
+        {/* Minimal Title & Filters */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100 dark:border-slate-800/60">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
-              Academic Syllabus vs. Industry Hiring Demand
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              Curriculum-Gap Dashboard
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              Curriculum-Gap Analysis
             </h1>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-2 max-w-2xl">
-              Real-time audit comparing university engineering syllabi with actual 2025/2026 tech company hiring criteria. Pinpoint deficits, reduce round-1 screening drop-offs, and implement turnkey bridge modules.
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Engineering syllabus audit benchmarked against 2025/2026 tech hiring bars.
             </p>
           </div>
 
-          {/* Institutional Filters Selector */}
-          <div className="flex flex-wrap items-center gap-3 p-2 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-slate-400 ml-1" />
+          {/* Clean Segmented Filters */}
+          <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-lg bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center">
+              <Building2 className="w-3.5 h-3.5 text-slate-400 ml-2" />
               <Select value={department} onValueChange={setDepartment}>
-                <SelectTrigger className="w-[140px] h-9 text-xs font-medium border-0 focus:ring-0 bg-transparent">
+                <SelectTrigger className="w-[125px] h-8 text-xs font-medium border-0 shadow-none bg-transparent focus:ring-0">
                   <SelectValue placeholder="Department" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cse">CSE (Core)</SelectItem>
                   <SelectItem value="it">Information Tech</SelectItem>
-                  <SelectItem value="aids">AI & Data Science</SelectItem>
+                  <SelectItem value="aids">AI & Data Sci</SelectItem>
                   <SelectItem value="ece">ECE / Tech</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="h-5 w-px bg-slate-200 dark:bg-slate-800" />
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
 
-            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-slate-400" />
+            <div className="flex items-center">
+              <Target className="w-3.5 h-3.5 text-slate-400 ml-1" />
               <Select value={targetBenchmark} onValueChange={setTargetBenchmark}>
-                <SelectTrigger className="w-[150px] h-9 text-xs font-medium border-0 focus:ring-0 bg-transparent">
+                <SelectTrigger className="w-[145px] h-8 text-xs font-medium border-0 shadow-none bg-transparent focus:ring-0">
                   <SelectValue placeholder="Benchmark" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="product">Tier-1 Product (₹15L+)</SelectItem>
+                  <SelectItem value="product">Product Tier-1 (₹15L+)</SelectItem>
                   <SelectItem value="startups">High Growth Startups</SelectItem>
-                  <SelectItem value="services">Enterprise / IT Services</SelectItem>
+                  <SelectItem value="services">IT Services / Mass</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="h-5 w-px bg-slate-200 dark:bg-slate-800" />
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
 
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-slate-400" />
+            <div className="flex items-center">
+              <Calendar className="w-3.5 h-3.5 text-slate-400 ml-1" />
               <Select value={semester} onValueChange={setSemester}>
-                <SelectTrigger className="w-[120px] h-9 text-xs font-medium border-0 focus:ring-0 bg-transparent">
+                <SelectTrigger className="w-[110px] h-8 text-xs font-medium border-0 shadow-none bg-transparent focus:ring-0">
                   <SelectValue placeholder="Semester" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sem5">5th Semester</SelectItem>
-                  <SelectItem value="sem6">6th Semester</SelectItem>
+                  <SelectItem value="sem5">5th Sem</SelectItem>
+                  <SelectItem value="sem6">6th Sem</SelectItem>
                   <SelectItem value="sem7">7th / 8th Sem</SelectItem>
                 </SelectContent>
               </Select>
@@ -431,145 +435,120 @@ export default function CurriculumGapDashboard() {
           </div>
         </div>
 
-        {/* 4 High-Impact KPI Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {/* Card 1: Alignment Score */}
-          <Card className="border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-emerald-500" />
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
+        {/* 4 Minimal Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 shadow-none">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
                 <span>Curriculum Alignment</span>
-                <Badge variant="secondary" className="text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
                   {avgGap}% Deficit
-                </Badge>
+                </span>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black tracking-tight">{alignmentScore}%</span>
-                <span className="text-xs text-slate-500">of modern hiring bar</span>
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  {alignmentScore}%
+                </span>
+                <span className="text-xs text-slate-400">of hiring bar</span>
               </div>
-              <Progress value={alignmentScore} className="h-1.5 mt-3 bg-slate-100 dark:bg-slate-800" />
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1">
-                <Info className="w-3 h-3 text-slate-400 shrink-0" />
-                <span>Based on analysis of 450+ tech job specs</span>
-              </p>
+              <Progress value={alignmentScore} className="h-1 mt-2.5 bg-slate-100 dark:bg-slate-800" />
             </CardContent>
           </Card>
 
-          {/* Card 2: Critical Gaps */}
-          <Card className="border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-rose-500" />
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
+          <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 shadow-none">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
                 <span>Critical Deficits</span>
-                <span className="p-1 rounded bg-rose-500/10 text-rose-500">
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                </span>
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-rose-600 dark:text-rose-400">{criticalCount}</span>
-                <span className="text-xs text-slate-500">high-risk subjects</span>
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-rose-600 dark:text-rose-400">
+                  {criticalCount}
+                </span>
+                <span className="text-xs text-slate-400">high-risk subjects</span>
               </div>
-              <div className="mt-3 flex items-center gap-2 text-xs">
-                <span className="text-slate-600 dark:text-slate-300 font-medium">System Design</span>
-                <span className="text-slate-400">•</span>
-                <span className="text-slate-600 dark:text-slate-300 font-medium">Docker/Cloud</span>
-                <span className="text-slate-400">•</span>
-                <span className="text-slate-600 dark:text-slate-300 font-medium">Vector DBs</span>
-              </div>
-              <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-2 font-medium">
-                Causes 70%+ of early round rejections
+              <p className="text-[11px] text-slate-500 mt-2 truncate">
+                System Design, Docker, Vector DBs
               </p>
             </CardContent>
           </Card>
 
-          {/* Card 3: Batch Screening Vulnerability */}
-          <Card className="border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-indigo-500" />
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
-                <span>Campus Screening Risk</span>
-                <span className="p-1 rounded bg-indigo-500/10 text-indigo-500">
-                  <TrendingDown className="w-3.5 h-3.5" />
-                </span>
+          <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 shadow-none">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                <span>Early Screening Risk</span>
+                <span className="text-[11px] font-medium text-slate-400">Round 1/2</span>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-indigo-600 dark:text-indigo-400">62%</span>
-                <span className="text-xs text-slate-500">students vulnerable</span>
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  62%
+                </span>
+                <span className="text-xs text-slate-400">students at risk</span>
               </div>
-              <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-                <span>OA Assessment: 42%</span>
-                <span>Tech Round 1: 58%</span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
-                Can be reduced to &lt;18% with bridge modules
+              <p className="text-[11px] text-slate-500 mt-2">
+                Drop-offs due to non-syllabus questions
               </p>
             </CardContent>
           </Card>
 
-          {/* Card 4: Recommended Turnaround */}
-          <Card className="border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500" />
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
-                <span>Bridge Resolution Time</span>
-                <span className="p-1 rounded bg-emerald-500/10 text-emerald-500">
-                  <Clock className="w-3.5 h-3.5" />
-                </span>
+          <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 shadow-none">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                <span>Remediation Time</span>
+                <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">4 Weeks</span>
-                <span className="text-xs text-slate-500">credit micro-sprint</span>
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+                  4 Weeks
+                </span>
+                <span className="text-xs text-slate-400">sprint format</span>
               </div>
-              <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>4 Ready-to-use BoS modules</span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
-                No university re-accreditation needed
+              <p className="text-[11px] text-slate-500 mt-2">
+                4 Turnkey modules ready for BoS
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="gap-matrix" className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-2">
-            <TabsList className="bg-slate-100 dark:bg-slate-900 p-1 rounded-lg">
-              <TabsTrigger value="gap-matrix" className="gap-2 text-xs sm:text-sm">
-                <Layers className="w-4 h-4" />
-                <span>Syllabus vs. Industry Gap Matrix</span>
+        {/* Tabs: Gap Matrix, Job Roles, Turnkey Modules */}
+        <Tabs defaultValue="gap-matrix" className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
+            <TabsList className="bg-slate-100 dark:bg-slate-900 p-0.5 rounded-lg">
+              <TabsTrigger value="gap-matrix" className="text-xs gap-1.5">
+                <Layers className="w-3.5 h-3.5" />
+                <span>Syllabus vs. Industry Matrix</span>
               </TabsTrigger>
-              <TabsTrigger value="role-simulator" className="gap-2 text-xs sm:text-sm">
-                <Target className="w-4 h-4" />
-                <span>Job Role Readiness</span>
+              <TabsTrigger value="role-simulator" className="text-xs gap-1.5">
+                <Target className="w-3.5 h-3.5" />
+                <span>Role Readiness</span>
               </TabsTrigger>
-              <TabsTrigger value="bridge-plans" className="gap-2 text-xs sm:text-sm">
-                <BookOpen className="w-4 h-4" />
-                <span>Turnkey Bridge Modules ({BRIDGE_MODULES.length})</span>
+              <TabsTrigger value="bridge-plans" className="text-xs gap-1.5">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Bridge Modules ({BRIDGE_MODULES.length})</span>
               </TabsTrigger>
             </TabsList>
 
-            {/* Matrix Search & Category Quick Filter */}
+            {/* Filter Search Bar */}
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input
-                  placeholder="Filter subjects or topics..."
+                  placeholder="Filter subjects..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 pl-8 text-xs w-[180px] sm:w-[220px] bg-white dark:bg-slate-900/80"
+                  className="h-8 pl-7 text-xs w-[160px] sm:w-[200px] bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
                 />
               </div>
 
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="h-8 text-xs w-[130px] bg-white dark:bg-slate-900/80">
-                  <Filter className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                <SelectTrigger className="h-8 text-xs w-[120px] bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                  <Filter className="w-3 h-3 mr-1 text-slate-400" />
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Subjects</SelectItem>
+                  <SelectItem value="all">All Fields</SelectItem>
                   <SelectItem value="systems">Systems & DB</SelectItem>
-                  <SelectItem value="software_eng">Software & Cloud</SelectItem>
+                  <SelectItem value="software_eng">Software/Cloud</SelectItem>
                   <SelectItem value="dsa">Algorithms</SelectItem>
                   <SelectItem value="ai_data">AI & Data</SelectItem>
                   <SelectItem value="core_cs">Core CS</SelectItem>
@@ -578,146 +557,123 @@ export default function CurriculumGapDashboard() {
             </div>
           </div>
 
-          {/* TAB 1: GAP MATRIX TABLE & CARDS */}
-          <TabsContent value="gap-matrix" className="space-y-4">
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 overflow-hidden shadow-sm">
-              <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                {filteredGaps.length === 0 ? (
-                  <div className="p-12 text-center text-slate-500">
-                    <p>No subjects match your filter criteria.</p>
-                    <Button variant="link" onClick={() => { setSearchQuery(""); setSelectedCategory("all"); }} className="mt-2 text-xs">
-                      Reset Filters
-                    </Button>
-                  </div>
-                ) : (
-                  filteredGaps.map((item) => (
-                    <div
-                      key={item.id}
-                      className="p-5 sm:p-6 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40"
-                    >
-                      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                        {/* Subject Title & Badges */}
-                        <div className="space-y-2 lg:max-w-[28%]">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                              {item.subject}
-                            </h3>
-                            {item.gapSeverity === "critical" && (
-                              <Badge className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[10px] font-semibold">
-                                Critical Deficit
-                              </Badge>
-                            )}
-                            {item.gapSeverity === "high" && (
-                              <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-semibold">
-                                High Gap
-                              </Badge>
-                            )}
-                            {item.gapSeverity === "moderate" && (
-                              <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-[10px] font-semibold">
-                                Moderate Gap
-                              </Badge>
-                            )}
-                            {item.gapSeverity === "aligned" && (
-                              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold">
-                                Aligned
-                              </Badge>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                            <span className="capitalize">{item.category.replace("_", " ")}</span>
-                            <span>•</span>
-                            <span>Est. Gap: <strong className="text-slate-800 dark:text-slate-200">{item.gapPercentage}%</strong></span>
-                          </div>
-
-                          <div className="pt-2 text-xs text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1.5">
-                            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                            <span>{item.impactOnPlacements}</span>
-                          </div>
+          {/* TAB 1: GAP MATRIX */}
+          <TabsContent value="gap-matrix" className="space-y-3">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {filteredGaps.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-500">
+                  No subjects match your query.
+                </div>
+              ) : (
+                filteredGaps.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-4 sm:p-5 hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors"
+                  >
+                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                      {/* Left: Subject Info */}
+                      <div className="space-y-1.5 lg:w-[26%]">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">
+                            {item.subject}
+                          </span>
+                          {item.gapSeverity === "critical" && (
+                            <Badge variant="outline" className="text-[10px] py-0 border-rose-500/30 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30">
+                              Critical
+                            </Badge>
+                          )}
+                          {item.gapSeverity === "high" && (
+                            <Badge variant="outline" className="text-[10px] py-0 border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
+                              High Gap
+                            </Badge>
+                          )}
+                          {item.gapSeverity === "moderate" && (
+                            <Badge variant="outline" className="text-[10px] py-0 border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30">
+                              Moderate
+                            </Badge>
+                          )}
+                          {item.gapSeverity === "aligned" && (
+                            <Badge variant="outline" className="text-[10px] py-0 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30">
+                              Aligned
+                            </Badge>
+                          )}
                         </div>
 
-                        {/* Side by Side Comparison Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
-                          {/* Academic Syllabus Box */}
-                          <div className="p-3.5 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 text-xs space-y-1.5">
-                            <div className="flex items-center justify-between text-slate-500 font-semibold tracking-wide uppercase text-[10px]">
-                              <span>Academic Syllabus (Standard)</span>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800">Theory Focus</span>
-                            </div>
-                            <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                              {item.syllabusContent}
-                            </p>
-                          </div>
-
-                          {/* Industry Requirement Box */}
-                          <div className="p-3.5 rounded-lg border border-emerald-500/20 dark:border-emerald-500/20 bg-emerald-500/[0.03] dark:bg-emerald-500/[0.04] text-xs space-y-1.5">
-                            <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400 font-semibold tracking-wide uppercase text-[10px]">
-                              <span>2025/2026 Industry Hiring Demand</span>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">Tested in Rounds</span>
-                            </div>
-                            <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
-                              {item.industryRequirement}
-                            </p>
-                          </div>
+                        <div className="text-[11px] text-slate-400">
+                          {item.gapPercentage}% Syllabus Deficit • {item.creditHours}
                         </div>
 
-                        {/* Recommendation Column */}
-                        <div className="lg:w-[26%] p-3.5 rounded-lg border border-indigo-500/15 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 text-xs space-y-2">
-                          <div className="flex items-center justify-between font-semibold text-indigo-700 dark:text-indigo-300 text-[10px] uppercase">
-                            <span className="flex items-center gap-1">
-                              <Zap className="w-3 h-3 text-indigo-500" />
-                              Actionable Intervention
-                            </span>
-                            <span className="text-slate-500 text-[10px]">{item.creditHours}</span>
-                          </div>
-                          <p className="text-slate-700 dark:text-slate-300 text-xs leading-snug">
-                            {item.recommendedIntervention}
+                        <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium pt-1">
+                          {item.impactOnPlacements}
+                        </p>
+                      </div>
+
+                      {/* Middle: Comparison Columns */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-xs">
+                          <span className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">
+                            Academic Syllabus Focus
+                          </span>
+                          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                            {item.syllabusContent}
+                          </p>
+                        </div>
+
+                        <div className="p-3 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-500/20 text-xs">
+                          <span className="block text-[10px] uppercase tracking-wider font-semibold text-emerald-700 dark:text-emerald-400 mb-1">
+                            2025/2026 Industry Requirement
+                          </span>
+                          <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
+                            {item.industryRequirement}
                           </p>
                         </div>
                       </div>
+
+                      {/* Right: Recommended Fix */}
+                      <div className="lg:w-[26%] p-3 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 text-xs space-y-1">
+                        <span className="block text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
+                          Recommended Action
+                        </span>
+                        <p className="text-slate-700 dark:text-slate-300 leading-normal">
+                          {item.recommendedIntervention}
+                        </p>
+                      </div>
                     </div>
-                  ))
-                )}
-              </div>
+                  </div>
+                ))
+              )}
             </div>
           </TabsContent>
 
           {/* TAB 2: ROLE READINESS SIMULATOR */}
-          <TabsContent value="role-simulator" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Selector List */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 px-1">
-                  Select Target Placement Role
-                </h3>
+          <TabsContent value="role-simulator" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* Role Selectors */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-1">
+                  Select Role Profile
+                </span>
                 {ROLE_PROFILES.map((rp) => {
                   const isSelected = selectedRole.id === rp.id;
                   return (
                     <div
                       key={rp.id}
                       onClick={() => setSelectedRole(rp)}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                      className={`p-3.5 rounded-lg border transition-colors cursor-pointer text-xs ${
                         isSelected
-                          ? "border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10 shadow-sm"
-                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700"
+                          ? "border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 hover:border-slate-300 dark:hover:border-slate-700"
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <h4 className="font-bold text-sm">{rp.role}</h4>
-                        <Badge
-                          variant="secondary"
-                          className={
-                            rp.marketDemand === "Extreme"
-                              ? "bg-rose-500/10 text-rose-600 text-[10px]"
-                              : "bg-indigo-500/10 text-indigo-600 text-[10px]"
-                          }
-                        >
-                          {rp.marketDemand} Demand
-                        </Badge>
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">
+                          {rp.role}
+                        </span>
+                        <span className="text-[10px] text-slate-400">{rp.marketDemand} Demand</span>
                       </div>
-                      <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-                        <span>Pkg: <strong>{rp.avgStartingPackage}</strong></span>
-                        <span>Coverage: <strong>{rp.syllabusCoverage}%</strong></span>
+                      <div className="mt-1.5 flex items-center justify-between text-slate-500">
+                        <span>CTC: {rp.avgStartingPackage}</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">{rp.syllabusCoverage}% Match</span>
                       </div>
                       <Progress value={rp.syllabusCoverage} className="h-1 mt-2" />
                     </div>
@@ -725,88 +681,82 @@ export default function CurriculumGapDashboard() {
                 })}
               </div>
 
-              {/* Right Diagnostic Inspector */}
+              {/* Role Details */}
               <div className="lg:col-span-2">
-                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm h-full">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
+                <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 shadow-none h-full">
+                  <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="text-xl flex items-center gap-2">
-                          <span>{selectedRole.role}</span>
-                          <Badge variant="outline" className="text-xs font-normal">
-                            Target CTC: {selectedRole.avgStartingPackage}
-                          </Badge>
+                        <CardTitle className="text-base font-bold">
+                          {selectedRole.role}
                         </CardTitle>
-                        <CardDescription className="text-xs mt-1">
-                          Calculated against Tier-1 Product & Unicorn hiring rubrics for this discipline.
-                        </CardDescription>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Target Entry CTC: {selectedRole.avgStartingPackage}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                        <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                           {selectedRole.syllabusCoverage}%
                         </span>
-                        <span className="block text-[11px] text-slate-500">Current Syllabus Match</span>
+                        <span className="block text-[10px] text-slate-400">Syllabus Match</span>
                       </div>
                     </div>
                   </CardHeader>
 
-                  <CardContent className="space-y-6">
+                  <CardContent className="p-5 space-y-5">
                     <div>
-                      <h5 className="text-xs font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1.5 mb-3">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        Critical Missing Skills In Current Academic Syllabus
-                      </h5>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <span className="block text-[11px] font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-2.5">
+                        Missing Skills in College Syllabus
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {selectedRole.criticalMissingSkills.map((skill, idx) => (
                           <div
                             key={idx}
-                            className="p-3 rounded-lg border border-rose-500/20 bg-rose-50/50 dark:bg-rose-950/20 flex items-center gap-2 text-xs"
+                            className="p-2.5 rounded-md border border-rose-500/20 bg-rose-50/40 dark:bg-rose-950/20 text-xs text-slate-800 dark:text-slate-200 flex items-center gap-2"
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-                            <span className="font-medium text-slate-800 dark:text-slate-200">{skill}</span>
+                            <span>{skill}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="h-px bg-slate-200 dark:bg-slate-800" />
-
                     <div>
-                      <h5 className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mb-3">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Recommended Coursework / Elective Injection
-                      </h5>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <span className="block text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2.5">
+                        Recommended Elective Additions
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {selectedRole.recommendedElectives.map((elec, idx) => (
                           <div
                             key={idx}
-                            className="p-3 rounded-lg border border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center gap-2 text-xs"
+                            className="p-2.5 rounded-md border border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-950/20 text-xs text-slate-800 dark:text-slate-200 flex items-center gap-2"
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                            <span className="font-medium text-slate-800 dark:text-slate-200">{elec}</span>
+                            <span>{elec}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Action box */}
-                    <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between flex-wrap gap-4">
+                    <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between flex-wrap gap-3">
                       <div>
-                        <h6 className="font-semibold text-xs">Deploy Targeted Diagnostic to Students</h6>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          Run an automated 45-minute Voke test to evaluate which students already bridge these gaps.
+                        <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">
+                          Automated Student Diagnostic
+                        </span>
+                        <p className="text-[11px] text-slate-500">
+                          Evaluate your batch with Voke's 45-min diagnostic test.
                         </p>
                       </div>
                       <Button
                         size="sm"
                         onClick={() => {
-                          toast.success(`Assessment drive initiated for ${selectedRole.role}!`);
+                          toast.success(`Assessment drive initiated for ${selectedRole.role}`);
                           navigate("/college/dashboard");
                         }}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs gap-1.5"
+                        className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white"
                       >
-                        <Zap className="w-3.5 h-3.5" />
-                        <span>Schedule Batch Diagnostic</span>
+                        <Zap className="w-3 h-3 mr-1" />
+                        <span>Schedule Test</span>
                       </Button>
                     </div>
                   </CardContent>
@@ -815,51 +765,45 @@ export default function CurriculumGapDashboard() {
             </div>
           </TabsContent>
 
-          {/* TAB 3: TURNKEY BRIDGE MODULES */}
-          <TabsContent value="bridge-plans" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* TAB 3: TURNKEY MODULES */}
+          <TabsContent value="bridge-plans" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {BRIDGE_MODULES.map((mod) => (
                 <Card
                   key={mod.code}
-                  className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm hover:border-emerald-500/50 transition-all group"
+                  className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 shadow-none hover:border-emerald-500/40 transition-colors"
                 >
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-2.5">
                     <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                      <Badge variant="outline" className="font-mono text-[10px]">
-                        {mod.code}
-                      </Badge>
-                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium text-[11px]">
-                        <Clock className="w-3 h-3" />
+                      <span className="font-mono font-medium text-[11px]">{mod.code}</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[11px]">
                         {mod.duration}
                       </span>
                     </div>
-                    <CardTitle className="text-base font-bold group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                    <CardTitle className="text-sm sm:text-base font-bold">
                       {mod.title}
                     </CardTitle>
-                    <CardDescription className="text-xs">
-                      Ideal for: <strong>{mod.targetSemester}</strong>
-                    </CardDescription>
+                    <p className="text-xs text-slate-500">
+                      Target: {mod.targetSemester} • {mod.modulesCount} Lectures + Labs
+                    </p>
                   </CardHeader>
 
-                  <CardContent className="space-y-4 text-xs">
-                    <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 leading-relaxed">
-                      <strong>Expected Student Outcome:</strong> {mod.outcome}
+                  <CardContent className="space-y-3 text-xs">
+                    <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-300">
+                      {mod.outcome}
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <span className="text-slate-500 font-medium">
-                        {mod.modulesCount} Structured Lectures + 4 Hands-on Projects
-                      </span>
+                    <div className="flex justify-end pt-1">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          toast.success(`Lesson plan for ${mod.code} downloaded!`);
+                          toast.success(`Syllabus for ${mod.code} downloaded!`);
                         }}
-                        className="text-xs h-8 gap-1.5"
+                        className="text-xs h-7 border-slate-200 dark:border-slate-800"
                       >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>Syllabus PDF</span>
+                        <Download className="w-3 h-3 mr-1" />
+                        <span>Download Syllabus</span>
                       </Button>
                     </div>
                   </CardContent>
@@ -870,57 +814,50 @@ export default function CurriculumGapDashboard() {
         </Tabs>
       </main>
 
-      {/* MODAL: EXPORT ACADEMIC COUNCIL REPORT */}
+      {/* EXPORT MODAL */}
       <Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
               <span>Export Board of Studies Report</span>
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Generate an executive curriculum gap audit document ready for review by the Academic Council, HODs, and Placement Cell.
+              Generates an executive curriculum gap audit document for faculty and academic councils.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 py-2 text-xs">
-            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Institution:</span>
-                <span className="font-medium">Engineering Campus / College</span>
-              </div>
+          <div className="space-y-2 py-2 text-xs">
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
               <div className="flex justify-between">
                 <span className="text-slate-500">Department:</span>
-                <span className="font-medium uppercase">{department}</span>
+                <span className="font-semibold uppercase">{department}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Benchmark Year:</span>
-                <span className="font-medium">2025/2026 Hiring Rubric</span>
+                <span className="text-slate-500">Benchmark:</span>
+                <span className="font-medium">2025/2026 Tech Rubric</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Audit Gaps Found:</span>
-                <span className="font-medium text-rose-600">{criticalCount} Critical, {highCount} High Deficit</span>
+                <span className="text-slate-500">Gaps Detected:</span>
+                <span className="font-semibold text-rose-600">{criticalCount} Critical, {highCount} High Deficit</span>
               </div>
             </div>
-            <p className="text-[11px] text-slate-500">
-              Includes line-by-line course addendums, required lab infrastructure recommendations, and accredited hours estimates.
-            </p>
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setExportModalOpen(false)}>
+            <Button variant="outline" size="sm" onClick={() => setExportModalOpen(false)} className="text-xs">
               Cancel
             </Button>
             <Button
               size="sm"
               onClick={() => {
                 setExportModalOpen(false);
-                toast.success("Executive Curriculum-Gap Report exported successfully!");
+                toast.success("Curriculum-Gap Report exported successfully!");
               }}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white"
+              className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white"
             >
-              <Download className="w-4 h-4 mr-1.5" />
-              Download Report (PDF)
+              <Download className="w-3.5 h-3.5 mr-1" />
+              Download Report
             </Button>
           </DialogFooter>
         </DialogContent>
