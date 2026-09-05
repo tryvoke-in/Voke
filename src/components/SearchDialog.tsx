@@ -21,6 +21,7 @@ import {
   Briefcase,
   Zap,
   Users,
+  GraduationCap,
   HelpCircle,
   User,
   ArrowRight,
@@ -158,7 +159,7 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
     : allQuestions.slice(0, 5); // Fallback: show first 5 popular questions when empty
 
   const navigationItems = [
-    { label: "Community Forum", path: "/community", icon: Users },
+    { label: "Curriculum Gap Dashboard", path: "/curriculum-gap", icon: GraduationCap },
     { label: "Help & FAQ Center", path: "/help", icon: HelpCircle },
     { label: "Profile Settings", path: "/profile", icon: User },
   ];

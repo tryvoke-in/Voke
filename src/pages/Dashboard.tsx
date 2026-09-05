@@ -10,7 +10,7 @@ import {
   FileText, LogOut, TrendingUp, Upload, Play, Target, Users, Mic, Settings,
   Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search, X,
   Globe, Briefcase, FileQuestion, ChevronRight, ChevronDown, ChevronUp, Sparkles, Lock, LayoutDashboard,
-  Bot, Video, Compass, Crown, Terminal, Brain
+  Bot, Video, Compass, Crown, Terminal, Brain, GraduationCap
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ProgressPanel } from "@/components/dashboard/ProgressPanel";
@@ -549,12 +549,12 @@ const Dashboard = () => {
       hoverBg: "hover:bg-blue-500/10 hover:text-blue-500",
     },
     {
-      id: "community",
-      label: "Community",
-      icon: Users,
-      path: "/community",
-      color: "text-sky-500",
-      hoverBg: "hover:bg-sky-500/10 hover:text-sky-500",
+      id: "curriculum-gap",
+      label: "Curriculum Gap",
+      icon: GraduationCap,
+      path: "/curriculum-gap",
+      color: "text-emerald-500",
+      hoverBg: "hover:bg-emerald-500/10 hover:text-emerald-500",
     },
   ];
 
@@ -920,13 +920,13 @@ const Dashboard = () => {
                             </CardContent>
                           </Card>
 
-                          <Card id="tour-community" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/community")}>
+                          <Card id="tour-curriculum-gap" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/curriculum-gap")}>
                             <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                              <div className="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <Users className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+                              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <GraduationCap className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                               </div>
-                              <h4 className="font-semibold text-sm">Community</h4>
-                              <p className="text-xs text-muted-foreground mt-1">Connect & Discuss</p>
+                              <h4 className="font-semibold text-sm">Curriculum Gap</h4>
+                              <p className="text-xs text-muted-foreground mt-1">For Institutions</p>
                             </CardContent>
                           </Card>
                         </div>

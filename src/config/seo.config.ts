@@ -323,6 +323,25 @@ export const PUBLIC_ROUTES_REGISTRY: Record<string, RouteSEOInput> = {
         ]
       })
   },
+  "/curriculum-gap": {
+    path: "/curriculum-gap",
+    title: "Curriculum-Gap Dashboard for Institutions & Colleges – Voke",
+    description:
+      "Pinpoint engineering syllabus deficits against 2025/2026 tech hiring benchmarks. Executive curriculum gap analysis, job role readiness, and turnkey bridge modules for institutions.",
+    keywords: ["curriculum gap analysis", "engineering syllabus audit", "college placement readiness", "institutional tech benchmark", "board of studies curriculum bridge"],
+    changefreq: "weekly",
+    priority: 0.8,
+    structuredData: (canonicalUrl) =>
+      createPageSchemaGraph({
+        canonicalUrl,
+        pageName: "Curriculum-Gap Dashboard for Institutions",
+        pageDescription: "Audit college engineering curricula against real industry hiring criteria.",
+        breadcrumbs: [
+          { name: "Home", url: SITE_URL },
+          { name: "Curriculum Gap", url: "/curriculum-gap" }
+        ]
+      })
+  },
   "/leaderboard": {
     path: "/leaderboard",
     title: "Global Student & Developer Interview Leaderboard – Voke",

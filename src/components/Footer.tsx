@@ -101,7 +101,7 @@ export const Footer = () => {
               <ul className="space-y-2.5">
                 {[
                   { label: "Daily Interview Challenge", to: "/daily-challenge" },
-                  { label: "Tech Candidate Forum", to: "/community" },
+                  { label: "Curriculum Gap (Institutions)", to: "/curriculum-gap" },
                   { label: "Interview Leaderboard", to: "/leaderboard" },
                   { label: "Job Recommendations", to: "/job-recommendations" },
                   { label: "Engineering Blog", to: "/blog" },

@@ -125,9 +125,9 @@ const PLATFORM_NAV_MAP = [
     label: "View Pricing & Upgrade"
   },
   {
-    keywords: ["community", "forum", "discussion", "members"],
-    path: "/community",
-    label: "Join Community Forum"
+    keywords: ["curriculum", "curriculum gap", "institution", "college syllabus", "syllabus gap", "bos"],
+    path: "/curriculum-gap",
+    label: "Open Curriculum Gap Dashboard"
   },
   {
     keywords: ["help", "support", "faq", "contact", "guide"],
