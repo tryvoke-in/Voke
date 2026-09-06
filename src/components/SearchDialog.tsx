@@ -22,6 +22,7 @@ import {
   Zap,
   Users,
   GraduationCap,
+  Award,
   HelpCircle,
   User,
   ArrowRight,
@@ -159,6 +160,7 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
     : allQuestions.slice(0, 5); // Fallback: show first 5 popular questions when empty
 
   const navigationItems = [
+    { label: "Skill India / iGOT Competency Hub", path: "/skill-india", icon: Award },
     { label: "Curriculum Gap Dashboard", path: "/curriculum-gap", icon: GraduationCap },
     { label: "Help & FAQ Center", path: "/help", icon: HelpCircle },
     { label: "Profile Settings", path: "/profile", icon: User },

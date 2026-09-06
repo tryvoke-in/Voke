@@ -8,7 +8,7 @@ export const ProfileCompletionGuard = ({ children }: { children: React.ReactNode
     const isSSR = typeof window === "undefined";
     const isPublicPage = [
         "/", "/auth", "/pricing", "/companies", "/dsa-sheet", "/question-practice",
-        "/daily-challenge", "/elite-prep", "/curriculum-gap", "/community", "/leaderboard",
+        "/daily-challenge", "/elite-prep", "/curriculum-gap", "/skill-india", "/community", "/leaderboard",
         "/help", "/privacy", "/about", "/terms", "/contact", "/waitlist"
     ].includes(location.pathname) || location.pathname.startsWith("/companies/") || location.pathname.startsWith("/blog");
 

@@ -10,7 +10,7 @@ import {
   FileText, LogOut, TrendingUp, Upload, Play, Target, Users, Mic, Settings,
   Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search, X,
   Globe, Briefcase, FileQuestion, ChevronRight, ChevronDown, ChevronUp, Sparkles, Lock, LayoutDashboard,
-  Bot, Video, Compass, Crown, Terminal, Brain, GraduationCap
+  Bot, Video, Compass, Crown, Terminal, Brain, GraduationCap, Award
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ProgressPanel } from "@/components/dashboard/ProgressPanel";
@@ -501,12 +501,12 @@ const Dashboard = () => {
       hoverBg: "hover:bg-pink-500/10 hover:text-pink-500",
     },
     {
-      id: "resume-builder",
-      label: "Resume Builder",
-      icon: FileText,
-      path: "/resume-builder",
-      color: "text-emerald-500",
-      hoverBg: "hover:bg-emerald-500/10 hover:text-emerald-500",
+      id: "skill-india",
+      label: "Skill India / iGOT",
+      icon: Award,
+      path: "/skill-india",
+      color: "text-amber-500",
+      hoverBg: "hover:bg-amber-500/10 hover:text-amber-500",
     },
     {
       id: "elite-prep",
@@ -890,13 +890,13 @@ const Dashboard = () => {
                         className="overflow-hidden"
                       >
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                          <Card id="tour-resume-builder" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/resume-builder")}>
+                          <Card id="tour-skill-india" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-amber-500" onClick={() => navigate("/skill-india")}>
                             <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <FileText className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                              <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <Award className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                               </div>
-                              <h4 className="font-semibold text-sm">Resume Builder</h4>
-                              <p className="text-xs text-muted-foreground mt-1">AI-Powered ATS Resume</p>
+                              <h4 className="font-semibold text-sm">Skill India & iGOT</h4>
+                              <p className="text-xs text-muted-foreground mt-1">Industry Demand Alignment</p>
                             </CardContent>
                           </Card>
 

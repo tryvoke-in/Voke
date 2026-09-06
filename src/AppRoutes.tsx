@@ -44,6 +44,7 @@ const PeerSessionRoom = lazy(() => import("./pages/PeerSessionRoom"));
 const RatePeerSession = lazy(() => import("./pages/RatePeerSession"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const CurriculumGapDashboard = lazy(() => import("./pages/CurriculumGapDashboard"));
+const SkillIndiaHub = lazy(() => import("./pages/SkillIndiaHub"));
 const Help = lazy(() => import("./pages/Help"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const About = lazy(() => import("./pages/About"));
@@ -103,6 +104,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/curriculum-gap" element={<ProtectedRoute><CurriculumGapDashboard /></ProtectedRoute>} />
         <Route path="/community" element={<Navigate to="/curriculum-gap" replace />} />
+        <Route path="/skill-india" element={<ProtectedRoute><SkillIndiaHub /></ProtectedRoute>} />
         
         <Route path="/interview/new" element={<ProtectedRoute><InterviewNew /></ProtectedRoute>} />
         <Route path="/interview/results/:id" element={<ProtectedRoute><InterviewResults /></ProtectedRoute>} />

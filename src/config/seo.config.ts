@@ -342,6 +342,25 @@ export const PUBLIC_ROUTES_REGISTRY: Record<string, RouteSEOInput> = {
         ]
       })
   },
+  "/skill-india": {
+    path: "/skill-india",
+    title: "Skill India & iGOT Karmayogi Competency Hub – Voke",
+    description:
+      "Bridge the gap between national skilling qualifications and 2025/2026 industry demand. NSQF Levels 5-7 alignment, iGOT FRAC competency mapping, and dream job pathways.",
+    keywords: ["Skill India Digital", "iGOT Karmayogi", "NSQF job roles", "competency alignment", "industry skill gap", "FRAC model", "Smart India Hackathon"],
+    changefreq: "daily",
+    priority: 0.85,
+    structuredData: (canonicalUrl) =>
+      createPageSchemaGraph({
+        canonicalUrl,
+        pageName: "Skill India & iGOT Competency Hub",
+        pageDescription: "Align skill development programs with emerging job market demands.",
+        breadcrumbs: [
+          { name: "Home", url: SITE_URL },
+          { name: "Skill India Hub", url: "/skill-india" }
+        ]
+      })
+  },
   "/leaderboard": {
     path: "/leaderboard",
     title: "Global Student & Developer Interview Leaderboard – Voke",

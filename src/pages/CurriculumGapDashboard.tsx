@@ -440,7 +440,7 @@ export default function CurriculumGapDashboard() {
           <div className="max-w-3xl mx-auto pt-6 space-y-6">
             <div className="text-center space-y-2">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-                <Sparkles className="w-3 h-3 text-emerald-600" />
+                
                 <span>AI Curriculum Benchmarking</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
@@ -615,7 +615,6 @@ export default function CurriculumGapDashboard() {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4" />
                         <span>Analyze & Compare Curriculum Gaps</span>
                       </>
                     )}
