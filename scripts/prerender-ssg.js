@@ -47,7 +47,13 @@ if (typeof global.window === 'undefined') {
       getElementsByClassName: () => [],
       querySelector: () => null,
       querySelectorAll: () => [],
-      documentElement: { classList: { add: () => {}, remove: () => {} }, style: {} },
+      documentElement: {
+        classList: { add: () => {}, remove: () => {}, contains: () => false, toggle: () => false },
+        style: {},
+        getAttribute: () => null,
+        setAttribute: () => {},
+        removeAttribute: () => {},
+      },
       head: { querySelector: () => null, appendChild: () => {} },
       body: { querySelector: () => null, appendChild: () => {} },
       title: '',
@@ -272,37 +278,6 @@ const PUBLIC_ROUTES = [
       "eventStatus": "https://schema.org/EventScheduled",
       "location": { "@type": "VirtualLocation", "url": `${SITE_URL}/daily-challenge` },
       "organizer": { "@type": "Organization", "name": "Voke", "url": SITE_URL }
-    }
-  },
-  {
-    path: '/elite-prep',
-    title: 'Elite Interview Preparation Program – Voke',
-    description: 'Accelerated 1-on-1 style AI coaching for tier-1 tech company placement. High-intensity mock interviews, system design drills, and resume optimization.',
-    keywords: ['elite prep program', 'MAANG interview coaching', 'tier 1 placement prep', 'system design mock interview'],
-    changefreq: 'weekly',
-    priority: 0.8,
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "Service",
-      "name": "Voke Elite Prep Coaching",
-      "description": "Personalized tier-1 interview preparation program.",
-      "provider": { "@type": "Organization", "name": "Voke", "url": SITE_URL },
-      "url": `${SITE_URL}/elite-prep`
-    }
-  },
-  {
-    path: '/community',
-    title: 'Tech Student & Job Seeker Community Hub – Voke',
-    description: 'Connect with B.Tech students and tech job seekers. Share interview experiences, study strategies, peer practice feedback, and career guidance.',
-    keywords: ['tech community', 'interview experience sharing', 'B.Tech placement forum', 'peer mock practice'],
-    changefreq: 'daily',
-    priority: 0.7,
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "DiscussionForumPosting",
-      "headline": "Voke Tech Candidate & Student Community",
-      "url": `${SITE_URL}/community`,
-      "author": { "@type": "Organization", "name": "Voke Community" }
     }
   },
   {
@@ -622,15 +597,23 @@ async function main() {
   // 1. Load server bundle
   const serverModule = await import(`file://${serverEntryPath}`);
 
+  const publicDir = path.resolve(__dirname, '../public');
+
   // 2. Generate sitemap.xml
   const sitemapXml = generateSitemap();
   fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemapXml, 'utf-8');
-  console.log('  ✅ Generated dist/sitemap.xml');
+  if (fs.existsSync(publicDir)) {
+    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemapXml, 'utf-8');
+  }
+  console.log('  ✅ Generated dist/sitemap.xml and public/sitemap.xml');
 
   // 3. Generate robots.txt
   const robotsTxt = generateRobotsTxt();
   fs.writeFileSync(path.join(distDir, 'robots.txt'), robotsTxt, 'utf-8');
-  console.log('  ✅ Generated dist/robots.txt');
+  if (fs.existsSync(publicDir)) {
+    fs.writeFileSync(path.join(publicDir, 'robots.txt'), robotsTxt, 'utf-8');
+  }
+  console.log('  ✅ Generated dist/robots.txt and public/robots.txt');
 
   // 4. Pre-render full React component HTML tree into dist/<route>/index.html
   const templateHtml = fs.readFileSync(indexHtmlPath, 'utf-8');
@@ -644,9 +627,13 @@ async function main() {
       if (page.path === '/') {
         fs.writeFileSync(indexHtmlPath, fullPrerenderedHtml, 'utf-8');
       } else {
-        const targetDir = path.join(distDir, page.path.replace(/^\//, ''));
+        const cleanRoute = page.path.replace(/^\//, '');
+        const targetDir = path.join(distDir, cleanRoute);
         fs.mkdirSync(targetDir, { recursive: true });
         fs.writeFileSync(path.join(targetDir, 'index.html'), fullPrerenderedHtml, 'utf-8');
+        
+        // Also write flat .html for cleanUrls compatibility
+        fs.writeFileSync(path.join(distDir, `${cleanRoute}.html`), fullPrerenderedHtml, 'utf-8');
       }
       prerenderCount++;
     } catch (err) {
@@ -656,9 +643,11 @@ async function main() {
       if (page.path === '/') {
         fs.writeFileSync(indexHtmlPath, fallbackHtml, 'utf-8');
       } else {
-        const targetDir = path.join(distDir, page.path.replace(/^\//, ''));
+        const cleanRoute = page.path.replace(/^\//, '');
+        const targetDir = path.join(distDir, cleanRoute);
         fs.mkdirSync(targetDir, { recursive: true });
         fs.writeFileSync(path.join(targetDir, 'index.html'), fallbackHtml, 'utf-8');
+        fs.writeFileSync(path.join(distDir, `${cleanRoute}.html`), fallbackHtml, 'utf-8');
       }
     }
   }

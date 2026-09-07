@@ -46,7 +46,7 @@ const QuestionPractice = () => {
     const [openTopic, setOpenTopic] = useState(false);
 
     // Loading state
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [loadingPhase, setLoadingPhase] = useState(0);
 
     // Solved questions tracking

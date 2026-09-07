@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -10,12 +9,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
     Search, ArrowLeft, ExternalLink, Loader2, Calendar,
-    TrendingUp, Award, Layers, AlertCircle, Code2
+    TrendingUp, Award, Layers, AlertCircle, Code2, CheckCircle2, Sparkles, BookOpen
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { motion } from "framer-motion";
+import {
+    getStaticCompany,
+    getStaticCompanyQuestions,
+    StaticCompanyItem,
+    StaticCompanyQuestion
+} from "@/data/staticCompanyData";
 
-const PERIODS = ["Thirty Days", "Three Months", "Six Months", "More Than Six Months"];
+const PERIODS = ["All", "Thirty Days", "Three Months", "Six Months", "More Than Six Months"];
 
 const COMPANY_LOGOS: Record<string, string> = {
     "google": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
@@ -63,73 +68,102 @@ const COMPANY_LOGOS: Record<string, string> = {
     "uber eats": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Uber_Eats_2018_Logo_Suite_stacked.png",
 };
 
+function formatSlugToName(slug: string): string {
+    if (!slug) return "";
+    const lower = slug.toLowerCase();
+    if (lower === "amd") return "AMD";
+    if (lower === "ibm") return "IBM";
+    if (lower === "github") return "GitHub";
+    if (lower === "gitlab") return "GitLab";
+    if (lower === "twitter") return "Twitter (X)";
+    return slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, " ");
+}
+
 const CompanyDetail = () => {
-    const { slug } = useParams();
+    const { slug = "" } = useParams<{ slug: string }>();
     const navigate = useNavigate();
-    const [company, setCompany] = useState<any>(null);
-    const [questions, setQuestions] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [loadingQuestions, setLoadingQuestions] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedPeriod, setSelectedPeriod] = useState("Thirty Days");
+
+    // 1. Instant Static Resolution for SSR & zero-latency initial render
+    const staticComp = getStaticCompany(slug);
+    const initialCompany = staticComp || {
+        id: slug,
+        name: formatSlugToName(slug),
+        slug: slug,
+        totalQuestions: 0,
+        periods: ["All"],
+        questionsByPeriod: {}
+    };
+
+    // Determine default non-empty period tab
+    const getBestInitialPeriod = () => {
+        if (staticComp) {
+            if (staticComp.questionsByPeriod["Thirty Days"]?.length) return "Thirty Days";
+            if (staticComp.questionsByPeriod["All"]?.length) return "All";
+            if (staticComp.periods.length > 0) return staticComp.periods[0];
+        }
+        return "All";
+    };
+
+    const [company, setCompany] = useState<any>(initialCompany);
+    const [selectedPeriod, setSelectedPeriod] = useState<string>(getBestInitialPeriod);
+    const [questions, setQuestions] = useState<any[]>(() => getStaticCompanyQuestions(slug, getBestInitialPeriod()));
+    const [loading, setLoading] = useState<boolean>(false);
+    const [loadingQuestions, setLoadingQuestions] = useState<boolean>(false);
+    const [searchQuery, setSearchQuery] = useState<string>("");
 
     // Helper to get logo with fallbacks
     const getCompanyLogoUrl = (companyName: string) => {
-        // 1. Static map for major companies
         const logo = COMPANY_LOGOS[companyName.toLowerCase()];
-        if (logo) {
-            return logo;
-        }
-
-        // 2. Google Favicon API (highly reliable, no DNS blocks)
-        // Clean name: remove special chars, spaces, lowercase
+        if (logo) return logo;
         const cleanName = companyName.toLowerCase().replace(/[^a-z0-9]/g, '');
         return `https://www.google.com/s2/favicons?domain=${cleanName}.com&sz=128`;
     };
 
+    // Background refresh from Supabase (graceful progressive enhancement)
     useEffect(() => {
-        if (slug) fetchCompany();
-    }, [slug]);
+        if (!slug) return;
+        let isMounted = true;
 
-    useEffect(() => {
-        if (company) fetchQuestions();
-    }, [company, selectedPeriod]);
+        const syncWithDb = async () => {
+            try {
+                const { data: compData, error: compErr } = await supabase
+                    .from('companies')
+                    .select('*')
+                    .eq('slug', slug)
+                    .maybeSingle();
 
-    const fetchCompany = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('companies')
-                .select('*')
-                .eq('slug', slug)
-                .single();
+                if (!compErr && compData && isMounted) {
+                    setCompany((prev: any) => ({ ...prev, ...compData }));
 
-            if (error) throw error;
-            setCompany(data);
-        } catch (error) {
-            console.error("Error fetching company:", error);
-            // set error or redirect
-        } finally {
-            setLoading(false);
-        }
-    };
+                    const { data: qData, error: qErr } = await supabase
+                        .from('company_questions')
+                        .select('*')
+                        .eq('company_id', compData.id)
+                        .eq('period', selectedPeriod)
+                        .order('frequency', { ascending: false });
 
-    const fetchQuestions = async () => {
-        setLoadingQuestions(true);
-        try {
-            // Mapping period names if necessary, assuming exact match from seed
-            const { data, error } = await supabase
-                .from('company_questions')
-                .select('*')
-                .eq('company_id', company.id)
-                .eq('period', selectedPeriod)
-                .order('frequency', { ascending: false });
+                    if (!qErr && qData && qData.length > 0 && isMounted) {
+                        setQuestions(qData);
+                    }
+                }
+            } catch (err) {
+                // Keep static dataset on any network/database errors
+            }
+        };
 
-            if (error) throw error;
-            setQuestions(data || []);
-        } catch (error) {
-            console.error("Error fetching questions:", error);
-        } finally {
-            setLoadingQuestions(false);
+        syncWithDb();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [slug, selectedPeriod]);
+
+    // Handle tab change
+    const handlePeriodChange = (newPeriod: string) => {
+        setSelectedPeriod(newPeriod);
+        const staticList = getStaticCompanyQuestions(slug, newPeriod);
+        if (staticList.length > 0) {
+            setQuestions(staticList);
         }
     };
 
@@ -139,74 +173,85 @@ const CompanyDetail = () => {
     );
 
     const getDifficultyColor = (diff: string) => {
-        switch (diff.toUpperCase()) {
-            case 'EASY': return 'text-green-500 bg-green-500/10 border-green-500/20';
-            case 'MEDIUM': return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
-            case 'HARD': return 'text-red-500 bg-red-500/10 border-red-500/20';
-            default: return 'text-gray-500 bg-gray-500/10';
+        switch (diff?.toUpperCase()) {
+            case 'EASY': return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+            case 'MEDIUM': return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
+            case 'HARD': return 'text-rose-500 bg-rose-500/10 border-rose-500/20';
+            default: return 'text-gray-500 bg-gray-500/10 border-gray-500/20';
         }
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
-    }
-
-    if (!company) {
-        return (
-            <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-                <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                <p className="text-lg text-muted-foreground">Company not found</p>
-                <Button onClick={() => navigate('/companies')}>Back to Companies</Button>
-            </div>
-        );
-    }
+    const companyName = company?.name || formatSlugToName(slug) || "Tech Company";
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background text-foreground flex flex-col">
             <SEO
-                title={`${company.name} Technical & Behavioral Interview Questions | Voke`}
-                description={`Practice top ${company.name} technical interview questions. Master ${company.name} coding problems, system design questions, and mock interview practice on Voke.`}
-                canonicalPath={`/companies/${company.slug}`}
+                title={`${companyName} Interview Questions & AI Practice | Voke`}
+                description={`Practice real ${companyName} technical and behavioral interview questions. Filter questions by frequency, difficulty, and topics with instant AI evaluation on Voke.`}
+                canonicalPath={`/companies/${slug}`}
             />
             <Navbar />
 
-            <main className="container mx-auto px-4 py-8 max-w-5xl">
+            <main className="container mx-auto px-4 py-8 max-w-5xl flex-1">
                 {/* Header */}
                 <div className="mb-8">
                     <Button variant="ghost" className="mb-4 pl-0 hover:bg-transparent hover:text-primary" onClick={() => navigate('/companies')}>
-                        <ArrowLeft className="h-4 w-4 mr-2" /> Back to Companies
+                        <ArrowLeft className="h-4 w-4 mr-2" /> Back to All Companies
                     </Button>
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="flex items-center gap-4">
-                            <div className="w-20 h-20 rounded-2xl bg-white p-2 shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden">
+                            <div className="w-20 h-20 rounded-2xl bg-white p-2 shadow-sm border border-border/50 flex items-center justify-center overflow-hidden shrink-0">
                                 <img
-                                    src={getCompanyLogoUrl(company.name)}
+                                    src={getCompanyLogoUrl(companyName)}
                                     crossOrigin="anonymous"
                                     onError={(e) => {
-                                        // Final fallback to UI Avatars
                                         const target = e.currentTarget;
-                                        // Prevent infinite loop if fallback also fails
                                         if (target.src.includes('ui-avatars.com')) return;
-                                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random&color=fff&size=64`;
+                                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&background=random&color=fff&size=64`;
                                     }}
-                                    alt={`${company.name} logo`}
+                                    alt={`${companyName} logo`}
                                     className="w-full h-full object-contain"
                                 />
                             </div>
                             <div>
-                                <h1 className="text-3xl font-bold text-foreground">{company.name}</h1>
-                                <p className="text-muted-foreground flex items-center gap-2 mt-1">
-                                    <Layers className="h-4 w-4" />
-                                    Top Interview Questions
+                                <h1 className="text-3xl font-bold text-foreground">{companyName} Interview Questions</h1>
+                                <p className="text-muted-foreground flex items-center gap-2 mt-1 text-sm">
+                                    <Layers className="h-4 w-4 text-primary" />
+                                    Curated technical problems, DSA questions & coding interview rounds
                                 </p>
                             </div>
                         </div>
+
+                        <div className="flex gap-2">
+                            <Button
+                                className="bg-primary text-primary-foreground font-medium shadow-md hover:bg-primary/90 gap-2"
+                                onClick={() => navigate(`/voice-assistant?company=${encodeURIComponent(companyName)}`)}
+                            >
+                                <Sparkles className="h-4 w-4" /> Start AI Mock Interview
+                            </Button>
+                        </div>
                     </div>
+                </div>
+
+                {/* Company Highlights Bar */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <Card className="bg-card/50 border-border/50 p-4">
+                        <p className="text-xs text-muted-foreground">Target Role</p>
+                        <p className="text-base font-semibold mt-1">Software Engineer (SDE I / II)</p>
+                    </Card>
+                    <Card className="bg-card/50 border-border/50 p-4">
+                        <p className="text-xs text-muted-foreground">Problem Count</p>
+                        <p className="text-base font-semibold mt-1">{questions.length > 0 ? `${questions.length}+ Verified` : "Top Curated"}</p>
+                    </Card>
+                    <Card className="bg-card/50 border-border/50 p-4">
+                        <p className="text-xs text-muted-foreground">Assessment Type</p>
+                        <p className="text-base font-semibold mt-1">DSA & System Design</p>
+                    </Card>
+                    <Card className="bg-card/50 border-border/50 p-4">
+                        <p className="text-xs text-muted-foreground">Preparation Mode</p>
+                        <p className="text-base font-semibold mt-1 text-primary">Live AI Interactive</p>
+                    </Card>
                 </div>
 
                 {/* Controls */}
@@ -214,8 +259,8 @@ const CompanyDetail = () => {
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search questions or topics..."
-                            className="pl-9 h-10"
+                            placeholder={`Search ${companyName} questions or topics...`}
+                            className="pl-9 h-11"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -223,92 +268,111 @@ const CompanyDetail = () => {
                 </div>
 
                 {/* Tabs */}
-                <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod} className="space-y-6">
-                    <TabsList className="bg-muted/50 p-1 h-auto flex-wrap">
+                <Tabs value={selectedPeriod} onValueChange={handlePeriodChange} className="space-y-6">
+                    <TabsList className="bg-muted/50 p-1 h-auto flex-wrap border border-border/40">
                         {PERIODS.map(period => (
-                            <TabsTrigger key={period} value={period} className="px-4 py-2">
+                            <TabsTrigger key={period} value={period} className="px-4 py-2 text-xs md:text-sm">
                                 {period}
                             </TabsTrigger>
                         ))}
                     </TabsList>
 
                     <TabsContent value={selectedPeriod} className="mt-0 space-y-4">
-                        {loadingQuestions ? (
-                            <div className="flex justify-center py-12">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            </div>
-                        ) : filteredQuestions.length === 0 ? (
+                        {filteredQuestions.length === 0 ? (
                             <Card className="border-dashed border-2 py-12 flex flex-col items-center justify-center text-center bg-muted/20">
                                 <Calendar className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
-                                <h3 className="text-lg font-medium">No questions found</h3>
-                                <p className="text-muted-foreground">Try adjusting your search or timeframe.</p>
+                                <h3 className="text-lg font-medium">No specific questions found for "{selectedPeriod}"</h3>
+                                <p className="text-muted-foreground text-sm mt-1">Explore other timeframe tabs above to view all frequent problems.</p>
+                                <Button variant="outline" className="mt-4" onClick={() => handlePeriodChange("All")}>
+                                    View All {companyName} Questions
+                                </Button>
                             </Card>
                         ) : (
                             <div className="space-y-3">
                                 {filteredQuestions.map((q, i) => (
-                                    <motion.div
-                                        key={q.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.03 }}
+                                    <div
+                                        key={q.id || `${slug}-${i}`}
+                                        className="transition-all duration-200"
                                     >
-                                        <Card className="hover:border-primary/50 transition-colors">
+                                        <Card className="hover:border-primary/50 transition-colors border-border/60 bg-card/80">
                                             <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                 <div className="flex-1 space-y-1">
                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                        <h3 className="font-semibold text-lg">{q.title}</h3>
-                                                        <Badge variant="outline" className={`${getDifficultyColor(q.difficulty)} border`}>
+                                                        <h3 className="font-semibold text-base md:text-lg">{q.title}</h3>
+                                                        <Badge variant="outline" className={`${getDifficultyColor(q.difficulty)} border text-xs`}>
                                                             {q.difficulty}
                                                         </Badge>
                                                     </div>
 
-                                                    <div className="flex items-center gap-x-4 gap-y-2 text-sm text-muted-foreground flex-wrap">
+                                                    <div className="flex items-center gap-x-4 gap-y-2 text-xs md:text-sm text-muted-foreground flex-wrap">
                                                         {q.acceptance_rate > 0 && (
                                                             <span className="flex items-center gap-1">
-                                                                <Award className="h-3 w-3" />
-                                                                {Math.round(q.acceptance_rate * 100)}% Acceptance
+                                                                <Award className="h-3.5 w-3.5 text-primary" />
+                                                                {Math.round(q.acceptance_rate <= 1 ? q.acceptance_rate * 100 : q.acceptance_rate)}% Acceptance
                                                             </span>
                                                         )}
                                                         {q.frequency > 0 && (
                                                             <span className="flex items-center gap-1">
-                                                                <TrendingUp className="h-3 w-3" />
-                                                                {q.frequency.toFixed(1)}% Frequency
+                                                                <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                                                                {q.frequency.toFixed(0)}% Frequency
                                                             </span>
                                                         )}
                                                     </div>
 
-                                                    <div className="flex gap-2 mt-2 flex-wrap">
-                                                        {q.topics.slice(0, 5).map((topic: string) => (
-                                                            <Badge key={topic} variant="secondary" className="text-xs bg-muted text-muted-foreground hover:bg-muted/80">
+                                                    <div className="flex gap-1.5 mt-2 flex-wrap">
+                                                        {q.topics?.slice(0, 5).map((topic: string) => (
+                                                            <Badge key={topic} variant="secondary" className="text-[11px] bg-muted text-muted-foreground">
                                                                 {topic}
                                                             </Badge>
                                                         ))}
-                                                        {q.topics.length > 5 && (
+                                                        {q.topics?.length > 5 && (
                                                             <span className="text-xs text-muted-foreground self-center">+{q.topics.length - 5} more</span>
                                                         )}
                                                     </div>
                                                 </div>
 
                                                 <div className="flex items-center gap-2 shrink-0">
-                                                    {q.url && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="gap-2"
-                                                            onClick={() => navigate(`/playground?title=${encodeURIComponent(q.title)}&company=${encodeURIComponent(company.name)}&mode=problem`)}
-                                                        >
-                                                            Solve <Code2 className="h-3 w-3" />
-                                                        </Button>
-                                                    )}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="gap-2 border-primary/30 hover:bg-primary hover:text-primary-foreground"
+                                                        onClick={() => navigate(`/playground?title=${encodeURIComponent(q.title)}&company=${encodeURIComponent(companyName)}&mode=problem`)}
+                                                    >
+                                                        Solve <Code2 className="h-3.5 w-3.5" />
+                                                    </Button>
                                                 </div>
                                             </CardContent>
                                         </Card>
-                                    </motion.div>
+                                    </div>
                                 ))}
                             </div>
                         )}
                     </TabsContent>
                 </Tabs>
+
+                {/* FAQ & Preparation Guide Section for SEO */}
+                <section className="mt-16 pt-8 border-t border-border/50">
+                    <h2 className="text-2xl font-bold mb-4">How to Prepare for {companyName} Technical Interviews</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                        <Card className="p-6 bg-card/40 border-border/40">
+                            <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                                <CheckCircle2 className="h-5 w-5 text-emerald-500" /> 1. Master High Frequency DSA
+                            </h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Review the top questions asked in {companyName} coding rounds over the past 3-6 months. Focus on core patterns including Arrays, Hash Tables, Trees, Dynamic Programming, and Graph Traversals.
+                            </p>
+                        </Card>
+
+                        <Card className="p-6 bg-card/40 border-border/40">
+                            <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                                <Sparkles className="h-5 w-5 text-primary" /> 2. Practice with AI Voice Mock Interviews
+                            </h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Simulate real pressure by practicing voice and video interview loops on Voke with AI calibrated specifically for {companyName} engineering standards and behavioral rubrics.
+                            </p>
+                        </Card>
+                    </div>
+                </section>
             </main>
         </div>
     );

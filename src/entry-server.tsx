@@ -4,10 +4,8 @@ import { StaticRouter } from "react-router-dom/server";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { OnlinePresenceProvider } from "@/components/OnlinePresenceProvider";
-import { WaitlistGuard } from "@/components/WaitlistGuard";
-import { ProfileCompletionGuard } from "@/components/ProfileCompletionGuard";
 import SEO from "@/components/SEO";
-import AppRoutes from "@/AppRoutes";
+import AppRoutesServer from "@/AppRoutesServer";
 
 export function render(url: string) {
   const queryClient = new QueryClient({
@@ -26,11 +24,7 @@ export function render(url: string) {
           <OnlinePresenceProvider>
             <StaticRouter location={url}>
               <SEO />
-              <WaitlistGuard>
-                <ProfileCompletionGuard>
-                  <AppRoutes />
-                </ProfileCompletionGuard>
-              </WaitlistGuard>
+              <AppRoutesServer />
             </StaticRouter>
           </OnlinePresenceProvider>
         </TooltipProvider>

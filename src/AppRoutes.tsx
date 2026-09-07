@@ -90,6 +90,11 @@ export const AppRoutes: React.FC = () => {
         <Route path="/companies" element={<Companies />} />
         <Route path="/companies/:slug" element={<CompanyDetail />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/dsa-sheet" element={<DSASheet />} />
+        <Route path="/question-practice" element={<QuestionPractice />} />
+        <Route path="/daily-challenge" element={<DailyChallengeLanding />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/playground" element={<Playground />} />
         
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -120,15 +125,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="/peer-interviews/room/:sessionId" element={<ProtectedRoute><PeerSessionRoom /></ProtectedRoute>} />
         <Route path="/peer-interviews/rate/:sessionId" element={<ProtectedRoute><RatePeerSession /></ProtectedRoute>} />
         
-        <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
-        
-        <Route path="/daily-challenge" element={<ProtectedRoute><DailyChallengeLanding /></ProtectedRoute>} />
         <Route path="/daily-challenge/solve" element={<ProtectedRoute><DailyChallenge /></ProtectedRoute>} />
         <Route path="/job-recommendations" element={<ProtectedRoute><JobRecommendations /></ProtectedRoute>} />
-        
-        <Route path="/question-practice" element={<ProtectedRoute><QuestionPractice /></ProtectedRoute>} />
-        <Route path="/dsa-sheet" element={<ProtectedRoute><DSASheet /></ProtectedRoute>} />
-        <Route path="/playground" element={<ProtectedRoute><Playground /></ProtectedRoute>} />
         <Route path="/elite-prep" element={<ProtectedRoute><ElitePrep /></ProtectedRoute>} />
         <Route path="/career-plan/:planId" element={<ProtectedRoute><CareerPlanView /></ProtectedRoute>} />
         <Route path="/resume-builder" element={<ProtectedRoute><ResumeBuilder /></ProtectedRoute>} />

@@ -106,7 +106,9 @@ export const PRIVATE_ROUTE_PREFIXES = [
   "/career-plan",
   "/daily-challenge/solve",
   "/playground",
-  "/resume-builder"
+  "/resume-builder",
+  "/elite-prep",
+  "/community"
 ];
 
 /**
@@ -318,44 +320,6 @@ export const PUBLIC_ROUTES_REGISTRY: Record<string, RouteSEOInput> = {
         breadcrumbs: [
           { name: "Home", url: SITE_URL },
           { name: "Daily Challenge", url: "/daily-challenge" }
-        ]
-      })
-  },
-  "/elite-prep": {
-    path: "/elite-prep",
-    title: "Elite Tech Mock Interview Coaching & MAANG Prep – Voke",
-    description:
-      "Accelerated 1-on-1 style AI coaching for tier-1 tech company placement. High-intensity mock interviews, system design drills, and resume optimization.",
-    keywords: ["elite mock interview", "MAANG interview coaching", "tier 1 placement prep", "system design mock interview", "AI interview coaching"],
-    changefreq: "weekly",
-    priority: 0.8,
-    structuredData: (canonicalUrl) =>
-      createPageSchemaGraph({
-        canonicalUrl,
-        pageName: "Elite Prep Program",
-        pageDescription: "Accelerated 1-on-1 style AI coaching for tier-1 tech company placement.",
-        breadcrumbs: [
-          { name: "Home", url: SITE_URL },
-          { name: "Elite Prep", url: "/elite-prep" }
-        ]
-      })
-  },
-  "/community": {
-    path: "/community",
-    title: "Tech Student & Job Seeker Community Hub – Voke",
-    description:
-      "Connect with B.Tech students and tech job seekers. Share interview experiences, study strategies, peer practice feedback, and career guidance.",
-    keywords: ["tech community", "interview experience sharing", "B.Tech placement forum", "peer mock practice"],
-    changefreq: "daily",
-    priority: 0.7,
-    structuredData: (canonicalUrl) =>
-      createPageSchemaGraph({
-        canonicalUrl,
-        pageName: "Candidate & Student Community Hub",
-        pageDescription: "Connect with tech job seekers and B.Tech students.",
-        breadcrumbs: [
-          { name: "Home", url: SITE_URL },
-          { name: "Community", url: "/community" }
         ]
       })
   },

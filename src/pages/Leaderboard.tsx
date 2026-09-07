@@ -23,6 +23,7 @@ const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
   const [topRated, setTopRated] = useState<LeaderboardUser[]>([]);
   const [mostActive, setMostActive] = useState<LeaderboardUser[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -31,9 +32,7 @@ const Leaderboard = () => {
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-    }
+    setIsLoggedIn(!!session);
   };
 
   const handleLogout = async () => {
@@ -42,6 +41,7 @@ const Leaderboard = () => {
       toast.error("Failed to log out.");
       console.error("Logout error:", error);
     } else {
+      setIsLoggedIn(false);
       navigate("/auth");
     }
   };

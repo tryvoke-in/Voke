@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Search, Briefcase, ChevronRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { ALL_STATIC_COMPANIES_LIST } from "@/data/staticCompanyData";
+
 const Companies = () => {
     const navigate = useNavigate();
-    const [companies, setCompanies] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [companies, setCompanies] = useState<any[]>(ALL_STATIC_COMPANIES_LIST);
+    const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
@@ -25,12 +27,11 @@ const Companies = () => {
                 .select('*')
                 .order('name');
 
-            if (error) throw error;
-            setCompanies(data || []);
+            if (!error && data && data.length > 0) {
+                setCompanies(data);
+            }
         } catch (error) {
             console.error("Error fetching companies:", error);
-        } finally {
-            setLoading(false);
         }
     };
 

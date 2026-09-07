@@ -53,7 +53,7 @@ const DailyChallengeLanding = () => {
   const dailyQuestion = getDailyQuestion();
   const [streak, setStreak] = useState(0);
   const [timeLeft, setTimeLeft] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Get previous 5 questions (excluding current daily one if possible, just slicing for now)
   // In a real app, this would be based on date. Here we simulate it.

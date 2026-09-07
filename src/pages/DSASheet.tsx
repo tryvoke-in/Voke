@@ -44,7 +44,7 @@ const DSASheet = () => {
     const [solvedIds, setSolvedIds] = useState<Set<number>>(new Set());
     const [reviewedIds, setReviewedIds] = useState<Set<number>>(new Set());
     const [userId, setUserId] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const loadUserData = async () => {

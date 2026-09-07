@@ -74,7 +74,7 @@ Disallow: /interview
 Disallow: /api/
 
 # -------------------------------------------------------------------
-# 3. XML Sitemap Index Location
+# 3. XML Sitemap Index Location & LLM Discoverability
 # -------------------------------------------------------------------
 Sitemap: https://www.tryvoke.in/sitemap.xml
 # LLM Context: https://www.tryvoke.in/llms.txt
