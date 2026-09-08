@@ -16,6 +16,18 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   }
 });
 
+// Automatically persist GitHub OAuth provider_token across page reloads and route changes
+if (typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.provider_token) {
+      localStorage.setItem('voke_github_oauth_token', session.provider_token);
+      if (session.user?.user_metadata?.user_name) {
+        localStorage.setItem('voke_github_username', session.user.user_metadata.user_name);
+      }
+    }
+  });
+}
+
 // Wrap signOut to ensure local session is always cleared even if server-side sign out fails
 const originalSignOut = supabase.auth.signOut.bind(supabase.auth);
 supabase.auth.signOut = async (...args) => {

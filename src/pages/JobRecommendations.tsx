@@ -17,7 +17,7 @@ import {
   Target, Bookmark, Clock, ArrowRight, Globe,
   Building2, HelpCircle, ChevronRight, Loader2, Sparkles,
   Check, Filter, ArrowUpRight, DollarSign, Layers,
-  Compass, Zap, Award
+  Compass, Zap, Award, Mic
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,6 +25,9 @@ import { CreatingPlanLoader } from "@/components/ui/CreatingPlanLoader";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
 import { cn } from "@/lib/utils";
+import { createAndPersistCareerPlan, CreatePlanOptions } from "@/services/careerPlanService";
+import { RoadmapCustomizeModal } from "@/components/career/RoadmapCustomizeModal";
+import { JobInterviewContext } from "@/types/jobInterview";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -192,6 +195,8 @@ export default function JobRecommendations() {
   // Selected job for detail modal
   const [selectedRec, setSelectedRec] = useState<JobRecommendation | null>(null);
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
+  const [roadmapModalOpen, setRoadmapModalOpen] = useState(false);
+  const [selectedRecForRoadmap, setSelectedRecForRoadmap] = useState<JobRecommendation | null>(null);
 
   // Filters & State
   const [search, setSearch] = useState("");
@@ -296,18 +301,125 @@ export default function JobRecommendations() {
     } catch {}
   };
 
-  const createCareerPlan = async (rec: JobRecommendation) => {
+  const openRoadmapModal = (rec: JobRecommendation) => {
+    setSelectedRecForRoadmap(rec);
+    setRoadmapModalOpen(true);
+  };
+
+  const handleStartJobMockInterview = (rec: JobRecommendation) => {
+    const job = rec.job_postings;
+    const jobTitle = job?.title || "Software Engineer";
+    const companyName = job?.company || "Target Company";
+    const jobDescription = job?.description || "";
+    const skillsRequired = job?.skills_required || [];
+
+    // Resolve skill gaps
+    let finalSkillGaps: Array<{ skill: string; priority?: string; estimated_time?: string } | string> = [];
+    if (rec.skill_gaps && rec.skill_gaps.length > 0) {
+      finalSkillGaps = rec.skill_gaps;
+    } else {
+      // Compute missing skills between skillsRequired and dynamicTopSkills
+      const missing = skillsRequired.filter(
+        (s) => !dynamicTopSkills.map((ts) => ts.toLowerCase()).includes(decode(s).toLowerCase())
+      );
+      finalSkillGaps = (missing.length > 0 ? missing : dynamicSkillGaps).slice(0, 4);
+    }
+
+    const jobInterviewContext: JobInterviewContext = {
+      jobTitle,
+      companyName,
+      jobDescription,
+      skillsRequired,
+      skillGaps: finalSkillGaps,
+      matchRationale: rec.match_reasons,
+      recommendationId: rec.id,
+      matchScore: rec.match_score,
+    };
+
+    // Store in sessionStorage for resilience across refreshes
+    sessionStorage.setItem("voke_job_interview_context", JSON.stringify(jobInterviewContext));
+
+    toast({
+      title: "Opening Elite Mock Interview",
+      description: `Targeting ${jobTitle} at ${companyName}...`,
+    });
+
+    navigate("/elite-prep", {
+      state: {
+        jobInterviewContext,
+      },
+    });
+  };
+
+  const handleGenerateRoadmap = async (options: CreatePlanOptions) => {
+    if (!selectedRecForRoadmap) return;
+    setRoadmapModalOpen(false);
+    await createCareerPlan(selectedRecForRoadmap, options);
+  };
+
+  const createCareerPlan = async (rec: JobRecommendation, options: CreatePlanOptions = {}) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        toast({ title: "Sign in Required", description: "Please log in to generate your career roadmap", variant: "destructive" });
+        return;
+      }
+
       setCreatingPlan(true);
-      const { data, error } = await supabase.functions.invoke("create-career-plan", {
-        body: { userId: user.id, targetRole: rec.job_postings.title, jobRecommendationId: rec.id },
-      });
-      if (error) throw error;
-      navigate(`/career-plan/${data.plan.id}`);
+      const targetRole = rec.job_postings?.title || (Array.isArray(rec.job_postings) ? (rec.job_postings as any)[0]?.title : null) || "Software Engineer";
+      const durationWeeks = options.durationWeeks || 4;
+
+      let planId: string | null = null;
+
+      // 1. Attempt edge function invocation first
+      try {
+        const { data, error } = await supabase.functions.invoke("create-career-plan", {
+          body: {
+            userId: user.id,
+            targetRole,
+            jobRecommendationId: rec.id,
+            durationWeeks,
+            experienceLevel: options.experienceLevel,
+            weeklyHours: options.weeklyHours,
+          },
+        });
+
+        if (error) {
+          console.warn("Edge function create-career-plan returned error:", error);
+          throw error;
+        }
+
+        if (data?.plan?.id) {
+          planId = data.plan.id;
+        }
+      } catch (invokeErr) {
+        console.warn("Edge function unavailable or returned non-2xx status, activating resilient client generator:", invokeErr);
+      }
+
+      // 2. If edge function failed or did not return a plan, fall back to direct resilient generation
+      if (!planId) {
+        const localPlan = await createAndPersistCareerPlan(user.id, targetRole, rec, options);
+        if (localPlan?.id) {
+          planId = localPlan.id;
+        }
+      }
+
+      if (planId) {
+        toast({
+          title: "Roadmap Created",
+          description: `Personalized ${durationWeeks}-Week prep roadmap for ${targetRole} is ready.`,
+        });
+        navigate(`/career-plan/${planId}`);
+      } else {
+        throw new Error("Unable to save career roadmap to your profile.");
+      }
     } catch (e: any) {
-      toast({ title: "Error", description: e.message || "Failed to create career plan", variant: "destructive" });
+      console.error("Career plan creation failed:", e);
+      toast({
+        title: "Error",
+        description: e.message || "Failed to create career plan",
+        variant: "destructive"
+      });
       setCreatingPlan(false);
     }
   };
@@ -908,16 +1020,26 @@ export default function JobRecommendations() {
                               {/* Card Action Controls Footer */}
                               <div className="pt-2 border-t border-border/50 flex flex-wrap items-center justify-between gap-2.5">
                                 
-                                <div className="flex items-center gap-2">
-                                  {/* Generate 30-Day Career Path */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                  {/* Start Mock Interview Button */}
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleStartJobMockInterview(rec)}
+                                    className="rounded-xl text-xs font-bold h-8 px-3 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-black shadow-xs gap-1.5 transition-all cursor-pointer font-sans"
+                                  >
+                                    <Mic className="w-3.5 h-3.5 text-black stroke-[2.5]" />
+                                    Mock Interview
+                                  </Button>
+
+                                  {/* Customize and Generate Career Path */}
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => createCareerPlan(rec)}
+                                    onClick={() => openRoadmapModal(rec)}
                                     className="rounded-xl text-xs font-bold h-8 px-3 border-sky-500/30 text-sky-700 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 gap-1.5"
                                   >
                                     <TrendingUp className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-                                    30-Day Prep Roadmap
+                                    Prep Roadmap
                                   </Button>
 
                                   {/* Direct Apply Button */}
@@ -1172,20 +1294,32 @@ export default function JobRecommendations() {
                 </div>
 
                 {/* Modal Footer Actions */}
-                <div className="flex items-center gap-2.5 pt-3 border-t border-border/60">
+                <div className="flex flex-wrap items-center gap-2.5 pt-3 border-t border-border/60">
                   <Button
-                    onClick={() => createCareerPlan(selectedRec)}
+                    onClick={() => {
+                      if (selectedRec) handleStartJobMockInterview(selectedRec);
+                    }}
+                    className="flex-1 rounded-xl text-xs font-bold h-9 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-black shadow-xs gap-1.5"
+                  >
+                    <Mic className="w-3.5 h-3.5 text-black stroke-[2.5]" />
+                    Start Mock Interview
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      if (selectedRec) openRoadmapModal(selectedRec);
+                    }}
                     variant="outline"
                     className="flex-1 rounded-xl text-xs font-bold h-9 gap-1.5 border-sky-500/30 text-sky-700 dark:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20"
                   >
                     <TrendingUp className="w-3.5 h-3.5 text-sky-600" />
-                    Generate 30-Day Roadmap
+                    Customize & Generate Roadmap
                   </Button>
 
                   {job?.application_url && (
-                    <Button asChild className="flex-1 rounded-xl text-xs font-bold h-9 bg-sky-600 hover:bg-sky-700 text-white gap-1.5 shadow-xs border-0">
+                    <Button asChild className="rounded-xl text-xs font-bold h-9 bg-sky-600 hover:bg-sky-700 text-white gap-1.5 shadow-xs border-0 px-4">
                       <a href={job.application_url} target="_blank" rel="noopener noreferrer">
-                        Apply on Partner Portal <ExternalLink className="w-3.5 h-3.5" />
+                        Apply <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     </Button>
                   )}
@@ -1238,6 +1372,22 @@ export default function JobRecommendations() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          7. ROADMAP CUSTOMIZATION MODAL (WEEKS / MONTHS SELECTION)
+      ══════════════════════════════════════════════════════════════════ */}
+      {selectedRecForRoadmap && (
+        <RoadmapCustomizeModal
+          isOpen={roadmapModalOpen}
+          onClose={() => setRoadmapModalOpen(false)}
+          targetRole={selectedRecForRoadmap.job_postings?.title || "Software Engineer"}
+          companyName={selectedRecForRoadmap.job_postings?.company}
+          skillGaps={selectedRecForRoadmap.skill_gaps}
+          skillsRequired={selectedRecForRoadmap.job_postings?.skills_required}
+          onGenerate={handleGenerateRoadmap}
+          isLoading={creatingPlan}
+        />
+      )}
 
     </div>
   );

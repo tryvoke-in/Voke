@@ -99,26 +99,42 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
 
         let githubReposList: { name: string; description: string; language: string; summary: string }[] = [];
 
-        // Fetch GitHub context (Auto-connected GitHub OAuth metadata + Stored Profile URL + Supabase Identities)
+        // Fetch GitHub context (Auto-connected GitHub OAuth metadata + Stored Profile URL + Supabase Identities + LocalStorage)
         const userMetadata = user.user_metadata || {};
         let targetGithubUsername: string | null = null;
 
+        // 1. Check profile.github_url
         if (userProfile?.github_url) {
-            const rawGithubUrl = String(userProfile.github_url).trim();
-            const cleanUrl = rawGithubUrl.replace(/\/$/, '').split('?')[0];
-            const parts = cleanUrl.split('/');
-            const candidateName = parts[parts.length - 1];
-            if (candidateName && candidateName.toLowerCase() !== 'github.com' && candidateName.toLowerCase() !== 'users') {
-                targetGithubUsername = candidateName;
+            targetGithubUsername = extractGithubUsername(userProfile.github_url);
+        }
+
+        // 2. Check local storage if not found in DB
+        if (!targetGithubUsername && typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            const localUsername = localStorage.getItem('voke_github_username');
+            if (localUsername) {
+                targetGithubUsername = extractGithubUsername(localUsername);
+            }
+            if (!targetGithubUsername) {
+                try {
+                    const localResume = localStorage.getItem('voke_resume_data');
+                    if (localResume) {
+                        const parsed = JSON.parse(localResume);
+                        if (parsed.github) {
+                            targetGithubUsername = extractGithubUsername(parsed.github);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[ProfileContext] Error reading local resume data:', e);
+                }
             }
         }
 
-        // Direct GitHub Auth Session Fallback (Auto-connects from OAuth metadata or identities)
+        // 3. Direct GitHub Auth Session Fallback (Auto-connects from OAuth metadata or identities)
         if (!targetGithubUsername) {
             const githubIdentity = user.identities?.find((id: any) => id.provider === 'github');
             const identityData = githubIdentity?.identity_data || {};
 
-            targetGithubUsername = 
+            const oauthCandidate = 
                 identityData.user_name || 
                 identityData.preferred_username || 
                 userMetadata.user_name || 
@@ -126,122 +142,75 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
                 (user.app_metadata?.provider === 'github' ? (userMetadata.preferred_username || userMetadata.user_name) : null) || 
                 null;
 
-            if (targetGithubUsername) {
-                console.log('[ProfileContext] Auto-connected GitHub username from OAuth session:', targetGithubUsername);
-                const autoGithubUrl = `https://github.com/${targetGithubUsername}`;
-                supabase.from('profiles').update({ github_url: autoGithubUrl }).eq('id', user.id).then();
+            if (oauthCandidate) {
+                targetGithubUsername = extractGithubUsername(oauthCandidate);
+                if (targetGithubUsername) {
+                    console.log('[ProfileContext] Auto-connected GitHub username from OAuth session:', targetGithubUsername);
+                    const autoGithubUrl = `https://github.com/${targetGithubUsername}`;
+                    supabase.from('profiles').update({ github_url: autoGithubUrl }).eq('id', user.id).then();
+                    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+                        localStorage.setItem('voke_github_username', targetGithubUsername);
+                    }
+                }
             }
         }
 
         const { data: { session } } = await supabase.auth.getSession();
-        const providerToken = session?.provider_token;
+        const providerToken = session?.provider_token || (typeof window !== 'undefined' ? (localStorage.getItem('voke_github_oauth_token') || localStorage.getItem('voke_github_pat')) : null);
 
+        // Fetch Repositories with multi-tier fallback (Live API -> Cache -> Resume Projects)
         if (targetGithubUsername || providerToken) {
-            try {
-                const username = targetGithubUsername || 'user';
-                console.log('[ProfileContext] Fetching GitHub repos (Personal & Org)...');
-
-                const allRawRepos: any[] = [];
-                const reqHeaders: Record<string, string> = {
-                    'Accept': 'application/vnd.github.v3+json'
-                };
-                if (providerToken) {
-                    reqHeaders['Authorization'] = `Bearer ${providerToken}`;
-                }
-
-                // 1. Authenticated User Endpoint (Returns all owner, collaborator, & org repos)
-                if (providerToken) {
-                    try {
-                        const authReposRes = await fetch(
-                            `https://api.github.com/user/repos?affiliation=owner,collaborator,organization_member&sort=updated&per_page=100`,
-                            { headers: reqHeaders }
-                        );
-                        if (authReposRes.ok) {
-                            const authRepos = await authReposRes.json();
-                            if (Array.isArray(authRepos)) allRawRepos.push(...authRepos);
-                        }
-                    } catch (aErr) {
-                        console.warn('[ProfileContext] Auth user repos fetch note:', aErr);
-                    }
-                }
-
-                // 2. Personal public repos endpoint
-                if (allRawRepos.length === 0 && targetGithubUsername) {
-                    const reposResponse = await fetch(
-                        `https://api.github.com/users/${username}/repos?sort=updated&per_page=100`,
-                        { headers: reqHeaders }
-                    );
-
-                    if (reposResponse.ok) {
-                        const userRepos = await reposResponse.json();
-                        if (Array.isArray(userRepos)) allRawRepos.push(...userRepos);
-                    }
-                }
-
-                // 3. Public Organization repos endpoint
-                if (targetGithubUsername) {
-                    try {
-                        const orgsResponse = await fetch(
-                            `https://api.github.com/users/${username}/orgs`,
-                            { headers: reqHeaders }
-                        );
-                        if (orgsResponse.ok) {
-                            const orgs = await orgsResponse.json();
-                            if (Array.isArray(orgs) && orgs.length > 0) {
-                                for (const org of orgs) {
-                                    if (org?.login) {
-                                        const orgReposRes = await fetch(
-                                            `https://api.github.com/orgs/${org.login}/repos?sort=updated&per_page=100`,
-                                            { headers: reqHeaders }
-                                        );
-                                        if (orgReposRes.ok) {
-                                            const orgRepos = await orgReposRes.json();
-                                            if (Array.isArray(orgRepos)) allRawRepos.push(...orgRepos);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } catch (orgErr) {
-                        console.warn('[ProfileContext] Org repos fetch note:', orgErr);
-                    }
-                }
-
-                // Deduplicate repos by name
-                const uniqueMap = new Map();
-                for (const r of allRawRepos) {
-                    if (r && r.name && !uniqueMap.has(r.name)) {
-                        uniqueMap.set(r.name, r);
-                    }
-                }
-                const repos = Array.from(uniqueMap.values());
-
-                if (repos.length > 0) {
-                    projectCount = repos.length;
-                    githubReposList = repos.map((repo: any) => ({
-                        name: repo.name,
-                        description: repo.description || (repo.owner?.login ? `Repository in ${repo.owner.login}` : 'GitHub project repository'),
-                        language: repo.language || 'TypeScript/JavaScript',
-                        summary: repo.description ? `${repo.name}: ${repo.description}` : `${repo.name} project repository`
-                    }));
-
-                    const projectSummaries = repos.map((repo: any) => 
-                        `Project: ${repo.name}\n- Description: ${repo.description || 'No description'}\n- Tech: ${repo.language || 'Not specified'}\n- Owner: ${repo.owner?.login || username}`
-                    );
-
-                    context += `\nGITHUB PROJECTS:\n${projectSummaries.join('\n\n')}\n`;
-                    hasGithub = true;
-                    console.log('[ProfileContext] ✓ Successfully loaded ALL Personal & Org GitHub projects:', projectCount, githubReposList.map(r => r.name));
-                }
-            } catch (e) {
-                console.error('[ProfileContext] GitHub fetch error:', e);
-                context += `GitHub Profile: https://github.com/${targetGithubUsername}\n`;
+            const fetched = await fetchUserGithubRepos(targetGithubUsername || undefined, providerToken);
+            if (fetched && fetched.length > 0) {
+                githubReposList = fetched;
             }
         }
 
-        // DO NOT inject hardcoded dummy repos - keep githubReposList as real user repos only
-        if (githubReposList.length === 0) {
-            console.log('[ProfileContext] No GitHub repos found for user session.');
+        // Fallback: If still 0 repos, check cached repos in localStorage
+        if (githubReposList.length === 0 && typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            const cached = getCachedGithubRepos();
+            if (cached && cached.length > 0) {
+                console.log('[ProfileContext] Recovered repositories from local cache:', cached.length);
+                githubReposList = cached;
+            }
+        }
+
+        // Fallback: If still 0 repos, extract projects from user's profile resume data
+        if (githubReposList.length === 0 && typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            try {
+                const localResume = localStorage.getItem('voke_resume_data');
+                if (localResume) {
+                    const parsed = JSON.parse(localResume);
+                    if (Array.isArray(parsed.projects) && parsed.projects.length > 0) {
+                        const fallbackProjects = parsed.projects
+                            .filter((p: any) => p && (p.name || p.title))
+                            .map((p: any) => ({
+                                name: (p.name || p.title).trim(),
+                                description: p.description || 'Project from candidate profile',
+                                language: p.techStack || 'TypeScript/JavaScript',
+                                summary: `${p.name || p.title}: ${p.description || 'Portfolio candidate project'}`
+                            }));
+                        if (fallbackProjects.length > 0) {
+                            console.log('[ProfileContext] Loaded candidate projects from resume profile:', fallbackProjects.length);
+                            githubReposList = fallbackProjects;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('[ProfileContext] Resume projects fallback note:', e);
+            }
+        }
+
+        if (githubReposList.length > 0) {
+            projectCount = githubReposList.length;
+            hasGithub = true;
+            const projectSummaries = githubReposList.map((repo) => 
+                `Project: ${repo.name}\n- Description: ${repo.description || 'No description'}\n- Tech: ${repo.language || 'Not specified'}\n- Owner: ${targetGithubUsername || 'Candidate'}`
+            );
+            context += `\nGITHUB PROJECTS:\n${projectSummaries.join('\n\n')}\n`;
+            console.log('[ProfileContext] ✓ Repositories successfully attached to context:', projectCount, githubReposList.map(r => r.name));
+        } else {
+            console.log('[ProfileContext] No GitHub repos or profile projects available.');
         }
 
         // Fetch LeetCode data
@@ -332,4 +301,285 @@ export async function loadUserProfileContext(): Promise<ProfileContext> {
         console.error('[ProfileContext] Error loading profile context:', error);
         throw error;
     }
+}
+
+export interface GitHubRepoItem {
+    name: string;
+    description: string;
+    language: string;
+    summary: string;
+}
+
+/**
+ * Robustly extracts the clean GitHub username from a URL, handle, or string
+ */
+export function extractGithubUsername(raw: string | null | undefined): string | null {
+    if (!raw) return null;
+    let val = String(raw).trim();
+    if (!val) return null;
+
+    // Strip wrapping quotes, brackets, markdown links
+    val = val.replace(/^["'<\(\[]+|["'>\)\]]+$/g, '');
+    // Strip leading @
+    val = val.replace(/^@+/, '');
+
+    // Handle full URL format
+    try {
+        if (val.startsWith('http://') || val.startsWith('https://')) {
+            const parsed = new URL(val);
+            const pathSegments = parsed.pathname.split('/').filter(Boolean);
+            if (pathSegments.length > 0) {
+                const candidate = pathSegments[0].replace(/^@+/, '');
+                if (!['settings', 'explore', 'topics', 'trending', 'features', 'login', 'signup', 'orgs', 'users', 'github.com'].includes(candidate.toLowerCase())) {
+                    return candidate;
+                }
+            }
+        }
+    } catch {
+        // Fall back to regex cleaning
+    }
+
+    // Handle non-protocol URLs like "github.com/username" or "username/project"
+    const cleaned = val
+        .replace(/^https?:\/\//i, '')
+        .replace(/^www\./i, '')
+        .replace(/^github\.com\//i, '')
+        .split('?')[0]
+        .split('#')[0];
+
+    const segments = cleaned.split('/').map(s => s.trim()).filter(Boolean);
+    if (segments.length > 0) {
+        const candidate = segments[0].replace(/^@+/, '');
+        if (candidate && !['settings', 'explore', 'topics', 'trending', 'features', 'login', 'signup', 'orgs', 'users', 'github.com'].includes(candidate.toLowerCase())) {
+            return candidate;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Retrieve cached repositories from localStorage
+ */
+export function getCachedGithubRepos(): GitHubRepoItem[] {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return [];
+    try {
+        const saved = localStorage.getItem('voke_cached_github_repos');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                return parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('[ProfileContext] Error reading cached repos:', e);
+    }
+    return [];
+}
+
+/**
+ * Save or add custom repo directly to local cache & active list
+ */
+export function saveCustomRepo(repo: { name: string; description?: string; language?: string }): GitHubRepoItem[] {
+    if (!repo || !repo.name) return getCachedGithubRepos();
+    const cleanName = repo.name.trim();
+    const existing = getCachedGithubRepos();
+    const filtered = existing.filter(r => r.name.toLowerCase() !== cleanName.toLowerCase());
+    const newItem: GitHubRepoItem = {
+        name: cleanName,
+        description: repo.description?.trim() || 'Custom candidate project',
+        language: repo.language?.trim() || 'TypeScript/JavaScript',
+        summary: repo.description ? `${cleanName}: ${repo.description.trim()}` : `${cleanName} project repository`
+    };
+    const updated = [newItem, ...filtered];
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        try {
+            localStorage.setItem('voke_cached_github_repos', JSON.stringify(updated));
+        } catch (e) {
+            console.warn('[ProfileContext] Failed to persist custom repo:', e);
+        }
+    }
+    return updated;
+}
+
+/**
+ * Fetch GitHub repos for user with resilience against 401 token expiration and 403 rate-limits
+ */
+export async function fetchUserGithubRepos(
+    usernameOverride?: string,
+    providerTokenOverride?: string | null
+): Promise<GitHubRepoItem[]> {
+    const rawUsername = usernameOverride || (typeof window !== 'undefined' ? localStorage.getItem('voke_github_username') : null);
+    const username = extractGithubUsername(rawUsername);
+
+    let personalAccessToken: string | null = null;
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        personalAccessToken = localStorage.getItem('voke_github_pat') || null;
+    }
+
+    const allRawRepos: any[] = [];
+    const baseHeaders: Record<string, string> = {
+        'Accept': 'application/vnd.github.v3+json'
+    };
+
+    // 1. If PAT is provided by candidate, it gives 5,000 req/hr rate limit
+    const authHeaders: Record<string, string> = { ...baseHeaders };
+    let hasAuthToken = false;
+
+    const oauthToken = providerTokenOverride || (typeof window !== 'undefined' ? localStorage.getItem('voke_github_oauth_token') : null);
+
+    // 0. High-speed rate-limit-immune local proxy endpoint
+    if (username && typeof window !== 'undefined') {
+        try {
+            const proxyRes = await fetch(`/api/github-repos?username=${encodeURIComponent(username)}`);
+            if (proxyRes.ok) {
+                const proxyData = await proxyRes.json();
+                if (Array.isArray(proxyData) && proxyData.length > 0) {
+                    console.log(`[ProfileContext] Successfully fetched ${proxyData.length} repos via proxy for @${username}`);
+                    localStorage.setItem('voke_cached_github_repos', JSON.stringify(proxyData));
+                    localStorage.setItem('voke_github_username', username);
+                    return proxyData;
+                }
+            }
+        } catch (proxyErr) {
+            console.warn('[ProfileContext] Local proxy note:', proxyErr);
+        }
+    }
+
+    if (personalAccessToken) {
+        authHeaders['Authorization'] = `token ${personalAccessToken.trim()}`;
+        hasAuthToken = true;
+    } else if (oauthToken) {
+        authHeaders['Authorization'] = `Bearer ${oauthToken.trim()}`;
+        hasAuthToken = true;
+    }
+
+    // Try authenticated endpoint first if token is available
+    if (hasAuthToken) {
+        try {
+            const authRes = await fetch(
+                `https://api.github.com/user/repos?affiliation=owner,collaborator,organization_member&sort=updated&per_page=100`,
+                { headers: authHeaders }
+            );
+            if (authRes.ok) {
+                const repos = await authRes.json();
+                if (Array.isArray(repos)) allRawRepos.push(...repos);
+            } else if (authRes.status === 401 || authRes.status === 403) {
+                console.warn(`[ProfileContext] Auth user repos failed (${authRes.status}), clearing stale token for fallback.`);
+                hasAuthToken = false;
+                if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+                    localStorage.removeItem('voke_github_oauth_token');
+                }
+            }
+        } catch (err) {
+            console.warn('[ProfileContext] Authenticated user repos fetch error:', err);
+        }
+    }
+
+    // 2. Fetch public repos for target username
+    if (allRawRepos.length === 0 && username) {
+        try {
+            // Only pass Authorization header if token didn't fail earlier
+            const reqHeaders = hasAuthToken ? authHeaders : baseHeaders;
+            const reposRes = await fetch(
+                `https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=100`,
+                { headers: reqHeaders }
+            );
+
+            if (reposRes.ok) {
+                const repos = await reposRes.json();
+                if (Array.isArray(repos)) allRawRepos.push(...repos);
+            } else {
+                const errStatus = reposRes.status;
+                if (errStatus === 403) {
+                    console.warn(`[ProfileContext] GitHub rate limit reached for IP (403). Using cached or profile projects.`);
+                } else if (errStatus === 401 && hasAuthToken) {
+                    // Retry once without token
+                    const retryRes = await fetch(
+                        `https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=100`,
+                        { headers: baseHeaders }
+                    );
+                    if (retryRes.ok) {
+                        const repos = await retryRes.json();
+                        if (Array.isArray(repos)) allRawRepos.push(...repos);
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('[ProfileContext] Public repos fetch error:', err);
+        }
+    }
+
+    // 3. Fetch public org repos
+    if (username && allRawRepos.length < 50) {
+        try {
+            const reqHeaders = hasAuthToken ? authHeaders : baseHeaders;
+            const orgsRes = await fetch(
+                `https://api.github.com/users/${encodeURIComponent(username)}/orgs`,
+                { headers: reqHeaders }
+            );
+            if (orgsRes.ok) {
+                const orgs = await orgsRes.json();
+                if (Array.isArray(orgs) && orgs.length > 0) {
+                    for (const org of orgs.slice(0, 3)) {
+                        if (org?.login) {
+                            try {
+                                const orgReposRes = await fetch(
+                                    `https://api.github.com/orgs/${encodeURIComponent(org.login)}/repos?sort=updated&per_page=50`,
+                                    { headers: reqHeaders }
+                                );
+                                if (orgReposRes.ok) {
+                                    const orgRepos = await orgReposRes.json();
+                                    if (Array.isArray(orgRepos)) allRawRepos.push(...orgRepos);
+                                }
+                            } catch (oErr) {
+                                // Ignore individual org errors
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            // Ignore org errors
+        }
+    }
+
+    // Deduplicate repos by name
+    const uniqueMap = new Map<string, any>();
+    for (const r of allRawRepos) {
+        if (r && r.name && !uniqueMap.has(r.name.toLowerCase())) {
+            uniqueMap.set(r.name.toLowerCase(), r);
+        }
+    }
+    const repos = Array.from(uniqueMap.values());
+
+    if (repos.length > 0) {
+        const mappedList: GitHubRepoItem[] = repos.map((repo: any) => ({
+            name: repo.name,
+            description: repo.description || (repo.owner?.login ? `Repository in ${repo.owner.login}` : 'GitHub project repository'),
+            language: repo.language || 'TypeScript/JavaScript',
+            summary: repo.description ? `${repo.name}: ${repo.description}` : `${repo.name} project repository`
+        }));
+
+        // Cache successful response
+        if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            try {
+                localStorage.setItem('voke_cached_github_repos', JSON.stringify(mappedList));
+                if (username) {
+                    localStorage.setItem('voke_github_username', username);
+                }
+            } catch (e) {
+                console.warn('[ProfileContext] Error caching repos:', e);
+            }
+        }
+        return mappedList;
+    }
+
+    // If fetch yielded 0 (e.g. rate limit 403 or network issue), return cached repos
+    const cached = getCachedGithubRepos();
+    if (cached.length > 0) {
+        return cached;
+    }
+
+    return [];
 }

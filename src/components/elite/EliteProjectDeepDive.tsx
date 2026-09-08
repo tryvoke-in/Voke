@@ -146,9 +146,15 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
   useEffect(() => {
     const checkSavedRepo = async () => {
       const saved = await fetchSelectedGithubRepo(userId, interviewType.id, company.id, role.id);
-      if (saved && availableRepos.includes(saved)) {
-        setSelectedProject(saved);
-        setIsPreInterviewSetupOpen(false); // Skip modal if already selected
+      if (saved) {
+        const firstMatch = saved.split(',').map(s => s.trim()).find(s => availableRepos.includes(s));
+        if (firstMatch) {
+          setSelectedProject(firstMatch);
+          setIsPreInterviewSetupOpen(false); // Skip modal if already selected
+        } else if (availableRepos.includes(saved)) {
+          setSelectedProject(saved);
+          setIsPreInterviewSetupOpen(false);
+        }
       } else if (availableRepos.length > 0) {
         setSelectedProject(availableRepos[0]); // Always default to 1st repo (compulsory min 1)
       }

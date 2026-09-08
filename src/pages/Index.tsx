@@ -10,13 +10,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { FloatingParticles } from "@/components/FloatingParticles";
 import { WAITLIST_CONFIG } from "@/config/waitlist";
 import { ReactLenis } from "lenis/react";
 import "lenis/dist/lenis.css";
 import { AccordionGallery, AccordionGalleryItem } from "@/components/AccordionGallery";
 import { ScrollStack, ScrollStackItem } from "@/components/ScrollStack";
-import { RippleGrid } from "@/components/RippleGrid";
 
 const VOKE_FEATURES: AccordionGalleryItem[] = [
   {
@@ -169,30 +167,25 @@ const Index = () => {
     <ReactLenis root options={{ anchors: true }}>
       <div className="min-h-screen text-white selection:bg-sky-500/30 font-sans antialiased overflow-x-hidden relative">
       {/* Base Solid Background beneath all negative layers */}
-      <div className="absolute inset-0 bg-[#030305] -z-30 pointer-events-none" />
+      <div className="absolute inset-0 bg-[#06070a] -z-30 pointer-events-none" />
 
-      {/* Interactive RippleGrid WebGL Shader Background */}
-      <div className="absolute inset-0 h-[100vh] min-h-[750px] max-h-[1100px] -z-10 overflow-hidden pointer-events-none opacity-70 [mask-image:radial-gradient(ellipse_85%_75%_at_50%_40%,#000_50%,transparent_100%)]">
-        <RippleGrid
-          gridColor="#0284c7"
-          rippleIntensity={0.045}
-          gridSize={10.0}
-          gridThickness={22.0}
-          fadeDistance={1.3}
-          vignetteStrength={2.5}
-          glowIntensity={0.18}
-          opacity={0.75}
-          mouseInteraction={true}
-          mouseInteractionRadius={1.1}
-          enableRainbow={false}
-        />
+      {/* Hero Ambient Glow & Precision Geometric Grid System (Subtle, Deep Charcoal-Navy Atmosphere) */}
+      <div className="absolute top-0 inset-x-0 h-[100vh] min-h-[780px] max-h-[1100px] -z-10 overflow-hidden pointer-events-none">
+        {/* Layer 1: Deep Dark Slate/Navy Vignette Base */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_60%_at_52%_44%,rgba(15,23,42,0.55)_0%,rgba(30,41,59,0.2)_35%,rgba(6,7,10,0)_72%)]" />
+
+        {/* Layer 2: Very Soft, Subdued Cool Steel/Azure Glow (Muted, non-overpowering) */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_45%_36%_at_52%_44%,rgba(14,116,144,0.07)_0%,rgba(3,105,161,0.03)_40%,transparent_75%)]" />
+
+        {/* Layer 3: Ultra-Faint Center Specular Shimmer */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_42%,rgba(56,189,248,0.04)_0%,transparent_35%)]" />
+
+        {/* Layer 4: Precision Orthogonal Cartesian Grid (50px squares, neutral white lines) */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.032)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.032)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_65%_at_50%_44%,#000_25%,transparent_90%)]" />
+
+        {/* Layer 5: Horizon Fade into Subsequent Sections */}
+        <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-b from-transparent to-[#08080c]" />
       </div>
-
-      {/* Floating Particles globally mounted in background */}
-      <FloatingParticles />
-
-      {/* Thin mesh grid lines for aesthetics */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)] -z-20 pointer-events-none" />
 
       <nav 
         className={`fixed z-50 transition-all duration-500 ${
@@ -332,7 +325,7 @@ const Index = () => {
                 <span className="text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
                   Master Tech Rounds & <br />
                 </span>
-                <span className="bg-gradient-to-r from-sky-300 via-cyan-200 to-white bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(56,189,248,0.45)]">
+                <span className="bg-gradient-to-r from-sky-300 via-cyan-100 to-white bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(56,189,248,0.2)]">
                   Secure the Offer.
                 </span>
               </motion.h1>
@@ -390,8 +383,8 @@ const Index = () => {
             {/* Right Column: Highly Creative 3D Overlapping Floating Cards Stack with Live Dialogue Inside Webcam Box */}
             <div className="lg:col-span-6 relative h-[450px] flex items-center justify-center select-none">
               
-              {/* Glow backdrop blob */}
-              <div className="absolute w-72 h-72 bg-sky-600/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+              {/* Glow backdrop blob behind cards */}
+              <div className="absolute w-[450px] h-[450px] bg-sky-500/4 rounded-full blur-[140px] pointer-events-none -z-10" />
 
               {/* CARD 1 (Main Base Card): Webcam Feed & Live Dialogue simulation */}
               <motion.div

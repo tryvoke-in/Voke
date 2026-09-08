@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   INTERVIEW_TYPES, ELITE_ROLES, TOP_COMPANIES,
   InterviewTypeItem, RoleItem, CompanyItem, InterviewRoundDef, getInterviewRounds
 } from '@/data/eliteInterviewData';
+import { JobInterviewContext } from '@/types/jobInterview';
 import {
   saveSelectedType, getSelectedType,
   saveSelectedRole, getSelectedRole,
@@ -28,17 +29,40 @@ type ViewMode = 'notebook_mindmap' | 'in_interview';
 const ElitePrep: React.FC = () => {
   usePrewarmInterviewChat();
   const navigate = useNavigate();
+  const location = useLocation();
   const { credits, isPremium, loading: creditsLoading, consumeCredit } = useInterviewCredits('elite');
 
+  // Job Interview Context (Passed when clicking 'Start Mock Interview' from Job Matches)
+  const [jobContext, setJobContext] = useState<JobInterviewContext | null>(() => {
+    if (location.state?.jobInterviewContext) {
+      return location.state.jobInterviewContext as JobInterviewContext;
+    }
+    const stored = sessionStorage.getItem('voke_job_interview_context');
+    if (stored) {
+      try {
+        return JSON.parse(stored) as JobInterviewContext;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
   // Beta / Under Development Notice Modal State (Shows every time user enters Elite Prep)
-  const [showBetaNotice, setShowBetaNotice] = useState<boolean>(true);
+  const [showBetaNotice, setShowBetaNotice] = useState<boolean>(() => {
+    return !location.state?.jobInterviewContext && !sessionStorage.getItem('voke_job_interview_context');
+  });
 
   const handleAcknowledgeBeta = () => {
     setShowBetaNotice(false);
   };
 
   // View mode
-  const [viewMode, setViewMode] = useState<ViewMode>('notebook_mindmap');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    return (location.state?.jobInterviewContext || sessionStorage.getItem('voke_job_interview_context'))
+      ? 'in_interview'
+      : 'notebook_mindmap';
+  });
 
   // Selections (Start fresh with null so only Step 1 is open)
   const [selectedType, setSelectedType] = useState<InterviewTypeItem | null>(null);
@@ -88,6 +112,74 @@ const ElitePrep: React.FC = () => {
     };
     initProfileAndUser();
   }, []);
+
+  // Auto-initialize Job Interview Mode when jobContext is present
+  useEffect(() => {
+    if (!jobContext) return;
+
+    setShowBetaNotice(false);
+
+    const safeCompanyId = 'job_co_' + (jobContext.companyName || 'company').toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const safeRoleId = 'job_ro_' + (jobContext.jobTitle || 'role').toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+    const customCompany: CompanyItem = {
+      id: safeCompanyId,
+      name: jobContext.companyName,
+      logo: `https://logo.clearbit.com/${jobContext.companyName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+      tier: 'Enterprise',
+      domain: `${jobContext.companyName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+      hq: 'Company HQ',
+      description: `Target company for ${jobContext.jobTitle}`,
+    };
+
+    const customRole: RoleItem = {
+      id: safeRoleId,
+      title: jobContext.jobTitle,
+      category: 'Target Job Opening',
+      description: jobContext.jobDescription?.slice(0, 300) || `Interview for ${jobContext.jobTitle} at ${jobContext.companyName}`,
+      iconName: 'Briefcase',
+      skills: jobContext.skillsRequired || [],
+      level: 'Job Match',
+    };
+
+    const customType: InterviewTypeItem = {
+      id: 'job-aligned',
+      title: 'Target Job Interview',
+      subtitle: `${jobContext.jobTitle} • ${jobContext.companyName}`,
+      active: true,
+      iconName: 'Briefcase',
+      description: `Mock interview tailored to ${jobContext.companyName}'s job description, resume verification, GitHub code interrogation, and candidate skill gap assessment.`,
+    };
+
+    const skillGapLabels = (jobContext.skillGaps || [])
+      .map((g: any) => (typeof g === 'string' ? g : g.skill))
+      .filter(Boolean)
+      .slice(0, 4)
+      .join(', ');
+
+    const customRound: InterviewRoundDef = {
+      roundId: `${safeCompanyId}_${safeRoleId}_r1`,
+      roundNumber: 1,
+      title: `Mock Interview: ${jobContext.jobTitle}`,
+      subtitle: `10 Questions (15 Mins) • Resume, GitHub & Skill Gaps for ${jobContext.companyName}`,
+      questionCount: 10,
+      durationMins: 15,
+      focusAreas: [
+        'Resume Verification & Experience',
+        'GitHub Project Deep Dive',
+        skillGapLabels ? `Skill Gaps: ${skillGapLabels}` : 'Technical Problem Solving',
+        'Role-Specific Architecture & Scenarios',
+      ],
+      description: `Role interview for ${jobContext.jobTitle} at ${jobContext.companyName} targeting resume, GitHub, and skill gaps.`,
+    };
+
+    setSelectedType(customType);
+    setSelectedCompany(customCompany);
+    setSelectedRole(customRole);
+    setActiveRound(customRound);
+    setRounds([customRound]);
+    setViewMode('in_interview');
+  }, [jobContext]);
 
   // Listen for Dev Tool progress/unlock changes
   useEffect(() => {
@@ -361,8 +453,21 @@ const ElitePrep: React.FC = () => {
             githubRepos={profileContext?.githubRepos}
             isLoadingRepos={loadingProfile}
             userId={userId || 'guest_user'}
-            onCompleteRound={handleCompleteRound}
-            onExit={() => setViewMode('notebook_mindmap')}
+            jobInterviewContext={jobContext || undefined}
+            onCompleteRound={(verdict) => {
+              handleCompleteRound(verdict);
+              if (jobContext) {
+                sessionStorage.removeItem('voke_job_interview_context');
+              }
+            }}
+            onExit={() => {
+              if (jobContext) {
+                sessionStorage.removeItem('voke_job_interview_context');
+                navigate('/job-recommendations');
+              } else {
+                setViewMode('notebook_mindmap');
+              }
+            }}
           />
         )}
 

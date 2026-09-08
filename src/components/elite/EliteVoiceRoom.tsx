@@ -11,12 +11,20 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, CheckCircle2, XCircle,
   Sparkles, HelpCircle, ShieldCheck, ChevronRight, User, Award, Clock,
   Volume2, Maximize2, Zap, Radio, MessageSquare, FileText, Subtitles,
-  GitBranch, FolderCode, Check, Github
+  GitBranch, FolderCode, Check, Github, Plus, RefreshCw, AlertCircle, Link2, ExternalLink, ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import { JobInterviewContext } from '@/types/jobInterview';
+import {
+  extractGithubUsername,
+  fetchUserGithubRepos,
+  getCachedGithubRepos,
+  saveCustomRepo,
+  GitHubRepoItem
+} from '@/utils/profileContext';
 
 interface EliteVoiceRoomProps {
   interviewType: InterviewTypeItem;
@@ -27,6 +35,7 @@ interface EliteVoiceRoomProps {
   githubRepos?: { name: string; description: string; language?: string; summary?: string }[];
   isLoadingRepos?: boolean;
   userId: string;
+  jobInterviewContext?: JobInterviewContext;
   onCompleteRound: (verdict: 'PASSED' | 'FAILED') => void;
   onExit: () => void;
 }
@@ -40,6 +49,7 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
   githubRepos,
   isLoadingRepos = false,
   userId,
+  jobInterviewContext,
   onCompleteRound,
   onExit
 }) => {
@@ -93,49 +103,218 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
   const [isEnding, setIsEnding] = useState(false);
   const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
 
-  // Target Repository Selection State (Dynamically loaded from Candidate's Profile)
-  const availableRepoOptions = React.useMemo(() => {
+  // Target Repository Selection State (Dynamically loaded from Candidate's Profile + Live Fetch + Manual Cache)
+  const [customRepoList, setCustomRepoList] = useState<GitHubRepoItem[]>(() => {
+    if (githubRepos && githubRepos.length > 0) return githubRepos as GitHubRepoItem[];
+    return getCachedGithubRepos();
+  });
+
+  const [githubUsernameInput, setGithubUsernameInput] = useState<string>(() => {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      return localStorage.getItem('voke_github_username') || '';
+    }
+    return '';
+  });
+
+  const [isFetchingRepos, setIsFetchingRepos] = useState(false);
+  const [manualProjectInput, setManualProjectInput] = useState('');
+  const [manualProjectTech, setManualProjectTech] = useState('');
+  const [showManualAdd, setShowManualAdd] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
+
+  // Sync customRepoList whenever parent passes new githubRepos
+  useEffect(() => {
     if (githubRepos && githubRepos.length > 0) {
-      return Array.from(new Set(githubRepos.map(r => r.name.trim())));
+      setCustomRepoList(githubRepos as GitHubRepoItem[]);
+    }
+  }, [githubRepos]);
+
+  const availableRepoOptions = React.useMemo(() => {
+    const combined: string[] = [];
+    if (customRepoList.length > 0) {
+      combined.push(...customRepoList.map(r => r.name.trim()));
+    }
+    if (githubRepos && githubRepos.length > 0) {
+      combined.push(...githubRepos.map(r => r.name.trim()));
     }
     if (candidateProfileContext) {
       const matches = Array.from(candidateProfileContext.matchAll(/Project:\s*([^\n\r]+)/gi));
       if (matches.length > 0) {
-        return Array.from(new Set(matches.map(m => m[1].trim())));
+        combined.push(...matches.map(m => m[1].trim()));
       }
     }
-    return [];
-  }, [githubRepos, candidateProfileContext]);
+    // Check cached repos in localStorage as fallback
+    const cached = getCachedGithubRepos();
+    if (cached.length > 0) {
+      combined.push(...cached.map(c => c.name.trim()));
+    }
+    return Array.from(new Set(combined.filter(Boolean)));
+  }, [customRepoList, githubRepos, candidateProfileContext]);
 
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Initialize selection: Fetch saved repo or select exactly 1 repo by default (compulsory min 1)
+  // Auto-fill username from candidateProfileContext or DB if input is empty
+  useEffect(() => {
+    if (!githubUsernameInput && candidateProfileContext) {
+      const match = candidateProfileContext.match(/github\.com\/([^\s\n\r/]+)/i);
+      if (match && match[1]) {
+        setGithubUsernameInput(match[1]);
+      }
+    }
+  }, [candidateProfileContext, githubUsernameInput]);
+
+  // Initialize selection: Fetch saved repos or select first repo by default (compulsory min 1)
   useEffect(() => {
     const loadRepoPreference = async () => {
       if (userId && interviewType?.id && company?.id && role?.id) {
         const saved = await fetchSelectedGithubRepo(userId, interviewType.id, company.id, role.id);
-        if (saved && availableRepoOptions.includes(saved)) {
-          setSelectedRepos([saved]);
-          return;
+        if (saved) {
+          const split = saved.split(',').map(s => s.trim()).filter(s => availableRepoOptions.includes(s));
+          if (split.length > 0) {
+            setSelectedRepos(split);
+            return;
+          }
         }
       }
       // If no saved repo or not found, automatically select ONLY the first available repo (never all)
       if (availableRepoOptions.length > 0) {
-        setSelectedRepos(prev => (prev.length > 0 && availableRepoOptions.includes(prev[0])) ? prev : [availableRepoOptions[0]]);
+        setSelectedRepos(prev => {
+          const valid = prev.filter(r => availableRepoOptions.includes(r));
+          return valid.length > 0 ? valid : [availableRepoOptions[0]];
+        });
       }
     };
     loadRepoPreference();
   }, [userId, interviewType?.id, company?.id, role?.id, availableRepoOptions]);
 
   const toggleRepoSelection = (repoName: string) => {
-    // Exactly 1 project is selected; minimum 1 is compulsory at all times
-    if (selectedRepos.length === 1 && selectedRepos[0] === repoName) {
-      toast.info(`"${repoName}" is currently selected as your target project.`);
+    if (selectedRepos.includes(repoName)) {
+      if (selectedRepos.length === 1) {
+        toast.info(`At least one repository must remain selected for the interview.`);
+        return;
+      }
+      const updated = selectedRepos.filter(r => r !== repoName);
+      setSelectedRepos(updated);
+      toast.success(`Deselected "${repoName}" (${updated.length} selected).`);
+    } else {
+      const updated = [...selectedRepos, repoName];
+      setSelectedRepos(updated);
+      toast.success(`Selected "${repoName}" (${updated.length} selected).`);
+    }
+  };
+
+  const handleConnectGitHubOAuth = async () => {
+    setOauthLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        console.log('[EliteVoiceRoom] Linking GitHub identity to existing session...');
+        const { data, error } = await supabase.auth.linkIdentity({
+          provider: 'github',
+          options: {
+            scopes: 'read:user repo read:org',
+            redirectTo: window.location.href
+          }
+        });
+        if (!error && data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+        if (error) {
+          console.warn('[EliteVoiceRoom] linkIdentity note:', error.message);
+        }
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          scopes: 'read:user repo read:org',
+          redirectTo: window.location.href
+        }
+      });
+      if (error) toast.error(error.message);
+    } catch (err: any) {
+      toast.error(`GitHub OAuth error: ${err.message || 'Failed to connect'}`);
+    } finally {
+      setOauthLoading(false);
+    }
+  };
+
+  const handleFetchReposByUsername = async () => {
+    const cleanUsername = extractGithubUsername(githubUsernameInput);
+    if (!cleanUsername) {
+      toast.error('Please enter a valid GitHub username or profile link.');
       return;
     }
-    setSelectedRepos([repoName]);
-    toast.success(`Selected "${repoName}" for the interview.`);
+
+    setIsFetchingRepos(true);
+    try {
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        localStorage.setItem('voke_github_username', cleanUsername);
+      }
+      const fetched = await fetchUserGithubRepos(cleanUsername);
+      if (fetched && fetched.length > 0) {
+        setCustomRepoList(fetched);
+        setSelectedRepos([fetched[0].name]);
+        toast.success(`Found ${fetched.length} repositories for @${cleanUsername}!`);
+      } else {
+        handleLoadResumeProjects();
+        toast.warning(`GitHub API rate limit or no public repos found for @${cleanUsername}. You can add your project directly below!`);
+      }
+    } catch (err: any) {
+      handleLoadResumeProjects();
+      toast.error('Could not query GitHub API. You can add your project directly below.');
+    } finally {
+      setIsFetchingRepos(false);
+    }
+  };
+
+  const handleAddManualProject = () => {
+    if (!manualProjectInput.trim()) {
+      toast.error('Please enter a project or repository name.');
+      return;
+    }
+    const cleanName = manualProjectInput.trim();
+    const updated = saveCustomRepo({
+      name: cleanName,
+      description: manualProjectTech.trim() || 'Candidate project for technical architecture interrogation',
+      language: 'TypeScript/JavaScript'
+    });
+    setCustomRepoList(updated);
+    setSelectedRepos(prev => prev.includes(cleanName) ? prev : [...prev, cleanName]);
+    setManualProjectInput('');
+    setManualProjectTech('');
+    setShowManualAdd(false);
+    toast.success(`Added "${cleanName}"! Ready for mock interview.`);
+  };
+
+  const handleLoadResumeProjects = () => {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    try {
+      const saved = localStorage.getItem('voke_resume_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed.projects) && parsed.projects.length > 0) {
+          const mapped: GitHubRepoItem[] = parsed.projects
+            .filter((p: any) => p && (p.name || p.title))
+            .map((p: any) => ({
+              name: (p.name || p.title).trim(),
+              description: p.description || 'Project from candidate profile',
+              language: p.techStack || 'TypeScript/JavaScript',
+              summary: `${p.name || p.title}: ${p.description || 'Portfolio project'}`
+            }));
+          if (mapped.length > 0) {
+            setCustomRepoList(prev => [...mapped, ...prev]);
+            setSelectedRepos([mapped[0].name]);
+            toast.success(`Loaded ${mapped.length} projects from your Profile resume!`);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading resume projects:', e);
+    }
   };
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -236,17 +415,20 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
   const [isPreInterviewSetupOpen, setIsPreInterviewSetupOpen] = useState(true);
 
   const handleConfirmSetupAndStart = async () => {
-    const targetProject = selectedRepos[0] || (availableRepoOptions.length > 0 ? availableRepoOptions[0] : '');
-    if (!targetProject) {
+    const targetProjects = selectedRepos.length > 0 
+      ? selectedRepos 
+      : (availableRepoOptions.length > 0 ? [availableRepoOptions[0]] : []);
+
+    if (targetProjects.length === 0) {
       toast.error('Please connect your GitHub account or add projects to your profile to proceed.');
       return;
     }
     
-    if (selectedRepos.length === 0 || selectedRepos[0] !== targetProject) {
-      setSelectedRepos([targetProject]);
+    if (selectedRepos.length === 0) {
+      setSelectedRepos(targetProjects);
     }
     
-    // Save selected project to DB
+    // Save selected project(s) to DB (comma-separated if multiple)
     try {
       const activeUserId = userId || (await supabase.auth.getSession()).data.session?.user.id;
       if (activeUserId) {
@@ -255,7 +437,7 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
           interviewType.id, 
           company.id, 
           role.id, 
-          targetProject
+          targetProjects.join(',')
         );
       }
     } catch (e) {
@@ -322,6 +504,52 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
 
   const initiateSession = () => {
     const isRound1 = round.roundNumber === 1;
+    const isJobMode = !!jobInterviewContext;
+    const skillGapStrings: string[] = (jobInterviewContext?.skillGaps || []).map((g: any) =>
+      typeof g === 'string' ? g : g.skill
+    ).filter(Boolean);
+    const gap1 = skillGapStrings[0] || 'Core Architecture';
+    const gap2 = skillGapStrings[1] || skillGapStrings[0] || 'System Design';
+    const gap3 = skillGapStrings[2] || '';
+    const targetComp = jobInterviewContext?.companyName || company.name;
+    const targetRoleName = jobInterviewContext?.jobTitle || role.title;
+    const descExcerpt = jobInterviewContext?.jobDescription ? jobInterviewContext.jobDescription.slice(0, 600) : '';
+
+    const jobInterviewCategoryFlow = `
+=== TARGET JOB MOCK INTERVIEW — RESUME, GITHUB & SPECIFIC SKILL GAP EVALUATION ===
+TARGET ROLE: ${targetRoleName}
+TARGET COMPANY: ${targetComp}
+CANDIDATE'S IDENTIFIED RESUME SKILL GAPS FOR THIS ROLE: [${skillGapStrings.join(', ')}]
+JOB DESCRIPTION CONTEXT:
+${descExcerpt}
+
+OBJECTIVE:
+You are the Technical Hiring Manager conducting an in-depth interview for the ${targetRoleName} position at ${targetComp}.
+CRITICAL MANDATES (YOU MUST STRICTLY FOLLOW ALL OF THESE):
+1. EVALUATE FOR THIS SPECIFIC ROLE: Keep the entire evaluation tailored to ${targetRoleName} at ${targetComp}.
+2. ASK RESUME QUESTIONS: Interrogate the candidate on their real education and previous experience listed on their resume.
+3. ASK GITHUB QUESTIONS: Question them on the concrete technical architecture and tradeoffs of their chosen GitHub ${selectedRepos.length > 1 ? 'repositories' : 'repository'} (${selectedRepos.join(', ') || 'their top repository'}).
+4. CRUCIAL — PROBE IDENTIFIED SKILL GAPS: The candidate's resume currently lacks or has weak alignment on [${skillGapStrings.join(', ')}]. You MUST probe their grasp of these missing skills to assess their true depth, architectural principles, or how fast they can ramp up!
+
+EXACT 10-QUESTION RESUME, GITHUB & SKILL GAP ALLOCATION:
+- Question 1 (Warm Intro & Role Alignment): Warmly welcome the candidate to their interview for the ${targetRoleName} role at ${targetComp}. Ask them to introduce their technical journey and why they want to join ${targetComp} for this position.
+- Question 2 (Resume - Educational Foundations & Background): Ask about their computer science or technical degree, coursework, or how they established their engineering foundation as listed on their resume.
+- Question 3 (Resume - Claimed Core Competencies & Past Experience): Ask about the primary technical stack, languages, or tools explicitly highlighted in their resume's work experience and project section.
+- Question 4 (GITHUB PROJECT QUESTION 1 OF 2): Deep dive into their selected GitHub repository (${selectedRepos[0] || 'their top repository'}). Ask a concrete question about the repository's component structure, data flow, API design, or package architecture.
+- Question 5 (GITHUB PROJECT QUESTION 2 OF 2): ${selectedRepos.length > 1 
+  ? `Inspect their second selected GitHub repository (${selectedRepos[1]}). Ask about its architecture, technical tradeoffs, edge cases, or how its architecture complements or contrasts with ${selectedRepos[0]}.` 
+  : `Follow up on their selected GitHub repository (${selectedRepos[0] || 'their top repository'}) regarding a technical tradeoff, edge case, state synchronization challenge, or performance bottleneck they solved in that codebase.`}
+- Question 6 (CRITICAL SKILL GAP 1 PROBE): The candidate lacks or has not explicitly demonstrated "${gap1}" on their resume, which is an important requirement for this ${targetRoleName} opening at ${targetComp}. Probe their conceptual understanding of "${gap1}" or ask a foundational problem-solving question on "${gap1}".
+- Question 7 (CRITICAL SKILL GAP 2 / PRODUCTION SCENARIO): Probe their knowledge on "${gap2}"${gap3 ? ` or "${gap3}"` : ''}. Ask a practical production scenario question involving this skill, or ask how their existing background will allow them to ramp up on "${gap2}" immediately without slowing down the team.
+- Question 8 (Job-Specific Technical Scenario): Present a realistic system design or architectural scenario based on the day-to-day requirements described in the ${targetComp} ${targetRoleName} job description.
+- Question 9 (Learning Velocity & Technical Adaptability): Ask a behavioral question about a time they had to rapidly master an unfamiliar technology or bridge a critical skill gap to deliver a project under tight deadlines.
+- Question 10 (Outro, Readiness & Closing Speech): Ask a final wrap-up question on their confidence for this ${targetRoleName} role at ${targetComp}, then speak a warm, polite closing goodbye thanking them for their time!
+
+=== CONVERSATIONAL VOICE RULES ===
+- EVERY QUESTION MUST BE CONCISE (1-2 sentences MAX, under 25 words).
+- Zero robotic fluff. Use natural transitions: "Got it!", "Thanks for clarifying.", "Understood."
+- Ask EXACTLY ONE question at a time. Never ask compound multi-part questions.
+`;
 
     const round1CategoryFlow = `
 === ROUND 1 — RESUME SCREENING & VERIFICATION (EXACT 10-QUESTION ALLOCATION) ===
@@ -395,6 +623,14 @@ DIFFICULTY MANDATE:
       }
     }
 
+    if (selectedRepos.length > 0 && !cleanedContext.includes('GITHUB PROJECTS (STRICTLY SELECTED REPOSITORIES ONLY:')) {
+      const projectsText = selectedRepos.map(repoName => {
+        const customProjectDesc = customRepoList.find(r => r.name.toLowerCase() === repoName.toLowerCase());
+        return `Project: ${repoName}\n- Description: ${customProjectDesc?.description || 'Candidate selected project repository for architectural and technical code interrogation'}\n- Tech: ${customProjectDesc?.language || 'Fullstack / Software Engineering'}`;
+      }).join('\n\n');
+      cleanedContext += `\nGITHUB PROJECTS (STRICTLY SELECTED REPOSITORIES ONLY: ${selectedRepos.join(', ')}):\n${projectsText}\n`;
+    }
+
     const repoSelectionMandate = selectedRepos.length > 0 ? `
 === STRICT REPOSITORY SELECTION MANDATE ===
 - CANDIDATE HAS EXPLICITLY SELECTED ONLY THESE TARGET REPOSITORIES FOR THIS INTERVIEW: [${selectedRepos.join(', ')}].
@@ -422,20 +658,21 @@ TARGET DOMAIN: FULL STACK ENGINEERING (${role.title} at ${company.name})
 - QUESTIONS MUST BE BALANCED BETWEEN FRONTEND (React/UI/Client state) AND BACKEND (APIs/Databases/Server architecture).`;
 
     const systemPrompt = `
-ROLE: You are an Elite Technical Interviewer at ${company.name} conducting a pure voice/video interview.
-CATEGORY: ${interviewType.title}
-TARGET ROLE: ${role.title}
+ROLE: You are an Elite Technical Interviewer at ${isJobMode ? targetComp : company.name} conducting a pure voice/video interview.
+CATEGORY: ${isJobMode ? 'Target Job Interview' : interviewType.title}
+TARGET ROLE: ${isJobMode ? targetRoleName : role.title}
 CURRENT ROUND: ${round.title} (Round ${round.roundNumber} of 4)
 FOCUS AREAS: ${round.focusAreas.join(', ')}
 ${cleanedContext ? `CANDIDATE CONTEXT / RESUME:\n${cleanedContext}` : ''}
+${isJobMode && skillGapStrings.length > 0 ? `TARGET SKILL GAPS IDENTIFIED FOR THIS ROLE: ${skillGapStrings.join(', ')}` : ''}
 
-${domainFocusMandate}
+${isJobMode ? '' : domainFocusMandate}
 
 ${repoSelectionMandate}
 
 === CONVERSATIONAL TONE & NATURAL TRANSITIONS ===
 1. WARM CONVERSATIONAL OPENING (QUESTION 1):
-   - Open naturally and warmly on your first message (e.g. "Hi Anurag! Welcome to your Round 1 interview for the Frontend Developer position at Google. It's great to connect with you! To get us started, could you briefly introduce yourself and share your core background in frontend development?")
+   - Open naturally and warmly on your first message (e.g. "Hi! Welcome to your interview for the ${isJobMode ? targetRoleName : role.title} position at ${isJobMode ? targetComp : company.name}. It's great to connect with you! To get us started, could you briefly introduce yourself and share your core background?")
    - DO NOT jump straight into cold robotic questions without a warm greeting.
 
 2. NATURAL INTER-QUESTION BRIDGES:
@@ -447,9 +684,9 @@ ${repoSelectionMandate}
 
 4. WRAP-UP & CLOSING SPEECH (ON QUESTION ${totalQuestions}):
    - After candidate answers Question ${totalQuestions} (the final question), output a warm, polite closing message thanking them for their time before outputting the final verdict token:
-     "Thank you so much for taking the time to speak with me today, Anurag! That completes all ${totalQuestions} questions for Round 1. We are finalizing your evaluation report and video analysis now. Have a wonderful day! [VERDICT: PASSED] [REASON: Candidate successfully completed all ${totalQuestions} screening questions with solid communication.]"
+     "Thank you so much for taking the time to speak with me today! That completes all ${totalQuestions} questions for this session. We are finalizing your evaluation report and video analysis now. Have a wonderful day! [VERDICT: PASSED] [REASON: Candidate successfully completed all ${totalQuestions} screening questions with solid communication.]"
 
-${isRound1 ? round1CategoryFlow : ''}
+${isJobMode ? jobInterviewCategoryFlow : (isRound1 ? round1CategoryFlow : '')}
 `;
 
     connect(systemPrompt);
@@ -829,70 +1066,113 @@ ${isRound1 ? round1CategoryFlow : ''}
       {/* SETUP MODAL (GitHub / Resume) */}
       {isPreInterviewSetupOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 select-text">
-          <div className="bg-[#0a0b12]/95 border border-white/10 backdrop-blur-2xl rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col p-6 shadow-2xl relative overflow-hidden space-y-5">
+          <div className="bg-[#0a0b12]/95 border border-white/10 backdrop-blur-2xl rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col p-6 shadow-2xl relative overflow-hidden space-y-4">
 
-            {/* Header Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
-                  <GitBranch className="w-5 h-5 text-sky-400" />
+            {/* Simplified Header */}
+            <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
+                  <GitBranch className="w-4 h-4 text-sky-400" />
                 </div>
-                <div>
-                  <h2 className="text-lg font-extrabold text-white tracking-tight">
+                <div className="min-w-0">
+                  <h2 className="text-sm font-bold text-white tracking-tight">
                     Select Target Repositories
                   </h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    Choose which GitHub repositories the AI interviewer will evaluate & question you on
-                  </p>
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-400 mt-0.5 truncate">
+                    <span className="font-semibold text-zinc-200">
+                      {jobInterviewContext ? jobInterviewContext.companyName : company.name}
+                    </span>
+                    <span className="text-zinc-600">•</span>
+                    <span className="truncate">
+                      {jobInterviewContext ? jobInterviewContext.jobTitle : role.title}
+                    </span>
+                    {jobInterviewContext?.skillGaps && jobInterviewContext.skillGaps.length > 0 && (
+                      <>
+                        <span className="text-zinc-600">•</span>
+                        <span className="text-amber-400/90 font-medium truncate">
+                          Gaps: {jobInterviewContext.skillGaps.map((g: any) => typeof g === 'string' ? g : g.skill).join(', ')}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5 bg-[#121422] border border-white/10 px-3 py-1.5 rounded-xl self-start sm:self-auto shrink-0">
-                <div className="w-6 h-6 rounded-lg bg-white p-0.5 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
-                  <img
-                    src={company.logo}
-                    alt={company.name}
-                    onError={(e) => {
-                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=18181b&color=fff&size=64`;
-                    }}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white leading-tight">{company.name}</span>
-                  <span className="text-[10px] text-sky-400 font-semibold leading-tight">{role.title}</span>
-                </div>
+              <div className="shrink-0">
+                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                  {selectedRepos.length} Selected
+                </span>
               </div>
             </div>
 
-            {/* Search Bar & Action Bar */}
-            <div className="space-y-3 flex-1 flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-white flex items-center gap-2">
-                  <FolderCode className="w-4 h-4 text-sky-400" />
-                  Your Repositories ({availableRepoOptions.length} Available)
-                </span>
-                <Badge className="bg-sky-500/20 border border-sky-500/30 text-sky-300 text-[10px] font-bold">
-                  {selectedRepos.length === 1 ? `Target: ${selectedRepos[0]}` : '1 Project Selected'}
-                </Badge>
-              </div>
-
-              {/* Search Filter Bar */}
-              {availableRepoOptions.length > 4 && (
-                <div className="relative">
+            {/* Repositories Section */}
+            <div className="space-y-2.5 flex-1 flex flex-col min-h-0">
+              {/* Sleek Search & Quick Action Bar */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="relative flex-1 max-w-sm">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search repositories..."
-                    className="w-full bg-[#121422] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-sky-500/60 transition-colors"
+                    placeholder={`Search ${availableRepoOptions.length} repositories...`}
+                    className="w-full bg-[#121422] border border-white/10 rounded-lg pl-3 pr-8 py-1.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-sky-500/60"
                   />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setShowManualAdd(!showManualAdd)}
+                    className="text-[11px] font-medium text-sky-400 hover:text-sky-300 flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <Plus className="w-3 h-3" /> Add Project
+                  </button>
+                  <span className="text-zinc-700">|</span>
+                  <span className="text-[11px] text-zinc-400 font-mono">
+                    @{githubUsernameInput || 'GitHub'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Inline Quick Add Form (toggled on demand) */}
+              {showManualAdd && (
+                <div className="p-3 rounded-xl bg-[#121422] border border-sky-500/30 space-y-2 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-sky-300">Add Project Manually</span>
+                    <button onClick={() => setShowManualAdd(false)} className="text-zinc-400 hover:text-white text-xs">×</button>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={manualProjectInput}
+                      onChange={(e) => setManualProjectInput(e.target.value)}
+                      placeholder="Project Name (e.g. Distributed Cache)"
+                      className="flex-1 bg-[#0a0b12] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white placeholder:text-zinc-500 focus:border-sky-500"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleAddManualProject}
+                      disabled={!manualProjectInput.trim()}
+                      className="h-8 px-3 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-lg"
+                    >
+                      Add & Select
+                    </Button>
+                  </div>
                 </div>
               )}
 
-              {/* Repositories Loading Skeletons, Scrollable Grid, or Connect GitHub Empty State */}
-              {isLoadingRepos ? (
-                <div className="p-8 rounded-2xl bg-[#121422]/60 border border-white/10 text-center space-y-4 my-auto flex flex-col items-center justify-center min-h-[220px]">
+              {/* Repositories Loading Skeletons */}
+              {isLoadingRepos || isFetchingRepos ? (
+                <div className="p-8 rounded-2xl bg-[#121422]/60 border border-white/10 text-center space-y-4 my-auto flex flex-col items-center justify-center min-h-[180px]">
                   <div className="relative">
                     <div className="w-10 h-10 rounded-full border-2 border-sky-500/30 border-t-sky-500 animate-spin" />
                     <Sparkles className="w-4 h-4 text-sky-400 absolute inset-0 m-auto" />
@@ -900,82 +1180,70 @@ ${isRound1 ? round1CategoryFlow : ''}
                   <div>
                     <h4 className="text-xs font-bold text-white tracking-wide">Fetching Your GitHub Repositories...</h4>
                     <p className="text-[11px] text-zinc-400 mt-1">
-                      Querying GitHub API for your personal & organization projects...
+                      Querying GitHub API for personal & organization projects...
                     </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 w-full opacity-60">
-                    <div className="h-14 rounded-xl bg-zinc-900/80 border border-white/10 animate-pulse" />
-                    <div className="h-14 rounded-xl bg-zinc-900/80 border border-white/10 animate-pulse" />
                   </div>
                 </div>
               ) : availableRepoOptions.length === 0 ? (
-                <div className="p-6 rounded-2xl bg-[#121422]/70 border border-white/10 text-center space-y-3 my-auto flex flex-col items-center justify-center">
+                <div className="p-6 rounded-2xl bg-[#121422]/70 border border-white/10 text-center space-y-3.5 my-auto flex flex-col items-center justify-center">
                   <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
                     <Github className="w-5 h-5" />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white">No GitHub Repositories Loaded</h4>
                     <p className="text-[11px] text-zinc-400 mt-1 max-w-sm mx-auto">
-                      Connect your GitHub account to let the AI interviewer evaluate and question you on your real personal & organization repositories.
+                      Add a project manually or enter your GitHub handle in Profile to start.
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={async () => {
-                      const { error } = await supabase.auth.signInWithOAuth({
-                        provider: 'github',
-                        options: {
-                          scopes: 'read:user repo read:org',
-                          redirectTo: `${window.location.origin}/elite-prep`
-                        }
-                      });
-                      if (error) toast.error(error.message);
-                    }}
-                    className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs inline-flex items-center gap-2 shadow-lg shadow-sky-600/20 cursor-pointer transition-all transform hover:scale-[1.02]"
+                    onClick={() => setShowManualAdd(true)}
+                    className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs inline-flex items-center gap-1.5 shadow-lg shadow-sky-600/20 cursor-pointer transition-all"
                   >
-                    <Github className="w-4 h-4" /> ⚡ Connect GitHub Account
+                    <Plus className="w-3.5 h-3.5" /> Add Project Manually
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[38vh] overflow-y-auto pr-1 flex-1">
+                /* Spacious, clean repository grid */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[46vh] overflow-y-auto pr-1 flex-1">
                   {availableRepoOptions
                     .filter(repo => repo.toLowerCase().includes(searchQuery.toLowerCase()))
                     .map((repo) => {
                       const isSelected = selectedRepos.includes(repo);
+                      const detail = customRepoList.find(r => r.name.toLowerCase() === repo.toLowerCase());
                       return (
                         <div
                           key={repo}
                           onClick={() => toggleRepoSelection(repo)}
-                          className={`group p-3.5 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col justify-between relative ${
+                          className={`p-3 rounded-xl border cursor-pointer transition-all duration-150 flex items-center justify-between gap-3 ${
                             isSelected
-                              ? 'bg-[#141628] border-sky-500/80 ring-2 ring-sky-500/30 shadow-lg shadow-sky-500/10'
-                              : 'bg-[#0d0e17]/80 border-white/5 hover:border-white/20 hover:bg-[#121422]/60 opacity-60 hover:opacity-100'
+                              ? 'bg-[#14182e] border-sky-500 shadow-md shadow-sky-500/10 ring-1 ring-sky-500/40'
+                              : 'bg-[#0e101c]/80 border-white/5 hover:border-white/20 hover:bg-[#121526]'
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-2 mb-2.5">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all shrink-0 ${
-                                isSelected 
-                                  ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/30 font-extrabold' 
-                                  : 'bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
-                              }`}>
-                                {isSelected ? <Check className="w-3.5 h-3.5 text-white stroke-[3]" /> : <GitBranch className="w-3.5 h-3.5 text-zinc-500" />}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h4 className={`text-xs font-bold tracking-tight truncate ${isSelected ? 'text-sky-200' : 'text-white group-hover:text-sky-300'}`}>
-                                  {repo}
-                                </h4>
-                                <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-white/5 inline-block mt-0.5">
-                                  GitHub Repo
-                                </span>
-                              </div>
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0 transition-all ${
+                              isSelected ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/30' : 'bg-zinc-800 text-zinc-500'
+                            }`}>
+                              {isSelected ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : <GitBranch className="w-3.5 h-3.5" />}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className={`text-xs font-bold truncate ${isSelected ? 'text-sky-200' : 'text-zinc-200'}`}>
+                                {repo}
+                              </h4>
+                              <span className="text-[10px] text-zinc-400 truncate block mt-0.5">
+                                {detail?.language || 'GitHub Project'}
+                              </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[10px]">
-                            <span className="text-zinc-500 font-medium">Interview Target</span>
-                            <span className={`font-bold ${isSelected ? 'text-sky-400' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
-                              {isSelected ? '✓ Selected Target' : 'Click to Select'}
+                          <div className="shrink-0">
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded transition-all ${
+                              isSelected
+                                ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30'
+                                : 'text-zinc-500 border border-white/5 hover:text-zinc-300'
+                            }`}>
+                              {isSelected ? '✓ Selected' : '+ Select'}
                             </span>
                           </div>
                         </div>
@@ -985,14 +1253,30 @@ ${isRound1 ? round1CategoryFlow : ''}
               )}
             </div>
 
-            {/* Confirmation Primary CTA */}
-            <div className="pt-2 border-t border-white/10">
+            {/* Bottom Action Bar */}
+            <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-zinc-400 self-start sm:self-auto min-w-0 flex items-center gap-1.5 flex-wrap">
+                <span>Selected ({selectedRepos.length}):</span>
+                {selectedRepos.length > 0 ? (
+                  <span className="text-sky-300 font-bold truncate max-w-xs sm:max-w-md">
+                    {selectedRepos.join(', ')}
+                  </span>
+                ) : (
+                  <span className="text-zinc-500 italic">None</span>
+                )}
+              </div>
+
               <Button
                 onClick={handleConfirmSetupAndStart}
-                className="w-full h-12 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-sky-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                disabled={availableRepoOptions.length === 0 && selectedRepos.length === 0}
+                className="w-full sm:w-auto h-11 px-6 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-sky-600/20 transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0"
               >
                 <Zap className="w-4 h-4 text-amber-400" />
-                Start Interview Session with "{selectedRepos[0] || 'Selected Project'}"
+                {selectedRepos.length > 1
+                  ? `Start Interview (${selectedRepos.length} Projects)`
+                  : selectedRepos.length === 1
+                  ? `Start Interview (${selectedRepos[0]})`
+                  : 'Start Interview Session'}
               </Button>
             </div>
           </div>
@@ -1000,47 +1284,36 @@ ${isRound1 ? round1CategoryFlow : ''}
       )}
 
       {/* TOP FLOATING HUD BAR */}
-      <header className="h-16 border-b border-white/10 bg-zinc-950/80 backdrop-blur-2xl px-6 flex items-center justify-between z-20 shrink-0 shadow-2xl">
+      <header className="h-14 border-b border-white/10 bg-zinc-950/90 backdrop-blur-xl px-5 flex items-center justify-between z-20 shrink-0">
         {/* Left: Company & Role Details */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-white p-1.5 shadow-lg flex items-center justify-center overflow-hidden shrink-0 border border-gray-200">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/10 p-1 flex items-center justify-center shrink-0 overflow-hidden">
             <img
               src={company.logo}
               alt={company.name}
               onError={(e) => {
                 e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=18181b&color=fff&size=64`;
               }}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain rounded"
             />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-base text-white tracking-wide">{company.name}</span>
-              <span className="text-zinc-600">•</span>
-              <span className="text-xs font-bold text-sky-400">{role.title}</span>
-              <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] py-0.5 font-semibold">
-                {interviewType.title}
-              </Badge>
-              <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-[10px] py-0.5 px-2 font-mono font-black tracking-wide shadow-sm flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>{apiLabel || '(primary 3.1)'}</span>
-              </Badge>
-            </div>
-            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
-              {round.title}
-            </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-bold text-sm text-white truncate">
+              {jobInterviewContext ? jobInterviewContext.companyName : company.name}
+            </span>
+            <span className="text-zinc-600">•</span>
+            <span className="text-xs font-medium text-zinc-300 truncate max-w-[240px] sm:max-w-xs md:max-w-md">
+              {jobInterviewContext ? jobInterviewContext.jobTitle : role.title}
+            </span>
           </div>
         </div>
 
-        {/* Center: 9-Step Progress Nodes HUD */}
-        <div className="hidden md:flex items-center gap-3 bg-zinc-900/90 border border-white/15 px-5 py-2 rounded-2xl shadow-xl">
-          <div className="flex items-center gap-2 mr-2">
-            <HelpCircle className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-extrabold text-white">Q{currentQuestionNumber} of {totalQuestions}</span>
-          </div>
-
-          {/* Node Indicators */}
-          <div className="flex items-center gap-1.5">
+        {/* Center: Clean Question Progress */}
+        <div className="hidden md:flex items-center gap-3 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10">
+          <span className="text-xs text-zinc-300 font-medium">
+            Question <strong className="text-white">{currentQuestionNumber}</strong> of {totalQuestions}
+          </span>
+          <div className="flex items-center gap-1">
             {Array.from({ length: totalQuestions }).map((_, i) => {
               const qIndex = i + 1;
               const isDone = qIndex < currentQuestionNumber;
@@ -1049,12 +1322,12 @@ ${isRound1 ? round1CategoryFlow : ''}
               return (
                 <div
                   key={i}
-                  className={`h-2 rounded-full transition-all duration-500 ${
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
                     isDone
-                      ? 'w-4 bg-emerald-400 shadow-md shadow-emerald-400/50'
+                      ? 'w-2.5 bg-emerald-400'
                       : isCurrent
-                      ? 'w-7 bg-amber-400 animate-pulse shadow-lg shadow-amber-400/60'
-                      : 'w-2 bg-zinc-800'
+                      ? 'w-4 bg-sky-400'
+                      : 'w-1.5 bg-zinc-700'
                   }`}
                 />
               );
@@ -1062,23 +1335,36 @@ ${isRound1 ? round1CategoryFlow : ''}
           </div>
         </div>
 
-        {/* Right: Live Timer & End Call */}
-        <div className="flex items-center gap-3">
+        {/* Right: Live Timer & Clean Actions */}
+        <div className="flex items-center gap-2.5">
           {status === LiveStatus.CONNECTED && (
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono font-extrabold">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>{formatTime(duration)}</span>
             </div>
           )}
 
+          {jobInterviewContext && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onExit}
+              className="text-xs text-zinc-400 hover:text-white hover:bg-white/10 h-8 px-2.5 rounded-lg flex items-center gap-1.5 font-medium cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Exit</span>
+            </Button>
+          )}
+
           <Button
-            variant="destructive"
+            variant="outline"
             size="sm"
             onClick={handleManualEndSession}
             disabled={isEnding}
-            className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold rounded-xl text-xs px-4 h-9 shadow-lg shadow-red-600/20"
+            className="h-8 px-3 rounded-lg border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
           >
-            <PhoneOff className="w-3.5 h-3.5 mr-1.5" /> End Interview
+            <PhoneOff className="w-3.5 h-3.5" />
+            <span>End Interview</span>
           </Button>
         </div>
       </header>
@@ -1104,18 +1390,10 @@ ${isRound1 ? round1CategoryFlow : ''}
             </div>
 
             {/* AI Badge Overlay (Top-Left) */}
-            <div className="absolute top-5 left-5 z-20 flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-zinc-900/90 backdrop-blur-md border border-white/15 shadow-xl">
-              <div className="w-7 h-7 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-extrabold text-white flex items-center gap-2">
-                  <span>{company.name} AI Technical Lead</span>
-                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] font-black tracking-wide">
-                    {apiLabel || '(primary 3.1)'}
-                  </span>
-                </div>
-                <div className="text-[10px] text-zinc-400 font-mono">Interviewer</div>
+            <div className="absolute top-5 left-5 z-20 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/80 backdrop-blur-md border border-white/10 shadow-lg">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <div className="text-xs font-semibold text-white">
+                {company.name} AI Technical Lead
               </div>
             </div>
 

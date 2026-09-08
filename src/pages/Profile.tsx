@@ -23,7 +23,7 @@ import InterviewAnalytics from "@/components/InterviewAnalytics";
 import AICoachChat from "@/components/AICoachChat";
 import ResumeAnalyzer from "@/components/ResumeAnalyzer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { loadUserProfileContext } from "@/utils/profileContext";
+import { loadUserProfileContext, extractGithubUsername, fetchUserGithubRepos } from "@/utils/profileContext";
 import { collegeService } from "@/services/collegeService";
 
 interface ExperienceItem {
@@ -1941,30 +1941,40 @@ const Profile = () => {
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs font-semibold text-foreground/90 dark:text-zinc-200">GitHub Integration</Label>
-                              <div className="p-3.5 rounded-xl border border-green-400/50 dark:border-green-400/30 dark:bg-green-400/10 bg-green-400/10 dark:bg-zinc-900/50 flex items-center justify-between">
-                                <div className="flex items-center gap-2.5">
-                                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                                    <Github className="w-4 h-4" />
-                                  </div>
-                                  <div>
-                                    <div className="text-xs font-bold text-foreground">GitHub Account</div>
-                                    <div className="text-[11px] text-muted-foreground dark:text-zinc-300">
-                                      {formData.github_url || profile?.github_url
-                                        ? `@${(formData.github_url || profile?.github_url || '').replace(/\/$/, '').split('/').pop()} linked`
-                                        : '1-Click Direct Connect'}
-                                        
+                              <div className="p-3.5 rounded-xl border border-blue-500/20 bg-blue-500/5 dark:bg-zinc-900/50 space-y-3">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                                      <Github className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                      <div className="text-xs font-bold text-foreground">GitHub Account</div>
+                                      <div className="text-[11px] text-muted-foreground dark:text-zinc-300">
+                                        {formData.github_url || profile?.github_url
+                                          ? `@${(formData.github_url || profile?.github_url || '').replace(/\/$/, '').split('/').pop()} linked`
+                                          : 'Connect or enter your GitHub handle'}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                                {formData.github_url || profile?.github_url ? (
-                                  <div className="flex items-center gap-2">
-                                    {/* <Badge variant="outline" className="border-emerald-600/30 dark:border-emerald-500/40 bg-emerald-500/15 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs px-2.5 py-1 font-extrabold flex items-center gap-1.5 shadow-xs">
-                                      <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
-                                      Connected kaali
-                                    </Badge> */}
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
+
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      try {
+                                        const { data: { session } } = await supabase.auth.getSession();
+                                        if (session?.user) {
+                                          const { data, error } = await supabase.auth.linkIdentity({
+                                            provider: 'github',
+                                            options: {
+                                              scopes: 'read:user repo read:org',
+                                              redirectTo: `${window.location.origin}/profile`
+                                            }
+                                          });
+                                          if (!error && data?.url) {
+                                            window.location.href = data.url;
+                                            return;
+                                          }
+                                        }
                                         const { error } = await supabase.auth.signInWithOAuth({
                                           provider: 'github',
                                           options: {
@@ -1973,30 +1983,54 @@ const Profile = () => {
                                           }
                                         });
                                         if (error) toast.error(error.message);
-                                      }}
-                                      className="text-[11px] font-bold text-blue-800 dark:text-blue-300 dark:hover:text-blue-600 hover:text-blue-600 underline cursor-pointer ml-1"
-                                    >
-                                      Re-connect
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={async () => {
-                                      const { error } = await supabase.auth.signInWithOAuth({
-                                        provider: 'github',
-                                        options: {
-                                          scopes: 'read:user repo read:org',
-                                          redirectTo: `${window.location.origin}/profile`
-                                        }
-                                      });
-                                      if (error) toast.error(error.message);
+                                      } catch (err: any) {
+                                        toast.error(err.message || 'OAuth error');
+                                      }
                                     }}
-                                    className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1.5 cursor-pointer transition-colors bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-500/20"
+                                    className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1.5 cursor-pointer transition-colors bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-500/20 self-start sm:self-auto"
                                   >
-                                    <Github className="w-3.5 h-3.5" /> ⚡ Connect GitHub
+                                    <Github className="w-3.5 h-3.5" /> ⚡ {formData.github_url || profile?.github_url ? 'Re-link via OAuth' : 'Connect via OAuth'}
                                   </button>
-                                )}
+                                </div>
+
+                                <div className="flex gap-2 items-center pt-2 border-t border-border/40">
+                                  <Input
+                                    placeholder="Enter username or URL (e.g. alexmorgan or github.com/alexmorgan)"
+                                    value={formData.github_url}
+                                    onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
+                                    className="bg-background/80 dark:bg-zinc-900/60 border-input dark:border-zinc-700/70 text-foreground text-xs h-9"
+                                  />
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={async () => {
+                                      const clean = extractGithubUsername(formData.github_url);
+                                      if (!clean) {
+                                        toast.error("Please enter a valid GitHub username or URL");
+                                        return;
+                                      }
+                                      const fullUrl = `https://github.com/${clean}`;
+                                      setFormData(prev => ({ ...prev, github_url: fullUrl }));
+                                      localStorage.setItem('voke_github_username', clean);
+                                      const { data: { user } } = await supabase.auth.getUser();
+                                      if (user) {
+                                        await supabase.from('profiles').update({ github_url: fullUrl }).eq('id', user.id);
+                                      }
+                                      toast.loading("Syncing repositories from GitHub...");
+                                      const repos = await fetchUserGithubRepos(clean);
+                                      toast.dismiss();
+                                      if (repos && repos.length > 0) {
+                                        setUserRepos(repos);
+                                        toast.success(`Successfully connected @${clean} (${repos.length} repositories loaded)!`);
+                                      } else {
+                                        toast.success(`Saved GitHub handle @${clean}!`);
+                                      }
+                                    }}
+                                    className="h-9 px-3 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shrink-0"
+                                  >
+                                    Save & Sync
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                             <div className="space-y-2">

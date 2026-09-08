@@ -306,6 +306,7 @@ const AdminDashboard = () => {
     }
   };
 
+  
   const handleToggleLocation = async (id: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
