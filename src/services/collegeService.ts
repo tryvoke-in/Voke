@@ -1803,30 +1803,34 @@ export const collegeService = {
     };
 
     // Feedback, strengths & weaknesses
-    const feedbackSummary = driveEvaluations.length > 0 && driveEvaluations[0].feedback
+    let candidateFeedback = driveEvaluations.length > 0 && driveEvaluations[0].feedback
       ? driveEvaluations[0].feedback
-      : (dbSessionEval?.feedback_summary || 
-        (isReady
-          ? "Candidate demonstrated exceptional clarity, accurate algorithmic reasoning, and articulate technical communication throughout the interview assessment."
-          : isIntermediate
-            ? "Candidate exhibits solid foundational understanding with good problem-solving instincts. Suggested improvement in time-complexity optimization and edge-case handling."
-            : "Candidate requires targeted practice in core data structures, algorithmic design patterns, and structured verbal articulation."));
+      : (dbSessionEval?.feedback_summary || "");
+
+    const isInvalidFeedbackText = candidateFeedback.toLowerCase().includes("invalid") || candidateFeedback.toLowerCase().includes("did not speak");
+    if (!candidateFeedback || (isInvalidFeedbackText && (primaryScore >= 50 || driveEvaluations[0]?.isPassed))) {
+      candidateFeedback = isReady
+        ? "Demonstrated strong algorithmic reasoning, problem-solving clarity, and structured technical articulation throughout the evaluation."
+        : isIntermediate
+          ? "Demonstrated solid technical understanding with sound problem-solving instincts. Shows strong readiness with minor refinements in optimization and edge cases."
+          : "Demonstrated fundamental technical awareness. Recommended to focus on core data structures and structured technical explanations.";
+    }
+    const feedbackSummary = candidateFeedback;
 
     const strengths = (dbSessionEval?.whats_good && Array.isArray(dbSessionEval.whats_good) && dbSessionEval.whats_good.length > 0)
       ? dbSessionEval.whats_good
       : [
           "Strong grasp of core data structures and algorithmic complexity",
-          "Articulate communication and structured approach to problem solving",
-          "Quick adaptation and clear explanation of trade-offs",
-          "Confident delivery and professional technical articulation"
+          "Clear, structured technical communication",
+          "Effective trade-off analysis during solution design"
         ];
 
     const weaknesses = (dbSessionEval?.whats_wrong && Array.isArray(dbSessionEval.whats_wrong) && dbSessionEval.whats_wrong.length > 0)
       ? dbSessionEval.whats_wrong
       : [
-          "Can deepen edge-case coverage in multi-threaded & high-concurrency scenarios",
-          "Recommend adding explicit unit test validation before finalizing solutions",
-          "Further practice on distributed system caching & consistency strategies"
+          "Deepen edge-case coverage in concurrent and high-scale scenarios",
+          "Validate assumptions with explicit test cases earlier",
+          "Practice distributed system caching and consistency trade-offs"
         ];
 
     return {

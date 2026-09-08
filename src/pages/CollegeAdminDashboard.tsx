@@ -27,6 +27,29 @@ import { ScheduleInterviewModal } from "@/components/college/ScheduleInterviewMo
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
+const formatCleanDate = (dateStr?: string) => {
+  if (!dateStr) return "N/A";
+  if (!dateStr.includes("-") && !dateStr.includes("/") && isNaN(Date.parse(dateStr))) {
+    return dateStr;
+  }
+  const parsed = new Date(dateStr);
+  if (isNaN(parsed.getTime())) {
+    return dateStr;
+  }
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+};
+
+const formatDisplayName = (name?: string) => {
+  if (!name) return "";
+  return name
+    .split(" ")
+    .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : "")
+    .join(" ");
+};
 
 const CollegeAdminDashboard = () => {
   const navigate = useNavigate();
@@ -636,7 +659,7 @@ const CollegeAdminDashboard = () => {
                               </div>
                               <div>
                                 <div className="font-semibold text-sm text-foreground flex items-center gap-1.5">
-                                  {student.fullName}
+                                  {formatDisplayName(student.fullName)}
                                 </div>
                                 <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
                                   <Mail className="w-3 h-3 text-muted-foreground/70" />
@@ -897,7 +920,7 @@ const CollegeAdminDashboard = () => {
                           #{idx + 1}
                         </div>
                         <div>
-                          <div className="font-semibold text-sm text-foreground">{student.fullName}</div>
+                          <div className="font-semibold text-sm text-foreground">{formatDisplayName(student.fullName)}</div>
                           <div className="text-xs text-muted-foreground">{student.email} • {student.targetRole}</div>
                         </div>
                       </div>
@@ -1042,8 +1065,8 @@ const CollegeAdminDashboard = () => {
                     : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/40 text-xs px-2.5 py-0.5 font-bold"
                 }>
                   {(selectedCandidateForReport.candidate.score || 0) >= (selectedCandidateForReport.drive.passingScore || 75)
-                    ? "🎉 SELECTED"
-                    : "NOT SELECTED"}
+                    ? "Selected"
+                    : "Not Selected"}
                 </Badge>
               </div>
               <DialogDescription className="text-xs text-muted-foreground mt-1">
@@ -1053,21 +1076,21 @@ const CollegeAdminDashboard = () => {
 
             <div className="py-4 space-y-4">
               {/* Candidate summary card */}
-              <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border flex items-center justify-between gap-4">
+              <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between gap-4">
                 <div>
                   <h3 className="font-bold text-base text-foreground">
-                    {selectedCandidateForReport.candidate.studentName || selectedCandidateForReport.candidate.studentEmail}
+                    {formatDisplayName(selectedCandidateForReport.candidate.studentName) || selectedCandidateForReport.candidate.studentEmail}
                   </h3>
                   <p className="text-xs text-muted-foreground font-mono">
                     {selectedCandidateForReport.candidate.studentEmail}
                   </p>
                   <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
-                    Completed: {selectedCandidateForReport.candidate.completedAt ? new Date(selectedCandidateForReport.candidate.completedAt).toLocaleString() : "Recently"}
+                    Completed: {formatCleanDate(selectedCandidateForReport.candidate.completedAt)}
                   </p>
                 </div>
 
                 <div className="text-right">
-                  <div className="text-[10px] text-muted-foreground uppercase font-semibold">Overall AI Score</div>
+                  <div className="text-[10px] text-muted-foreground uppercase font-semibold">Overall Score</div>
                   <div className={`text-2xl font-extrabold font-mono ${(selectedCandidateForReport.candidate.score || 0) >= (selectedCandidateForReport.drive.passingScore || 75)
                       ? "text-emerald-600 dark:text-emerald-400"
                       : "text-rose-600 dark:text-rose-400"
@@ -1075,24 +1098,24 @@ const CollegeAdminDashboard = () => {
                     {selectedCandidateForReport.candidate.score}%
                   </div>
                   <div className="text-[10px] text-muted-foreground">
-                    Threshold: {selectedCandidateForReport.drive.passingScore || 75}%
+                    Cutoff: {selectedCandidateForReport.drive.passingScore || 75}%
                   </div>
                 </div>
               </div>
 
               {/* Feedback note */}
-              <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-500/20 text-xs space-y-1">
-                <span className="font-bold text-blue-700 dark:text-blue-300 block">Placement Cell Assessment Summary:</span>
-                <p className="text-foreground/90 leading-relaxed">
+              <div className="p-3.5 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border text-xs space-y-1">
+                <span className="font-semibold text-foreground block">Assessment Summary</span>
+                <p className="text-muted-foreground leading-relaxed">
                   {selectedCandidateForReport.candidate.feedback}
                 </p>
               </div>
 
-              {/* Question-by-Question breakdown */}
+              {/* Question Breakdown */}
               {selectedCandidateForReport.candidate.answers && selectedCandidateForReport.candidate.answers.length > 0 && (
                 <div className="space-y-3 pt-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-foreground/80">
-                    Question-by-Question Evaluation ({selectedCandidateForReport.candidate.answers.length} Questions):
+                    Question Breakdown ({selectedCandidateForReport.candidate.answers.length})
                   </h4>
 
                   {selectedCandidateForReport.candidate.answers.map((ans, idx) => (
@@ -1131,16 +1154,17 @@ const CollegeAdminDashboard = () => {
       {selectedStudentForReport && (
         <Dialog open={!!selectedStudentForReport} onOpenChange={() => setSelectedStudentForReport(null)}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border text-foreground p-0 rounded-2xl shadow-2xl">
-            <div className="p-6 border-b border-border bg-gradient-to-r from-blue-500/10 via-card to-blue-500/10">
+            {/* Clean Modal Header */}
+            <div className="p-6 border-b border-border/80 bg-muted/20">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-extrabold text-lg text-white shadow-lg shadow-blue-500/20">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-base text-white shadow-sm">
                     {selectedStudentForReport.fullName.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <DialogTitle className="text-xl font-bold text-foreground">
-                        {selectedStudentForReport.fullName}
+                      <DialogTitle className="text-lg font-bold text-foreground">
+                        {formatDisplayName(selectedStudentForReport.fullName)}
                       </DialogTitle>
                       <Badge className={`text-[11px] px-2 py-0.5 border ${
                         (studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 80
@@ -1149,13 +1173,13 @@ const CollegeAdminDashboard = () => {
                             ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
                             : "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30"
                       }`}>
-                        {(studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 80 ? "Placement Ready 🎉" : (studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 60 ? "Intermediate" : "Needs Practice"}
+                        {(studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 80 ? "Placement Ready" : (studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 60 ? "Intermediate" : "Needs Practice"}
                       </Badge>
                     </div>
-                    <DialogDescription className="text-xs text-muted-foreground font-mono flex items-center gap-2 mt-0.5">
+                    <DialogDescription className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
                       <span>{selectedStudentForReport.email}</span>
                       <span>•</span>
-                      <span>{selectedStudentForReport.branch} ({selectedStudentForReport.batch})</span>
+                      <span>{selectedStudentForReport.branch || "Computer Science"} ({selectedStudentForReport.batch || "2025"})</span>
                     </DialogDescription>
                   </div>
                 </div>
@@ -1165,7 +1189,7 @@ const CollegeAdminDashboard = () => {
                     size="sm"
                     variant="outline"
                     onClick={handlePrintReport}
-                    className="border-border text-xs gap-1.5 h-8 bg-card"
+                    className="border-border text-xs gap-1.5 h-8 bg-card shadow-2xs"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Print / Export
@@ -1176,7 +1200,7 @@ const CollegeAdminDashboard = () => {
                       handleScheduleForSingleStudent(selectedStudentForReport.email);
                       setSelectedStudentForReport(null);
                     }}
-                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs gap-1.5 h-8 shadow-sm"
+                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs gap-1.5 h-8 shadow-xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     Schedule Interview
@@ -1188,16 +1212,16 @@ const CollegeAdminDashboard = () => {
             {loadingReportData ? (
               <div className="py-20 flex flex-col items-center justify-center gap-3 text-muted-foreground">
                 <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
-                <p className="text-sm">Compiling student evaluation report & AI analytics...</p>
+                <p className="text-sm">Loading evaluation report...</p>
               </div>
             ) : (
               <div className="p-6 space-y-6">
-                {/* 1. Scorecard Hero Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* 1. Key Metrics Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
                   {/* Overall Score */}
-                  <div className="p-4 rounded-2xl bg-card border border-border flex flex-col items-center justify-center text-center shadow-xs">
-                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Overall AI Score</span>
-                    <div className={`text-4xl font-black font-mono my-1 ${
+                  <div className="p-4 rounded-xl bg-card border border-border/70 flex flex-col justify-between shadow-2xs">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Overall Score</span>
+                    <div className={`text-3xl font-extrabold font-mono my-1 ${
                       (studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 80
                         ? "text-emerald-600 dark:text-emerald-400"
                         : (studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 60
@@ -1207,98 +1231,99 @@ const CollegeAdminDashboard = () => {
                       {studentReportData?.overallScore || selectedStudentForReport.averageScore}%
                     </div>
                     <span className="text-[10px] text-muted-foreground">
-                      Benchmark Cutoff: 75%
+                      Benchmark: 75%
                     </span>
                   </div>
 
                   {/* Target Role */}
-                  <div className="p-4 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border flex flex-col justify-center">
+                  <div className="p-4 rounded-xl bg-card border border-border/70 flex flex-col justify-between shadow-2xs">
                     <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Target Role</span>
-                    <div className="font-bold text-foreground text-sm mt-1">{selectedStudentForReport.targetRole}</div>
-                    <span className="text-[10px] text-blue-600 dark:text-blue-400 mt-0.5">Assessed for Campus Placements</span>
-                  </div>
-
-                  {/* Interviews Taken */}
-                  <div className="p-4 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border flex flex-col justify-center">
-                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Interviews Completed</span>
-                    <div className="font-black text-2xl text-foreground mt-1">
-                      {studentReportData?.interviewsCompleted || selectedStudentForReport.interviewsCompleted || 1}
+                    <div className="font-semibold text-foreground text-xs line-clamp-2 my-1">
+                      {selectedStudentForReport.targetRole}
                     </div>
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">
-                      {studentReportData?.durationMinutes || 25} Mins Avg Duration
+                    <span className="text-[10px] text-muted-foreground">
+                      Campus Placement
                     </span>
                   </div>
 
-                  {/* Placement Verdict */}
-                  <div className="p-4 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border flex flex-col justify-center">
+                  {/* Assessments Taken */}
+                  <div className="p-4 rounded-xl bg-card border border-border/70 flex flex-col justify-between shadow-2xs">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Assessments</span>
+                    <div className="font-extrabold text-3xl font-mono text-foreground my-1">
+                      {studentReportData?.interviewsCompleted || selectedStudentForReport.interviewsCompleted || 1}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      Avg {studentReportData?.durationMinutes || 25} min duration
+                    </span>
+                  </div>
+
+                  {/* Readiness Status */}
+                  <div className="p-4 rounded-xl bg-card border border-border/70 flex flex-col justify-between shadow-2xs">
                     <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Placement Status</span>
-                    <div className="font-bold text-foreground text-sm mt-1 flex items-center gap-1.5">
+                    <div className="my-1 flex items-center gap-1.5">
                       {(studentReportData?.overallScore || selectedStudentForReport.averageScore) >= 80 ? (
-                        <>
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span className="text-emerald-600 dark:text-emerald-400">Selected / Shortlisted</span>
-                        </>
+                        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-xs font-semibold px-2 py-0.5">
+                          Shortlisted
+                        </Badge>
                       ) : (
-                        <>
-                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                          <span className="text-amber-600 dark:text-amber-400">In Training / Prep</span>
-                        </>
+                        <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-xs font-semibold px-2 py-0.5">
+                          In Training
+                        </Badge>
                       )}
                     </div>
-                    <span className="text-[10px] text-muted-foreground mt-0.5">
-                      Last Active: {studentReportData?.latestAssessmentDate || selectedStudentForReport.lastActive}
+                    <span className="text-[10px] text-muted-foreground">
+                      Active: {formatCleanDate(studentReportData?.latestAssessmentDate || selectedStudentForReport.lastActive)}
                     </span>
                   </div>
                 </div>
 
-                {/* 2. Executive Evaluation & AI Summary */}
-                <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-500/20 space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                    <Bot className="w-4 h-4" />
-                    AI Evaluator Executive Feedback & Summary
+                {/* 2. AI Evaluation Summary */}
+                <div className="p-4 rounded-xl bg-card border border-border/70 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4 text-blue-500" />
+                    AI Evaluation Summary
                   </div>
-                  <p className="text-sm text-foreground/90 leading-relaxed font-sans">
+                  <p className="text-sm text-foreground/90 leading-relaxed font-normal">
                     {studentReportData?.feedbackSummary || "Candidate demonstrated solid foundational understanding with good problem-solving instincts. Suggested improvement in time-complexity optimization and edge-case handling."}
                   </p>
                 </div>
 
-                {/* 3. Strengths & Areas for Improvement */}
+                {/* 3. Strengths & Focus Areas */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Strengths */}
-                  <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-500/20 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                  {/* Key Strengths */}
+                  <div className="p-4 rounded-xl bg-card border border-border/70 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                       <CheckCircle2 className="w-4 h-4" />
-                      Key Technical Strengths ("What's Good")
+                      Key Strengths
                     </div>
                     <ul className="space-y-2">
                       {(studentReportData?.strengths || [
                         "Strong grasp of core data structures and algorithmic complexity",
-                        "Articulate communication and structured approach to problem solving",
-                        "Quick adaptation and clear explanation of trade-offs",
-                        "Confident delivery and professional technical articulation"
+                        "Clear, structured technical communication",
+                        "Effective trade-off analysis during solution design"
                       ]).map((st, i) => (
-                        <li key={i} className="text-xs text-foreground/85 flex items-start gap-2">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">•</span>
+                        <li key={i} className="text-xs text-foreground/85 flex items-start gap-2 leading-relaxed">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">•</span>
                           <span>{st}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  {/* Areas for Improvement */}
-                  <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/20 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                  {/* Focus Areas */}
+                  <div className="p-4 rounded-xl bg-card border border-border/70 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
                       <AlertCircle className="w-4 h-4" />
-                      Areas for Improvement ("What Needs Work")
+                      Focus Areas
                     </div>
                     <ul className="space-y-2">
                       {(studentReportData?.weaknesses || [
-                        "Can deepen edge-case coverage in multi-threaded & high-concurrency scenarios",
-                        "Recommend adding explicit unit test validation before finalizing solutions",
-                        "Further practice on distributed system caching & consistency strategies"
+                        "Deepen edge-case coverage in concurrent scenarios",
+                        "Validate assumptions with explicit test cases earlier",
+                        "Practice distributed system caching and consistency trade-offs"
                       ]).map((wk, i) => (
-                        <li key={i} className="text-xs text-foreground/85 flex items-start gap-2">
-                          <span className="text-amber-600 dark:text-amber-400 font-bold">•</span>
+                        <li key={i} className="text-xs text-foreground/85 flex items-start gap-2 leading-relaxed">
+                          <span className="text-amber-600 dark:text-amber-400 font-bold mt-0.5">•</span>
                           <span>{wk}</span>
                         </li>
                       ))}
@@ -1306,31 +1331,30 @@ const CollegeAdminDashboard = () => {
                   </div>
                 </div>
 
-                {/* 4. Core Competencies Matrix (6 metrics) */}
-                <div className="p-5 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border space-y-4">
+                {/* 4. Core Competencies */}
+                <div className="p-5 rounded-xl bg-card border border-border/70 space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                       <Award className="w-4 h-4 text-blue-500" />
-                      Core Competency Scorecard
+                      Core Competencies
                     </h4>
-                    <span className="text-[11px] text-muted-foreground">Scored on scale of 100</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {[
-                      { name: "Technical Accuracy & Depth", score: studentReportData?.detailedScores.technicalAccuracy || 84, color: "bg-blue-500" },
-                      { name: "DSA & Algorithmic Problem Solving", score: studentReportData?.detailedScores.dsa || 82, color: "bg-indigo-500" },
-                      { name: "Communication & Articulation", score: studentReportData?.detailedScores.communication || 88, color: "bg-emerald-500" },
-                      { name: "System Design & Architecture", score: studentReportData?.detailedScores.systemDesign || 78, color: "bg-blue-500" },
-                      { name: "Confidence & Executive Delivery", score: studentReportData?.detailedScores.confidence || 85, color: "bg-amber-500" },
-                      { name: "Logic & Analytical Reasoning", score: studentReportData?.detailedScores.problemSolving || 80, color: "bg-cyan-500" },
+                      { name: "Technical Depth", score: studentReportData?.detailedScores.technicalAccuracy || 84, color: "bg-blue-500" },
+                      { name: "Data Structures & Algorithms", score: studentReportData?.detailedScores.dsa || 82, color: "bg-indigo-500" },
+                      { name: "Communication", score: studentReportData?.detailedScores.communication || 88, color: "bg-emerald-500" },
+                      { name: "System Design", score: studentReportData?.detailedScores.systemDesign || 78, color: "bg-blue-500" },
+                      { name: "Confidence & Delivery", score: studentReportData?.detailedScores.confidence || 85, color: "bg-amber-500" },
+                      { name: "Problem Solving", score: studentReportData?.detailedScores.problemSolving || 80, color: "bg-cyan-500" },
                     ].map(comp => (
-                      <div key={comp.name} className="space-y-1.5 p-3 rounded-xl bg-card border border-border/50">
+                      <div key={comp.name} className="space-y-1.5 p-3 rounded-lg bg-muted/30 border border-border/40">
                         <div className="flex justify-between items-center text-xs">
                           <span className="text-foreground/90 font-medium">{comp.name}</span>
                           <span className="font-bold font-mono text-foreground">{comp.score}%</span>
                         </div>
-                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                           <div className={`h-full ${comp.color} rounded-full transition-all duration-500`} style={{ width: `${comp.score}%` }} />
                         </div>
                       </div>
@@ -1340,46 +1364,46 @@ const CollegeAdminDashboard = () => {
 
                 {/* 5. 6Q Intelligence Matrix */}
                 {studentReportData?.sixQScore && (
-                  <div className="p-5 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border space-y-4">
+                  <div className="p-5 rounded-xl bg-card border border-border/70 space-y-4">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-blue-500" />
-                        6Q Intelligence Matrix (Cognitive & Behavioral Evaluation)
+                        6Q Intelligence Matrix
                       </h4>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
                       {[
                         { code: "IQ", title: "Intellectual", score: studentReportData.sixQScore.iq || 82, desc: "Algorithmic Logic" },
-                        { code: "EQ", title: "Emotional", score: studentReportData.sixQScore.eq || 86, desc: "Team & Comms" },
-                        { code: "CQ", title: "Coding", score: studentReportData.sixQScore.cq || 80, desc: "Syntax & Edge Cases" },
-                        { code: "AQ", title: "Adversity", score: studentReportData.sixQScore.aq || 84, desc: "Handling Ambiguity" },
-                        { code: "SQ", title: "System", score: studentReportData.sixQScore.sq || 78, desc: "Scalability & Architecture" },
-                        { code: "MQ", title: "Mindset", score: studentReportData.sixQScore.mq || 88, desc: "Professional Drive" },
+                        { code: "EQ", title: "Emotional", score: studentReportData.sixQScore.eq || 86, desc: "Communication" },
+                        { code: "CQ", title: "Coding", score: studentReportData.sixQScore.cq || 80, desc: "Syntax & Quality" },
+                        { code: "AQ", title: "Adversity", score: studentReportData.sixQScore.aq || 84, desc: "Adaptability" },
+                        { code: "SQ", title: "System", score: studentReportData.sixQScore.sq || 78, desc: "Scalability" },
+                        { code: "MQ", title: "Mindset", score: studentReportData.sixQScore.mq || 88, desc: "Growth & Grit" },
                       ].map(q => (
-                        <div key={q.code} className="p-3 rounded-xl bg-card border border-border/50 text-center space-y-1">
-                          <div className="text-[10px] font-bold text-muted-foreground uppercase">{q.code} • {q.title}</div>
+                        <div key={q.code} className="p-3 rounded-lg bg-muted/30 border border-border/40 text-center space-y-1">
+                          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{q.code} • {q.title}</div>
                           <div className="text-xl font-extrabold font-mono text-foreground">{q.score}</div>
-                          <div className="text-[9px] text-muted-foreground line-clamp-1">{q.desc}</div>
+                          <div className="text-[10px] text-muted-foreground line-clamp-1">{q.desc}</div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* 6. Question-by-Question Evaluation Breakdown (if student has drive answers) */}
+                {/* 6. Question Breakdown */}
                 {studentReportData?.driveEvaluations && studentReportData.driveEvaluations.some(d => d.answers && d.answers.length > 0) && (
-                  <div className="p-5 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border space-y-4">
+                  <div className="p-5 rounded-xl bg-card border border-border/70 space-y-4">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                       <FileText className="w-4 h-4 text-blue-500" />
-                      Detailed Question-by-Question Evaluation
+                      Question Breakdown
                     </h4>
 
                     <div className="space-y-3">
                       {studentReportData.driveEvaluations.flatMap(d => d.answers || []).map((ans, idx) => (
-                        <div key={idx} className="p-4 rounded-xl bg-card border border-border/60 space-y-2 text-xs">
+                        <div key={idx} className="p-3.5 rounded-lg bg-muted/30 border border-border/50 space-y-2 text-xs">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-bold text-foreground">
+                            <span className="font-semibold text-foreground">
                               Q{idx + 1}: {ans.question}
                             </span>
                             <Badge className={`text-[10px] font-mono font-bold ${
@@ -1391,12 +1415,12 @@ const CollegeAdminDashboard = () => {
                             </Badge>
                           </div>
 
-                          <div className="bg-muted/50 p-2.5 rounded-lg border border-border/40 text-foreground/90">
-                            <strong className="text-muted-foreground block text-[10px] uppercase mb-0.5">Candidate Answer:</strong>
-                            <p className="italic">{ans.studentAnswer}</p>
+                          <div className="bg-background/80 dark:bg-black/20 p-2.5 rounded-md border border-border/50 text-foreground/90">
+                            <strong className="text-muted-foreground block text-[10px] uppercase mb-0.5">Submitted Answer:</strong>
+                            <p className="italic text-foreground/80">{ans.studentAnswer}</p>
                           </div>
 
-                          <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-500/20 text-blue-800 dark:text-blue-300">
+                          <div className="p-2.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-900 dark:text-blue-300">
                             <strong className="text-blue-700 dark:text-blue-400 block text-[10px] uppercase mb-0.5">AI Feedback:</strong>
                             <p>{ans.aiFeedback}</p>
                           </div>
@@ -1408,10 +1432,10 @@ const CollegeAdminDashboard = () => {
 
                 {/* 7. Completed Assessment History */}
                 {studentReportData?.driveEvaluations && studentReportData.driveEvaluations.length > 0 && (
-                  <div className="p-5 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border space-y-3">
+                  <div className="p-5 rounded-xl bg-card border border-border/70 space-y-3">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />
-                      Placement Drives & Assessment History
+                      Assessment History
                     </h4>
 
                     <div className="divide-y divide-border/50">
@@ -1420,7 +1444,7 @@ const CollegeAdminDashboard = () => {
                           <div>
                             <div className="font-semibold text-foreground">{evalItem.driveTitle}</div>
                             <div className="text-[11px] text-muted-foreground">
-                              {evalItem.interviewType.replace(/_/g, " ").toUpperCase()} • {new Date(evalItem.completedAt).toLocaleDateString()}
+                              {evalItem.interviewType.replace(/_/g, " ").toUpperCase()} • {formatCleanDate(evalItem.completedAt)}
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
