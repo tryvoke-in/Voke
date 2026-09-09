@@ -1070,8 +1070,8 @@ const Index = () => {
               },
               {
                 name: "Voke Elite",
-                price: "₹99",
-                originalPrice: "₹199",
+                price: "₹399",
+                originalPrice: "₹799",
                 desc: "Complete power for serious job hunters.",
                 features: [
                   "Everything in Basic",

@@ -38,14 +38,31 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2. Parse request and determine price server-side
-    const { plan } = await req.json();
+    const { plan, couponCode } = await req.json();
 
     let amount = 0;
     const currency = "INR";
+    const normalizedCoupon = typeof couponCode === "string" ? couponCode.trim().toLowerCase() : "";
+    let appliedDiscount = "0%";
     
     // Map the plan identifier to a fixed server-side amount
     if (plan === "elite_pro") {
-      amount = 9900; // ₹99 in paise
+      const BASE_PRICE_RUPEES = 399;
+
+      if (normalizedCoupon) {
+        if (normalizedCoupon === "vickybyte30") {
+          // 30% discount on ₹399 -> ₹279
+          const discountedPriceRupees = Math.round(BASE_PRICE_RUPEES * 0.70); // 279
+          amount = discountedPriceRupees * 100; // 27900 paise (₹279)
+          appliedDiscount = "30%";
+        } else {
+          return new Response(JSON.stringify({ error: "Invalid coupon code" }), { 
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          });
+        }
+      } else {
+        amount = BASE_PRICE_RUPEES * 100; // 39900 paise (₹399)
+      }
     } else {
       return new Response(JSON.stringify({ error: "Invalid plan specified" }), { 
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } 
@@ -76,7 +93,10 @@ Deno.serve(async (req: Request) => {
         currency,
         receipt,
         notes: {
-          user_id: user.id
+          user_id: user.id,
+          plan: plan,
+          coupon_code: normalizedCoupon || "none",
+          discount: appliedDiscount,
         }
       }),
     });
@@ -89,7 +109,10 @@ Deno.serve(async (req: Request) => {
 
     const order = await response.json();
 
-    return new Response(JSON.stringify(order), {
+    return new Response(JSON.stringify({
+      ...order,
+      razorpay_key_id: RAZORPAY_KEY_ID,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

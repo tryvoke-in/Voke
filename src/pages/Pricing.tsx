@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { Check, Zap, Star, Shield, HelpCircle, ArrowRight, Building, GraduationCap, Sparkles } from "lucide-react";
+import { Check, Zap, Star, Shield, HelpCircle, ArrowRight, Building, GraduationCap, Sparkles, Tag, CheckCircle2, X } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Footer } from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,35 @@ const Pricing = () => {
     const [isPaying, setIsPaying] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const [isPremium, setIsPremium] = useState(false);
+    const [couponInput, setCouponInput] = useState("");
+    const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+    const [couponError, setCouponError] = useState("");
+
+    const handleApplyCoupon = () => {
+        const code = couponInput.trim().toLowerCase();
+        if (!code) {
+            setCouponError("Please enter a coupon code");
+            return;
+        }
+        if (code === "vickybyte30") {
+            setAppliedCoupon("vickybyte30");
+            setCouponError("");
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 2500);
+            toast.success("🎉 Coupon 'vickybyte30' applied! 30% discount unlocked.");
+            trackEvent("pricing_coupon_applied", "/pricing", { code: "vickybyte30" });
+        } else {
+            setCouponError("Invalid coupon code");
+            toast.error("Invalid coupon code");
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponInput("");
+        setCouponError("");
+        toast.info("Coupon removed");
+    };
 
     useEffect(() => {
         const checkPremiumStatus = async () => {
@@ -32,29 +61,47 @@ const Pricing = () => {
 
     const ensureRazorpay = (): Promise<boolean> => {
         return new Promise((resolve) => {
-            // Already loaded
             if ((window as any).Razorpay) {
                 resolve(true);
                 return;
             }
-            // Check if script tag already exists but hasn't loaded yet
+
+            let attempts = 0;
+            const timer = setInterval(() => {
+                attempts++;
+                if ((window as any).Razorpay) {
+                    clearInterval(timer);
+                    resolve(true);
+                } else if (attempts >= 25) {
+                    clearInterval(timer);
+                    resolve(!!(window as any).Razorpay);
+                }
+            }, 100);
+
             const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
             if (existing) {
-                existing.addEventListener('load', () => resolve(true));
-                existing.addEventListener('error', () => resolve(false));
-                // In case it already loaded between our check
-                setTimeout(() => {
-                    if ((window as any).Razorpay) resolve(true);
-                }, 500);
-                return;
+                existing.addEventListener('load', () => {
+                    clearInterval(timer);
+                    resolve(true);
+                });
+                existing.addEventListener('error', () => {
+                    clearInterval(timer);
+                    resolve(false);
+                });
+            } else {
+                const script = document.createElement("script");
+                script.src = "https://checkout.razorpay.com/v1/checkout.js";
+                script.async = true;
+                script.onload = () => {
+                    clearInterval(timer);
+                    resolve(true);
+                };
+                script.onerror = () => {
+                    clearInterval(timer);
+                    resolve(false);
+                };
+                document.head.appendChild(script);
             }
-            // Dynamically inject
-            const script = document.createElement("script");
-            script.src = "https://checkout.razorpay.com/v1/checkout.js";
-            script.async = true;
-            script.onload = () => resolve(true);
-            script.onerror = () => resolve(false);
-            document.head.appendChild(script);
         });
     };
 
@@ -70,13 +117,6 @@ const Pricing = () => {
                 return;
             }
 
-            const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY;
-            if (!razorpayKey) {
-                toast.error("Payment gateway is not configured. Please contact support.");
-                setIsPaying(false);
-                return;
-            }
-
             const loaded = await ensureRazorpay();
             if (!loaded || !(window as any).Razorpay) {
                 toast.error("Payment gateway could not be loaded. Please disable adblocker and try again.");
@@ -87,7 +127,8 @@ const Pricing = () => {
             // Create a Razorpay order on the server based on the chosen plan
             const { data: orderData, error: orderError } = await supabase.functions.invoke("create-razorpay-order", {
                 body: {
-                    plan: "elite_pro"
+                    plan: "elite_pro",
+                    couponCode: appliedCoupon || undefined,
                 },
             });
 
@@ -110,13 +151,22 @@ const Pricing = () => {
                 return;
             }
 
+            const razorpayKey = orderData?.razorpay_key_id || import.meta.env.VITE_RAZORPAY_KEY;
+            if (!razorpayKey) {
+                toast.error("Payment gateway is not configured. Please add VITE_RAZORPAY_KEY to your .env file.");
+                setIsPaying(false);
+                return;
+            }
+
             const options = {
                 key: razorpayKey,
                 amount: orderData.amount,
                 currency: orderData.currency,
                 order_id: orderData.id,
                 name: "Voke Elite",
-                description: "Upgrade to Voke Elite Pro Plan",
+                description: appliedCoupon 
+                    ? "Upgrade to Voke Elite Pro Plan (30% Discount Applied)" 
+                    : "Upgrade to Voke Elite Pro Plan",
                 image: "/images/voke_logo.png",
                 handler: async function (response: any) {
                     console.log("Payment response:", response);
@@ -218,9 +268,9 @@ const Pricing = () => {
         {
             name: "Voke Elite",
             description: "Complete power for serious job hunters.",
-            price: "₹99",
+            price: "₹399",
             priceLabel: "/ month",
-            originalPrice: "₹199",
+            originalPrice: "₹799",
             features: [
                 "Everything in Basic",
                 "Unlimited AI Mock Interviews",
@@ -342,12 +392,22 @@ const Pricing = () => {
                                             <p className="text-muted-foreground text-sm leading-relaxed min-h-[40px]">{plan.description}</p>
                                         </div>
 
-                                        <div className="mb-8">
+                                        <div className="mb-6">
                                             <div className="flex items-baseline gap-2">
                                                 {plan.price === "Custom" ? (
                                                      <span className="text-4xl font-bold tracking-tight">Custom</span>
                                                 ) : plan.price === "Free" ? (
                                                      <span className="text-5xl font-bold tracking-tight">Free</span>
+                                                ) : plan.name === "Voke Elite" && appliedCoupon ? (
+                                                    <div className="flex flex-col">
+                                                        <div className="flex items-baseline gap-2">
+                                                            <span className="text-5xl font-bold tracking-tight text-emerald-400">₹279</span>
+                                                            <span className="text-lg text-muted-foreground line-through">₹399</span>
+                                                        </div>
+                                                        <span className="text-xs font-semibold text-emerald-400 mt-1 inline-flex items-center gap-1">
+                                                            <Sparkles className="w-3 h-3" /> 30% OFF with {appliedCoupon} (Save ₹120)
+                                                        </span>
+                                                    </div>
                                                 ) : (
                                                     <>
                                                         <span className="text-5xl font-bold tracking-tight">{plan.price}</span>
@@ -363,6 +423,75 @@ const Pricing = () => {
                                                 </p>
                                             )}
                                         </div>
+
+                                        {/* Coupon Code Section for Voke Elite */}
+                                        {plan.name === "Voke Elite" && !isPremium && (
+                                            <div className="mb-6">
+                                                {!appliedCoupon ? (
+                                                    <div className="p-3 rounded-2xl bg-sky-500/5 border border-sky-500/20 backdrop-blur-sm">
+                                                        <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold text-sky-400">
+                                                            <Tag className="w-3.5 h-3.5" /> Have a coupon code?
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <input
+                                                                type="text"
+                                                                value={couponInput}
+                                                                onChange={(e) => {
+                                                                    setCouponInput(e.target.value);
+                                                                    setCouponError("");
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault();
+                                                                        handleApplyCoupon();
+                                                                    }
+                                                                }}
+                                                                placeholder="Enter coupon code"
+                                                                className="flex-1 min-w-0 bg-background/90 border border-border/80 focus:border-sky-500 rounded-xl px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground font-mono uppercase tracking-wider outline-none transition-colors"
+                                                            />
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                onClick={handleApplyCoupon}
+                                                                className="h-8 px-3 text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white rounded-xl shrink-0 shadow-sm"
+                                                            >
+                                                                Apply
+                                                            </Button>
+                                                        </div>
+                                                        {couponError && (
+                                                            <p className="text-[11px] text-red-400 mt-1.5 font-medium">{couponError}</p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                                                <CheckCircle2 className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">
+                                                                        {appliedCoupon}
+                                                                    </span>
+                                                                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.2 rounded-full">
+                                                                        30% OFF
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-[11px] text-muted-foreground">30% discount applied &bull; Save ₹120</p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleRemoveCoupon}
+                                                            className="text-muted-foreground hover:text-red-400 p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                                                            title="Remove coupon"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
 
                                          {isPremium && plan.name === "Voke Elite" ? (
                                              <div className="space-y-2 mb-8">
@@ -416,7 +545,15 @@ const Pricing = () => {
                                                      ? 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:scale-[1.02] border-transparent' 
                                                      : 'bg-white/5 hover:bg-white/10 border-white/10 text-white hover:text-white'}`}
                                              >
-                                                 {isPremium && plan.name === "Voke Elite" ? "Already Premium" : isPaying && plan.name === "Voke Elite" ? "Opening checkout..." : plan.cta}
+                                                 {isPremium && plan.name === "Voke Elite" 
+                                                     ? "Already Premium" 
+                                                     : isPaying && plan.name === "Voke Elite" 
+                                                         ? "Opening checkout..." 
+                                                         : plan.name === "Voke Elite"
+                                                             ? appliedCoupon 
+                                                                 ? "Upgrade to Elite - ₹279" 
+                                                                 : "Upgrade to Elite - ₹399"
+                                                             : plan.cta}
                                                  {plan.popular && !isPaying && !isPremium && <ArrowRight className="w-4 h-4 ml-2" />}
                                              </Button>
                                          )}
@@ -463,7 +600,7 @@ const Pricing = () => {
                     >
                          {[
                             { q: "Can I upgrade later?", a: "Yes, you can upgrade from Basic to Voke Elite at any time to unlock unlimited mock interviews and coding compiler environments instantly." },
-                            { q: "Is there a student discount?", a: "We do not offer separate student discounts. Voke Elite is priced extremely affordably at ₹99/month for everyone, including students, to ensure high-quality prep is accessible." },
+                             { q: "Can I use a coupon code?", a: "Yes! If you have a valid coupon or promo code, you can enter it in the coupon box before checkout to receive your discount." },
                             { q: "What's the Enterprise limit?", a: "Enterprise plans support custom limits, custom interview templates, and LMS integration options. Contact teamtryvoke@gmail.com to request custom seating setups." },
                             { q: "Do you offer refunds?", a: "No, we do not offer refunds once premium features are activated or credits are used. You can cancel your monthly subscription at any time to prevent renewals." },
                             { q: "Can I pause my subscription?", a: "We do not support pausing. However, you can cancel your subscription from your profile page anytime with no penalties, and restart when you resume prep." },
