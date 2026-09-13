@@ -32,6 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { StandardVoiceBrain } from '@/services/voice/StandardVoiceBrain';
 
 const PRESET_ROLES = [
   "Full Stack Developer",
@@ -58,6 +59,8 @@ const VoiceAssistant: React.FC = () => {
   const driveId = searchParams.get("driveId") || searchParams.get("drive") || "";
   const [collegeDrive, setCollegeDrive] = useState<CollegeScheduledDrive | null>(null);
 
+  const standardBrainRef = useRef(new StandardVoiceBrain());
+
   const {
     status,
     connect,
@@ -70,7 +73,7 @@ const VoiceAssistant: React.FC = () => {
     sendHiddenContext,
     submitCurrentSpeech,
     speakText
-  } = useGroqVoice();
+  } = useGroqVoice({ brain: standardBrainRef.current });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { credits, hasGivenFeedback, isPremium, canTakeInterview, loading: creditsLoading, consumeCredit, refreshCredits, grantFeedbackCredits } = useInterviewCredits('voice');

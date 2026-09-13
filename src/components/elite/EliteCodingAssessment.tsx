@@ -1,3 +1,4 @@
+import { ElitePrepBrain } from '@/services/voice/ElitePrepBrain';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
@@ -160,6 +161,7 @@ async function slidingWindowRateLimiter(key, limit, windowSize) {
 
 const SECTION_C_SYSTEM_DESIGN: Record<string, SystemDesignQuestion[]> = SYSTEM_DESIGN_QUESTIONS as unknown as Record<string, SystemDesignQuestion[]>;
 
+
 export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   interviewType,
   company,
@@ -171,7 +173,8 @@ export const EliteCodingAssessment: React.FC<EliteCodingAssessmentProps> = ({
   onExit
 }) => {
   const navigate = useNavigate();
-  const { status, connect, disconnect, isUserSpeaking, isAiSpeaking, volume, logs, sendHiddenContext, isSilentMode, setIsSilentMode } = useGroqVoice();
+  const eliteBrainRef = useRef(new ElitePrepBrain(round.roundNumber));
+  const { status, connect, disconnect, isUserSpeaking, isAiSpeaking, volume, logs, sendHiddenContext, isSilentMode, setIsSilentMode } = useGroqVoice({ brain: eliteBrainRef.current });
   const { violationCount, AntiCheatOverlay } = useAntiCheat({
     onTerminate: () => {
       disconnect();

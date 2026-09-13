@@ -1,3 +1,4 @@
+import { ElitePrepBrain } from '@/services/voice/ElitePrepBrain';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +30,7 @@ interface EliteHRRoundProps {
   onExit: () => void;
 }
 
+
 export const EliteHRRound: React.FC<EliteHRRoundProps> = ({
   interviewType,
   company,
@@ -39,6 +41,8 @@ export const EliteHRRound: React.FC<EliteHRRoundProps> = ({
   onCompleteRound,
   onExit
 }) => {
+  const eliteBrainRef = useRef(new ElitePrepBrain(round.roundNumber));
+  
   const {
     status,
     connect,
@@ -48,7 +52,7 @@ export const EliteHRRound: React.FC<EliteHRRoundProps> = ({
     volume,
     logs,
     apiLabel
-  } = useGroqVoice();
+  } = useGroqVoice({ brain: eliteBrainRef.current });
   const { violationCount, AntiCheatOverlay } = useAntiCheat({
     onTerminate: () => {
       disconnect();

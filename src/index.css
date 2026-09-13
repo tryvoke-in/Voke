@@ -8,13 +8,17 @@ All colors MUST be HSL.
 
 /* Fix for Monaco Editor textarea becoming visible (White Box bug) due to Tailwind */
 .monaco-editor textarea,
-.monaco-editor textarea.inputarea {
-  resize: none !important;
+.monaco-editor textarea.inputarea,
+.monaco-editor textarea.inputarea:focus {
   background-color: transparent !important;
   color: transparent !important;
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+  resize: none !important;
+  position: absolute !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 @layer base {

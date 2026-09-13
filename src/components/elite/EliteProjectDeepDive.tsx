@@ -1,3 +1,4 @@
+import { ElitePrepBrain } from '@/services/voice/ElitePrepBrain';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,6 +70,7 @@ const DIFFICULTY_LABEL: Record<DifficultyLevel, string> = {
   hard: '🔴 Hard'
 };
 
+
 export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
   interviewType,
   company,
@@ -81,6 +83,8 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
   onCompleteRound,
   onExit
 }) => {
+  const eliteBrainRef = useRef(new ElitePrepBrain(round.roundNumber));
+
   const {
     status,
     connect,
@@ -89,7 +93,7 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
     isAiSpeaking,
     volume,
     logs
-  } = useGroqVoice();
+  } = useGroqVoice({ brain: eliteBrainRef.current });
   const { violationCount, AntiCheatOverlay } = useAntiCheat({
     onTerminate: () => {
       disconnect();
