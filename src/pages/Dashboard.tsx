@@ -502,12 +502,12 @@ const Dashboard = () => {
       hoverBg: "hover:bg-pink-500/10 hover:text-pink-500",
     },
     {
-      id: "skill-india",
-      label: "Skill India / iGOT",
-      icon: Award,
-      path: "/skill-india",
-      color: "text-amber-500",
-      hoverBg: "hover:bg-amber-500/10 hover:text-amber-500",
+      id: "resume-builder",
+      label: "Resume Builder",
+      icon: FileText,
+      path: "/resume-builder",
+      color: "text-emerald-500",
+      hoverBg: "hover:bg-emerald-500/10 hover:text-emerald-500",
     },
     {
       id: "elite-prep",
@@ -550,12 +550,12 @@ const Dashboard = () => {
       hoverBg: "hover:bg-blue-500/10 hover:text-blue-500",
     },
     {
-      id: "curriculum-gap",
-      label: "Curriculum Gap",
-      icon: GraduationCap,
-      path: "/curriculum-gap",
-      color: "text-emerald-500",
-      hoverBg: "hover:bg-emerald-500/10 hover:text-emerald-500",
+      id: "community",
+      label: "Community",
+      icon: Users,
+      path: "/community",
+      color: "text-pink-500",
+      hoverBg: "hover:bg-pink-500/10 hover:text-pink-500",
     },
   ];
 
@@ -921,17 +921,17 @@ const Dashboard = () => {
                       >
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                           <div
-                            id="tour-skill-india"
-                            onClick={() => navigate("/skill-india")}
+                            id="tour-resume-builder"
+                            onClick={() => navigate("/resume-builder")}
                             className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
                           >
-                            <div className="w-11 h-11 rounded-full bg-amber-50 dark:bg-amber-500/15 dark:border dark:border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300 group-hover:scale-105 transition-transform mb-4">
-                              <Award className="w-5 h-5" />
+                            <div className="w-11 h-11 rounded-full bg-emerald-50 dark:bg-emerald-500/15 dark:border dark:border-emerald-400/30 flex items-center justify-center text-emerald-600 dark:text-emerald-300 group-hover:scale-105 transition-transform mb-4">
+                              <FileText className="w-5 h-5" />
                             </div>
                             <div className="flex items-center justify-between gap-2">
                               <div>
-                                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Skill India & iGOT</h4>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Industry Demand</p>
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Resume Builder</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">ATS-Ready Resume</p>
                               </div>
                               <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0" />
                             </div>
@@ -972,17 +972,17 @@ const Dashboard = () => {
                           </div>
 
                           <div
-                            id="tour-curriculum-gap"
-                            onClick={() => navigate("/curriculum-gap")}
+                            id="tour-community"
+                            onClick={() => navigate("/community")}
                             className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
                           >
-                            <div className="w-11 h-11 rounded-full bg-emerald-50 dark:bg-emerald-500/15 dark:border dark:border-emerald-400/30 flex items-center justify-center text-emerald-600 dark:text-emerald-300 group-hover:scale-105 transition-transform mb-4">
-                              <GraduationCap className="w-5 h-5" />
+                            <div className="w-11 h-11 rounded-full bg-pink-50 dark:bg-pink-500/15 dark:border dark:border-pink-400/30 flex items-center justify-center text-pink-600 dark:text-pink-300 group-hover:scale-105 transition-transform mb-4">
+                              <Users className="w-5 h-5" />
                             </div>
                             <div className="flex items-center justify-between gap-2">
                               <div>
-                                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Curriculum Gap</h4>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">For Institutions</p>
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Community</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Connect & Discuss</p>
                               </div>
                               <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0" />
                             </div>

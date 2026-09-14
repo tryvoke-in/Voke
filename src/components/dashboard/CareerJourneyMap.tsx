@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Trophy, Crown, Check, Lock, Sparkles, Flame, Zap,
   Bot, Layers, ArrowRight, Gift, Star, Code2, Brain,
-  ChevronRight, X, Compass, Award, ExternalLink, HelpCircle
+  ChevronRight, X, Compass, Award, ExternalLink, HelpCircle,
+  ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -37,7 +38,7 @@ interface JourneyNode {
 
 export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
   profile,
-  userStreak = 1,
+  userStreak = 0,
   allSessions = [],
 }) => {
   const navigate = useNavigate();
@@ -45,16 +46,17 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
   const [selectedNode, setSelectedNode] = useState<JourneyNode | null>(null);
   const [chestClaimed, setChestClaimed] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [currentXP, setCurrentXP] = useState(1450);
+  const [showStreakModal, setShowStreakModal] = useState(false);
 
-  // Initialize chest claimed state from localStorage for today
+  // Initialize chest claimed state from localStorage for today scoped to this user
   useEffect(() => {
     const today = new Date().toDateString();
-    const lastClaim = localStorage.getItem("voke_daily_chest_claim");
+    const claimKey = `voke_daily_chest_${profile?.id || 'guest'}_${today}`;
+    const lastClaim = localStorage.getItem(claimKey);
     if (lastClaim === today) {
       setChestClaimed(true);
     }
-  }, []);
+  }, [profile?.id]);
 
   const handleClaimChest = () => {
     if (chestClaimed) {
@@ -63,12 +65,12 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
     }
 
     const today = new Date().toDateString();
-    localStorage.setItem("voke_daily_chest_claim", today);
+    const claimKey = `voke_daily_chest_${profile?.id || 'guest'}_${today}`;
+    localStorage.setItem(claimKey, today);
     setChestClaimed(true);
-    setCurrentXP((prev) => prev + 100);
     setShowConfetti(true);
 
-    toast.success("🎁 Daily Mystery Loot Claimed! +100 XP & Streak Shield Activated!", {
+    toast.success("🎁 Daily Mystery Loot Claimed! +50 XP & Streak Shield Activated!", {
       description: "Keep practicing daily to level up your career rank.",
     });
 
@@ -77,159 +79,256 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
     }, 4500);
   };
 
-  // Define the 7 Journey Nodes
+  // Real dynamic user progress metrics
+  const solvedCount = useMemo(() => {
+    return allSessions.filter((s: any) => s.type === 'Coding Practice' || s.question_id).length;
+  }, [allSessions]);
+
+  const interviewCount = useMemo(() => {
+    return allSessions.filter((s: any) => s.type === 'Text' || s.type === 'Video' || s.type === 'Peer').length;
+  }, [allSessions]);
+
+  const systemDesignCount = useMemo(() => {
+    return allSessions.filter((s: any) => 
+      s.category?.toLowerCase()?.includes('system') || 
+      s.role?.toLowerCase()?.includes('system') ||
+      s.title?.toLowerCase()?.includes('system')
+    ).length;
+  }, [allSessions]);
+
+  // Stage unlock thresholds
+  const isDsaCompleted = solvedCount >= 5;
+  const isInterviewCompleted = isDsaCompleted && interviewCount >= 3;
+  const isSystemDesignCompleted = isInterviewCompleted && systemDesignCount >= 1;
+
+  // Real Dynamic XP calculation based on genuine activity
+  const currentXP = useMemo(() => {
+    let xp = 0;
+
+    // 1. XP from Solved Questions / Coding Practice (50 XP per question + bonus for high score)
+    const codingSessions = allSessions.filter((s: any) => s.type === 'Coding Practice' || s.question_id);
+    codingSessions.forEach((s: any) => {
+      xp += 50;
+      if (s.score && s.score >= 80) xp += 25;
+    });
+
+    // 2. XP from Completed Interview Simulations (150 XP per mock + score bonus)
+    const interviewSessions = allSessions.filter((s: any) => s.type === 'Text' || s.type === 'Video' || s.type === 'Peer');
+    interviewSessions.forEach((s: any) => {
+      xp += 150;
+      const score = s.overall_score || s.score || 0;
+      if (score > 0) {
+        xp += Math.round(score * 0.5);
+      }
+    });
+
+    // 3. Platform Streak Momentum Bonus (25 XP per day of active streak)
+    if (userStreak && userStreak > 0) {
+      xp += userStreak * 25;
+    }
+
+    // 4. Daily Mystery Loot Claimed Today (+50 XP)
+    if (chestClaimed) {
+      xp += 50;
+    }
+
+    return xp;
+  }, [allSessions, userStreak, chestClaimed]);
+
+  const maxXP = 2500;
+  const progressPercent = Math.min(100, Math.round((currentXP / maxXP) * 100));
+
+  // Today's goals for the streak modal
+  const solvedToday = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    return allSessions.filter((s: any) => {
+      const isCoding = s.type === 'Coding Practice' || s.question_id;
+      if (!isCoding) return false;
+      const d = s.date || s.solved_at || s.created_at;
+      return d && d.startsWith(today);
+    }).length;
+  }, [allSessions]);
+
+  const mocksToday = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    return allSessions.filter((s: any) => {
+      const isMock = s.type === 'Text' || s.type === 'Video' || s.type === 'Peer';
+      if (!isMock) return false;
+      const d = s.date || s.created_at;
+      return d && d.startsWith(today);
+    }).length;
+  }, [allSessions]);
+
+  const dailyGoalPercent = Math.min(100, Math.round(((Math.min(2, solvedToday) + Math.min(1, mocksToday)) / 3) * 100));
+  const outerOffset = 201 - Math.round(201 * (Math.min(2, solvedToday) / 2));
+  const innerOffset = 138 - Math.round(138 * (Math.min(1, mocksToday) / 1));
+
+  // Define the 7 Career Journey Nodes (Dynamically adapting to real user achievements)
   const nodes: JourneyNode[] = [
     {
       id: "node-1",
-      title: "Array & String Bastion",
-      category: "Data Structures",
+      title: "DSA Preparation",
+      category: "Algorithmic Foundation",
       stage: "Stage 1",
-      status: "completed",
+      status: isDsaCompleted ? "completed" : "active",
       x: 75,
       y: 130,
-      xp: 150,
+      xp: 250,
       icon: Code2,
-      badge: "Mastered",
-      description: "Fundamental memory layouts, hashing, sliding windows, and algorithmic foundations.",
-      questTasks: [
-        "Two Sum & Hash Maps (Completed)",
-        "Longest Substring Without Repeating Characters (Completed)",
-        "Sliding Window Maximum (Completed)"
-      ],
-      ctaText: "Review Questions",
+      badge: isDsaCompleted ? "Completed" : "Active Focus",
+      description: "Data Structures & Algorithms problem-solving patterns, time/space complexity analysis, and core interview questions.",
+      questTasks: isDsaCompleted
+        ? [
+            "Master High-Yield Algorithmic Patterns (Mastered)",
+            "Optimize Time & Space Complexities (Mastered)",
+            `${solvedCount} Curated Problems Solved on Platform`
+          ]
+        : [
+            `${solvedCount}/5 Problems Solved to Clear Stage`,
+            "Review Core Algorithmic Patterns",
+            "Complete Daily Coding Practice"
+          ],
+      ctaText: isDsaCompleted ? "Review DSA Sheet" : "Solve Questions",
       ctaPath: "/dsa-sheet"
     },
     {
       id: "node-2",
-      title: "Two Pointers & Linked Lists",
-      category: "Algorithms",
-      stage: "Stage 1",
-      status: "completed",
+      title: "AI Mock Interviews",
+      category: "Live Simulation",
+      stage: "Stage 2",
+      status: isInterviewCompleted ? "completed" : isDsaCompleted ? "active" : "unlocked",
       x: 235,
-      y: 65,
-      xp: 200,
-      icon: Check,
-      badge: "Mastered",
-      description: "In-place array manipulations, fast & slow pointers, and singly/doubly linked chains.",
-      questTasks: [
-        "Trapping Rain Water (Completed)",
-        "Linked List Cycle Detection (Completed)",
-        "Reverse Nodes in k-Group (Completed)"
-      ],
-      ctaText: "Review Solutions",
-      ctaPath: "/dsa-sheet"
-    },
-    {
-      id: "node-3",
-      title: "Tree & Graph Labyrinth",
-      category: "Advanced DSA",
-      stage: "Stage 2",
-      status: "active",
-      x: 395,
-      y: 140,
-      xp: 350,
-      icon: Brain,
-      badge: "Current Quest",
-      description: "Recursive DFS/BFS traversals, binary search trees, topological sorting, and shortest path algorithms.",
-      questTasks: [
-        "Lowest Common Ancestor in BST (Solved)",
-        "Word Ladder II (Pending)",
-        "Course Schedule & Cycle Detection (In Progress)"
-      ],
-      ctaText: "Resume DSA Quest",
-      ctaPath: "/dsa-sheet"
-    },
-    {
-      id: "node-4",
-      title: "AI Behavioral & STAR Arena",
-      category: "Mock Interviews",
-      stage: "Stage 2",
-      status: "unlocked",
-      x: 555,
       y: 65,
       xp: 450,
       icon: Bot,
-      badge: "Next Challenger",
-      description: "Master situation, task, action, and result frameworks with real-time vocal AI evaluation.",
+      badge: isInterviewCompleted ? "Completed" : isDsaCompleted ? "Active Focus" : "Next Stage",
+      description: "Interactive AI voice & video technical interview simulations with real-time scoring, live coding, and diagnostic feedback.",
+      questTasks: isInterviewCompleted
+        ? [
+            "3 Technical Coding Mocks (Completed)",
+            "Achieve 80%+ Evaluation Score (Mastered)",
+            "AI Diagnostic Feedback Reviewed"
+          ]
+        : [
+            `${interviewCount}/3 Technical Coding Mocks (${interviewCount > 0 ? `${interviewCount} Done` : "Pending"})`,
+            "Achieve 80%+ Evaluation Score",
+            isDsaCompleted ? "Active AI Interview Simulation" : "Unlock by Completing DSA Preparation"
+          ],
+      ctaText: "Start AI Interview",
+      ctaPath: "/interview/new"
+    },
+    {
+      id: "node-3",
+      title: "System Design",
+      category: "Scalable Architecture",
+      stage: "Stage 3",
+      status: isSystemDesignCompleted ? "completed" : isInterviewCompleted ? "active" : isDsaCompleted ? "unlocked" : "locked",
+      x: 395,
+      y: 140,
+      xp: 550,
+      icon: Layers,
+      badge: isSystemDesignCompleted ? "Completed" : isInterviewCompleted ? "Active Focus" : isDsaCompleted ? "Next Stage" : "Locked Lv. 3",
+      description: "High-Level distributed systems, caching strategies, database sharding, microservices, and load balancing.",
       questTasks: [
-        "Handle Conflict with Senior Teammates",
-        "Tell Me About a Tough Architecture Mistake",
-        "Achieve 85%+ STAR Communication Score"
+        "Design High-Throughput Distributed System",
+        "Evaluate Caching, Sharding & CAP Theorem",
+        "Architect Fault-Tolerant Microservices"
       ],
-      ctaText: "Enter AI Arena",
+      ctaText: "Explore System Design",
+      ctaPath: "/video-interview"
+    },
+    {
+      id: "node-4",
+      title: "Behavioral & Leadership",
+      category: "Culture & HR Fit",
+      stage: "Stage 4",
+      status: "locked",
+      x: 555,
+      y: 65,
+      xp: 600,
+      icon: Award,
+      badge: "Locked Lv. 4",
+      description: "STAR method storytelling, conflict management, cross-functional collaboration, and cultural alignment.",
+      questTasks: [
+        "Formulate 5 Key Leadership Stories",
+        "Master STAR Method Response Framework",
+        "Demonstrate Ownership & Conflict Resolution"
+      ],
+      ctaText: "Practice Behavioral",
       ctaPath: "/interview/new"
     },
     {
       id: "node-5",
-      title: "System Design Citadel",
-      category: "Architecture",
-      stage: "Stage 3",
-      status: "locked",
-      x: 715,
-      y: 140,
-      xp: 550,
-      icon: Layers,
-      badge: "Locked Lv. 5",
-      description: "Distributed caching, database sharding, rate limiting, and CAP theorem trade-offs.",
-      questTasks: [
-        "Design TinyURL / Bitly at 100M QPS",
-        "Design Instagram News Feed & Fanout",
-        "Complete 1 System Design Simulation"
-      ],
-      ctaText: "Unlock at Level 5",
-      ctaPath: "/video-interview"
-    },
-    {
-      id: "node-6",
       title: `${company} Boss Trial`,
-      category: "Company Raid",
-      stage: "Stage 3",
+      category: "Target Company",
+      stage: "Stage 5",
       status: "boss",
       boss: true,
-      x: 875,
-      y: 65,
-      xp: 750,
+      x: 715,
+      y: 140,
+      xp: 850,
       icon: Zap,
       badge: "Boss Challenge",
-      description: `Comprehensive multi-round simulation tailored to real ${company} hiring bar standards.`,
+      description: `Comprehensive multi-round simulation tailored to real ${company} hiring bar standards and actual rounds.`,
       questTasks: [
-        `Pass ${company} Technical Bar Assessment`,
-        `Leadership Principles & Culture Fit`,
-        `Live Code & Complexity Defense`
+        `Pass ${company} Technical Screen`,
+        `${company} Architecture & Deep Dive`,
+        `Leadership Principles & Bar Raiser Round`
       ],
       ctaText: `Explore ${company} Guide`,
       ctaPath: `/companies/${company.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`
     },
     {
+      id: "node-6",
+      title: "Bar Raiser Trial",
+      category: "Executive Screen",
+      stage: "Stage 6",
+      status: "locked",
+      x: 875,
+      y: 65,
+      xp: 900,
+      icon: ShieldCheck,
+      badge: "Elite Gauntlet",
+      description: "The senior cross-functional bar raiser round testing long-term engineering judgment, system trade-offs, and ownership.",
+      questTasks: [
+        "Defend Complex Architecture Decisions",
+        "Demonstrate Scaled Engineering Judgment",
+        "Surpass Universal Hiring Bar"
+      ],
+      ctaText: "Take Bar Raiser Mock",
+      ctaPath: "/interview/new"
+    },
+    {
       id: "node-7",
       title: "The Offer Summit",
-      category: "Victory",
-      stage: "Goal",
+      category: "Victory Goal",
+      stage: "Final Goal",
       status: "summit",
       x: 1025,
       y: 125,
       xp: 1000,
       icon: Crown,
-      badge: "Victory Goal",
-      description: `Signed Offer Letter at ${company} with competitive tier package and elite status.`,
+      badge: "Dream Offer",
+      description: `Signed Offer Letter at ${company} with competitive compensation, equity package, and elite career milestone.`,
       questTasks: [
-        "Negotiate Offer Package",
-        "Celebrate Career Breakthrough",
-        "Join Voke Hall of Fame"
+        "Receive Official Written Offer",
+        "Negotiate Package & Equity",
+        "Celebrate Career Breakthrough"
       ],
-      ctaText: "View Career Perks",
+      ctaText: "View Offer Perks",
       ctaPath: "/pricing"
     }
   ];
 
-  const maxXP = 2500;
-  const level = 4;
-  const progressPercent = Math.min(100, Math.round((currentXP / maxXP) * 100));
-
   // Path coordinates for the undulating adventure spline
   const pathD = "M 75 130 C 130 130, 180 65, 235 65 C 290 65, 340 140, 395 140 C 450 140, 500 65, 555 65 C 610 65, 660 140, 715 140 C 770 140, 820 65, 875 65 C 930 65, 970 125, 1025 125";
-  // Completed portion of path (Nodes 1 -> 3)
-  const completedPathD = "M 75 130 C 130 130, 180 65, 235 65 C 290 65, 340 140, 395 140";
+
+  // Completed portion of path (dynamically based on completed milestones)
+  const completedPathD = isInterviewCompleted
+    ? "M 75 130 C 130 130, 180 65, 235 65 C 290 65, 340 140, 395 140"
+    : isDsaCompleted
+    ? "M 75 130 C 130 130, 180 65, 235 65"
+    : "";
 
   return (
     <div className="relative w-full rounded-3xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden select-none">
@@ -258,37 +357,17 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
         </div>
       </div>
 
-      {/* Top HUD: Level, Rank, XP Bar, and Target Badge */}
+      {/* Top HUD: XP Bar, Duolingo-Style Streak Badge, and Daily Mystery Loot */}
       <div className="relative z-10 px-6 pt-5 pb-4 border-b border-slate-200/60 dark:border-border/60 bg-white/80 dark:bg-card/85 backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
-        {/* Left: Quest Chapter Title */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#5E37E8] to-indigo-500 text-white flex items-center justify-center shadow-md shadow-[#5E37E8]/25 shrink-0">
-            <Compass className="w-5 h-5 animate-spin-slow" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-[#5E37E8] dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-400/30">
-                  Chapter 2: The Data Dungeon
-                </span>
-              </h3>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-              
-            </p>
-          </div>
-        </div>
-
-        {/* Right: Gamified Stats Pill Row */}
+        {/* Stats Pill Row */}
         <div className="flex flex-wrap items-center gap-3">
           {/* XP Progress Capsule */}
           <div className="bg-slate-50 dark:bg-muted/40 border border-slate-200/80 dark:border-border/80 px-3.5 py-1.5 rounded-2xl flex items-center gap-3 shadow-2xs">
             <div className="flex items-center gap-1.5">
               <Award className="w-4 h-4 text-indigo-500" />
               <div className="text-left">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                  Lv. {level} Explorer
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block leading-none">
+                  Total XP
                 </span>
                 <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100">
                   {currentXP} / {maxXP} <span className="text-[10px] text-slate-500 font-normal">XP</span>
@@ -306,10 +385,31 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
             </div>
           </div>
 
-          {/* Daily Streak Flame Pill */}
-          <div className="bg-orange-50 dark:bg-orange-500/10 border border-orange-200/70 dark:border-orange-500/30 px-3 py-1.5 rounded-2xl flex items-center gap-1.5 text-orange-600 dark:text-orange-400 shadow-2xs">
-            <Flame className="w-4 h-4 fill-orange-500 text-orange-500 animate-pulse" />
-            <span className="text-xs font-bold">{userStreak || 1} Day Streak</span>
+          {/* Duolingo-Style Streak Card (Light & Dark Mode) */}
+          <div className="flex flex-wrap items-center gap-2">
+            <motion.div
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => setShowStreakModal(true)}
+              className="bg-white dark:bg-[#18181b] border border-slate-200/90 dark:border-zinc-800 rounded-2xl px-3.5 py-2 flex items-center gap-2.5 shadow-2xs hover:shadow-xs transition-all cursor-pointer select-none"
+            >
+              {/* Flame Badge (Lit if streak > 0, unlit/dormant if 0) */}
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                userStreak > 0
+                  ? "bg-gradient-to-tr from-amber-500 via-orange-500 to-red-500 shadow-xs shadow-orange-500/30"
+                  : "bg-slate-100 dark:bg-zinc-800/80 border border-slate-200/60 dark:border-zinc-700/50"
+              }`}>
+                <Flame className={`w-4 h-4 ${userStreak > 0 ? "fill-white text-white animate-pulse" : "text-slate-400 dark:text-zinc-500"}`} />
+              </div>
+              <div className="leading-none">
+                <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white block tracking-tight">
+                  {userStreak}
+                </span>
+                <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wide block mt-0.5">
+                  {userStreak === 1 ? "Streak Day" : "Streak Days"}
+                </span>
+              </div>
+            </motion.div>
           </div>
 
           {/* Daily Mystery Chest Action */}
@@ -392,25 +492,27 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
               className="animate-pulse"
             />
 
-            {/* Active & Completed Energy Trail with glowing gradient */}
-            <path
-              d={completedPathD}
-              stroke="url(#completedGrad)"
-              strokeWidth="5"
-              strokeLinecap="round"
-              filter="url(#glow)"
-            />
-
-            {/* Flowing animated energy pulses along completed track */}
-            <path
-              d={completedPathD}
-              stroke="#FFFFFF"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeDasharray="14 120"
-              className="animate-dash"
-              opacity="0.9"
-            />
+            {/* Active & Completed Energy Trail with glowing gradient (only rendered when user has completions) */}
+            {completedPathD && (
+              <>
+                <path
+                  d={completedPathD}
+                  stroke="url(#completedGrad)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  filter="url(#glow)"
+                />
+                <path
+                  d={completedPathD}
+                  stroke="#FFFFFF"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeDasharray="14 120"
+                  className="animate-dash"
+                  opacity="0.9"
+                />
+              </>
+            )}
 
             {/* Decorative terrain contour hills */}
             <path
@@ -424,9 +526,9 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
 
           {/* Stepping Stones / Intermediate Waypoint Dots */}
           {[
-            { x: 155, y: 97, completed: true },
-            { x: 315, y: 102, completed: true },
-            { x: 475, y: 102, completed: false },
+            { x: 155, y: 97, completed: isDsaCompleted },
+            { x: 315, y: 102, completed: isInterviewCompleted },
+            { x: 475, y: 102, completed: isSystemDesignCompleted },
             { x: 635, y: 102, completed: false },
             { x: 795, y: 102, completed: false },
             { x: 950, y: 95, completed: false }
@@ -460,7 +562,7 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                     initial={{ y: 0 }}
                     animate={{ y: [-4, 3, -4] }}
                     transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
-                    className="absolute -top-12 flex flex-col items-center z-30 pointer-events-none"
+                    className="absolute -top-10 flex flex-col items-center z-30 pointer-events-none"
                   >
                     <div className="px-2.5 py-0.5 rounded-full bg-[#5E37E8] text-white text-[10px] font-extrabold shadow-lg shadow-[#5E37E8]/40 tracking-wider uppercase flex items-center gap-1 border border-white/30 whitespace-nowrap">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
@@ -549,17 +651,20 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
       {/* Bottom Motivation & Quick Quest Action Footer */}
       <div className="relative z-10 px-6 py-3 bg-white/80 dark:bg-card/85 backdrop-blur-md border-t border-slate-200/60 dark:border-border/60 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-          
           <span>
-             Complete <strong>Tree & Graph Labyrinth</strong> to unlock the <strong>AI Behavioral Arena</strong>!
+            {isDsaCompleted ? (
+              <>Active Focus: Complete your <strong>AI Mock Interviews</strong> to unlock <strong>System Design</strong>!</>
+            ) : (
+              <>Active Focus: Start with <strong>DSA Preparation</strong> to build your algorithmic foundation ({solvedCount}/5 solved)!</>
+            )}
           </span>
         </div>
 
         <button
-          onClick={() => navigate("/dsa-sheet")}
+          onClick={() => navigate(isDsaCompleted ? "/interview/new" : "/dsa-sheet")}
           className="h-8 px-4 rounded-xl bg-[#5E37E8] hover:bg-[#522fd6] text-white text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
         >
-          <span>Continue Journey</span>
+          <span>{isDsaCompleted ? "Start AI Interview" : "Start DSA Practice"}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -625,9 +730,9 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
 
               {/* Quest Tasks Checklist */}
               <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-border/60">
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Quest Objectives:
-                </p>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  Stage Objectives:
+                </span>
                 <div className="space-y-1.5">
                   {selectedNode.questTasks.map((task, idx) => (
                     <div
@@ -636,7 +741,7 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                     >
                       <div
                         className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                          selectedNode.status === "completed" || task.includes("Completed") || task.includes("Solved")
+                          selectedNode.status === "completed" || task.includes("Completed") || task.includes("Mastered")
                             ? "bg-emerald-500 text-white"
                             : "border border-slate-400 text-transparent"
                         }`}
@@ -668,6 +773,145 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                   className="h-9 text-xs rounded-xl bg-[#5E37E8] hover:bg-[#522fd6] text-white font-semibold flex items-center gap-1.5 shadow-sm shadow-[#5E37E8]/25 cursor-pointer"
                 >
                   <span>{selectedNode.ctaText}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Duolingo-Style Detailed Streak & Daily Goal Modal */}
+      <AnimatePresence>
+        {showStreakModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#18181b] border border-slate-200 dark:border-zinc-800 p-6 shadow-2xl space-y-5 relative overflow-hidden"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowStreakModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 transition-colors cursor-pointer z-10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🔥</span>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                  Daily Momentum & Streak Goals
+                </h3>
+              </div>
+
+              {/* Grid of the 2 Featured Reference Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* 1. Large Streak Days Card */}
+                <div className={`rounded-2xl p-5 text-white border shadow-md flex flex-col justify-between relative overflow-hidden min-h-[160px] ${
+                  userStreak > 0
+                    ? "bg-gradient-to-b from-amber-400 to-amber-500 dark:from-[#202024] dark:to-[#18181b] border-amber-300 dark:border-zinc-800"
+                    : "bg-slate-100 dark:bg-[#1c1c1f] text-slate-900 dark:text-white border-slate-200 dark:border-zinc-800"
+                }`}>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        userStreak > 0 ? "bg-white/20 dark:bg-orange-500/20" : "bg-slate-200 dark:bg-zinc-700/50"
+                      }`}>
+                        <Flame className={`w-5 h-5 ${
+                          userStreak > 0
+                            ? "fill-white text-white dark:text-orange-500 dark:fill-orange-500"
+                            : "text-slate-400 dark:text-zinc-400"
+                        }`} />
+                      </div>
+                      <span className="text-3xl font-black tracking-tight">{userStreak}</span>
+                    </div>
+                    <span className={`text-xs font-black uppercase tracking-wider ${
+                      userStreak > 0 ? "text-white/90 dark:text-zinc-400" : "text-slate-500 dark:text-zinc-400"
+                    }`}>
+                      {userStreak === 1 ? "Streak Day" : "Streak Days"}
+                    </span>
+                  </div>
+
+                  {/* Motivational Mascot Note */}
+                  <div className="relative z-10 mt-4 pt-3 border-t border-slate-200/60 dark:border-zinc-800/80">
+                    <p className={`text-xs font-medium leading-snug ${
+                      userStreak > 0 ? "text-white/90 dark:text-zinc-300" : "text-slate-600 dark:text-zinc-400"
+                    }`}>
+                      {userStreak > 0
+                        ? `Consistent practice gets you to ${company || "Google"}! Keep your momentum blazing.`
+                        : `Complete your first practice session today to ignite your streak towards ${company || "Google"}!`}
+                    </p>
+                  </div>
+
+                  {/* Background flame artwork silhouette */}
+                  <Flame className={`absolute -bottom-6 -right-6 w-32 h-32 fill-current pointer-events-none ${
+                    userStreak > 0 ? "text-white/15 dark:text-orange-500/10" : "text-slate-300/30 dark:text-zinc-700/15"
+                  }`} />
+                </div>
+
+                {/* 2. Concentric Dual-Ring Daily Goal Card */}
+                <div className="rounded-2xl p-5 bg-slate-50 dark:bg-[#202024] border border-slate-200/80 dark:border-zinc-800/90 shadow-sm flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/15 text-blue-500 flex items-center justify-center text-xs">
+                        🎯
+                      </div>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">Daily Goal</span>
+                    </div>
+                  </div>
+
+                  {/* Concentric Dual Rings SVG */}
+                  <div className="flex items-center justify-center my-2">
+                    <div className="relative w-20 h-20 flex items-center justify-center">
+                      <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
+                        {/* Outer Ring Background (DSA: 2 target) */}
+                        <circle cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="6" className="text-slate-200 dark:text-zinc-700" fill="none" />
+                        <circle cx="40" cy="40" r="32" stroke="#3b82f6" strokeWidth="6" strokeDasharray="201" strokeDashoffset={outerOffset} strokeLinecap="round" fill="none" />
+
+                        {/* Inner Ring Background (Mocks: 1 target) */}
+                        <circle cx="40" cy="40" r="22" stroke="currentColor" strokeWidth="6" className="text-slate-200 dark:text-zinc-700" fill="none" />
+                        <circle cx="40" cy="40" r="22" stroke="#06b6d4" strokeWidth="6" strokeDasharray="138" strokeDashoffset={innerOffset} strokeLinecap="round" fill="none" />
+                      </svg>
+                      <span className="absolute text-xs font-black text-slate-800 dark:text-white">{dailyGoalPercent}%</span>
+                    </div>
+                  </div>
+
+                  {/* Ring Legend Counters */}
+                  <div className="flex items-center justify-around gap-2 text-xs font-bold pt-2 border-t border-slate-200/60 dark:border-zinc-800">
+                    <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span>📖 {solvedToday}/2 Solved</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-cyan-600 dark:text-cyan-400">
+                      <div className="w-2 h-2 rounded-full bg-cyan-500" />
+                      <span>🥊 {mocksToday}/1 Mocks</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowStreakModal(false)}
+                  className="h-9 text-xs rounded-xl cursor-pointer"
+                >
+                  Close
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setShowStreakModal(false);
+                    navigate("/dsa-sheet");
+                  }}
+                  className="h-9 text-xs rounded-xl bg-[#5E37E8] hover:bg-[#522fd6] text-white font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <span>{isDsaCompleted ? "Practice Questions" : "Start First Practice"}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
               </div>
