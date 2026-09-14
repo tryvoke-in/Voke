@@ -10,12 +10,13 @@ import {
   FileText, LogOut, TrendingUp, Upload, Play, Target, Users, Mic, Settings,
   Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search, X,
   Globe, Briefcase, FileQuestion, ChevronRight, ChevronDown, ChevronUp, Sparkles, Lock, LayoutDashboard,
-  Bot, Video, Compass, Crown, Terminal, Brain, GraduationCap, Award
+  Bot, Video, Compass, Crown, Terminal, Brain, GraduationCap, Award, CalendarDays
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ProgressPanel } from "@/components/dashboard/ProgressPanel";
-import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
 import { DSAPreparationBanner } from "@/components/dashboard/DSAPreparationBanner";
+import { RoadToOffer } from "@/components/dashboard/RoadToOffer";
+import { CareerJourneyMap } from "@/components/dashboard/CareerJourneyMap";
 import { ReferralButton } from "@/components/dashboard/ReferralButton";
 import { UpgradeButton } from "@/components/UpgradeButton";
 import { Sidebar } from "@/components/Sidebar";
@@ -585,13 +586,10 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden">
       {/* Subtle Ambient Background Effects */}
-      <div className="fixed inset-0 bg-[radial-gradient(rgba(0,0,0,0.04)_1px,transparent_1px)] dark:bg-[radial-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none z-0" />
-      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-sky-600/5 dark:bg-sky-500/7 rounded-full blur-[140px] pointer-events-none z-0" />
-      <div className="fixed top-1/3 right-10 w-[450px] h-[450px] bg-amber-500/4 dark:bg-amber-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
-      <div className="fixed bottom-20 left-10 w-[500px] h-[500px] bg-emerald-500/4 dark:bg-emerald-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(120,119,198,0.04),transparent)] dark:bg-[radial-gradient(ellipse_70%_40%_at_50%_-10%,rgba(255,255,255,0.015),transparent)] pointer-events-none z-0" />
 
       {/* Header */}
-      <header className={`fixed z-[100] backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-white/60 dark:bg-gray-950/60 border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 left-0 right-0 bg-white/40 dark:bg-gray-950/40 border-b border-gray-200/50 dark:border-gray-800/50"}`}>
+      <header className={`fixed z-[100] backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-white/70 dark:bg-background/85 border border-gray-200/50 dark:border-border/60 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 left-0 right-0 bg-white/50 dark:bg-background/85 border-b border-gray-200/50 dark:border-border/60"}`}>
         <div className={`container mx-auto px-4 flex items-center justify-between transition-all duration-500 ${isScrolled ? "py-1" : "py-2"}`}>
           <div className="flex items-center gap-0.5 cursor-pointer" onClick={() => navigate("/dashboard")}>
             <img
@@ -599,7 +597,7 @@ const Dashboard = () => {
               alt="Voke Logo"
               className="w-14 h-14 object-contain"
             />
-            <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">Voke</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Voke</h1>
           </div>
 
           <div className="flex-1 max-w-md ml-3 mr-9 hidden md:flex items-center gap-3">
@@ -707,51 +705,55 @@ const Dashboard = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative overflow-hidden rounded-3xl bg-blue-500 dark:bg-blue-800 text-white p-8 shadow-xl"
+                  className="relative overflow-hidden rounded-3xl bg-[#5E37E8] text-white px-6 sm:px-8 py-5 shadow-xl flex flex-col justify-center min-h-[210px] sm:h-[222px]"
                 >
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-
-                  <div className="relative z-10">
-                    {/* Top row: Title + Streak */}
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
-                      <div className="flex-1 min-w-0">
-                        <h2 className="text-xl sm:text-3xl font-bold mb-1 leading-tight">Ready to ace your next interview?</h2>
-                        <p className="text-white/80 text-xs sm:text-sm">
-                          Success is where preparation and opportunity meet.
-                        </p>
-                      </div>
-                      <div className="flex flex-row sm:flex-col gap-2 shrink-0">
-                        <div className="bg-white/20 backdrop-blur-md px-4 py-3 rounded-full flex items-center gap-1.5 border border-white/10">
-                          <Flame className="w-4 h-4 text-orange-300 fill-orange-300" />
-                          <span className="font-bold text-sm">{userStreak} Day{userStreak === 1 ? '' : 's'}</span>
-                        </div>
-                      </div>
+                  <div className="relative z-10 max-w-[480px]">
+                    {/* Top Pill Badge: GOOD AFTERNOON, PRIYANSHU 👏 */}
+                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-white text-[10.5px] font-semibold tracking-wider uppercase mb-2">
+                      <span>GOOD AFTERNOON, {profile?.full_name?.split(' ')[0]?.toUpperCase() || "PRIYANSHU"}</span>
+                      <span>👏</span>
                     </div>
 
-                    <div id="tour-stats" className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4">
-                      {realStats.map((stat, i) => (
-                        <div
-                          key={i}
-                          onClick={() => {
-                            if (stat.label === "Credits") {
-                              if (!isPremium && (creditsVoice + creditsVideo) === 0 && !hasGivenFeedback) {
-                                setShowFeedbackModal(true);
-                              } else {
-                                navigate("/pricing");
-                              }
-                            }
-                          }}
-                          className={`bg-white/10 backdrop-blur-sm rounded-xl p-2.5 sm:p-4 border border-white/5 hover:bg-white/20 transition-colors ${stat.label === "Credits" ? "cursor-pointer" : ""
-                            }`}
-                        >
-                          <div className="flex items-center gap-1.5 mb-1 text-white/70">
-                            <stat.icon className={`w-3.5 h-3.5 ${stat.label === "Credits" ? "fill-amber-300 text-amber-300" : ""}`} />
-                            <span className="text-[10px] sm:text-xs font-medium truncate">{stat.label}</span>
-                          </div>
-                          <p className="text-xl sm:text-2xl font-bold truncate">{stat.value}</p>
-                        </div>
-                      ))}
+                    {/* Main Heading */}
+                    <h2 className="text-2xl sm:text-[28px] font-extrabold text-white tracking-tight leading-tight mb-1">
+                      Ready to ace your next interview?
+                    </h2>
+
+                    {/* Subheadline */}
+                    <p className="text-white/90 text-xs sm:text-[13px] font-normal mb-4">
+                      Practice with AI. Get real feedback. Build your confidence.
+                    </p>
+
+                    {/* Two Action Buttons */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => navigate("/interview/new")}
+                        className="bg-white hover:bg-slate-50 text-slate-900 font-bold px-4 sm:px-5 py-2 rounded-xl shadow-xs text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-slate-900 text-slate-900" />
+                        <span>Start an Interview</span>
+                      </button>
+                      <button
+                        onClick={() => navigate("/job-recommendations")}
+                        className="bg-white/10 hover:bg-white/20 text-white border border-white/35 font-medium px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer"
+                      >
+                        <Compass className="w-4 h-4 text-white" />
+                        <span>Explore Roles</span>
+                      </button>
                     </div>
+                  </div>
+
+                  {/* Right Side Complete Artwork from Reference Image */}
+                  <div className="hidden sm:block absolute right-0 top-0 bottom-0 h-full w-[48%] max-w-[490px] pointer-events-none select-none">
+                    <img
+                      src="/images/hero_illustration_purple.png?v=1"
+                      alt="AI Interview Prep"
+                      className="h-full w-full object-cover object-right"
+                      style={{
+                        maskImage: "linear-gradient(to right, transparent 0%, black 30px)",
+                        WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30px)"
+                      }}
+                    />
                   </div>
                 </motion.div>
 
@@ -798,14 +800,14 @@ const Dashboard = () => {
 
                 {/* Quick Actions Header & Grid */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
-                        <Zap className="w-5 h-5 text-yellow-500" />
-                        Actions
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Zap className="w-5 h-5 text-amber-500 fill-amber-500 shrink-0" />
+                      <h3 className="text-base sm:text-lg font-bold text-foreground">
+                        Quick Actions
                       </h3>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                        {showMoreActions ? "8 Tools" : "4 Core"}
+                      <span className="text-xs sm:text-sm text-muted-foreground font-normal ml-1">
+                        Jump into practice or explore popular options.
                       </span>
                     </div>
 
@@ -838,45 +840,73 @@ const Dashboard = () => {
 
                   {/* Top 4 Core Actions (Always Visible) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card id="tour-text-interview" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-sky-500" onClick={() => navigate("/interview/new")}>
-                      <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                        <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                          <Bot className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+                    <div
+                      id="tour-text-interview"
+                      onClick={() => navigate("/interview/new")}
+                      className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                    >
+                      <div className="w-11 h-11 rounded-full bg-blue-50 dark:bg-blue-500/15 dark:border dark:border-blue-400/30 flex items-center justify-center text-blue-600 dark:text-blue-300 group-hover:scale-105 transition-transform mb-4">
+                        <Briefcase className="w-5 h-5" />
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Text Interview</h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">AI Chat Practice</p>
                         </div>
-                        <h4 className="font-semibold text-sm">Text Interview</h4>
-                        <p className="text-xs text-muted-foreground mt-1">AI Chat Practice</p>
-                      </CardContent>
-                    </Card>
+                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </div>
+                    </div>
 
-                    <Card id="tour-pro-interview" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-pink-500" onClick={() => navigate("/voice-assistant")}>
-                      <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                        <div className="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                          <Video className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+                    <div
+                      id="tour-pro-interview"
+                      onClick={() => navigate("/voice-assistant")}
+                      className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                    >
+                      <div className="w-11 h-11 rounded-full bg-rose-50 dark:bg-rose-500/15 dark:border dark:border-rose-400/30 flex items-center justify-center text-rose-500 dark:text-rose-300 group-hover:scale-105 transition-transform mb-4">
+                        <Video className="w-5 h-5" />
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Pro Interview</h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Voice & Video AI</p>
                         </div>
-                        <h4 className="font-semibold text-sm">Pro Interview</h4>
-                        <p className="text-xs text-muted-foreground mt-1">Voice & Video AI</p>
-                      </CardContent>
-                    </Card>
+                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </div>
+                    </div>
 
-                    <Card id="tour-job-matches" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-blue-500" onClick={() => navigate("/job-recommendations")}>
-                      <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                        <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                          <Compass className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    <div
+                      id="tour-job-matches"
+                      onClick={() => navigate("/job-recommendations")}
+                      className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                    >
+                      <div className="w-11 h-11 rounded-full bg-purple-50 dark:bg-purple-500/15 dark:border dark:border-purple-400/30 flex items-center justify-center text-purple-600 dark:text-purple-300 group-hover:scale-105 transition-transform mb-4">
+                        <CalendarDays className="w-5 h-5" />
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Job Matches</h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Find Your Role</p>
                         </div>
-                        <h4 className="font-semibold text-sm">Job Matches</h4>
-                        <p className="text-xs text-muted-foreground mt-1">Find Your Role</p>
-                      </CardContent>
-                    </Card>
+                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </div>
+                    </div>
 
-                    <Card id="tour-elite-prep" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-amber-500 overflow-hidden" onClick={() => navigate("/elite-prep")}>
-                      <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                        <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                          <Crown className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                    <div
+                      id="tour-elite-prep"
+                      onClick={() => navigate("/elite-prep")}
+                      className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                    >
+                      <div className="w-11 h-11 rounded-full bg-amber-50 dark:bg-amber-500/15 dark:border dark:border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300 group-hover:scale-105 transition-transform mb-4">
+                        <Crown className="w-5 h-5" />
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Elite Prep</h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Premium Interview Prep</p>
                         </div>
-                        <h4 className="font-semibold text-sm">Elite Prep</h4>
-                        <p className="text-xs text-muted-foreground mt-1">Premium Interview Prep</p>
-                      </CardContent>
-                    </Card>
+                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Bottom 4 Actions (Smooth Expand/Collapse) */}
@@ -890,45 +920,73 @@ const Dashboard = () => {
                         className="overflow-hidden"
                       >
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                          <Card id="tour-skill-india" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-amber-500" onClick={() => navigate("/skill-india")}>
-                            <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                              <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <Award className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                          <div
+                            id="tour-skill-india"
+                            onClick={() => navigate("/skill-india")}
+                            className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                          >
+                            <div className="w-11 h-11 rounded-full bg-amber-50 dark:bg-amber-500/15 dark:border dark:border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300 group-hover:scale-105 transition-transform mb-4">
+                              <Award className="w-5 h-5" />
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <div>
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Skill India & iGOT</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Industry Demand</p>
                               </div>
-                              <h4 className="font-semibold text-sm">Skill India & iGOT</h4>
-                              <p className="text-xs text-muted-foreground mt-1">Industry Demand Alignment</p>
-                            </CardContent>
-                          </Card>
+                              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0" />
+                            </div>
+                          </div>
 
-                          <Card id="tour-playground" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-indigo-500" onClick={() => navigate("/playground")}>
-                            <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                              <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <Terminal className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                          <div
+                            id="tour-playground"
+                            onClick={() => navigate("/playground")}
+                            className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                          >
+                            <div className="w-11 h-11 rounded-full bg-indigo-50 dark:bg-indigo-500/15 dark:border dark:border-indigo-400/30 flex items-center justify-center text-indigo-600 dark:text-indigo-300 group-hover:scale-105 transition-transform mb-4">
+                              <Terminal className="w-5 h-5" />
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <div>
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Playground</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Code Sandbox</p>
                               </div>
-                              <h4 className="font-semibold text-sm">Playground</h4>
-                              <p className="text-xs text-muted-foreground mt-1">Code Sandbox</p>
-                            </CardContent>
-                          </Card>
+                              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0" />
+                            </div>
+                          </div>
 
-                          <Card id="tour-question-practice" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-orange-500" onClick={() => navigate("/question-practice")}>
-                            <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                              <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <Brain className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                          <div
+                            id="tour-question-practice"
+                            onClick={() => navigate("/question-practice")}
+                            className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                          >
+                            <div className="w-11 h-11 rounded-full bg-orange-50 dark:bg-orange-500/15 dark:border dark:border-orange-400/30 flex items-center justify-center text-orange-600 dark:text-orange-300 group-hover:scale-105 transition-transform mb-4">
+                              <Brain className="w-5 h-5" />
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <div>
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Question Practice</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Daily Challenges</p>
                               </div>
-                              <h4 className="font-semibold text-sm">Question Practice</h4>
-                              <p className="text-xs text-muted-foreground mt-1">Daily Challenges</p>
-                            </CardContent>
-                          </Card>
+                              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0" />
+                            </div>
+                          </div>
 
-                          <Card id="tour-curriculum-gap" className="hover:shadow-lg transition-all cursor-pointer group border-l-4 border-l-emerald-500" onClick={() => navigate("/curriculum-gap")}>
-                            <CardContent className="p-4 flex flex-col items-center text-center pt-6">
-                              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <GraduationCap className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                          <div
+                            id="tour-curriculum-gap"
+                            onClick={() => navigate("/curriculum-gap")}
+                            className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                          >
+                            <div className="w-11 h-11 rounded-full bg-emerald-50 dark:bg-emerald-500/15 dark:border dark:border-emerald-400/30 flex items-center justify-center text-emerald-600 dark:text-emerald-300 group-hover:scale-105 transition-transform mb-4">
+                              <GraduationCap className="w-5 h-5" />
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <div>
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">Curriculum Gap</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">For Institutions</p>
                               </div>
-                              <h4 className="font-semibold text-sm">Curriculum Gap</h4>
-                              <p className="text-xs text-muted-foreground mt-1">For Institutions</p>
-                            </CardContent>
-                          </Card>
+                              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0" />
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -955,6 +1013,15 @@ const Dashboard = () => {
                   <DailyQuestionWidget questionStreak={questionStreak} userStreak={userStreak} />
                 </motion.div>
               </div>
+            </div>
+
+            {/* Gamified Animated Career Journey */}
+            <div className="mt-8">
+              <CareerJourneyMap
+                profile={profile}
+                userStreak={userStreak}
+                allSessions={allSessions}
+              />
             </div>
 
             {/* Upcoming Interview Schedule & Events */}

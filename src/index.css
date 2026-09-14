@@ -71,48 +71,48 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 224 30% 5%;
-    --foreground: 0 0% 98%;
+    --background: 224 22% 6%;
+    --foreground: 220 14% 94%;
 
-    --card: 224 20% 11.5%;
-    --card-foreground: 0 0% 98%;
+    --card: 224 16% 13.8%;
+    --card-foreground: 220 14% 94%;
 
-    --popover: 224 20% 11.5%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 224 16% 15%;
+    --popover-foreground: 220 14% 94%;
 
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 224 18% 16%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 224 14% 18.5%;
+    --secondary-foreground: 220 12% 92%;
 
-    --muted: 224 18% 16%;
-    --muted-foreground: 220 14% 75%;
+    --muted: 224 14% 17.5%;
+    --muted-foreground: 220 11% 68%;
 
-    --accent: 224 18% 17%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 224 14% 19%;
+    --accent-foreground: 220 12% 92%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 224 16% 20%;
-    --input: 224 16% 20%;
+    --border: 224 13% 22%;
+    --input: 224 13% 22%;
     --ring: 217 91% 60%;
 
     /* Dark mode custom tokens */
     --gradient-hero: none;
     --gradient-card: none;
-    --shadow-soft: 0 4px 20px -2px hsl(0, 0%, 0%, 0.45);
-    --shadow-medium: 0 10px 40px -5px hsl(0, 0%, 0%, 0.6);
-    --shadow-strong: 0 20px 60px -10px hsl(0, 0%, 0%, 0.75);
+    --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
+    --shadow-medium: 0 10px 40px -5px rgba(0, 0, 0, 0.55);
+    --shadow-strong: 0 20px 60px -10px rgba(0, 0, 0, 0.65);
 
-    --sidebar-background: 224 24% 8%;
-    --sidebar-foreground: 0 0% 98%;
+    --sidebar-background: 224 22% 5.5%;
+    --sidebar-foreground: 220 14% 94%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 18% 16%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 224 16% 20%;
+    --sidebar-accent: 224 14% 17%;
+    --sidebar-accent-foreground: 220 12% 92%;
+    --sidebar-border: 224 13% 20%;
     --sidebar-ring: 217 91% 60%;
   }
 }
@@ -190,3 +190,87 @@ html.lenis, html.lenis body {
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
 }
+
+/* Gamified Journey Map Animations */
+@keyframes svg-dash {
+  to {
+    stroke-dashoffset: -268;
+  }
+}
+
+.animate-dash {
+  animation: svg-dash 4s linear infinite;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+
+.animate-wiggle {
+  animation: wiggle 1.2s ease-in-out infinite;
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.5s ease-in-out infinite;
+}
+
+@keyframes flag-wave {
+  0%, 100% { transform: skewY(0deg) scaleX(1); }
+  25% { transform: skewY(3.5deg) scaleX(0.96) rotate(-1deg); }
+  50% { transform: skewY(-2.5deg) scaleX(1.03) rotate(1deg); }
+  75% { transform: skewY(2deg) scaleX(0.98); }
+}
+
+.animate-flag-wave {
+  transform-origin: left center;
+  animation: flag-wave 2.4s ease-in-out infinite;
+}
+
+@keyframes cloud-drift {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(35px); }
+  100% { transform: translateX(0); }
+}
+
+.animate-cloud-drift {
+  animation: cloud-drift 18s ease-in-out infinite;
+}
+
+@keyframes cloud-drift-reverse {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(-30px); }
+  100% { transform: translateX(0); }
+}
+
+.animate-cloud-drift-reverse {
+  animation: cloud-drift-reverse 22s ease-in-out infinite;
+}
+

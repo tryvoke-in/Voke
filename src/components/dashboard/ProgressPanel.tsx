@@ -263,7 +263,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
             </span>
             <button
               onClick={() => navigate("/interview/new")}
-              className="mt-3 px-3 py-1.5 bg-sky-600 text-white rounded-lg text-xs font-medium hover:bg-sky-700 transition-colors shadow-md"
+              className="mt-3 px-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium hover:bg-orange-700 transition-colors shadow-md"
             >
               Start First Interview
             </button>
@@ -310,7 +310,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
       {/* Dynamic Insights Row */}
       <div className="grid grid-cols-2 gap-4 pt-1">
         {/* Biggest Improvement */}
-        <div className="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md border border-gray-200/50 dark:border-gray-800/50 rounded-2xl p-4 flex flex-col hover:border-emerald-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
+        <div className="bg-white/40 dark:bg-muted/40 backdrop-blur-md border border-gray-200/50 dark:border-border/60 rounded-2xl p-4 flex flex-col hover:border-emerald-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
           <div className="text-emerald-500 text-xs font-semibold flex items-center gap-1">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Biggest improvement</span>
@@ -321,7 +321,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         </div>
 
         {/* Needs Attention */}
-        <div className="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md border border-gray-200/50 dark:border-gray-800/50 rounded-2xl p-4 flex flex-col hover:border-orange-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
+        <div className="bg-white/40 dark:bg-muted/40 backdrop-blur-md border border-gray-200/50 dark:border-border/60 rounded-2xl p-4 flex flex-col hover:border-orange-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
           <div className="text-orange-500 text-xs font-semibold flex items-center gap-1">
             <AlertCircle className="w-3.5 h-3.5" />
             <span>Needs attention</span>
@@ -337,7 +337,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         id="tour-view-details-btn"
         type="button"
         onClick={() => navigate("/profile", { state: { tab: "analytics" } })}
-        className="w-full py-3 px-4 rounded-xl border border-blue-500/40 text-blue-600 dark:text-blue-400 bg-blue-500/5 hover:bg-blue-500/15 backdrop-blur-sm font-semibold text-sm active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-xs"
+        className="w-full py-3 px-4 rounded-xl border border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/5 hover:bg-blue-500/10 dark:hover:bg-blue-500/15 backdrop-blur-sm font-semibold text-sm active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-xs"
       >
         <span>View Detailed Analytics</span>
         <ArrowRight className="w-4 h-3 group-hover:translate-x-1 transition-transform" />

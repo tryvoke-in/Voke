@@ -118,24 +118,24 @@ export const DSAPreparationBanner = () => {
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -3 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
       className="h-full"
     >
       <Card
-        className="relative border border-border/60 shadow-sm hover:shadow-md bg-card text-card-foreground transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group"
+        className="relative border border-slate-200/80 dark:border-border/90 shadow-xs hover:shadow-md bg-white dark:bg-card text-card-foreground transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group dark:shadow-md"
       >
         <CardContent className="p-5 flex flex-col justify-between flex-1 space-y-4">
           {/* Header Row */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <motion.div
-                whileHover={{ rotate: 5, scale: 1.1 }}
-                className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0 group-hover:bg-emerald-500/20 group-hover:text-emerald-300 transition-colors"
+                whileHover={{ rotate: 5, scale: 1.08 }}
+                className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200/60 dark:border-indigo-400/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/25 transition-colors"
               >
                 <Code2 className="w-4 h-4" />
               </motion.div>
-              <h3 className="text-sm sm:text-base font-bold tracking-tight text-foreground truncate">
+              <h3 className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 truncate">
                 Data Structures & Algorithms
               </h3>
             </div>
@@ -144,31 +144,31 @@ export const DSAPreparationBanner = () => {
           {/* Day & Solved Stats */}
           <div className="space-y-2">
             <div className="flex items-baseline justify-between">
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
                   Day {currentDay}
                 </span>
-                <span className="text-xs text-muted-foreground font-medium">
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                   of {TOTAL_DAYS}
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-xs font-bold text-emerald-400 mr-1.5">
+                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mr-1.5">
                   {progressPercentage}%
                 </span>
-                <span className="text-[11px] text-muted-foreground font-medium">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                   {solvedCount} / {TOTAL_QUESTIONS} Solved
                 </span>
               </div>
             </div>
 
             {/* Progress Bar */}
-            <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-slate-100 dark:bg-muted/70 rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercentage}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="h-full bg-emerald-500 rounded-full"
+                className="h-full bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-400 rounded-full"
               />
             </div>
           </div>
@@ -176,10 +176,10 @@ export const DSAPreparationBanner = () => {
           {/* Today's Goal */}
           <div className="space-y-2 pt-1">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-foreground flex items-center gap-1">
+              <span className="font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1">
                 Today's Goal ({QUESTIONS_PER_DAY} Problems)
               </span>
-              <span className="font-bold text-emerald-400">
+              <span className="font-bold text-indigo-600 dark:text-indigo-400">
                 {todaySolvedCount} / {QUESTIONS_PER_DAY} Done
               </span>
             </div>
@@ -199,8 +199,8 @@ export const DSAPreparationBanner = () => {
                     transition={{ delay: index * 0.08, duration: 0.3 }}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
                       isFilled
-                        ? "bg-emerald-500"
-                        : "bg-muted/80"
+                        ? "bg-indigo-600 dark:bg-indigo-500 shadow-xs shadow-indigo-500/30"
+                        : "bg-slate-100 dark:bg-muted/70"
                     }`}
                   />
                 );
@@ -212,7 +212,7 @@ export const DSAPreparationBanner = () => {
           <div className="pt-2">
             <Button
               onClick={() => navigate("/dsa-sheet")}
-              className="w-full relative overflow-hidden bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all duration-300 group/btn"
+              className="w-full relative overflow-hidden bg-[#5E37E8] hover:bg-[#522fd6] text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-[#5E37E8]/25 hover:shadow-md hover:shadow-[#5E37E8]/35 transition-all duration-200 active:scale-[0.99] group/btn cursor-pointer"
             >
               <span>Continue DSA Practice</span>
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />

@@ -238,7 +238,7 @@ export const DashboardSearchBar: React.FC<{
       {/* Minimalist Search Input */}
       <div
         className={cn(
-          "relative w-full h-9 rounded-full bg-white/40 hover:bg-muted/60 dark:bg-gray-950/40 dark:hover:bg-gray-900/80 border border-border/60 focus-within:border-blue-500/60 focus-within:bg-background focus-within:ring-2 focus-within:ring-blue-500/20 transition-all duration-200 flex items-center px-3 gap-2",
+          "relative w-full h-9 rounded-full bg-white/40 hover:bg-muted/60 dark:bg-muted/40 dark:hover:bg-muted/70 border border-border/60 focus-within:border-blue-500/60 focus-within:bg-background focus-within:ring-2 focus-within:ring-blue-500/20 transition-all duration-200 flex items-center px-3 gap-2",
           isOpen && "border-blue-500/60 ring-2 ring-blue-500/20"
         )}
       >
@@ -286,7 +286,7 @@ export const DashboardSearchBar: React.FC<{
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl bg-popover/95 dark:bg-[#0c0e17] backdrop-blur-xl border border-border/80 shadow-2xl overflow-hidden max-h-[380px] overflow-y-auto custom-scrollbar"
+            className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl bg-popover/95 backdrop-blur-xl border border-border/80 shadow-2xl overflow-hidden max-h-[380px] overflow-y-auto custom-scrollbar"
           >
             {/* When Query is Empty: Show Top Companies & Trending Questions */}
             {!hasQuery && (

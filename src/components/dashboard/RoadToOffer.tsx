@@ -167,11 +167,11 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
 
   if (isEditing) {
     return (
-      <Card className="border-0 bg-card text-card-foreground shadow-sm rounded-2xl overflow-hidden">
+      <Card className="border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card text-card-foreground shadow-xs rounded-2xl overflow-hidden">
         <CardHeader className="p-4 pb-3 border-b border-border/40">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <Target className="w-4 h-4 text-blue-500" />
+              <Target className="w-4 h-4 text-[#5E37E8]" />
               Set Interview Target
             </CardTitle>
             {profile?.target_interview_date && (
@@ -224,7 +224,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
           <div className="flex justify-end pt-1">
             <Button
               size="sm"
-              className="h-7 px-3 text-xs bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg"
+              className="h-7 px-3 text-xs bg-[#5E37E8] hover:bg-[#522fd6] text-white font-medium rounded-lg shadow-xs transition-all"
               onClick={handleSave}
               disabled={loading || !date}
             >
@@ -239,18 +239,18 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -3 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
       className="h-full"
     >
-      <Card className="relative border border-border/60 shadow-sm hover:shadow-md bg-card text-card-foreground transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group">
+      <Card className="relative border border-slate-200/80 dark:border-border/90 shadow-xs hover:shadow-md bg-white dark:bg-card text-card-foreground transition-all duration-300 rounded-2xl overflow-hidden h-full flex flex-col justify-between group dark:shadow-md">
         <CardContent className="p-5 flex flex-col justify-between flex-1 space-y-4">
           {/* Header Row */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <motion.div
-                whileHover={{ rotate: 5, scale: 1.1 }}
-                className="w-8 h-8 rounded-xl bg-muted/40 p-1 flex items-center justify-center shrink-0 transition-colors"
+                whileHover={{ rotate: 5, scale: 1.08 }}
+                className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border/80 p-1.5 flex items-center justify-center shrink-0 transition-colors"
               >
                 <img
                   src={getCompanyLogoUrl(company || "google")}
@@ -264,7 +264,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
                   className="w-full h-full object-contain"
                 />
               </motion.div>
-              <h3 className="text-sm sm:text-base font-bold tracking-tight text-foreground truncate">
+              <h3 className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 truncate">
                 Road to {company || "Google"}
               </h3>
             </div>
@@ -272,7 +272,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
             <Button
               variant="outline"
               size="sm"
-              className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5 rounded-lg border-border/40 hover:bg-muted/80 transition-colors"
+              className="h-7 px-2.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 gap-1.5 rounded-lg border-slate-200/80 dark:border-border/70 hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer"
               onClick={() => setIsEditing(true)}
             >
               <Edit3 className="w-3 h-3" />
@@ -283,18 +283,18 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
           {/* Days Left & Target Date */}
           <div className="flex items-baseline justify-between">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
+              <span className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
                 {daysRemaining || 7}
               </span>
-              <span className="text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase">
                 Days Left
               </span>
             </div>
             <div className="text-right">
-              <span className="text-xs font-bold text-foreground block">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                 {date ? format(date, "MMM do, yyyy") : "Aug 28th, 2026"}
               </span>
-              <span className="text-[10px] text-muted-foreground font-medium block">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
                 Target Interview
               </span>
             </div>
@@ -303,13 +303,13 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
           {/* Milestone Progress */}
           <div className="space-y-2 pt-1">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-foreground">
+              <span className="font-semibold text-slate-700 dark:text-slate-200">
                 Milestone Progress
               </span>
-              <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="font-bold text-[10.5px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200/60 dark:border-indigo-400/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-500"></span>
                 </span>
                 Stage 1 of 3
               </span>
@@ -319,29 +319,29 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
             <div className="grid grid-cols-3 gap-2">
               <motion.div
                 whileHover={{ scale: 1.03 }}
-                className="bg-muted/30 hover:bg-muted/50 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
+                className="bg-indigo-50/80 dark:bg-indigo-500/15 border border-indigo-200/80 dark:border-indigo-500/40 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
               >
-                <span className="text-xs font-bold text-foreground">DSA Prep</span>
-                <span className="text-[9px] font-semibold text-emerald-400 mt-0.5 flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-xs font-bold text-indigo-950 dark:text-indigo-200">DSA Prep</span>
+                <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse"></span>
                   Active
                 </span>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.03 }}
-                className="bg-muted/30 hover:bg-muted/50 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
+                className="bg-slate-50 dark:bg-muted/30 border border-slate-200/60 dark:border-border/60 hover:bg-slate-100/70 dark:hover:bg-muted/50 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
               >
-                <span className="text-xs font-bold text-foreground">AI Mocks</span>
-                <span className="text-[9px] font-semibold text-orange-400 mt-0.5">Target</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">AI Mocks</span>
+                <span className="text-[9px] font-semibold text-amber-600 dark:text-amber-400 mt-0.5">Target</span>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.03 }}
-                className="bg-muted/30 hover:bg-muted/50 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
+                className="bg-slate-50 dark:bg-muted/30 border border-slate-200/60 dark:border-border/60 hover:bg-slate-100/70 dark:hover:bg-muted/50 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
               >
-                <span className="text-xs font-bold text-foreground truncate max-w-[70px]">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[70px]">
                   {company || "Google"}
                 </span>
-                <span className="text-[9px] font-semibold text-muted-foreground mt-0.5">Upcoming</span>
+                <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 mt-0.5">Upcoming</span>
               </motion.div>
             </div>
           </div>
@@ -357,7 +357,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
                   navigate("/companies");
                 }
               }}
-              className="w-full relative overflow-hidden bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all duration-300 group/btn"
+              className="w-full relative overflow-hidden bg-[#5E37E8] hover:bg-[#522fd6] text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-[#5E37E8]/25 hover:shadow-md hover:shadow-[#5E37E8]/35 transition-all duration-200 active:scale-[0.99] group/btn cursor-pointer"
             >
               <span>Explore {company || "Google"} Prep Guide</span>
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />
