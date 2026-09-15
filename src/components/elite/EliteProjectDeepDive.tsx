@@ -94,7 +94,10 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
     volume,
     logs
   } = useGroqVoice({ brain: eliteBrainRef.current });
+  const [isPreInterviewSetupOpen, setIsPreInterviewSetupOpen] = useState(true);
+
   const { violationCount, AntiCheatOverlay } = useAntiCheat({
+    isActive: !isPreInterviewSetupOpen,
     onTerminate: () => {
       disconnect();
       onCompleteRound('FAILED');
@@ -142,7 +145,6 @@ export const EliteProjectDeepDive: React.FC<EliteProjectDeepDiveProps> = ({
 
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isPreInterviewSetupOpen, setIsPreInterviewSetupOpen] = useState(true);
   const [isFetchingRepo, setIsFetchingRepo] = useState(true);
   const [hasStartedSession, setHasStartedSession] = useState(false);
 

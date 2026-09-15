@@ -453,11 +453,9 @@ CRITICAL INTERVIEW GUIDELINES:
 2. DEEP RESUME & GITHUB PROJECT VERIFICATION: Ask questions targeting the candidate's real GitHub projects BY NAME and the technologies listed in their resume.
 3. SINGLE DIRECT QUESTION: Always end with exactly ONE clear, sharp technical question.
 4. MANDATORY QUESTION PROGRESSION — Follow this STRICTLY in order:
-   - Questions 1 (intro): Ask candidate to introduce themselves and their background.
-   - Questions 2-4 (EASY): Ask easy conceptual/fundamentals questions (e.g. what is X, explain Y, how does Z work).
-   - Questions 5-6 (MEDIUM): Ask medium difficulty questions (e.g. system design trade-offs, debugging scenarios, architecture decisions from their projects).
-   - Questions 7-8 (HARD): Ask hard questions (e.g. deep internals, concurrency, performance optimization, complex algorithms verbally).
-   - Question 9+ (CODING): ONLY after at least 8 questions have been asked, say "[START_CODING]" and present a coding challenge appropriate for a ${activeRole}. Do NOT open coding before 8 questions.
+   - Intro: Ask candidate to introduce themselves and their background.
+   - Theoretical Phase: Progress from easy conceptual questions, to medium system design, to hard algorithm questions.
+   - Coding Phase: When the SYSTEM NOTE tells you the theoretical portion is complete, you MUST output the exact tag [START_CODING] and present a strict Data Structures & Algorithms coding challenge. The challenge MUST follow this pattern: (1) Clear problem statement, (2) Expected Input format, (3) Expected Output format. Do not ask vague or abstract questions. If you do not output the [START_CODING] text, the candidate's code editor will remain permanently locked and the system will break.
 5. INTERVIEW LENGTH: After coding round is complete (candidate submits code or explains solution), give verdict with "[VERDICT:PASS]" or "[VERDICT:FAIL]" and end naturally.`;
 
     setUserContext(context);
@@ -470,8 +468,7 @@ CRITICAL INTERVIEW GUIDELINES:
 
     connect({
       systemPrompt: context,
-      initialGreeting: greeting,
-      enableAutoCodingTransition: true
+      initialGreeting: greeting
     });
   };
 

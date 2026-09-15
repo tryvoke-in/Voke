@@ -2,6 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { IVoiceBrain } from "./VoiceBrainInterface";
 
 export class StandardVoiceBrain implements IVoiceBrain {
+    private sessionStartTimeMs: number | null = null;
+    private hasTriggeredCoding: boolean = false;
     
     async generateNextQuestion(
         fullMessages: { role: 'user' | 'assistant' | 'system'; content: string }[],
@@ -9,6 +11,22 @@ export class StandardVoiceBrain implements IVoiceBrain {
         addTokens: (promptTokens: number, completionTokens: number) => void
     ): Promise<{ text: string; apiLabel?: string }> {
         
+        if (!this.sessionStartTimeMs) {
+            this.sessionStartTimeMs = Date.now();
+        }
+
+        const elapsedMinutes = (Date.now() - this.sessionStartTimeMs) / 60000;
+        
+        let timeDirective = "";
+        if (elapsedMinutes >= 20 && elapsedMinutes < 25) {
+            timeDirective = "\n\n[SYSTEM NOTE: The 20-minute theoretical portion is complete. In your next response, you MUST say '[START_CODING]' and give a standard Data Structures & Algorithms (DSA) coding problem. Provide a clear problem statement, sample input, and sample output.]";
+            this.hasTriggeredCoding = true;
+        } else if (elapsedMinutes >= 25) {
+            timeDirective = "\n\n[SYSTEM NOTE: The interview time limit is up. You MUST end the interview NOW by saying '[VERDICT:PASS]' or '[VERDICT:FAIL]'. Do not ask any more questions.]";
+        }
+
+        const finalSysPrompt = sysPrompt + timeDirective;
+
         let aiText = "";
         let apiLabel = "";
 
@@ -48,7 +66,7 @@ export class StandardVoiceBrain implements IVoiceBrain {
                 body: { 
                     messages: fullMessages,
                     interviewType: 'pro_interview',
-                    systemPrompt: sysPrompt
+                    systemPrompt: finalSysPrompt
                 }
             });
 
@@ -89,7 +107,7 @@ export class StandardVoiceBrain implements IVoiceBrain {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: contents.slice(-8),
-                            systemInstruction: { parts: [{ text: sysPrompt + customDirective }] },
+                            systemInstruction: { parts: [{ text: finalSysPrompt + customDirective }] },
                             generationConfig: { temperature: 0.65, maxOutputTokens: 800 }
                         })
                     });
@@ -121,7 +139,7 @@ export class StandardVoiceBrain implements IVoiceBrain {
                 const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
                 if (groqApiKey) {
                     const groqMessages = [
-                        { role: 'system', content: sysPrompt + antiRepetitionRule },
+                        { role: 'system', content: finalSysPrompt + antiRepetitionRule },
                         ...fullMessages.filter((m: any) => m.role !== 'system')
                     ];
 
@@ -132,7 +150,7 @@ export class StandardVoiceBrain implements IVoiceBrain {
                             "Content-Type": "application/json"
                         },
                         body: JSON.stringify({
-                            model: "llama-3.3-70b-versatile",
+                            model: "llama-3.1-8b-instant",
                             messages: groqMessages.slice(-10),
                             temperature: 0.7,
                             max_tokens: 200,

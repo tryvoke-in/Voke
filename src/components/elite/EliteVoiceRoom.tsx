@@ -66,7 +66,10 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
     logs,
     apiLabel
   } = useGroqVoice({ brain: eliteBrainRef.current });
+  const [isPreInterviewSetupOpen, setIsPreInterviewSetupOpen] = useState(true);
+
   const { violationCount, AntiCheatOverlay } = useAntiCheat({
+    isActive: !isPreInterviewSetupOpen,
     onTerminate: () => {
       disconnect();
       onCompleteRound('FAILED');
@@ -414,8 +417,7 @@ export const EliteVoiceRoom: React.FC<EliteVoiceRoomProps> = ({
     }
   };
 
-  // Pre-interview repository setup modal state
-  const [isPreInterviewSetupOpen, setIsPreInterviewSetupOpen] = useState(true);
+
 
   const handleConfirmSetupAndStart = async () => {
     const targetProjects = selectedRepos.length > 0 

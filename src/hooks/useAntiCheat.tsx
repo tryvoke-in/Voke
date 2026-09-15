@@ -8,6 +8,8 @@ interface AntiCheatHookReturn {
 
 interface AntiCheatOptions {
   onTerminate?: () => void;
+  disabled?: boolean;
+  isActive?: boolean;
 }
 
 export function useAntiCheat(options?: AntiCheatOptions): AntiCheatHookReturn {
@@ -16,8 +18,14 @@ export function useAntiCheat(options?: AntiCheatOptions): AntiCheatHookReturn {
   const [isTerminated, setIsTerminated] = useState(false);
 
   const [isProctoringDisabled, setIsProctoringDisabled] = useState<boolean>(() => {
-    return typeof window !== 'undefined' && localStorage.getItem('voke_dev_proctoring_disabled') === 'true';
+    return options?.disabled ?? (typeof window !== 'undefined' && localStorage.getItem('voke_dev_proctoring_disabled') === 'true');
   });
+
+  useEffect(() => {
+    if (options?.disabled !== undefined) {
+      setIsProctoringDisabled(options.disabled);
+    }
+  }, [options?.disabled]);
 
   // Listen for changes from DevResetWidget
   useEffect(() => {
@@ -34,80 +42,64 @@ export function useAntiCheat(options?: AntiCheatOptions): AntiCheatHookReturn {
   }, []);
 
   const handleViolation = useCallback((type: 'TAB_SWITCH' | 'COPY_PASTE' | 'INSPECT') => {
-    if (isProctoringDisabled || isTerminated) return;
+    if (isProctoringDisabled || isTerminated || options?.isActive === false) return;
     
     setViolationCount(prev => {
       const newCount = prev + 1;
       
-      // If it's a tab/window switch and it happens 3 times, terminate immediately
+      // Auto-terminate on 3rd tab switch
       if (type === 'TAB_SWITCH' && newCount >= 3) {
         setIsTerminated(true);
         if (options?.onTerminate) {
           options.onTerminate();
         }
       }
+      
       return newCount;
     });
     
     setActiveViolationType(type);
-  }, [isProctoringDisabled, isTerminated, options]);
+  }, [isProctoringDisabled, isTerminated, options?.isActive, options?.onTerminate]);
 
-  const dismissWarning = () => {
-    if (isTerminated) return; // Cannot dismiss if terminated
+  const dismissWarning = useCallback(() => {
     setActiveViolationType(null);
-  };
+  }, []);
 
   useEffect(() => {
+    if (isProctoringDisabled || options?.isActive === false) return;
+
     // 1. Prevent Context Menu (Right Click)
     const handleContextMenu = (e: MouseEvent) => {
-      if (isProctoringDisabled) return;
       e.preventDefault();
       handleViolation('COPY_PASTE');
     };
 
     // 2. Prevent Copy/Cut/Paste
     const handleClipboard = (e: ClipboardEvent) => {
-      if (isProctoringDisabled) return;
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        return;
+      }
       e.preventDefault();
       handleViolation('COPY_PASTE');
     };
 
-    // 3. Tab visibility change
+    // 3. Detect Tab Switching via Visibility API
     const handleVisibilityChange = () => {
-      if (isProctoringDisabled) return;
       if (document.visibilityState === 'hidden') {
         handleViolation('TAB_SWITCH');
       }
     };
 
-    // 4. Window blur (On-screen cheat software like Parrot stealing focus)
-    const handleWindowBlur = () => {
-      if (isProctoringDisabled) return;
-      // We count focus loss as a tab switch violation
-      handleViolation('TAB_SWITCH');
-    };
-
-    // 5. Block Inspect Element Shortcuts (F12, Ctrl+Shift+I/J/C, Ctrl+U)
+    // 4. Block Inspect Element Shortcuts (F12, Ctrl+Shift+I/J/C, Ctrl+U)
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isProctoringDisabled) return;
-
       // F12
       if (e.key === 'F12' || e.keyCode === 123) {
         e.preventDefault();
         handleViolation('INSPECT');
       }
-      // Ctrl+Shift+I or Cmd+Option+I
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
-        e.preventDefault();
-        handleViolation('INSPECT');
-      }
-      // Ctrl+Shift+J or Cmd+Option+J
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
-        e.preventDefault();
-        handleViolation('INSPECT');
-      }
-      // Ctrl+Shift+C or Cmd+Option+C
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+      // Ctrl+Shift+I/J/C or Cmd+Option+I/J/C
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'J', 'C', 'i', 'j', 'c'].includes(e.key)) {
         e.preventDefault();
         handleViolation('INSPECT');
       }
@@ -118,14 +110,12 @@ export function useAntiCheat(options?: AntiCheatOptions): AntiCheatHookReturn {
       }
     };
 
-    // Add event listeners (capture phase true for strict interception)
     document.addEventListener('contextmenu', handleContextMenu, true);
     document.addEventListener('copy', handleClipboard, true);
     document.addEventListener('cut', handleClipboard, true);
     document.addEventListener('paste', handleClipboard, true);
     document.addEventListener('visibilitychange', handleVisibilityChange, true);
     document.addEventListener('keydown', handleKeyDown, true);
-    window.addEventListener('blur', handleWindowBlur, true);
 
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu, true);
@@ -134,9 +124,8 @@ export function useAntiCheat(options?: AntiCheatOptions): AntiCheatHookReturn {
       document.removeEventListener('paste', handleClipboard, true);
       document.removeEventListener('visibilitychange', handleVisibilityChange, true);
       document.removeEventListener('keydown', handleKeyDown, true);
-      window.removeEventListener('blur', handleWindowBlur, true);
     };
-  }, [handleViolation, isProctoringDisabled]);
+  }, [handleViolation, isProctoringDisabled, options?.isActive]);
 
   const AntiCheatOverlay: React.FC = () => {
     if (!activeViolationType && !isTerminated) return null;

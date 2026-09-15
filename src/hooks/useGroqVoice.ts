@@ -10,25 +10,7 @@ export type GroqVoiceConnectOptions = string | {
     initialGreeting?: string;
     mode?: 'conversational' | 'coding_silent';
     fixedQuestions?: string[];
-    enableAutoCodingTransition?: boolean;
 };
-
-const SYSTEM_INSTRUCTION = `YOU ARE:
-A real-time voice-based technical interviewer conducting an elite software engineering interview.
-
-CRITICAL LANGUAGE MANDATE:
-- You MUST communicate, ask questions, and respond ONLY in clear, natural, professional English.
-- NEVER output Japanese, Chinese, Hindi, or any non-English language under any circumstance.
-
-1. Core Personality & Speaking Style:
-- Speak in a friendly, concise, natural, and professional tone.
-- Keep responses concise (1-3 sentences max) unless explicitly asked for in-depth explanation.
-- Never sound robotic or overly formal.
-
-2. Interview Etiquette & Candidate Focus:
-- Respect the candidate's focus. When the candidate is working on code or thinking silently, do NOT interrupt them.
-- When they explain their approach or ask questions, respond directly and constructively.
-`;
 
 interface UseGroqVoiceReturn {
     status: LiveStatus;
@@ -72,7 +54,6 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
     const conversationHistoryRef = useRef<{ role: 'user' | 'assistant' | 'system'; content: string }[]>([]);
     const fixedQuestionsRef = useRef<string[] | null>(null);
     const fixedQuestionIndexRef = useRef<number>(0);
-    const autoCodingRef = useRef<boolean>(false);
     const statusRef = useRef(status);
     const isAiSpeakingRef = useRef(isAiSpeaking);
     const isListeningRef = useRef(false);
@@ -341,7 +322,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             formData.append('file', audioFile);
             formData.append('model', 'whisper-large-v3-turbo');
             formData.append('language', 'en');
-            formData.append('prompt', 'Technical software engineering interview speech strictly in English.');
+            formData.append('prompt', 'Professional interview speech strictly in English.');
             formData.append('temperature', '0');
             formData.append('response_format', 'verbose_json');
 
@@ -408,35 +389,11 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         try {
             console.log('DEBUG: Sending to Groq...');
 
-            const systemPromptContent = contextRef.current ? contextRef.current : SYSTEM_INSTRUCTION;
+            const systemPromptContent = contextRef.current || "";
             
-            // Calculate how many AI questions have been asked (excluding system/assistant greeting)
-            const aiQuestionCount = conversationHistoryRef.current.filter(m => m.role === 'assistant').length;
-            
-            let turnDirective = "";
-            if (autoCodingRef.current) {
-                if (aiQuestionCount >= 8 && aiQuestionCount < 11) {
-                    turnDirective = "\n\n[SYSTEM NOTE: You have asked enough theoretical questions. In your next response, you MUST say '[START_CODING]' and give a coding problem.]";
-                } else if (aiQuestionCount >= 11) {
-                    turnDirective = "\n\n[SYSTEM NOTE: The interview is over. You MUST end the interview NOW by saying '[VERDICT:PASS]' or '[VERDICT:FAIL]'. Do not ask any more questions.]";
-                }
-            }
-
-            // Create a copy of the history to inject the directive into the last message
-            const modifiedHistory = [...conversationHistoryRef.current];
-            if (turnDirective && modifiedHistory.length > 0) {
-                const lastMsg = modifiedHistory[modifiedHistory.length - 1];
-                if (lastMsg.role === 'user') {
-                    modifiedHistory[modifiedHistory.length - 1] = {
-                        ...lastMsg,
-                        content: lastMsg.content + turnDirective
-                    };
-                }
-            }
-
             const messages = [
                 { role: 'system', content: systemPromptContent },
-                ...modifiedHistory
+                ...conversationHistoryRef.current
             ];
 
             console.log('DEBUG: Full messages being sent:', JSON.stringify(messages, null, 2));
@@ -456,7 +413,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
         try {
             const messages = [
-                { role: 'system', content: SYSTEM_INSTRUCTION + '\n\nCONTEXT:\n' + contextRef.current },
+                { role: 'system', content: contextRef.current || "" },
                 ...conversationHistoryRef.current
             ];
             await sendToGroq(messages);
@@ -779,11 +736,9 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
             systemPromptText = context || '';
             fixedQuestionsRef.current = null;
             fixedQuestionIndexRef.current = 0;
-            autoCodingRef.current = false;
         } else if (context && typeof context === 'object') {
             systemPromptText = context.systemPrompt || '';
             initialGreetingText = context.initialGreeting || '';
-            autoCodingRef.current = !!context.enableAutoCodingTransition;
             
             if (context.mode === 'coding_silent') {
                 setIsSilentMode(true);
@@ -799,7 +754,6 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
         } else {
             fixedQuestionsRef.current = null;
             fixedQuestionIndexRef.current = 0;
-            autoCodingRef.current = false;
         }
 
         contextRef.current = systemPromptText;
@@ -822,19 +776,7 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
                     timestamp: new Date()
                 }]);
                 speakResponse(initialGreetingText);
-                return;
             }
-
-            // Fallback greeting
-            const fallbackGreeting = "Welcome! Let's get started. Could you please introduce yourself, your technical background, and give me a brief overview of the main projects on your resume?";
-            conversationHistoryRef.current.push({ role: 'assistant', content: fallbackGreeting });
-            setLogs([{
-                id: 'init',
-                role: 'assistant',
-                text: fallbackGreeting,
-                timestamp: new Date()
-            }]);
-            speakResponse(fallbackGreeting);
 
         } catch (e) {
             console.error("DEBUG: Connection failed", e);

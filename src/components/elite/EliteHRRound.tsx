@@ -53,7 +53,10 @@ export const EliteHRRound: React.FC<EliteHRRoundProps> = ({
     logs,
     apiLabel
   } = useGroqVoice({ brain: eliteBrainRef.current });
+  const [isPreInterviewSetupOpen, setIsPreInterviewSetupOpen] = useState(false);
+
   const { violationCount, AntiCheatOverlay } = useAntiCheat({
+    isActive: !isPreInterviewSetupOpen,
     onTerminate: () => {
       disconnect();
       onCompleteRound('FAILED');
@@ -187,7 +190,6 @@ export const EliteHRRound: React.FC<EliteHRRoundProps> = ({
     }
   };
 
-  const [isPreInterviewSetupOpen, setIsPreInterviewSetupOpen] = useState(false);
 
   const handleConfirmSetupAndStart = async () => {
     setIsPreInterviewSetupOpen(false);
