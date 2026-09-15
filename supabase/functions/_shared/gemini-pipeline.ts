@@ -3,7 +3,7 @@ export function getGeminiApiKeys(): string[] {
   const dynamicKeys = dynamicKeysStr.split(',').map(k => k.trim()).filter(k => k.length > 0);
   const proKey = Deno.env.get('PRO_INTERVIEW_GEMINI_KEY') || Deno.env.get('GOOGLE_API_KEY_PRO') || '';
   const primaryKey = Deno.env.get('GOOGLE_API_KEY') || '';
-  
+
   const keys: string[] = [...dynamicKeys];
   if (proKey && !keys.includes(proKey)) keys.push(proKey);
   if (primaryKey && !keys.includes(primaryKey)) keys.push(primaryKey);
@@ -58,7 +58,7 @@ export async function callGeminiPipeline(options: GeminiPipelineOptions, isStrea
 
         const endpoint = isStream ? 'streamGenerateContent?alt=sse' : 'generateContent';
         const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + currentModel + ':' + endpoint + (isStream ? '&key=' : '?key=') + apiKey;
-        
+
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -92,7 +92,7 @@ export async function callGeminiPipeline(options: GeminiPipelineOptions, isStrea
 
         const errorText = await response.text();
         allErrors.push('[' + currentModel + ' Key ' + currentKeyIndex + '] ' + response.status + ': ' + errorText.substring(0, 200));
-        
+
         if (response.status === 429 || response.status === 403 || response.status < 500) {
           currentKeyIndex++;
           continue;

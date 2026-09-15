@@ -13,7 +13,7 @@ export class ElitePrepBrain implements IVoiceBrain {
         sysPrompt: string,
         addTokens: (promptTokens: number, completionTokens: number) => void
     ): Promise<{ text: string; apiLabel?: string }> {
-        
+
         let aiText = "";
         let apiLabel = "";
 
@@ -54,7 +54,7 @@ export class ElitePrepBrain implements IVoiceBrain {
             try {
                 console.log(`[ElitePrepBrain] Calling secure interview-chat Edge Function (Turn ${turnCount + 1})...`);
                 const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('interview-chat', {
-                    body: { 
+                    body: {
                         messages: fullMessages,
                         interviewType: isHRRound ? 'behavioral' : 'pro_interview',
                         systemPrompt: sysPrompt

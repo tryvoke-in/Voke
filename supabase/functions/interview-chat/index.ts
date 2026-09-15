@@ -29,7 +29,7 @@ CRITICAL MANDATES:
 
   const rawFiltered = (messages || []).filter((msg: any) => msg.role !== 'system');
   const geminiContents: any[] = [];
-  
+
   for (const msg of rawFiltered) {
     const role = msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user';
     const text = msg.content || msg.text || '';
@@ -72,26 +72,26 @@ serve(async (req) => {
   // STEP 2: Handle WebSocket Upgrade
   if (req.headers.get("upgrade") === "websocket") {
     const { socket, response } = Deno.upgradeWebSocket(req);
-    
+
     socket.onmessage = async (e) => {
       try {
         const payload = JSON.parse(e.data);
-        
+
         // STEP 5: Pre-warm ping
         if (payload.type === 'ping') {
-           socket.send(JSON.stringify({ type: 'pong', status: 'warm' }));
-           return;
+          socket.send(JSON.stringify({ type: 'pong', status: 'warm' }));
+          return;
         }
-        
+
         const { geminiContents, fullSystemPrompt } = buildInterviewContext(payload);
         const recentContents = geminiContents.slice(-8);
 
         const geminiRes = await streamGeminiPipeline({
-           geminiContents: recentContents,
-           systemPrompt: fullSystemPrompt,
-           temperature: 0.7,
+          geminiContents: recentContents,
+          systemPrompt: fullSystemPrompt,
+          temperature: 0.7,
         });
-        
+
         if (geminiRes.ok && geminiRes.stream) {
           const reader = geminiRes.stream.getReader();
           const decoder = new TextDecoder("utf-8");
@@ -103,22 +103,22 @@ serve(async (req) => {
           }
           socket.send("[DONE]");
         } else {
-           socket.send(`data: {"candidates": [{"content": {"parts": [{"text": "[DEBUG ERROR: ${geminiRes.errorText || 'Unknown pipeline error'}] Could you tell me about a technical challenge you've solved recently?"}]}}]}\n\n`);
-           socket.send("[DONE]");
+          socket.send(`data: {"candidates": [{"content": {"parts": [{"text": "[DEBUG ERROR: ${geminiRes.errorText || 'Unknown pipeline error'}] Could you tell me about a technical challenge you've solved recently?"}]}}]}\n\n`);
+          socket.send("[DONE]");
         }
       } catch (err: any) {
         console.error(err);
         socket.send(JSON.stringify({ error: err.message }));
       }
     };
-    
+
     return response;
   }
 
   // STEP 1: Handle HTTP POST (SSE Fallback)
   try {
     const body = await req.json();
-    
+
     // STEP 5: Pre-warm ping over HTTP
     if (body.type === 'ping') {
       return new Response(JSON.stringify({ status: 'warm' }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -126,13 +126,13 @@ serve(async (req) => {
 
     const { geminiContents, fullSystemPrompt } = buildInterviewContext(body);
     const recentContents = geminiContents.slice(-8);
-    
+
     const geminiRes = await callGeminiPipeline({
       geminiContents: recentContents,
       systemPrompt: fullSystemPrompt,
       temperature: 0.7,
     });
-    
+
     if (geminiRes.ok && geminiRes.aiContent) {
       return new Response(JSON.stringify({
         question: geminiRes.aiContent,

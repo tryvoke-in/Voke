@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voke AI - College Pilot Partnership Agreement (MoU)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1e293b;
+      background-color: #f1f5f9;
+      margin: 0;
+      padding: 15px 0;
+      font-size: 10.5px;
+      line-height: 1.4;
+    }
+
+    .page {
+      width: 210mm;
+      height: 297mm;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 10mm 16mm 8mm 16mm;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-area img {
+      height: 28px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .logo-fallback {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #0f172a;
+    }
+
+    .badge {
+      background: #eff6ff;
+      color: #2563eb;
+      font-weight: 700;
+      font-size: 9px;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1px solid #bfdbfe;
+    }
+
+    h1.doc-title {
+      font-size: 15.5px;
+      font-weight: 800;
+      text-align: center;
+      color: #0f172a;
+      margin: 2px 0 1px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .doc-subtitle {
+      text-align: center;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .parties-box {
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      padding: 6px 10px;
+      margin-bottom: 8px;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .parties-box p {
+      margin: 1px 0;
+    }
+
+    .clause {
+      margin-bottom: 7px;
+    }
+
+    .clause-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border-left: 3px solid #2563eb;
+      padding-left: 6px;
+      margin-bottom: 2px;
+    }
+
+    .clause p, .clause ul {
+      margin: 1.5px 0;
+      color: #334155;
+    }
+
+    ul {
+      padding-left: 15px;
+    }
+
+    li {
+      margin-bottom: 1.5px;
+    }
+
+    .highlight-pill {
+      background: #fef3c7;
+      color: #92400e;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid #fde68a;
+    }
+
+    .confidential-pill {
+      background: #ecfdf5;
+      color: #065f46;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid #a7f3d0;
+    }
+
+    .pilot-date-banner {
+      background: #eff6ff;
+      border: 1.5px solid #3b82f6;
+      border-radius: 6px;
+      padding: 6px 12px;
+      margin: 7px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10.5px;
+      color: #1e3a8a;
+    }
+
+    .pilot-date-banner strong {
+      font-size: 11px;
+      color: #1e40af;
+    }
+
+    .date-fill-line {
+      font-weight: 700;
+      color: #1d4ed8;
+      border-bottom: 1.5px dashed #3b82f6;
+      padding: 0 10px;
+    }
+
+    table.spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0 2px 0;
+      font-size: 10px;
+    }
+
+    table.spec-table th, table.spec-table td {
+      border: 1px solid #cbd5e1;
+      padding: 4px 7px;
+      text-align: left;
+    }
+
+    table.spec-table th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #0f172a;
+      width: 28%;
+    }
+
+    table.spec-table td {
+      background-color: #ffffff;
+      color: #334155;
+    }
+
+    .fill-line {
+      display: inline-block;
+      min-width: 170px;
+      border-bottom: 1px solid #94a3b8;
+    }
+
+    .page-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 4px;
+      margin-top: 4px;
+      font-size: 8.5px;
+      color: #94a3b8;
+    }
+
+    .actions-bar {
+      width: 210mm;
+      margin: 0 auto 10px auto;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 6px 12px;
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background-color: #1e293b;
+    }
+
+    @media print {
+      body {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+      }
+      .actions-bar {
+        display: none !important;
+      }
+      .page {
+        margin: 0;
+        border: none;
+        box-shadow: none;
+        padding: 10mm 16mm 8mm 16mm;
+        width: 210mm;
+        height: 297mm;
+        overflow: hidden;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="actions-bar">
+    <button class="btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  </div>
+
+  <div class="page">
+    <div>
+      <div class="doc-header">
+        <div class="logo-area">
+          <img src="public/images/voke_logo_new.png" alt="Voke AI Logo" onerror="this.style.display='none'">
+          <div class="logo-fallback">VOKE AI</div>
+        </div>
+        <div class="badge">Institutional Pilot Agreement</div>
+      </div>
+
+      <h1 class="doc-title">Memorandum of Understanding (MoU)</h1>
+      <div class="doc-subtitle">Institutional Placement Pilot, Feedback Partnership & Brand Authorization</div>
+
+      <div class="parties-box">
+        <p><strong>This Memorandum of Understanding ("Agreement") is entered between:</strong></p>
+        <p><strong>1. VOKE AI</strong> (hereinafter <strong>"Voke"</strong> or <strong>"Service Provider"</strong>), operating the AI-powered interview readiness & career simulation platform, and</p>
+        <p><strong>2. College / Partner Institution:</strong> <span class="fill-line" style="min-width: 320px;"></span></p>
+      </div>
+
+      <div class="clause">
+        <div class="clause-title">Preamble & Purpose</div>
+        <p>The Institution strives to enhance student interview readiness and corporate employability. Voke provides a proprietary AI simulation platform conducting real-time video, voice, and technical mock interviews with automated performance diagnostics. The Parties agree to execute a sponsored, zero-cost placement preparation pilot program for designated students in exchange for verified student feedback, internal AI model training rights, and institutional marketing/brand recognition rights.</p>
+      </div>
+
+      <div class="clause">
+        <div class="clause-title">Clause 1: Scope of Pilot & Free Access (Zero Commercial Consideration)</div>
+        <ul>
+          <li><strong>Student Allocation:</strong> Voke agrees to grant sponsored access to the Voke Platform for up to <span class="highlight-pill">_______ Students</span> of the Institution.</li>
+          <li><strong>100% Free of Cost:</strong> This pilot is provided strictly at <strong>₹0 / $0 (Zero Commercial Fee)</strong>. Neither the Institution nor participating students shall be charged any registration, access, or subscription fees.</li>
+          <li><strong>Platform Inclusions:</strong> Enrolled students receive access to AI-driven mock interviews (Text, Voice, and Video practice), real-time evaluation of articulation, technical accuracy, and camera confidence, plus personalized scorecards.</li>
+          <li><strong>Placement Analytics:</strong> Voke shall provide the Institution's Placement Cell with an aggregate cohort readiness report highlighting batch participation and overarching skill strengths/gaps.</li>
+        </ul>
+      </div>
+
+      <div class="clause">
+        <div class="clause-title">Clause 2: Student Feedback & Collaboration Obligations (The Consideration)</div>
+        <ul>
+          <li><strong>Mandatory Student Feedback:</strong> In consideration for receiving sponsored access without financial charge, <strong>100% of participating students</strong> who take an interview on Voke shall complete the post-interview diagnostic feedback survey.</li>
+          <li><strong>Scope of Feedback:</strong> Feedback shall evaluate platform usability, realism of interview simulations, question relevancy, speech/video evaluation accuracy, and overall learning value.</li>
+          <li><strong>Placement Cell Facilitation:</strong> The Institution’s Training & Placement Cell agrees to actively coordinate and mandate feedback submission, targeting a minimum completion rate of <strong>90%+</strong> across the participating student cohort.</li>
+          <li><strong>Institutional Testimonial:</strong> Upon completion of the pilot, an authorized representative agrees to provide a brief written review/quote on the platform's utility and placement impact.</li>
+        </ul>
+      </div>
+
+      <div class="clause">
+        <div class="clause-title">Clause 3: AI Model Training, Confidentiality & Strict Non-Sharing Guarantee</div>
+        <ul>
+          <li><strong>Internal AI Training Rights:</strong> The Institution acknowledges and agrees that Voke shall have the explicit right to process, analyze, and use student feedback, platform ratings, diagnostic metrics, and anonymized interview interaction data internally for the sole purpose of training, fine-tuning, benchmarking, and improving Voke’s proprietary AI models and evaluation algorithms.</li>
+          <li><span class="confidential-pill">Strict Non-Disclosure & Non-Sharing Guarantee:</span> Voke explicitly covenants, warrants, and guarantees that:
+            <ul>
+              <li>All student feedback and training datasets shall remain <strong>strictly confidential</strong> and proprietary to Voke.</li>
+              <li>Voke <strong>shall NOT share, sell, rent, license, publish, or disclose</strong> this data or any individual student responses to any third parties, commercial advertisers, external institutions, or outside entities under any circumstances.</li>
+              <li>All training data will be processed on an anonymized and de-identified basis to guarantee individual student privacy.</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <div class="clause">
+        <div class="clause-title">Clause 4: Brand, Name & Logo Marketing Authorization</div>
+        <ul>
+          <li><strong>Grant of License:</strong> The Institution hereby grants Voke a worldwide, royalty-free, non-exclusive license to use the Institution’s official name, acronym, logo, and emblems for marketing, promotional, and brand-building purposes.</li>
+          <li><strong>Authorized Channels:</strong> Voke is authorized to display the Institution's logo and name on the official Voke website (e.g., "Partner Campuses" / "Placement Partners"), pitch decks, investor presentations, case studies, whitepapers, social media channels, and corporate brochures.</li>
+          <li><strong>Case Study & Metrics:</strong> Voke may highlight aggregate, anonymized pilot results (e.g., <em>"Achieved 82% interview readiness rate"</em>) in public case studies.</li>
+        </ul>
+      </div>
+
+      <div class="pilot-date-banner">
+        <div><strong>🗓️ Pilot Schedule:</strong> The free pilot drive will happen on: <span class="date-fill-line">________________________ (Date)</span></div>
+        <div><strong>Cohort Size:</strong> <span class="highlight-pill">_______ Students</span></div>
+      </div>
+
+      <table class="spec-table">
+        <tr>
+          <th>Institution Name</th>
+          <td><span class="fill-line" style="min-width: 170px;"></span></td>
+          <th>Pilot Conduct Date</th>
+          <td><span class="date-fill-line">____________________</span></td>
+        </tr>
+        <tr>
+          <th>Target Batch / Department</th>
+          <td><span class="fill-line" style="min-width: 170px;"></span></td>
+          <th>Allocated Free Seats</th>
+          <td><strong>_______ Students</strong></td>
+        </tr>
+        <tr>
+          <th>Commercial Consideration</th>
+          <td><strong>₹0.00 (100% Free of Cost)</strong></td>
+          <th>Student Feedback Obligation</th>
+          <td><strong>Mandatory (100% of participants)</strong></td>
+        </tr>
+        <tr>
+          <th>Internal AI Training</th>
+          <td><strong>Authorized (Strictly Internal Only)</strong></td>
+          <th>Third-Party Data Sharing</th>
+          <td><strong>Strictly Prohibited (Zero Third-Party Sharing)</strong></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-footer">
+      <span>Voke AI — Institutional Placement Pilot Agreement & Feedback Partnership</span>
+      <span>Official Engagement Terms</span>
+    </div>
+  </div>
+
+</body>
+</html>
