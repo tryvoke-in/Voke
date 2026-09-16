@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-6106K1D9YZ"></script>
@@ -95,12 +95,12 @@
     <script>
       (function() {
         try {
+          const path = window.location.pathname;
           const stored = localStorage.getItem('theme');
-          if (stored === 'light') {
-            document.documentElement.classList.remove('dark');
-          } else {
+          if (path === '/' || path === '' || !stored || stored === 'dark') {
             document.documentElement.classList.add('dark');
-            if (!stored) localStorage.setItem('theme', 'dark');
+          } else if (stored === 'light') {
+            document.documentElement.classList.remove('dark');
           }
         } catch (e) {}
       })();

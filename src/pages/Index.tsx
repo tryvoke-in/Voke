@@ -147,6 +147,11 @@ const Index = () => {
   }, [currentDialogueIdx]);
 
   useEffect(() => {
+    // Ensure the landing page is always strictly rendered in dark theme
+    document.documentElement.classList.add("dark");
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
@@ -165,7 +170,7 @@ const Index = () => {
 
   return (
     <ReactLenis root options={{ anchors: true }}>
-      <div className="min-h-screen text-white selection:bg-sky-500/30 font-sans antialiased overflow-x-hidden relative">
+      <div className="min-h-screen bg-[#06070a] text-white selection:bg-sky-500/30 font-sans antialiased overflow-x-hidden relative dark isolate">
       {/* Base Solid Background beneath all negative layers */}
       <div className="absolute inset-0 bg-[#06070a] -z-30 pointer-events-none" />
 
