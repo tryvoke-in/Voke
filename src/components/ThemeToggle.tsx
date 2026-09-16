@@ -1,5 +1,6 @@
 import { Moon, Sun } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Button } from "@/components/ui/button";
 
 export const ThemeToggle = () => {
@@ -12,75 +13,67 @@ export const ThemeToggle = () => {
     return "dark";
   });
 
+  const isTransitioningRef = useRef(false);
+  const [waveId, setWaveId] = useState(0);
+
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "dark") {
+    if (theme === "dark" && !root.classList.contains("dark")) {
       root.classList.add("dark");
-    } else {
+    } else if (theme === "light" && root.classList.contains("dark")) {
       root.classList.remove("dark");
     }
   }, [theme]);
 
-  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
+  const applyTheme = (nextTheme: "light" | "dark") => {
+    const root = document.documentElement;
+    if (nextTheme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    localStorage.setItem("theme", nextTheme);
+    setTheme(nextTheme);
+  };
 
-    const isAppearanceTransition =
-      typeof document !== "undefined" &&
-      "startViewTransition" in document &&
-      !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const toggleTheme = () => {
+    if (isTransitioningRef.current) return;
 
-    if (!isAppearanceTransition) {
-      const root = document.documentElement;
-      if (nextTheme === "dark") {
-        root.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-      } else {
-        root.classList.remove("dark");
-        localStorage.setItem("theme", "light");
-      }
-      setTheme(nextTheme);
+    const root = document.documentElement;
+    const isDark = root.classList.contains("dark");
+    const nextTheme = isDark ? "light" : "dark";
+
+    // Fallback for browsers without View Transition API or if reduced motion is preferred
+    if (
+      !document.startViewTransition ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      applyTheme(nextTheme);
       return;
     }
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX || rect.left + rect.width / 2;
-    const y = e.clientY || rect.top + rect.height / 2;
+    isTransitioningRef.current = true;
 
-    const endRadius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
-    );
+    try {
+      const transition = document.startViewTransition(() => {
+        flushSync(() => {
+          applyTheme(nextTheme);
+        });
+      });
 
-    // @ts-ignore
-    const transition = document.startViewTransition(() => {
-      const root = document.documentElement;
-      if (nextTheme === "dark") {
-        root.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-      } else {
-        root.classList.remove("dark");
-        localStorage.setItem("theme", "light");
-      }
-      setTheme(nextTheme);
-    });
-
-    transition.ready.then(() => {
-      const clipPath = [
-        `circle(0px at ${x}px ${y}px)`,
-        `circle(${endRadius}px at ${x}px ${y}px)`
-      ];
-
-      document.documentElement.animate(
-        {
-          clipPath: clipPath
-        },
-        {
-          duration: 650,
-          easing: "cubic-bezier(0.25, 1, 0.5, 1)",
-          pseudoElement: "::view-transition-new(root)"
-        }
-      );
-    });
+      // A page-sized clip-path wave repaints every frame. Keep the page
+      // transition to opacity and use a composited pulse on the control.
+      void transition.finished.catch(() => {
+        applyTheme(nextTheme);
+      }).finally(() => {
+        isTransitioningRef.current = false;
+        setWaveId((id) => id + 1);
+      });
+    } catch {
+      applyTheme(nextTheme);
+      isTransitioningRef.current = false;
+      setWaveId((id) => id + 1);
+    }
   };
 
   return (
@@ -88,17 +81,33 @@ export const ThemeToggle = () => {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="text-muted-foreground hover:text-foreground hover:bg-muted/50 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center cursor-pointer"
+      className="text-muted-foreground hover:text-foreground hover:bg-muted/50 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center cursor-pointer overflow-hidden"
       title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
       aria-label="Toggle theme"
     >
-      {theme === "dark" ? (
-        <Sun className="w-5 h-5 text-amber-400 transition-transform duration-300 hover:rotate-45" />
-      ) : (
-        <Moon className="w-5 h-5 text-slate-700 transition-transform duration-300 hover:-rotate-12" />
+      {waveId > 0 && (
+        <span
+          key={waveId}
+          aria-hidden="true"
+          className="theme-toggle-wave absolute inset-0 rounded-full pointer-events-none"
+        />
       )}
+      <span className="relative flex items-center justify-center w-5 h-5 pointer-events-none">
+        <Sun
+          className={`w-5 h-5 text-amber-400 absolute transition-all duration-300 transform ${
+            theme === "dark"
+              ? "rotate-0 scale-100 opacity-100"
+              : "rotate-90 scale-0 opacity-0"
+          }`}
+        />
+        <Moon
+          className={`w-5 h-5 text-slate-700 dark:text-slate-200 absolute transition-all duration-300 transform ${
+            theme === "light"
+              ? "rotate-0 scale-100 opacity-100"
+              : "-rotate-90 scale-0 opacity-0"
+          }`}
+        />
+      </span>
     </Button>
   );
 };
-
-

@@ -80,7 +80,7 @@ const Dashboard = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [isTourOpen, setIsTourOpen] = useState(false);
-  const [showMoreActions, setShowMoreActions] = useState(false);
+  const [showMoreActions, setShowMoreActions] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -110,7 +110,7 @@ const Dashboard = () => {
     const initDashboard = async () => {
       await checkAuth();
       await loadData();
-      
+
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user || !active) return;
@@ -574,13 +574,13 @@ const Dashboard = () => {
     .filter((s: any) => typeof s.score === "number" && !isNaN(s.score))
     .sort((a: any, b: any) => new Date(a.date || a.created_at).getTime() - new Date(b.date || b.created_at).getTime());
 
-  const currentOverallScore = scoredSessions.length > 0 
-    ? scoredSessions[scoredSessions.length - 1].score 
+  const currentOverallScore = scoredSessions.length > 0
+    ? scoredSessions[scoredSessions.length - 1].score
     : 10;
 
   const startingScore = scoredSessions.length > 0 ? scoredSessions[0].score : 0;
-  const scoreDifference = scoredSessions.length >= 2 
-    ? currentOverallScore - startingScore 
+  const scoreDifference = scoredSessions.length >= 2
+    ? currentOverallScore - startingScore
     : 0;
 
   return (
@@ -806,16 +806,13 @@ const Dashboard = () => {
                       <h3 className="text-base sm:text-lg font-bold text-foreground">
                         Quick Actions
                       </h3>
-                      <span className="text-xs sm:text-sm text-muted-foreground font-normal ml-1">
-                        Jump into practice or explore popular options.
-                      </span>
                     </div>
 
                     {/* Compact Mascot Dock & More Actions Toggle */}
                     <div className="flex items-center gap-3">
-                      <CompactAICoach 
-                        userStreak={userStreak} 
-                        score={currentOverallScore} 
+                      <CompactAICoach
+                        userStreak={userStreak}
+                        score={currentOverallScore}
                         scoreChange={scoreDifference}
                         totalInterviews={allSessions?.length || 0}
                         hasGivenInterview={(allSessions?.length || 0) > 0}
@@ -1021,6 +1018,7 @@ const Dashboard = () => {
                 profile={profile}
                 userStreak={userStreak}
                 allSessions={allSessions}
+                onUpdate={() => loadData(true)}
               />
             </div>
 
@@ -1054,3 +1052,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
