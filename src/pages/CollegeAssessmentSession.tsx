@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, useParams } from "react-router-dom";
+import Editor from '@monaco-editor/react';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -201,10 +202,12 @@ export default function CollegeAssessmentSession() {
 
   useEffect(() => {
     if (!loading && drive && !isCompleted && currentQ) {
+      speakCurrentQuestion();
       if (currentQ.type === "coding") {
         setIsCodeEditorOpen(true);
+      } else {
+        setIsCodeEditorOpen(false);
       }
-      speakCurrentQuestion();
     }
     return () => {
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -633,11 +636,21 @@ export default function CollegeAssessmentSession() {
                       </div>
                     </div>
 
-                    <Textarea
-                      value={codeSnippet}
-                      onChange={e => setCodeSnippet(e.target.value)}
-                      className="bg-black font-mono text-xs text-emerald-400 border-0 focus-visible:ring-0 min-h-[140px] resize-y"
-                    />
+                    <div className="h-[250px] sm:h-[300px] border border-border/50 rounded overflow-hidden">
+                      <Editor
+                        height="100%"
+                        language={codeLanguage}
+                        theme="vs-dark"
+                        value={codeSnippet}
+                        onChange={(val) => setCodeSnippet(val || "")}
+                        options={{
+                          minimap: { enabled: false },
+                          fontSize: 13,
+                          padding: { top: 10 },
+                          scrollBeyondLastLine: false,
+                        }}
+                      />
+                    </div>
 
                     {codeOutput && (
                       <div className="p-2 rounded bg-black/80 border border-border font-mono text-[11px] text-foreground/80">
