@@ -18,10 +18,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-import { collegeService } from "@/services/collegeService";
 import {
   CollegeScheduledDrive,
   ScheduledDriveCandidate as CandidateProgress,
+  collegeService,
+  sanitizeAndRenameCollege
 } from "@/services/collegeService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -118,8 +119,9 @@ const CollegeDriveDetails: React.FC = () => {
           col = collegeService.getColleges()[0];
         }
         if (col) {
-          setCollege(col);
-          collegeService.getCollegeStudents(col.id).then(setStudents);
+          const sanitized = sanitizeAndRenameCollege(col);
+          setCollege(sanitized);
+          collegeService.getCollegeStudents(sanitized.id).then(setStudents);
         }
       } else {
         toast.error("Drive not found.");

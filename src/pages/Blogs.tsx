@@ -25,7 +25,7 @@ const Blogs = () => {
         .select('*')
         .eq('status', 'Published')
         .order('published_at', { ascending: false });
-      
+
       console.log("Blogs data:", data);
       console.log("Blogs error:", error);
 
@@ -42,7 +42,7 @@ const Blogs = () => {
   return (
     <div className="min-h-screen bg-black text-white selection:bg-sky-500/30">
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(124,58,237,0.15),transparent_70%)]" />
@@ -82,16 +82,16 @@ const Blogs = () => {
                 <Card className="bg-white/5 border-white/10 overflow-hidden hover:border-sky-500/30 transition-all duration-500 h-full flex flex-col group-hover:shadow-2xl group-hover:shadow-sky-500/10">
                   <div className="relative h-56 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
-                    <img 
-                      src={blog.image_url || "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=2000&auto=format&fit=crop"} 
-                      alt={blog.title} 
+                    <img
+                      src={blog.image_url || "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=2000&auto=format&fit=crop"}
+                      alt={blog.title}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                     />
                     <Badge className="absolute top-4 left-4 z-20 bg-black/50 backdrop-blur-md border-white/10 hover:bg-black/70">
                       {blog.category}
                     </Badge>
                   </div>
-                  
+
                   <CardHeader className="space-y-4 flex-1">
                     <div className="flex items-center gap-4 text-xs text-gray-400">
                       <div className="flex items-center gap-1.5">

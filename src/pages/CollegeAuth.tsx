@@ -11,7 +11,7 @@ import {
   CheckCircle2, Users, BarChart3, Bot, Key, Mail, Lock, Phone, MapPin,
   Eye, EyeOff, ShieldAlert
 } from "lucide-react";
-import { collegeService, College } from "@/services/collegeService";
+import { collegeService, College, sanitizeAndRenameCollege } from "@/services/collegeService";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -67,9 +67,10 @@ const CollegeAuth = () => {
     }
 
     // Only redirect to dashboard if no specific college was requested and an active session exists
-    const session = collegeService.getCollegeSession();
+    const rawSession = collegeService.getCollegeSession();
+    const session = rawSession ? sanitizeAndRenameCollege(rawSession) : null;
     if (session) {
-      navigate(`/college/dashboard?college=${session.id}`);
+      navigate(`/college/dashboard?college=${session.id}`, { replace: true });
     }
   }, [navigate, searchParams]);
 

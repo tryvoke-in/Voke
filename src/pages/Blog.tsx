@@ -43,7 +43,7 @@ const Blog = () => {
                 .select('*')
                 .eq('status', 'Published')
                 .order('published_at', { ascending: false });
-            
+
             if (error) throw error;
             setBlogPosts(data || []);
         } catch (error) {
@@ -64,10 +64,10 @@ const Blog = () => {
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
                             <div className="flex items-center gap-2 cursor-pointer" onClick={handleLogoClick}>
-                                <img 
-                                    src="/images/voke_logo.png" 
-                                    alt="Voke Logo" 
-                                    className="w-10 h-10 object-contain" 
+                                <img
+                                    src="/images/voke_logo.png"
+                                    alt="Voke Logo"
+                                    className="w-10 h-10 object-contain"
                                 />
                                 <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-500 dark:from-white dark:via-white dark:to-white/40">
                                     Voke Blog

@@ -146,17 +146,73 @@ export interface CollegeAnalytics {
   topPerformers: CollegeStudent[];
 }
 
+// Default fallback verified university details
+export const DEFAULT_CLEAN_COLLEGE: College = {
+  id: "college-nst",
+  name: "Newton School of Technology",
+  shortName: "NST",
+  slug: "newton-school-of-technology",
+  domains: ["nst.rishihood.edu.in", "rishihood.edu.in"],
+  adminEmail: "placement@nst.rishihood.edu.in",
+  adminName: "Training & Placement Cell",
+  tier: "Enterprise Campus Partner",
+  contractPeriod: "2025 - 2026 Academic Year",
+  totalStudentSlots: 1000,
+  location: "Delhi NCR, India",
+  establishedYear: 2022,
+  contactPhone: "+91 98000 00000"
+};
+
+export const isBannedOrInappropriate = (input: any): boolean => {
+  if (!input) return false;
+  const str = typeof input === "string" ? input : JSON.stringify(input);
+  const lower = str.toLowerCase();
+  const bannedKeywords = [
+    "srijal",
+    "srivastav",
+    "srivastava",
+    "anurang",
+    "papa",
+    "akps"
+  ];
+  return bannedKeywords.some(kw => lower.includes(kw));
+};
+
+export function sanitizeAndRenameCollege(college: College): College;
+export function sanitizeAndRenameCollege(college: null | undefined): null;
+export function sanitizeAndRenameCollege(college: College | null | undefined): College | null;
+export function sanitizeAndRenameCollege(college: College | null | undefined): College | null {
+  if (!college) return null;
+  const str = JSON.stringify(college).toLowerCase();
+  if (
+    str.includes("papa") ||
+    str.includes("srijal") ||
+    str.includes("srivastav") ||
+    str.includes("anurang") ||
+    str.includes("akps") ||
+    college.name?.toLowerCase().includes("papa") ||
+    college.name?.toLowerCase().includes("anurang") ||
+    college.shortName === "AKPS" ||
+    college.adminEmail?.toLowerCase().includes("srijal") ||
+    college.adminName?.toLowerCase().includes("srijal") ||
+    (college.domains && college.domains.includes("gmail.com"))
+  ) {
+    return { ...DEFAULT_CLEAN_COLLEGE };
+  }
+  return college;
+}
+
 // Known legacy dummy IDs to prune so only real registered colleges remain
 const HARDCODED_COLLEGE_IDS = new Set([
-  "college-nst", "college-dtu", "college-iitd", "college-vit"
+  "college-dtu", "college-iitd", "college-vit"
 ]);
 
 const DUMMY_DEFAULT_EMAILS = new Set([
-  "placement@nst.edu.in", "tnp@dtu.ac.in", "tnp@iitd.ac.in", "placement@vit.ac.in"
+  "tnp@dtu.ac.in", "tnp@iitd.ac.in", "placement@vit.ac.in"
 ]);
 
 // Default Partner Colleges configuration (empty by default so only real registered colleges appear)
-export const DEFAULT_COLLEGES: College[] = [];
+export const DEFAULT_COLLEGES: College[] = [DEFAULT_CLEAN_COLLEGE];
 
 const STORAGE_KEYS = {
   COLLEGES: "voke_partner_colleges",
@@ -164,6 +220,66 @@ const STORAGE_KEYS = {
   COLLEGE_DRIVES: "voke_college_drives",
   REGISTERED_STUDENTS: "voke_college_registered_students"
 };
+
+// Self-healing: Purge and immediately rename any inappropriate or banned entries in browser storage
+export const purgeBannedStorage = () => {
+  try {
+    if (typeof localStorage === "undefined" || !localStorage.getItem) return;
+
+    // 1. Clean session if present - DO NOT create a session if none exists
+    const sessionStr = localStorage.getItem(STORAGE_KEYS.COLLEGE_SESSION);
+    if (sessionStr) {
+      const lower = sessionStr.toLowerCase();
+      if (lower.includes("papa") || lower.includes("srijal") || lower.includes("srivastav") || lower.includes("anurang") || lower.includes("akps")) {
+        localStorage.removeItem(STORAGE_KEYS.COLLEGE_SESSION);
+      }
+    }
+
+    // 2. Clean partner colleges
+    const collegesStr = localStorage.getItem(STORAGE_KEYS.COLLEGES);
+    if (collegesStr) {
+      try {
+        const list: College[] = JSON.parse(collegesStr);
+        const cleaned = list
+          .map(c => sanitizeAndRenameCollege(c))
+          .filter((c): c is College => Boolean(c) && !HARDCODED_COLLEGE_IDS.has(c.id) && !DUMMY_DEFAULT_EMAILS.has(c.adminEmail));
+        if (cleaned.length === 0) {
+          cleaned.push(DEFAULT_CLEAN_COLLEGE);
+        }
+        localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(cleaned));
+      } catch {}
+    } else {
+      localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify([DEFAULT_CLEAN_COLLEGE]));
+    }
+
+    // 3. Clean drives
+    const drivesStr = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
+    if (drivesStr) {
+      try {
+        const drives: any[] = JSON.parse(drivesStr);
+        const cleaned = drives.filter(d => !isBannedOrInappropriate(d));
+        localStorage.setItem(STORAGE_KEYS.COLLEGE_DRIVES, JSON.stringify(cleaned));
+      } catch {}
+    }
+
+    // 4. Clean registered students
+    const studentsStr = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
+    if (studentsStr) {
+      try {
+        const students: any[] = JSON.parse(studentsStr);
+        const cleaned = students.filter(s => !isBannedOrInappropriate(s));
+        localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(cleaned));
+      } catch {}
+    }
+  } catch (e) {
+    console.warn("Storage auto-clean warning:", e);
+  }
+};
+
+// Auto-run cleanup immediately
+if (typeof window !== "undefined") {
+  purgeBannedStorage();
+}
 
 // Realtime Channel name
 const COLLEGE_ROSTER_CHANNEL = "voke_college_realtime_roster";
@@ -182,11 +298,12 @@ export const getCollegeRealtimeChannel = () => {
   return sharedRosterChannel;
 };
 
-let _inMemoryColleges: College[] = [];
+let _inMemoryColleges: College[] = [DEFAULT_CLEAN_COLLEGE];
 
 // Fetch college registrations from Supabase and merge into localStorage
 let _collegesLoadedFromDb = false;
 async function ensureCollegesFromDb(): Promise<void> {
+  purgeBannedStorage();
   if (_collegesLoadedFromDb) return;
   _collegesLoadedFromDb = true;
   try {
@@ -199,33 +316,39 @@ async function ensureCollegesFromDb(): Promise<void> {
       const stored = typeof localStorage !== "undefined" && localStorage.getItem
         ? localStorage.getItem(STORAGE_KEYS.COLLEGES)
         : null;
-      let existing: College[] = stored ? JSON.parse(stored) : [];
-      // Clean legacy dummy colleges
-      existing = existing.filter(c => !HARDCODED_COLLEGE_IDS.has(c.id) && !DUMMY_DEFAULT_EMAILS.has(c.adminEmail));
+      let existing: College[] = stored ? JSON.parse(stored) : [DEFAULT_CLEAN_COLLEGE];
+      // Clean legacy dummy colleges & banned entries
+      existing = existing.map(c => sanitizeAndRenameCollege(c)).filter(c => 
+        !HARDCODED_COLLEGE_IDS.has(c.id) && 
+        !DUMMY_DEFAULT_EMAILS.has(c.adminEmail)
+      );
 
       for (const row of dbColleges) {
         if (row.phone_number) {
           try {
             const college: College = JSON.parse(row.phone_number);
             if (
-              college && 
-              (college.id || college.adminEmail) && 
+              college &&
+              (college.id || college.adminEmail) &&
+              !isBannedOrInappropriate(college) &&
               !HARDCODED_COLLEGE_IDS.has(college.id) &&
               !DUMMY_DEFAULT_EMAILS.has(college.adminEmail)
             ) {
-              const existingIdx = existing.findIndex(c => 
-                c.id === college.id || 
-                (c.adminEmail && college.adminEmail && c.adminEmail.toLowerCase() === college.adminEmail.toLowerCase())
+              const sanitized = sanitizeAndRenameCollege(college);
+              const existingIdx = existing.findIndex(c =>
+                c.id === sanitized.id ||
+                (c.adminEmail && sanitized.adminEmail && c.adminEmail.toLowerCase() === sanitized.adminEmail.toLowerCase())
               );
               if (existingIdx >= 0) {
-                existing[existingIdx] = { ...existing[existingIdx], ...college };
+                existing[existingIdx] = { ...existing[existingIdx], ...sanitized };
               } else {
-                existing.push(college);
+                existing.push(sanitized);
               }
             }
-          } catch (pe) {}
+          } catch (pe) { }
         }
       }
+      existing = existing.map(c => sanitizeAndRenameCollege(c));
       _inMemoryColleges = existing;
       if (typeof localStorage !== "undefined" && localStorage.setItem) {
         localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(existing));
@@ -289,10 +412,10 @@ export const collegeService = {
   getCollegeByDomain(domain: string): College | undefined {
     if (!domain) return undefined;
     const cleanDomain = domain.toLowerCase().trim().replace(/^@/, "");
-    
+
     // Generic public email domains must never match a partner college
     const publicEmailProviders = [
-      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", 
+      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com",
       "icloud.com", "aol.com", "zoho.com", "protonmail.com", "proton.me",
       "yandex.com", "mail.com", "gmx.com", "rediffmail.com"
     ];
@@ -315,7 +438,7 @@ export const collegeService = {
     if (!domain) return undefined;
 
     const publicEmailProviders = [
-      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", 
+      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com",
       "icloud.com", "aol.com", "zoho.com", "protonmail.com", "proton.me",
       "yandex.com", "mail.com", "gmx.com", "rediffmail.com"
     ];
@@ -332,7 +455,7 @@ export const collegeService = {
     if (!domain) return false;
 
     const publicEmailProviders = [
-      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", 
+      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com",
       "icloud.com", "aol.com", "zoho.com", "protonmail.com", "proton.me",
       "yandex.com", "mail.com", "gmx.com", "rediffmail.com"
     ];
@@ -361,16 +484,16 @@ export const collegeService = {
     if (!matchedCollege) {
       const emailDomain = cleanEmail.split("@")[1];
       if (emailDomain) {
-        matchedCollege = colleges.find(c => 
+        matchedCollege = colleges.find(c =>
           c.domains.some(d => emailDomain.toLowerCase() === d.toLowerCase() || emailDomain.toLowerCase().endsWith("." + d.toLowerCase()))
         );
       }
     }
 
     if (!matchedCollege) {
-      return { 
-        success: false, 
-        error: "College admin credentials not recognized. Check your email or onboard your university." 
+      return {
+        success: false,
+        error: "College admin credentials not recognized. Check your email or onboard your university."
       };
     }
 
@@ -410,7 +533,7 @@ export const collegeService = {
     if (!matchedCollege) {
       const emailDomain = cleanEmail.split("@")[1];
       if (emailDomain) {
-        matchedCollege = colleges.find(c => 
+        matchedCollege = colleges.find(c =>
           c.domains.some(d => emailDomain.toLowerCase() === d.toLowerCase() || emailDomain.toLowerCase().endsWith("." + d.toLowerCase()))
         );
       }
@@ -423,9 +546,9 @@ export const collegeService = {
       return { success: true, college: sanitizedCollege };
     }
 
-    return { 
-      success: false, 
-      error: "College admin credentials not recognized. Try signing in with a partner email (e.g. placement@nst.edu.in) or click Quick Demo Sign In." 
+    return {
+      success: false,
+      error: "College admin credentials not recognized. Try signing in with a partner email (e.g. placement@nst.edu.in) or click Quick Demo Sign In."
     };
   },
 
@@ -435,7 +558,13 @@ export const collegeService = {
       if (typeof window !== "undefined" && typeof localStorage !== "undefined" && localStorage.getItem) {
         const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_SESSION);
         if (stored) {
-          return JSON.parse(stored);
+          const session: College = JSON.parse(stored);
+          if (!session || !session.id) return null;
+          const sanitized = sanitizeAndRenameCollege(session);
+          if (sanitized && JSON.stringify(sanitized) !== stored) {
+            localStorage.setItem(STORAGE_KEYS.COLLEGE_SESSION, JSON.stringify(sanitized));
+          }
+          return sanitized;
         }
       }
     } catch (e) {
@@ -444,11 +573,19 @@ export const collegeService = {
     return null;
   },
 
-  setCollegeSession(college: College): void {
+  setCollegeSession(college: College | null): void {
     try {
+      if (!college) {
+        this.clearCollegeSession();
+        return;
+      }
+      const sanitized = sanitizeAndRenameCollege(college);
+      if (!sanitized) {
+        this.clearCollegeSession();
+        return;
+      }
+      delete sanitized.adminPasswordHash;
       if (typeof window !== "undefined" && typeof localStorage !== "undefined" && localStorage.setItem) {
-        const sanitized = { ...college };
-        delete sanitized.adminPasswordHash;
         localStorage.setItem(STORAGE_KEYS.COLLEGE_SESSION, JSON.stringify(sanitized));
       }
     } catch (e) {
@@ -458,8 +595,15 @@ export const collegeService = {
 
   clearCollegeSession(): void {
     try {
-      if (typeof window !== "undefined" && typeof localStorage !== "undefined" && localStorage.removeItem) {
-        localStorage.removeItem(STORAGE_KEYS.COLLEGE_SESSION);
+      if (typeof window !== "undefined") {
+        if (typeof localStorage !== "undefined" && localStorage.removeItem) {
+          localStorage.removeItem(STORAGE_KEYS.COLLEGE_SESSION);
+          localStorage.removeItem("voke_college_session");
+        }
+        if (typeof sessionStorage !== "undefined" && sessionStorage.removeItem) {
+          sessionStorage.removeItem(STORAGE_KEYS.COLLEGE_SESSION);
+          sessionStorage.removeItem("voke_college_session");
+        }
       }
     } catch (e) {
       console.warn("Failed to clear college session", e);
@@ -591,7 +735,7 @@ export const collegeService = {
         phone_number: JSON.stringify(newCollege),
         status: 'college_registration'
       }, { onConflict: 'email' }).then(({ error }) => { if (error) console.warn('College reg upsert error:', error); }, e => console.warn('College reg upsert failed:', e));
-    } catch (dbe) {}
+    } catch (dbe) { }
 
     const sanitizedCollege = { ...newCollege };
     delete sanitizedCollege.adminPasswordHash;
@@ -601,24 +745,27 @@ export const collegeService = {
   },
 
   async updateCollegeAsync(collegeId: string, updates: Partial<College>): Promise<College | null> {
+    if (isBannedOrInappropriate(updates)) {
+      throw new Error("Invalid institutional update details.");
+    }
     await ensureCollegesFromDb();
     const existingColleges = this.getColleges();
     const index = existingColleges.findIndex(c => c.id === collegeId);
-    
+
     if (index === -1) return null;
-    
+
     const updatedCollege = { ...existingColleges[index], ...updates };
     const updatedList = [
       ...existingColleges.slice(0, index),
       updatedCollege,
       ...existingColleges.slice(index + 1)
     ];
-    
+
     _inMemoryColleges = updatedList;
     try {
       if (typeof localStorage !== "undefined" && localStorage.setItem) {
         localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(updatedList));
-        
+
         // Also update the session if this is the active college
         const sessionStr = localStorage.getItem(STORAGE_KEYS.COLLEGE_SESSION);
         if (sessionStr) {
@@ -631,7 +778,7 @@ export const collegeService = {
     } catch (e) {
       console.warn("Failed to update college in local storage", e);
     }
-    
+
     return updatedCollege;
   },
 
@@ -641,7 +788,7 @@ export const collegeService = {
       await ensureCollegesFromDb();
       const colleges = this.getColleges();
       const targetCollege = colleges.find(c => c.id === collegeId || c.slug === collegeId);
-      
+
       const updated = colleges.filter(c => c.id !== collegeId && c.slug !== collegeId);
       _inMemoryColleges = updated;
 
@@ -697,7 +844,7 @@ export const collegeService = {
           .delete()
           .eq('status', 'college_registration')
           .eq('email', targetCollege.adminEmail)
-          .then(() => {}, () => {});
+          .then(() => { }, () => { });
       }
       return true;
     } catch (e) {
@@ -774,7 +921,7 @@ export const collegeService = {
         type: "broadcast",
         event: "student_registered",
         payload: newStudent
-      }).then(() => {}, () => {});
+      }).then(() => { }, () => { });
     } catch (e) {
       console.warn("Failed to save registered student:", e);
     }
@@ -849,14 +996,14 @@ export const collegeService = {
         college_name: college?.name || "Partner College",
         phone_number: JSON.stringify(newStudent),
         status: 'registered_student'
-      }, { onConflict: 'email' }).then(() => {}, () => {});
+      }, { onConflict: 'email' }).then(() => { }, () => { });
 
       const channel = getCollegeRealtimeChannel();
       channel.send({
         type: "broadcast",
         event: "student_registered",
         payload: newStudent
-      }).then(() => {}, () => {});
+      }).then(() => { }, () => { });
     } catch (e) {
       console.warn("Failed to persist student:", e);
     }
@@ -911,7 +1058,7 @@ export const collegeService = {
           if (row.phone_number) {
             try {
               parsedStudent = JSON.parse(row.phone_number);
-            } catch {}
+            } catch { }
           }
 
           const studentName = parsedStudent?.fullName || cleanEmail.split("@")[0].replace(/[._]/g, " ");
@@ -1067,8 +1214,8 @@ export const collegeService = {
       if (stored) {
         const parsed: CollegeScheduledDrive[] = JSON.parse(stored);
         if (parsed.length > 0) {
-          const collegeDrives = parsed.filter(d => 
-            d.collegeId === targetId || 
+          const collegeDrives = parsed.filter(d =>
+            d.collegeId === targetId ||
             d.collegeId.includes(targetId) ||
             targetId.includes(d.collegeId) ||
             (college && (
@@ -1131,7 +1278,7 @@ export const collegeService = {
     } catch (e) {
       console.warn("Failed to load drives from localStorage", e);
     }
-    
+
     // Fallback to searching through active session drives
     const session = this.getCollegeSession();
     if (session) {
@@ -1143,7 +1290,7 @@ export const collegeService = {
 
   scheduleCollegeDrive(driveData: Omit<CollegeScheduledDrive, 'id' | 'createdAt'>): CollegeScheduledDrive {
     const driveId = `drive-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    
+
     // Generate direct assessment link
     let interviewPath = `/college/assessment/${driveId}?role=${encodeURIComponent(driveData.targetRole)}`;
     if (driveData.interviewType === "video_interview") {
@@ -1182,8 +1329,8 @@ export const collegeService = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updated)
-        }).then(() => {}, () => {});
-      } catch (e) {}
+        }).then(() => { }, () => { });
+      } catch (e) { }
 
       // Persist globally into Supabase for 100% cross-device availability
       try {
@@ -1193,7 +1340,7 @@ export const collegeService = {
           phone_number: JSON.stringify(newDrive),
           status: 'college_drive_record'
         }, { onConflict: 'email' }).then(({ error }) => { if (error) console.warn('Drive upsert error:', error); }, e => console.warn('Drive upsert failed:', e));
-      } catch (dbe) {}
+      } catch (dbe) { }
 
       // Broadcast reliably to all active tabs and browsers
       this.broadcastCollegeEvent("college_drive_scheduled", {
@@ -1209,7 +1356,7 @@ export const collegeService = {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
       const existing: CollegeScheduledDrive[] = stored ? JSON.parse(stored) : [];
-      
+
       const index = existing.findIndex(d => d.id === driveId);
       if (index === -1) return null;
 
@@ -1223,7 +1370,7 @@ export const collegeService = {
 
       // Also update in API/Supabase if needed (omitted here for brevity, matching delete logic)
       this.broadcastCollegeEvent("college_drive_updated", { drive: updatedDrive });
-      
+
       return updatedDrive;
     } catch (e) {
       console.warn("Failed to update scheduled drive", e);
@@ -1238,21 +1385,21 @@ export const collegeService = {
       const existing: CollegeScheduledDrive[] = stored ? JSON.parse(stored) : [];
       const updated = existing.filter(d => d.id !== driveId);
       localStorage.setItem(STORAGE_KEYS.COLLEGE_DRIVES, JSON.stringify(updated));
-      
+
       try {
         fetch("/api/college-drives", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updated)
-        }).then(() => {}, () => {});
-      } catch (e) {}
+        }).then(() => { }, () => { });
+      } catch (e) { }
 
       try {
         supabase.from('waitlist')
           .delete()
           .eq('email', `${driveId}@drives.voke.internal`)
-          .then(() => {}, () => {});
-      } catch (e) {}
+          .then(() => { }, () => { });
+      } catch (e) { }
     } catch (e) {
       console.warn("Failed to delete drive", e);
     }
@@ -1377,7 +1524,7 @@ export const collegeService = {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
       let allDrives: CollegeScheduledDrive[] = stored ? JSON.parse(stored) : [];
-      
+
       const driveIndex = allDrives.findIndex(d => d.id === result.driveId);
       if (driveIndex >= 0) {
         const existingCandidates = allDrives[driveIndex].candidates || [];
@@ -1413,7 +1560,7 @@ export const collegeService = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(allDrives)
-      }).then(() => {}, () => {});
+      }).then(() => { }, () => { });
 
       // Persist drive with candidate results to Supabase waitlist for multi-device sync
       try {
@@ -1424,8 +1571,8 @@ export const collegeService = {
           status: 'college_drive_record'
         }, { onConflict: 'email' }).then(({ error }) => {
           if (error) console.warn("Supabase drive result sync error:", error);
-        }).then(() => {}, () => {});
-      } catch (e) {}
+        }).then(() => { }, () => { });
+      } catch (e) { }
 
       // Also update student's record in registered students
       this.recordStudentRegistration({
@@ -1441,14 +1588,14 @@ export const collegeService = {
         const calSaved = localStorage.getItem(calKey);
         if (calSaved) {
           const calEvents: any[] = JSON.parse(calSaved);
-          const filteredCal = calEvents.filter(e => 
-            e.id !== `college-drive-${result.driveId}` && 
+          const filteredCal = calEvents.filter(e =>
+            e.id !== `college-drive-${result.driveId}` &&
             e.id !== result.driveId &&
             (!e.link || !e.link.includes(result.driveId))
           );
           localStorage.setItem(calKey, JSON.stringify(filteredCal));
         }
-      } catch (e) {}
+      } catch (e) { }
 
       // Broadcast candidate evaluation update in real-time
       this.broadcastCollegeEvent("drive_candidate_evaluated", {
@@ -1486,7 +1633,7 @@ export const collegeService = {
               if (drive && drive.id) {
                 combinedMap.set(drive.id, drive);
               }
-            } catch (pe) {}
+            } catch (pe) { }
           }
         }
       }
@@ -1518,16 +1665,16 @@ export const collegeService = {
           combinedMap.set(d.id, d);
         }
       });
-    } catch (e) {}
+    } catch (e) { }
 
     if (combinedMap.size > 0) {
       const merged = Array.from(combinedMap.values());
       try {
         localStorage.setItem(STORAGE_KEYS.COLLEGE_DRIVES, JSON.stringify(merged));
-      } catch (e) {}
+      } catch (e) { }
 
-      const collegeDrives = merged.filter(d => 
-        d.collegeId === targetId || 
+      const collegeDrives = merged.filter(d =>
+        d.collegeId === targetId ||
         d.collegeId.includes(targetId) ||
         targetId.includes(d.collegeId) ||
         (college && (
@@ -1595,17 +1742,17 @@ export const collegeService = {
     if (!studentEmail) return [];
     const cleanEmail = studentEmail.toLowerCase().trim();
     const studentCollege = this.getCollegeByEmail(cleanEmail);
-    
-    const allDrives: CollegeScheduledDrive[] = studentCollege 
+
+    const allDrives: CollegeScheduledDrive[] = studentCollege
       ? this.getCollegeDrives(studentCollege.id)
       : (() => {
-          try {
-            const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
-            return stored ? JSON.parse(stored) : [];
-          } catch {
-            return [];
-          }
-        })();
+        try {
+          const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
+          return stored ? JSON.parse(stored) : [];
+        } catch {
+          return [];
+        }
+      })();
 
     return allDrives.filter(drive => {
       const cand = drive.candidates?.find(c => c.studentEmail.toLowerCase() === cleanEmail);
@@ -1641,10 +1788,10 @@ export const collegeService = {
             if (drive && drive.id) {
               allDrivesMap.set(drive.id, drive);
             }
-          } catch (pe) {}
+          } catch (pe) { }
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // 2. Merge from localStorage
     try {
@@ -1655,7 +1802,7 @@ export const collegeService = {
           allDrivesMap.set(d.id, d);
         }
       });
-    } catch (e) {}
+    } catch (e) { }
 
     // 3. Filter: strictly only drives where this student is genuinely eligible
     const matchingDrives: CollegeScheduledDrive[] = [];
@@ -1722,7 +1869,7 @@ export const collegeService = {
   async exportStudentsToCSV(collegeId: string): Promise<string> {
     const students = await this.getCollegeStudents(collegeId);
     const headers = ["Student Name", "College Email ID", "Branch", "Batch", "Target Role", "Interviews Taken", "Avg AI Score", "Placement Readiness", "Last Active"];
-    
+
     const rows = students.map(s => [
       `"${s.fullName}"`,
       `"${s.email}"`,
@@ -1768,7 +1915,7 @@ export const collegeService = {
     // 1. Check all college drives for evaluations of this student
     const drives = await this.getCollegeDrivesAsync(collegeId);
     const driveEvaluations: StudentDetailedAssessmentReport["driveEvaluations"] = [];
-    
+
     for (const drive of drives) {
       const cand = drive.candidates?.find(c => c.studentEmail.toLowerCase() === cleanEmail);
       if (cand && (cand.status === "Completed" || cand.score !== undefined)) {
@@ -1820,11 +1967,11 @@ export const collegeService = {
           dbSessionEval = sessions[0];
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // Derive overall scores
-    const primaryScore = driveEvaluations.length > 0 
-      ? driveEvaluations[0].score 
+    const primaryScore = driveEvaluations.length > 0
+      ? driveEvaluations[0].score
       : (interviewSessions.length > 0 ? interviewSessions[0].score : (student.averageScore || 0));
 
     const totalInterviews = Math.max(
@@ -1874,18 +2021,18 @@ export const collegeService = {
     const strengths = (dbSessionEval?.whats_good && Array.isArray(dbSessionEval.whats_good) && dbSessionEval.whats_good.length > 0)
       ? dbSessionEval.whats_good
       : [
-          "Strong grasp of core data structures and algorithmic complexity",
-          "Clear, structured technical communication",
-          "Effective trade-off analysis during solution design"
-        ];
+        "Strong grasp of core data structures and algorithmic complexity",
+        "Clear, structured technical communication",
+        "Effective trade-off analysis during solution design"
+      ];
 
     const weaknesses = (dbSessionEval?.whats_wrong && Array.isArray(dbSessionEval.whats_wrong) && dbSessionEval.whats_wrong.length > 0)
       ? dbSessionEval.whats_wrong
       : [
-          "Deepen edge-case coverage in concurrent and high-scale scenarios",
-          "Validate assumptions with explicit test cases earlier",
-          "Practice distributed system caching and consistency trade-offs"
-        ];
+        "Deepen edge-case coverage in concurrent and high-scale scenarios",
+        "Validate assumptions with explicit test cases earlier",
+        "Practice distributed system caching and consistency trade-offs"
+      ];
 
     return {
       student,

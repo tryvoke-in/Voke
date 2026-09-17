@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Building2, Mail, User, Phone, MapPin, Globe, ArrowLeft, LogOut, Upload, CheckCircle2 } from "lucide-react";
-import { collegeService, College } from "@/services/collegeService";
+import { collegeService, College, sanitizeAndRenameCollege } from "@/services/collegeService";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -26,16 +26,17 @@ const CollegeAdminProfile = () => {
   const [logoUrl, setLogoUrl] = useState("");
 
   useEffect(() => {
-    const session = collegeService.getCollegeSession();
+    const rawSession = collegeService.getCollegeSession();
+    const session = rawSession ? sanitizeAndRenameCollege(rawSession) : null;
     if (!session) {
-      navigate("/college/auth");
+      navigate("/college/auth", { replace: true });
       return;
     }
     setCollege(session);
     setName(session.name);
     setAdminName(session.adminName);
     setAdminEmail(session.adminEmail);
-    setDomains(session.domains.join(", "));
+    setDomains((session.domains || []).join(", "));
     setLocation(session.location || "");
     setContactPhone(session.contactPhone || "");
     setLogoUrl(session.logoUrl || "");
@@ -77,7 +78,7 @@ const CollegeAdminProfile = () => {
   const handleSignOut = () => {
     collegeService.clearCollegeSession();
     toast.success("Signed out successfully");
-    navigate("/college/auth");
+    navigate("/college/auth", { replace: true });
   };
 
   if (isLoading) {

@@ -21,7 +21,7 @@ export const CollegeStudentBanner = ({ userEmail, userCollegeName }: CollegeStud
 
     if (!college && userCollegeName) {
       const colleges = collegeService.getColleges();
-      college = colleges.find(c => 
+      college = colleges.find(c =>
         c.name.toLowerCase().includes(userCollegeName.toLowerCase()) ||
         c.shortName.toLowerCase() === userCollegeName.toLowerCase()
       );

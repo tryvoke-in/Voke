@@ -21,7 +21,8 @@ import {
 } from "lucide-react";
 import {
   College, CollegeStudent, CollegeScheduledDrive, CollegeAnalytics,
-  collegeService, ScheduledDriveCandidate, StudentDetailedAssessmentReport
+  collegeService, ScheduledDriveCandidate, StudentDetailedAssessmentReport,
+  sanitizeAndRenameCollege, DEFAULT_CLEAN_COLLEGE
 } from "@/services/collegeService";
 import { ScheduleInterviewModal } from "@/components/college/ScheduleInterviewModal";
 import { toast } from "sonner";
@@ -54,7 +55,11 @@ const formatDisplayName = (name?: string) => {
 const CollegeAdminDashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [college, setCollege] = useState<College | null>(null);
+  const [college, setCollege] = useState<College | null>(() => {
+    const s = collegeService.getCollegeSession();
+    return s ? sanitizeAndRenameCollege(s) : null;
+  });
+  const currentCollege = college ? sanitizeAndRenameCollege(college) : null;
   const [students, setStudents] = useState<CollegeStudent[]>([]);
   const [drives, setDrives] = useState<CollegeScheduledDrive[]>([]);
   const [analytics, setAnalytics] = useState<CollegeAnalytics | null>(null);
@@ -164,21 +169,27 @@ const CollegeAdminDashboard = () => {
         c.shortName?.toLowerCase() === requestedCollegeParam.toLowerCase()
       );
       if (found) {
-        activeCollege = found;
-        collegeService.setCollegeSession(found);
+        activeCollege = sanitizeAndRenameCollege(found);
       }
     }
 
     if (!activeCollege) {
-      activeCollege = collegeService.getCollegeSession();
+      const session = collegeService.getCollegeSession();
+      if (session) {
+        activeCollege = sanitizeAndRenameCollege(session);
+      }
     }
 
     if (!activeCollege) {
-      navigate("/college/auth");
+      if (showLoading) setLoading(false);
+      setRefreshing(false);
+      navigate("/college/auth", { replace: true });
       return;
     }
 
+    collegeService.setCollegeSession(activeCollege);
     setCollege(activeCollege);
+
     try {
       const studentList = await collegeService.getCollegeStudents(activeCollege.id);
       const drivesList = collegeService.getCollegeDrives(activeCollege.id);
@@ -204,18 +215,18 @@ const CollegeAdminDashboard = () => {
   const handleSignOut = () => {
     collegeService.clearCollegeSession();
     toast.info("Logged out from College Admin Portal.");
-    navigate("/college/auth");
+    navigate("/college/auth", { replace: true });
   };
 
   const handleExportCSV = async () => {
-    if (!college) return;
+    if (!currentCollege) return;
     try {
-      const csvContent = await collegeService.exportStudentsToCSV(college.id);
+      const csvContent = await collegeService.exportStudentsToCSV(currentCollege.id);
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `${college.slug}-students-roster.csv`);
+      link.setAttribute("download", `${currentCollege.slug}-students-roster.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -231,9 +242,9 @@ const CollegeAdminDashboard = () => {
       toast.error("Please enter a valid student email address.");
       return;
     }
-    if (!college) return;
+    if (!currentCollege) return;
 
-    collegeService.addStudentToCollege(college.id, {
+    collegeService.addStudentToCollege(currentCollege.id, {
       fullName: newStudentName.trim() || newStudentEmail.split("@")[0],
       email: newStudentEmail.trim().toLowerCase(),
       targetRole: newStudentRole,
@@ -244,7 +255,7 @@ const CollegeAdminDashboard = () => {
       readinessStatus: "Placement Ready"
     });
 
-    toast.success(`Student ${newStudentEmail} successfully added to ${college.name} roster!`);
+    toast.success(`Student ${newStudentEmail} successfully added to ${currentCollege.name} roster!`);
     setNewStudentName("");
     setNewStudentEmail("");
     setAddStudentOpen(false);
@@ -297,7 +308,7 @@ const CollegeAdminDashboard = () => {
     return matchesSearch && matchesStatus;
   });
 
-  if (loading || !college) {
+  if (loading || !currentCollege) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -360,14 +371,25 @@ const CollegeAdminDashboard = () => {
 
             <ThemeToggle />
 
-            <div className="relative flex items-center justify-center w-9 h-9 cursor-pointer group ml-1" onClick={() => navigate('/college/profile')}>
+            <div className="relative flex items-center justify-center w-9 h-9 cursor-pointer group ml-1" onClick={() => navigate('/college/profile')} title="College Profile">
               <Avatar className="w-8 h-8 transition-transform group-hover:scale-105 border border-border">
-                <AvatarImage src={college?.logoUrl} alt={college?.name || "Profile"} className="object-cover" />
+                <AvatarImage src={currentCollege?.logoUrl} alt={currentCollege?.name || "Profile"} className="object-cover" />
                 <AvatarFallback className="bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-300">
-                  {(college?.name || "U")[0].toUpperCase()}
+                  {(currentCollege?.name || "U")[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="text-xs h-9 px-2.5 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors ml-1"
+              title="Sign out of College Portal"
+            >
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </Button>
           </div>
         </div>
       </header>
@@ -384,17 +406,17 @@ const CollegeAdminDashboard = () => {
             <div className="space-y-2 max-w-2xl">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge className="bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-500/30 text-xs">
-                  {college.shortName} Placement & Training Cell
+                  {currentCollege.shortName} Placement & Training Cell
                 </Badge>
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> Academic Year {college.contractPeriod}
+                  <Clock className="w-3 h-3" /> Academic Year {currentCollege.contractPeriod}
                 </span>
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
-                {college.name}
+                {currentCollege.name}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Placement Admin: <strong className="text-foreground">{college.adminName}</strong> ({college.adminEmail}) • Authorized Domains: <span className="font-mono text-blue-600 dark:text-blue-300 text-xs">{college.domains.map(d => `@${d}`).join(", ")}</span>
+                Placement Admin: <strong className="text-foreground">{currentCollege.adminName}</strong> ({currentCollege.adminEmail}) • Authorized Domains: <span className="font-mono text-blue-600 dark:text-blue-300 text-xs">{(currentCollege.domains || []).map(d => `@${d}`).join(", ")}</span>
               </p>
             </div>
 
