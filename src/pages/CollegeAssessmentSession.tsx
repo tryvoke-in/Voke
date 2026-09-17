@@ -165,37 +165,29 @@ export default function CollegeAssessmentSession() {
     }
   };
 
-  // Build the strict question bank for this round:
+  // Build the strict randomized question set for this candidate:
   // QUESTION 1 IS ALWAYS: MANDATORY_INTRO_QUESTION
-  // Followed by custom uploaded questions, limited by drive.questionCountLimit
+  // Followed by randomized theoretical questions (e.g. 8) + coding challenge (e.g. 1)
   const questions: CollegeCustomQuestion[] = (() => {
-    const rawCustom = drive?.customQuestions || [];
-    
-    // Filter out any duplicate intro question in uploaded list
-    const filteredCustom = rawCustom.filter(q => 
-      !q.question.toLowerCase().includes("introduce yourself") &&
-      !q.question.toLowerCase().includes("tell me about yourself")
-    );
-
-    // Limit count: if limit = 5, we take 1 intro + 4 custom
-    const limit = drive?.questionCountLimit && drive.questionCountLimit > 0 
-      ? drive.questionCountLimit 
-      : 5;
-    
-    const remainingSlots = Math.max(1, limit - 1);
-    const selectedCustom = filteredCustom.slice(0, remainingSlots);
-
-    return [MANDATORY_INTRO_QUESTION, ...selectedCustom];
+    if (!drive) return [MANDATORY_INTRO_QUESTION];
+    const sampledCustom = collegeService.sampleQuestionsForCandidate(drive, studentEmail);
+    return [MANDATORY_INTRO_QUESTION, ...sampledCustom];
   })();
 
   const currentQ = questions[currentQuestionIndex] || questions[0];
+  const isCurrentCoding = currentQ?.type === "coding";
 
   // Speak question aloud using Text-to-Speech whenever currentQuestionIndex changes
   const speakCurrentQuestion = () => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     
     window.speechSynthesis.cancel();
-    const textToSpeak = `Question ${currentQuestionIndex + 1}. ${currentQ.question}`;
+    const prefix = currentQuestionIndex === 0 
+      ? "Welcome. " 
+      : isCurrentCoding 
+        ? `Question ${currentQuestionIndex + 1}, Coding Challenge. ` 
+        : `Question ${currentQuestionIndex + 1}, Theoretical Question. `;
+    const textToSpeak = `${prefix}${currentQ.question}`;
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
@@ -209,6 +201,9 @@ export default function CollegeAssessmentSession() {
 
   useEffect(() => {
     if (!loading && drive && !isCompleted && currentQ) {
+      if (currentQ.type === "coding") {
+        setIsCodeEditorOpen(true);
+      }
       speakCurrentQuestion();
     }
     return () => {
@@ -273,7 +268,8 @@ export default function CollegeAssessmentSession() {
             expectedKeyPoints: currentQ.expectedAnswerOrKeyPoints,
             candidateAnswer: combinedResponse,
             targetRole: drive?.targetRole || "Software Engineer",
-            difficulty: currentQ.difficulty || "Medium"
+            difficulty: currentQ.difficulty || "Medium",
+            questionType: currentQ.type || "theoretical"
           }
         });
 
@@ -575,8 +571,16 @@ export default function CollegeAssessmentSession() {
                     <Badge className="bg-blue-600 text-white font-mono text-[10px] px-2 py-0.5">
                       Question {currentQuestionIndex + 1}
                     </Badge>
+                    <Badge className={`text-[10px] px-2 py-0.5 font-semibold uppercase flex items-center gap-1 ${
+                      isCurrentCoding
+                        ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/40"
+                        : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                    }`}>
+                      {isCurrentCoding ? <Code2 className="w-3 h-3 mr-0.5" /> : <BookOpen className="w-3 h-3 mr-0.5" />}
+                      {isCurrentCoding ? "Coding Challenge" : "Theoretical Question"}
+                    </Badge>
                     <Badge className="bg-muted/50 text-gray-300 text-[10px] uppercase font-mono">
-                      {currentQ.difficulty || "Medium"} • {currentQ.type || "Technical"}
+                      {currentQ.difficulty || "Medium"}
                     </Badge>
                   </div>
 
@@ -589,7 +593,10 @@ export default function CollegeAssessmentSession() {
                   {currentQ.question}
                 </CardTitle>
                 <CardDescription className="text-xs text-gray-400 pt-0.5">
-                  Speak clearly into your microphone or type your response below. The AI evaluates depth against expected key concepts.
+                  {isCurrentCoding 
+                    ? "Write and execute your implementation in the Live Workspace below, or speak to explain your approach and algorithmic complexity."
+                    : "Speak clearly into your microphone or type your response below. The AI evaluates conceptual depth and architectural understanding."
+                  }
                 </CardDescription>
               </CardHeader>
 

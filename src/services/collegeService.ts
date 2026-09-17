@@ -59,7 +59,7 @@ export interface CollegeStudent {
 export interface CollegeCustomQuestion {
   id: string;
   question: string;
-  type?: "technical" | "coding" | "system_design" | "behavioral";
+  type?: "theoretical" | "coding" | "technical" | "system_design" | "behavioral";
   difficulty?: "Easy" | "Medium" | "Hard";
   expectedAnswerOrKeyPoints?: string;
   category?: string;
@@ -113,6 +113,8 @@ export interface CollegeScheduledDrive {
   customQuestions?: CollegeCustomQuestion[];
   customQuestionsOnly?: boolean;
   questionCountLimit?: number;
+  theoreticalQuestionCount?: number; // e.g. 8 random theoretical questions
+  codingQuestionCount?: number; // e.g. 1 random coding question
   instructions: string;
   targetCompanies?: string[];
   status: "scheduled" | "active" | "completed";
@@ -1277,6 +1279,58 @@ export const collegeService = {
       if (match) return match;
     }
     return undefined;
+  },
+
+  // Sample randomized questions for candidate (e.g. 8 random theoretical + 1 random coding question)
+  sampleQuestionsForCandidate(drive: CollegeScheduledDrive, candidateEmail?: string): CollegeCustomQuestion[] {
+    if (!drive || !drive.customQuestions || drive.customQuestions.length === 0) {
+      return [];
+    }
+
+    const rawQuestions = drive.customQuestions.filter(q =>
+      !q.question.toLowerCase().includes("introduce yourself") &&
+      !q.question.toLowerCase().includes("tell me about yourself")
+    );
+
+    // Divide pool into theoretical and coding
+    const theoreticalPool = rawQuestions.filter(q =>
+      q.type === "theoretical" || !q.type || q.type === "technical" || q.type === "system_design" || q.type === "behavioral"
+    );
+    const codingPool = rawQuestions.filter(q => q.type === "coding");
+
+    // Quotas: default 8 theory + 1 coding if pools exist and counts not explicitly defined
+    let targetTheoryCount = typeof drive.theoreticalQuestionCount === "number"
+      ? drive.theoreticalQuestionCount
+      : (codingPool.length > 0 && theoreticalPool.length >= 8 ? 8 : (drive.questionCountLimit || theoreticalPool.length));
+
+    let targetCodingCount = typeof drive.codingQuestionCount === "number"
+      ? drive.codingQuestionCount
+      : (codingPool.length > 0 ? 1 : 0);
+
+    // Shuffle using Fisher-Yates
+    const shuffleArray = <T>(array: T[]): T[] => {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
+
+    const shuffledTheory = shuffleArray(theoreticalPool);
+    const shuffledCoding = shuffleArray(codingPool);
+
+    const selectedTheory = shuffledTheory.slice(0, Math.max(0, targetTheoryCount));
+    const selectedCoding = shuffledCoding.slice(0, Math.max(0, targetCodingCount));
+
+    // Fallback if counts resulted in empty list
+    if (selectedTheory.length === 0 && selectedCoding.length === 0) {
+      const shuffledAll = shuffleArray(rawQuestions);
+      return shuffledAll.slice(0, drive.questionCountLimit || 5);
+    }
+
+    // Return theoretical questions first, followed by coding challenges
+    return [...selectedTheory, ...selectedCoding];
   },
 
   // Record a student's completed interview assessment result for a college placement drive

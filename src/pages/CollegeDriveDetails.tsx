@@ -14,6 +14,8 @@ import {
   ChevronUp,
   Edit3,
   Trash2,
+  Code2,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { collegeService } from "@/services/collegeService";
@@ -272,18 +274,34 @@ const CollegeDriveDetails: React.FC = () => {
           {/* Uploaded Question Bank */}
           <div className="p-5 rounded-xl bg-card border border-border shadow-sm space-y-4">
             <div
-              className="flex items-center justify-between cursor-pointer group"
+              className="flex items-center justify-between cursor-pointer group flex-wrap gap-2"
               onClick={() => setIsQuestionsExpanded(!isQuestionsExpanded)}
             >
-              <h4 className="text-sm font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 flex items-center gap-1.5 group-hover:opacity-80 transition-opacity">
-                <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                Uploaded Question Set ({customQuestions.length} Questions)
-                {isQuestionsExpanded ? (
-                  <ChevronUp className="w-4 h-4 ml-1 opacity-50" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 ml-1 opacity-50" />
-                )}
-              </h4>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-sm font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 flex items-center gap-1.5 group-hover:opacity-80 transition-opacity">
+                  <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  Uploaded Question Set ({customQuestions.length} Questions)
+                  {isQuestionsExpanded ? (
+                    <ChevronUp className="w-4 h-4 ml-1 opacity-50" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 ml-1 opacity-50" />
+                  )}
+                </h4>
+                <div className="flex items-center gap-1.5 text-xs flex-wrap">
+                  <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px] flex items-center gap-1">
+                    <BookOpen className="w-2.5 h-2.5" />
+                    Bank: {customQuestions.filter(q => q.type === "theoretical" || !q.type || q.type === "technical" || q.type === "system_design" || q.type === "behavioral").length} Theory
+                  </Badge>
+                  <Badge className="bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 text-[10px] flex items-center gap-1">
+                    <Code2 className="w-2.5 h-2.5" />
+                    Bank: {customQuestions.filter(q => q.type === "coding").length} Coding
+                  </Badge>
+                  <Badge className="bg-blue-600 text-white text-[10px] flex items-center gap-1 font-medium">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    Per Student: {drive.theoreticalQuestionCount ?? (customQuestions.some(q => q.type === "coding") ? 8 : customQuestions.length)} Theory + {drive.codingQuestionCount ?? (customQuestions.some(q => q.type === "coding") ? 1 : 0)} Code (Randomized)
+                  </Badge>
+                </div>
+              </div>
               <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-xs">
                 Passing Benchmark: {drive.passingScore || 75}%
               </Badge>
@@ -291,34 +309,45 @@ const CollegeDriveDetails: React.FC = () => {
 
             {isQuestionsExpanded && (
               <div className="space-y-3 animate-in slide-in-from-top-2 fade-in duration-200">
-                {customQuestions.map((q, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3.5 rounded-lg bg-muted/40 dark:bg-black/40 border border-border/50 text-sm space-y-1.5"
-                  >
-                    <div className="flex items-start md:items-center gap-2 flex-col md:flex-row">
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge className="bg-muted text-foreground/80 text-[10px] px-2 py-0.5 font-mono">
-                          Q{idx + 1}
-                        </Badge>
-                        <span className="text-xs text-blue-600 dark:text-blue-300 font-semibold uppercase">
-                          {q.difficulty || "Medium"}
+                {customQuestions.map((q, idx) => {
+                  const isCoding = q.type === "coding";
+                  return (
+                    <div
+                      key={idx}
+                      className="p-3.5 rounded-lg bg-muted/40 dark:bg-black/40 border border-border/50 text-sm space-y-1.5"
+                    >
+                      <div className="flex items-start md:items-center gap-2 flex-col md:flex-row">
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge className="bg-muted text-foreground/80 text-[10px] px-2 py-0.5 font-mono">
+                            Q{idx + 1}
+                          </Badge>
+                          <Badge className={`text-[10px] px-2 py-0.5 font-semibold uppercase flex items-center gap-1 ${
+                            isCoding
+                              ? "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30"
+                              : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                          }`}>
+                            {isCoding ? <Code2 className="w-2.5 h-2.5 mr-0.5" /> : <BookOpen className="w-2.5 h-2.5 mr-0.5" />}
+                            {isCoding ? "Coding" : "Theoretical"}
+                          </Badge>
+                          <span className="text-xs text-blue-600 dark:text-blue-300 font-semibold uppercase">
+                            {q.difficulty || "Medium"}
+                          </span>
+                        </div>
+                        <span className="text-foreground font-medium">
+                          {q.question}
                         </span>
                       </div>
-                      <span className="text-foreground font-medium">
-                        {q.question}
-                      </span>
+                      {q.expectedAnswerOrKeyPoints && (
+                        <p className="text-xs text-muted-foreground pl-0 md:pl-28 mt-1">
+                          <strong className="text-blue-700 dark:text-blue-300">
+                            Expected / Rubric:
+                          </strong>{" "}
+                          {q.expectedAnswerOrKeyPoints}
+                        </p>
+                      )}
                     </div>
-                    {q.expectedAnswerOrKeyPoints && (
-                      <p className="text-xs text-muted-foreground pl-0 md:pl-20 mt-1">
-                        <strong className="text-blue-700 dark:text-blue-300">
-                          Expected:
-                        </strong>{" "}
-                        {q.expectedAnswerOrKeyPoints}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

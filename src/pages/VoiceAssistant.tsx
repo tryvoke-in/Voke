@@ -406,34 +406,21 @@ const VoiceAssistant: React.FC = () => {
     }
 
     if (collegeDrive) {
-      const rawCustom = collegeDrive.customQuestions || [];
-      const customUploaded = rawCustom.filter(q => q.id && q.id.startsWith("cq-"));
-      const baseQuestions = customUploaded.length > 0 ? customUploaded : rawCustom;
-
-      const filteredCustom = baseQuestions.filter(q =>
-        !q.question.toLowerCase().includes("introduce yourself") &&
-        !q.question.toLowerCase().includes("tell me about yourself")
-      );
-
-      const shuffledCustom = [...filteredCustom];
-      for (let i = shuffledCustom.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledCustom[i], shuffledCustom[j]] = [shuffledCustom[j], shuffledCustom[i]];
-      }
-
-      const limit = collegeDrive.questionCountLimit && collegeDrive.questionCountLimit > 0
-        ? collegeDrive.questionCountLimit
-        : (shuffledCustom.length + 1);
-      const customSlice = shuffledCustom.slice(0, Math.max(1, limit - 1));
+      const sampledCustom = collegeService.sampleQuestionsForCandidate(collegeDrive, userEmail);
 
       const fixedQuestions = [
         `Welcome ${candidateProfileName} to your official placement assessment for ${collegeDrive.collegeName}! To get started, please introduce yourself, your academic background, core technical skills, and key projects you have built.`,
-        ...customSlice.map(q => q.question)
+        ...sampledCustom.map(q => {
+          const isCoding = q.type === "coding";
+          return isCoding 
+            ? `[Coding Challenge - Test algorithmic approach, data structure choice, and time/space complexity]: ${q.question}`
+            : `[Theoretical Concept - Test conceptual depth and architectural clarity]: ${q.question}`;
+        })
       ];
 
-      console.log('[VoiceAssistant] Loaded Random-Ordered College Assessment Questions:', fixedQuestions);
+      console.log('[VoiceAssistant] Loaded Randomized College Assessment Questions (Theoretical & Coding):', fixedQuestions);
 
-      setUserContext(`Institutional Placement Assessment for ${collegeDrive.collegeName}. Candidate: ${candidateProfileName}. Target Role: ${collegeDrive.targetRole}`);
+      setUserContext(`Institutional Placement Assessment for ${collegeDrive.collegeName}. Candidate: ${candidateProfileName}. Target Role: ${collegeDrive.targetRole}. Guidelines: For Coding questions, evaluate candidate's logical approach, edge cases, and time/space complexity. For Theoretical questions, evaluate architectural precision and depth.`);
 
       if (!hasCameraPermission) {
         await startCamera();
