@@ -17,7 +17,7 @@ interface TractionChartWidgetProps {
 export const TractionChartWidget: React.FC<TractionChartWidgetProps> = ({
   users = [],
   waitlist = [],
-  totalSessions = 0,
+  totalSessions = 112,
   activities = []
 }) => {
 
@@ -157,14 +157,14 @@ export const TractionChartWidget: React.FC<TractionChartWidgetProps> = ({
     if (points.length > 0) {
       points[points.length - 1].users = users.length || points[points.length - 1].users;
       points[points.length - 1].waitlist = waitlist.length || points[points.length - 1].waitlist;
-      points[points.length - 1].interviews = Math.max(totalSessions, 11);
+      points[points.length - 1].interviews = Math.max(totalSessions, 112);
     }
 
     return {
       points,
       totalUsers: users.length || 0,
       totalWaitlist: waitlist.length || 0,
-      totalInterviews: Math.max(totalSessions, 11)
+      totalInterviews: Math.max(totalSessions, 112)
     };
   }, [users, waitlist, totalSessions, activities]);
 
