@@ -6,7 +6,7 @@ import {
   Globe, Play, Star, Menu, X, Terminal, Code,
   Layers, MessageSquare, BarChart3, Check, CheckCircle2, Camera,
   Mic, Github, Smile, Building, MapPin, DollarSign, GraduationCap,
-  ShieldCheck, Target, Activity
+  ShieldCheck, Target, Activity, Cpu, Briefcase
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +22,164 @@ import { PricingScrollSection } from "@/components/landing/PricingScrollSection"
 import { HiringTeamsBanner } from "@/components/landing/HiringTeamsBanner";
 import { Footer } from "@/components/Footer";
 
+interface MatchingJob {
+  role: string;
+  company: string;
+  location: string;
+  salary: string;
+  score: number;
+  level: string;
+  logoBg: string;
+  brandColor: string;
+  glowColor: string;
+  tagline: string;
+  about: string;
+  stage: string;
+  headquarters: string;
+  engineeringCulture: string;
+  interviewFocus: string[];
+  rounds: string;
+  acceptanceRate: string;
+  difficulty: string;
+  tags: string[];
+  description: string;
+}
+
+const MATCHING_JOBS: MatchingJob[] = [
+  {
+    role: "Software Engineer III",
+    company: "Linear",
+    location: "Remote, US",
+    salary: "$140k - $170k",
+    score: 88,
+    level: "L5 Senior",
+    logoBg: "bg-zinc-800 text-white",
+    brandColor: "#5E6AD2",
+    glowColor: "rgba(94, 106, 210, 0.28)",
+    tagline: "Purpose-built issue tracking & project intelligence tool",
+    about: "Linear streamlines software projects, sprints, tasks, and bug tracking with high-performance real-time synchronization.",
+    stage: "Series B • High Growth",
+    headquarters: "San Francisco, CA / Remote",
+    engineeringCulture: "Craftsmanship-first engineering, sub-50ms optimistic UI updates, local-first SQLite replication, and keyboard-driven workflows.",
+    interviewFocus: ["Optimistic UI Architecture", "Conflict-Free Replicated Data (CRDTs)", "High-Concurrency Indexing"],
+    rounds: "4 Rounds • Screen -> Architecture & Data Sync -> Code Pairing -> Founders & Product Fit",
+    acceptanceRate: "~1.8%",
+    difficulty: "8.8 / 10 • Rigorous",
+    tags: ["System Design", "Distributed Systems", "TypeScript", "PostgreSQL"],
+    description: "Build ultra-fast project intelligence tools. Requires deep mastery of optimistic UI updates and high-concurrency database indexing."
+  },
+  {
+    role: "Frontend Specialist",
+    company: "Vercel",
+    location: "Remote, Global",
+    salary: "$130k - $160k",
+    score: 90,
+    level: "Staff Specialist",
+    logoBg: "bg-white text-black",
+    brandColor: "#ffffff",
+    glowColor: "rgba(255, 255, 255, 0.22)",
+    tagline: "Frontend cloud platform for developer velocity and edge rendering",
+    about: "Vercel powers the modern web with Next.js, Turbopack, and edge serverless infrastructure trusted by the world's leading brands.",
+    stage: "Series D • $3.25B Valuation",
+    headquarters: "San Francisco, CA / Remote",
+    engineeringCulture: "Radical performance budgets, zero-layout-shift strictness, edge worker isolation, and first-principles developer ergonomics.",
+    interviewFocus: ["React Server Components Internals", "Sub-millisecond Edge Streaming", "V8 Isolation & Sandbox Security"],
+    rounds: "5 Rounds • Technical Screen -> System Design -> Frontend Live Coding -> Culture & Staff Bar",
+    acceptanceRate: "~1.4%",
+    difficulty: "9.2 / 10 • Elite",
+    tags: ["Next.js", "Web Performance", "React Server Components", "Edge Runtimes"],
+    description: "Architect cutting-edge developer tooling, Next.js server components, and sub-millisecond edge rendering pipelines."
+  },
+  {
+    role: "AI / ML Infrastructure Engineer",
+    company: "OpenAI",
+    location: "San Francisco, CA",
+    salary: "$170k - $215k",
+    score: 93,
+    level: "Research Infra",
+    logoBg: "bg-[#0F6B38] text-white",
+    brandColor: "#10a37f",
+    glowColor: "rgba(16, 163, 127, 0.32)",
+    tagline: "Building safe, beneficial Artificial General Intelligence",
+    about: "OpenAI conducts research and deploys transformative AI systems like GPT-4, o1, and ChatGPT to empower human capability worldwide.",
+    stage: "Frontier AI Lab",
+    headquarters: "San Francisco, CA",
+    engineeringCulture: "Exascale compute orchestration, tensor-parallel training clusters, bare-metal GPU optimization, and fail-safe safety checkpoints.",
+    interviewFocus: ["GPU Cluster Sharding & NCCL", "KV-Cache Memory Partitioning", "Low-Latency Transformer Serving"],
+    rounds: "5 Rounds • Coding Screen -> Parallel ML Systems Design -> CUDA / Kernel Deep Dive -> Research Team Fit",
+    acceptanceRate: "~0.9%",
+    difficulty: "9.8 / 10 • Frontier",
+    tags: ["PyTorch", "GPU Clusters", "Distributed Training", "CUDA"],
+    description: "Scale large-scale model inference, GPU memory partitioning, and low-latency transformer pipeline orchestration."
+  },
+  {
+    role: "Technical Product Manager",
+    company: "Stripe",
+    location: "San Francisco, CA",
+    salary: "$150k - $185k",
+    score: 86,
+    level: "Senior TPM",
+    logoBg: "bg-[#635BFF] text-white",
+    brandColor: "#635BFF",
+    glowColor: "rgba(99, 91, 255, 0.28)",
+    tagline: "Financial infrastructure and money movement for the internet",
+    about: "Stripe powers economic infrastructure for millions of businesses worldwide, handling hundreds of billions in global money movement.",
+    stage: "Global FinTech Leader",
+    headquarters: "San Francisco, CA / Dublin",
+    engineeringCulture: "Five-nines (99.999%) availability, backward-compatible API immutability, meticulous developer documentation, and deterministic ledger consistency.",
+    interviewFocus: ["API Versioning & Backward Compatibility", "Idempotency Keys & Double-charge Guards", "Global Merchant Risk Topology"],
+    rounds: "4 Rounds • Product Architecture -> System Design & Pairing -> Merchant Integration -> Executive Leadership",
+    acceptanceRate: "~2.4%",
+    difficulty: "8.9 / 10 • High",
+    tags: ["API Architecture", "Payments Infra", "Developer Experience", "Risk Systems"],
+    description: "Lead API standardization and real-time payment reliability across global merchant infrastructure."
+  },
+  {
+    role: "Backend Systems Engineer",
+    company: "Supabase",
+    location: "Remote, SG",
+    salary: "$120k - $150k",
+    score: 87,
+    level: "L4 Engineer",
+    logoBg: "bg-[#3ECF8E] text-black",
+    brandColor: "#3ECF8E",
+    glowColor: "rgba(62, 207, 142, 0.28)",
+    tagline: "The open source Firebase alternative built on PostgreSQL",
+    about: "Supabase provides developers with an enterprise-grade backend in minutes: Postgres database, Authentication, instant APIs, Edge Functions, and Realtime.",
+    stage: "Series B • Open-Source Leader",
+    headquarters: "Remote Global / Singapore",
+    engineeringCulture: "Building in public, deep PostgreSQL internals, WAL replication plugins, distributed Elixir clustering, and multi-tenant Docker sandbox isolation.",
+    interviewFocus: ["Postgres WAL Replication & CDC", "Multi-tenant DB Sharding", "High-throughput Realtime WebSockets"],
+    rounds: "4 Rounds • Async Coding Assignment -> Postgres Deep Dive -> Realtime Architecture -> Founder Conversation",
+    acceptanceRate: "~2.1%",
+    difficulty: "9.0 / 10 • Very High",
+    tags: ["PostgreSQL", "Go", "Realtime Elixir", "Database Replication"],
+    description: "Optimize open-source database backends, write WAL replication plugins, and scale multi-tenant database clusters."
+  },
+  {
+    role: "Distributed Cloud Architect",
+    company: "Datadog",
+    location: "Remote, US",
+    salary: "$160k - $195k",
+    score: 91,
+    level: "Principal",
+    logoBg: "bg-[#632CA6] text-white",
+    brandColor: "#9055FF",
+    glowColor: "rgba(144, 85, 255, 0.28)",
+    tagline: "Cloud monitoring and security platform for modern scale",
+    about: "Datadog automates infrastructure monitoring, APM, and log management to provide unified, real-time observability across cloud architectures.",
+    stage: "Public (NASDAQ: DDOG)",
+    headquarters: "New York, NY / Remote",
+    engineeringCulture: "Petabyte-scale distributed streaming pipelines, kernel-level eBPF probes, massive high-throughput Kafka topologies, and multi-cloud resilience.",
+    interviewFocus: ["Petabyte Event Stream Ingestion", "eBPF Low-overhead Telemetry", "Partitioning & Distributed Consensus"],
+    rounds: "5 Rounds • Systems Coding -> Distributed Streaming Architecture -> Incident Retrospective -> Director of Engineering",
+    acceptanceRate: "~1.6%",
+    difficulty: "9.5 / 10 • Elite",
+    tags: ["Kubernetes", "eBPF", "High Throughput", "Observability"],
+    description: "Design massive-scale event ingestion systems handling billions of logs and telemetry spans per second."
+  }
+];
+
 const Index = () => {
   const navigate = useNavigate();
   const [isHeroHeaderVisible, setIsHeroHeaderVisible] = useState(false);
@@ -29,6 +187,8 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   // Bar theme: "black" for MacBook hero & light sections, "white" for dark sections like Job Matching
   const [barTheme, setBarTheme] = useState<"white" | "black">("black");
+  const [activeJobIndex, setActiveJobIndex] = useState(0);
+  const currentJob = MATCHING_JOBS[activeJobIndex] || MATCHING_JOBS[0];
 
   const scrollToFeatures = useCallback(() => {
     const el = document.getElementById("features");
