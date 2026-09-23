@@ -76,8 +76,8 @@ const MATCHING_JOBS: MatchingJob[] = [
     score: 90,
     level: "Staff Specialist",
     logoBg: "bg-white text-black",
-    brandColor: "#ffffff",
-    glowColor: "rgba(255, 255, 255, 0.22)",
+    brandColor: "#0070F3",
+    glowColor: "rgba(0, 112, 243, 0.35)",
     tagline: "Frontend cloud platform for developer velocity and edge rendering",
     about: "Vercel powers the modern web with Next.js, Turbopack, and edge serverless infrastructure trusted by the world's leading brands.",
     stage: "Series D • $3.25B Valuation",
@@ -576,25 +576,42 @@ const Index = () => {
                     rotationAmount={0.5}
                     onActiveIndexChange={setActiveJobIndex}
                   >
-                    {MATCHING_JOBS.map((job, idx) => (
-                      <ScrollStackItem key={idx}>
-                        <div
-                          onMouseEnter={() => setActiveJobIndex(idx)}
-                          className="relative w-full flex items-center justify-center"
-                        >
-                          {/* Giant Company Watermark attached directly to this card's pinned position */}
+                    {MATCHING_JOBS.map((job, idx) => {
+                      const isActive = idx === activeJobIndex;
+                      return (
+                        <ScrollStackItem key={idx}>
                           <div
-                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-black text-[18vw] md:text-[22vw] leading-none tracking-tighter uppercase select-none pointer-events-none text-white whitespace-nowrap z-0 transition-all duration-500"
-                            style={{
-                              opacity: 0.08,
-                              textShadow: `0 0 100px ${job.glowColor}`
-                            }}
+                            onMouseEnter={() => setActiveJobIndex(idx)}
+                            className="relative w-full flex items-center justify-center"
                           >
-                            {job.company}
-                          </div>
+                            {/* Giant Company Watermark - ONLY the single active card's name appears with its signature brand color */}
+                            <div
+                              className="absolute top-1/2 left-1/2 font-black text-[18vw] md:text-[22vw] leading-none tracking-tighter uppercase select-none pointer-events-none whitespace-nowrap z-0"
+                              style={{
+                                color: job.brandColor,
+                                textShadow: `0 0 100px ${job.glowColor}, 0 0 45px ${job.brandColor}60, 0 0 15px ${job.brandColor}`,
+                                opacity: isActive ? 0.25 : 0,
+                                visibility: isActive ? 'visible' : 'hidden',
+                                transform: isActive
+                                  ? 'translate(-50%, -50%) scale(1)'
+                                  : 'translate(-50%, -50%) scale(0.92)',
+                                filter: isActive ? 'blur(0px)' : 'blur(16px)',
+                                transition: 'opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s',
+                              }}
+                            >
+                              {job.company}
+                            </div>
 
-                          {/* The Physical Card Box */}
-                          <div className="relative z-10 w-full rounded-[28px] bg-[#0d0d16] border border-white/12 p-6 md:p-8 shadow-[0_24px_50px_-15px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)] transition-all duration-300 hover:border-emerald-500/40 space-y-4">
+                            {/* The Physical Card Box */}
+                            <div
+                              className="relative z-10 w-full rounded-[28px] bg-[#0d0d16] border p-6 md:p-8 shadow-[0_24px_50px_-15px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)] transition-all duration-300 space-y-4"
+                              style={{
+                                borderColor: isActive ? `${job.brandColor}70` : 'rgba(255, 255, 255, 0.12)',
+                                boxShadow: isActive
+                                  ? `0 24px 60px -15px rgba(0,0,0,0.95), 0 0 40px ${job.glowColor}`
+                                  : '0 24px 50px -15px rgba(0,0,0,0.95)'
+                              }}
+                            >
                             {/* Top Header Tab: Visible even when stacked cards overlap */}
                             <div className="flex items-center justify-between pb-3 border-b border-white/10">
                               <div className="flex items-center gap-2">
@@ -668,8 +685,9 @@ const Index = () => {
                             </div>
                           </div>
                         </div>
-                      </ScrollStackItem>
-                    ))}
+                        </ScrollStackItem>
+                      );
+                    })}
                   </ScrollStack>
                 </div>
               </div>

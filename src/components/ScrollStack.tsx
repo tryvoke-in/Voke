@@ -107,6 +107,7 @@ export const ScrollStack: React.FC<ScrollStackProps> = React.memo(({
         const rot = rotationAmount ? (i % 2 === 0 ? 0.4 : -0.4) * (i + 1) * rotationAmount : 0;
 
         card.style.transform = `translate3d(0, ${Math.round(translateY * 10) / 10}px, 0) scale(${targetScale}) rotate(${rot}deg)`;
+        activeIdx = Math.max(activeIdx, i);
       } else {
         // Natural resting position before reaching the stack
         card.style.transform = 'translate3d(0, 0, 0) scale(1) rotate(0deg)';
