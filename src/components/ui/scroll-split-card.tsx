@@ -35,6 +35,7 @@ export function ScrollSplitCard({
   footer,
 }: ScrollSplitCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isFlipped, setIsFlipped] = React.useState(false);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -49,6 +50,14 @@ export function ScrollSplitCard({
     mass: 0.5,
     restDelta: 0.001,
   });
+
+  // Once flip finishes (progress >= 0.70), switch from 3D GPU texture to native 2D DOM rendering for razor-sharp vector text
+  React.useEffect(() => {
+    return smoothProgress.on("change", (latest) => {
+      const flipped = latest >= 0.70;
+      setIsFlipped((prev) => (prev !== flipped ? flipped : prev));
+    });
+  }, [smoothProgress]);
 
   // Stage 1 (0 to 0.35): Separation
   const leftX = useTransform(smoothProgress, [0, 0.35, 0.72], [0, -42, -20]);
@@ -76,8 +85,13 @@ export function ScrollSplitCard({
       ref={containerRef}
       className={cn("relative h-[220vh] w-full", className)}
     >
-      {/* Sticky Viewport Container with navbar clearance */}
-      <div className="sticky top-0 flex h-screen w-full flex-col items-center justify-center pt-16 sm:pt-20 pb-4 sm:pb-6 px-4 sm:px-6 overflow-visible [perspective:1400px]">
+      {/* Sticky Viewport Container - perspective removed when flipped so text is never blurred by 3D projection */}
+      <div
+        className={cn(
+          "sticky top-0 flex h-screen w-full flex-col items-center justify-center pt-16 sm:pt-20 pb-4 sm:pb-6 px-4 sm:px-6 overflow-visible",
+          !isFlipped && "[perspective:1400px]"
+        )}
+      >
 
         {/* Top Header - safely cleared below floating navbar */}
         {header && (
@@ -88,7 +102,10 @@ export function ScrollSplitCard({
 
         {/* 3 Split & Flip Cards Container */}
         <motion.div
-          style={{ scale, transformStyle: "preserve-3d" }}
+          style={{
+            scale: isFlipped ? 1 : scale,
+            transformStyle: isFlipped ? "flat" : "preserve-3d"
+          }}
           className={cn(
             "flex h-[520px] sm:h-[570px] lg:h-[610px] xl:h-[640px] w-full max-w-6xl lg:max-w-7xl relative",
             cardsContainerClassName
@@ -97,7 +114,7 @@ export function ScrollSplitCard({
           {/* Seamless dark underlay to prevent subpixel seam rendering before cards split */}
           <motion.div
             style={{
-              opacity: underlayOpacity,
+              opacity: isFlipped ? 0 : underlayOpacity,
             }}
             className="absolute inset-0 bg-[#05070c] rounded-[24px] sm:rounded-[28px] border border-emerald-500/30 pointer-events-none -z-10"
           />
@@ -108,15 +125,18 @@ export function ScrollSplitCard({
               className="relative h-full flex-1"
               style={{
                 x: i === 0 ? leftX : i === 2 ? rightX : 0,
-                rotateY,
-                rotateZ: i === 0 ? rotateZLeft : i === 2 ? rotateZRight : 0,
+                rotateY: isFlipped ? 0 : rotateY,
+                rotateZ: isFlipped ? 0 : (i === 0 ? rotateZLeft : i === 2 ? rotateZRight : 0),
                 zIndex: i === 1 ? 10 : 5,
-                transformStyle: "preserve-3d",
+                transformStyle: isFlipped ? "flat" : "preserve-3d",
               }}
             >
               {/* Front Side: Split Image */}
               <motion.div
-                className="absolute -inset-x-[1px] inset-y-0 overflow-hidden [backface-visibility:hidden] pointer-events-none"
+                className={cn(
+                  "absolute -inset-x-[1px] inset-y-0 overflow-hidden pointer-events-none",
+                  isFlipped ? "hidden" : "[backface-visibility:hidden]"
+                )}
                 style={{
                   zIndex: 2,
                   borderRadius: i === 0 ? borderRadiusLeft : i === 2 ? borderRadiusRight : borderRadiusMiddle,
@@ -143,10 +163,11 @@ export function ScrollSplitCard({
                 />
               </motion.div>
 
-              {/* Back Side: Rich Content / Pricing Tier Card (Crisp & Selectable) */}
+              {/* Back Side: Rich Content / Pricing Tier Card (Crystal Sharp Native 2D Vector Text) */}
               <motion.div
                 className={cn(
-                  "absolute inset-0 overflow-hidden flex flex-col [backface-visibility:hidden] pointer-events-auto select-text",
+                  "absolute inset-0 overflow-hidden flex flex-col pointer-events-auto select-text",
+                  !isFlipped && "[backface-visibility:hidden]",
                   i === 1
                     ? "border-2 border-[#0F6B38] shadow-[0_20px_45px_rgba(0,59,45,0.12)] rounded-[24px] sm:rounded-[28px]"
                     : "border border-[#DCE7DF] shadow-[0_12px_32px_rgba(0,59,45,0.07)] rounded-[24px] sm:rounded-[28px]"
@@ -154,15 +175,15 @@ export function ScrollSplitCard({
                 style={{
                   backgroundColor: card.bgColor || "#ffffff",
                   color: card.textColor || "#003B2D",
-                  transform: "rotateY(180deg) translateZ(1px)",
+                  transform: isFlipped ? "none" : "rotateY(180deg)",
                   zIndex: i === 1 ? 10 : 2,
                   borderRadius: i === 0 ? borderRadiusLeft : i === 2 ? borderRadiusRight : borderRadiusMiddle,
-                  opacity: backOpacity,
-                  backfaceVisibility: "hidden",
-                  WebkitBackfaceVisibility: "hidden",
+                  opacity: isFlipped ? 1 : backOpacity,
+                  backfaceVisibility: isFlipped ? "visible" : "hidden",
+                  WebkitBackfaceVisibility: isFlipped ? "visible" : "hidden",
                   WebkitFontSmoothing: "antialiased",
                   MozOsxFontSmoothing: "grayscale",
-                  textRendering: "geometricPrecision",
+                  textRendering: "optimizeLegibility",
                 }}
               >
                 {card.content ? (

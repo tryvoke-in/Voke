@@ -76,7 +76,14 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
     const isPopular = plan.popular;
 
     return (
-      <div className="relative flex flex-col justify-between h-full p-6 sm:p-7 select-text bg-white text-[#14231B]">
+      <div
+        className="relative flex flex-col justify-between h-full p-6 sm:p-7 select-text bg-white text-[#111e17] antialiased"
+        style={{
+          WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale",
+          textRendering: "optimizeLegibility",
+        }}
+      >
         <div>
           {/* Top Badge Row */}
           <div className="flex items-center justify-between gap-2 mb-3.5">
@@ -90,40 +97,40 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
                 {plan.badge}
               </span>
             )}
-            <span className="text-[11px] text-[#557564] font-medium font-mono">
+            <span className="text-[11px] text-[#476654] font-semibold font-mono">
               {plan.period}
             </span>
           </div>
 
           {/* Title & Desc */}
-          <h3 className="text-2xl sm:text-3xl font-bold text-[#003B2D] tracking-tight mb-1">
+          <h3 className="text-2xl sm:text-3xl font-extrabold text-[#002B20] tracking-tight mb-1">
             {plan.name}
           </h3>
-          <p className="text-xs text-[#557564] leading-relaxed mb-4">
+          <p className="text-xs text-[#476654] font-medium leading-relaxed mb-4">
             {plan.desc}
           </p>
 
           {/* Clean Price Presentation */}
           <div className="mb-4">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#003B2D] tracking-tight">
+              <span className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002B20] tracking-tight">
                 {plan.price}
               </span>
-              <span className="text-xs text-[#557564] font-medium">
+              <span className="text-xs text-[#476654] font-semibold">
                 {plan.price === "Custom" ? "license" : `/ ${plan.period.toLowerCase()} pass`}
               </span>
             </div>
-            <p className="text-[11px] text-[#557564] mt-1">
+            <p className="text-[11.5px] text-[#476654] font-medium mt-1">
               {plan.billingNote}
             </p>
           </div>
 
           {/* Delicate Divider */}
-          <div className="h-px bg-[#E8EFE9] mb-4" />
+          <div className="h-px bg-[#E2EBE5] mb-4" />
 
           {/* Feature List */}
           <div className="space-y-2.5">
-            <p className={`text-[10.5px] uppercase tracking-wider font-bold mb-1 ${isPopular ? "text-[#0F6B38]" : "text-[#003B2D]"
+            <p className={`text-[11px] uppercase tracking-wider font-extrabold mb-1.5 ${isPopular ? "text-[#0F6B38]" : "text-[#002B20]"
               }`}>
               {isPopular ? "Everything in Pro, plus:" : "Included features:"}
             </p>
@@ -133,7 +140,7 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
                   }`}>
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </div>
-                <span className="text-xs text-[#2D4537] leading-snug font-medium">
+                <span className="text-xs sm:text-[12.5px] text-[#14261C] leading-snug font-medium antialiased">
                   {feat}
                 </span>
               </div>
