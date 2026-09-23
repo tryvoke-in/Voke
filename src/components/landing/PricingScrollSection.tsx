@@ -23,7 +23,7 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
       features: [
         "4 Pro Video Credits (Voice + Video Merged)",
         "3 Text AI Mock Interview Credits",
-        "Full Gemini 2.5 Flash Body Language Analysis",
+        "Multi-Modal Vision & Body Language Analysis",
         "Detailed Audio / Video Performance Reports",
         "Core Technical Question Bank & Scorecard",
         "Real-Time Pacing & Speech Cadence Tracking"
@@ -45,7 +45,7 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
         "2 Pro Video Interview Credits Included",
         "Interactive Code IDE & Algorithm Compilers",
         "AI Resume Optimization & Keyword Scoring",
-        "Full Gemini 2.5 Flash Speech & Posture Analysis",
+        "Advanced Speech Cadence & Posture Analysis",
         "Verified Voke Scorecard for Recruiter Match"
       ]
     },
@@ -76,7 +76,7 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
     const isPopular = plan.popular;
 
     return (
-      <div className="relative flex flex-col justify-between h-full p-6 sm:p-7 select-none bg-white text-[#14231B]">
+      <div className="relative flex flex-col justify-between h-full p-6 sm:p-7 select-text bg-white text-[#14231B]">
         <div>
           {/* Top Badge Row */}
           <div className="flex items-center justify-between gap-2 mb-3.5">

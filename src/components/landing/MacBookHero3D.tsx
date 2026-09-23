@@ -216,7 +216,7 @@ export const MacBookHero3D: React.FC<MacBookHero3DProps> = React.memo(({
   // Viewport tracking ref to cull rendering when scrolled offscreen
   const isInViewportRef = useRef<boolean>(true);
   const isRenderingRef = useRef<boolean>(false);
-  const requestRenderRef = useRef<() => void>(() => {});
+  const requestRenderRef = useRef<() => void>(() => { });
 
   // High-performance rAF-throttled scroll listener with ZERO reflows
   useEffect(() => {

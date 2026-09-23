@@ -157,8 +157,8 @@ const Index = () => {
         {/* Floating Frosted Glass Pill Navbar */}
         <nav
           className={`fixed top-4 sm:top-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-6xl transition-all duration-500 ease-out ${isHeaderVisible
-              ? "opacity-100 translate-y-0 pointer-events-auto"
-              : "opacity-0 -translate-y-8 pointer-events-none"
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 -translate-y-8 pointer-events-none"
             }`}
         >
           <div
@@ -372,12 +372,25 @@ const Index = () => {
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
 
             {/* Job Match & Verified Score Placement */}
-            <section id="job-matching" style={{ contentVisibility: "auto", containIntrinsicSize: "850px" }} className="py-24 md:py-32 bg-transparent relative overflow-hidden">
-              <div className="container mx-auto px-4 md:px-6 relative z-10 max-w-6xl">
+            <section id="job-matching" style={{ contentVisibility: "auto", containIntrinsicSize: "850px" }} className="py-24 md:py-32 bg-transparent relative overflow-hidden transition-colors duration-700">
+              {/* Dynamic Company Ambient Aura */}
+              <div
+                className="absolute inset-0 pointer-events-none transition-all duration-700 opacity-60"
+                style={{
+                  background: `radial-gradient(circle 800px at 50% 45%, ${currentJob.glowColor}, transparent 70%)`
+                }}
+              />
+
+              {/* Giant Ambient Company Watermark in Background */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-black text-[15vw] md:text-[20vw] leading-none tracking-tighter uppercase select-none pointer-events-none transition-all duration-700 opacity-[0.045] text-white whitespace-nowrap z-0">
+                {currentJob.company}
+              </div>
+
+              <div className="container mx-auto px-4 md:px-6 relative z-10 max-w-7xl">
                 {/* Centered Heading */}
-                <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+                <div className="text-center max-w-3xl mx-auto mb-10 space-y-4">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-                    <Users className="w-3.5 h-3.5" /> Job Alignment
+                    <Users className="w-3.5 h-3.5" /> Job Alignment & Active Dossier
                   </div>
                   <motion.h2
                     initial={{ opacity: 0, y: 10 }}
@@ -393,151 +406,255 @@ const Index = () => {
                   <p className="text-base md:text-lg text-zinc-400 leading-relaxed max-w-2xl mx-auto">
                     Compare your mock interview scores against active industry role benchmarks and track your hiring readiness in real time.
                   </p>
+
+                  {/* Company Quick Selector Pills */}
+                  <div className="flex items-center justify-center flex-wrap gap-2 pt-2">
+                    {MATCHING_JOBS.map((j, i) => {
+                      const isActive = i === activeJobIndex;
+                      return (
+                        <button
+                          key={j.company}
+                          onClick={() => setActiveJobIndex(i)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 border flex items-center gap-1.5 cursor-pointer ${isActive
+                            ? "bg-white/15 text-white border-white/40 shadow-sm"
+                            : "bg-white/5 text-zinc-400 border-white/10 hover:border-white/20 hover:text-zinc-200"
+                            }`}
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: j.brandColor }}
+                          />
+                          <span>{j.company}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Full-width Stack of Job Cards with Page Scroll */}
-                <div className="w-full max-w-3xl mx-auto relative">
-                  <ScrollStack
-                    useWindowScroll={true}
-                    itemDistance={80}
-                    itemScale={0.03}
-                    itemStackDistance={22}
-                    stackPosition="18%"
-                    scaleEndPosition="6%"
-                    baseScale={0.88}
-                    rotationAmount={0.5}
-                  >
-                    {[
-                      {
-                        role: "Software Engineer III",
-                        company: "Linear",
-                        location: "Remote, US",
-                        salary: "$140k - $170k",
-                        score: 88,
-                        level: "L5 Senior",
-                        logoBg: "bg-zinc-800 text-white",
-                        tags: ["System Design", "Distributed Systems", "TypeScript", "PostgreSQL"],
-                        description: "Build ultra-fast project intelligence tools. Requires deep mastery of optimistic UI updates and high-concurrency database indexing."
-                      },
-                      {
-                        role: "Frontend Specialist",
-                        company: "Vercel",
-                        location: "Remote, Global",
-                        salary: "$130k - $160k",
-                        score: 90,
-                        level: "Staff Specialist",
-                        logoBg: "bg-white text-black",
-                        tags: ["Next.js", "Web Performance", "React Server Components", "Edge Runtimes"],
-                        description: "Architect cutting-edge developer tooling, Next.js server components, and sub-millisecond edge rendering pipelines."
-                      },
-                      {
-                        role: "AI / ML Infrastructure Engineer",
-                        company: "OpenAI",
-                        location: "San Francisco, CA",
-                        salary: "$170k - $215k",
-                        score: 93,
-                        level: "Research Infra",
-                        logoBg: "bg-[#0F6B38] text-white",
-                        tags: ["PyTorch", "GPU Clusters", "Distributed Training", "CUDA"],
-                        description: "Scale large-scale model inference, GPU memory partitioning, and low-latency transformer pipeline orchestration."
-                      },
-                      {
-                        role: "Technical Product Manager",
-                        company: "Stripe",
-                        location: "San Francisco, CA",
-                        salary: "$150k - $185k",
-                        score: 86,
-                        level: "Senior TPM",
-                        logoBg: "bg-[#635BFF] text-white",
-                        tags: ["API Architecture", "Payments Infra", "Developer Experience", "Risk Systems"],
-                        description: "Lead API standardization and real-time payment reliability across global merchant infrastructure."
-                      },
-                      {
-                        role: "Backend Systems Engineer",
-                        company: "Supabase",
-                        location: "Remote, SG",
-                        salary: "$120k - $150k",
-                        score: 87,
-                        level: "L4 Engineer",
-                        logoBg: "bg-[#3ECF8E] text-black",
-                        tags: ["PostgreSQL", "Go", "Realtime Elixir", "Database Replication"],
-                        description: "Optimize open-source database backends, write WAL replication plugins, and scale multi-tenant database clusters."
-                      },
-                      {
-                        role: "Distributed Cloud Architect",
-                        company: "Datadog",
-                        location: "Remote, US",
-                        salary: "$160k - $195k",
-                        score: 91,
-                        level: "Principal",
-                        logoBg: "bg-[#632CA6] text-white",
-                        tags: ["Kubernetes", "eBPF", "High Throughput", "Observability"],
-                        description: "Design massive-scale event ingestion systems handling billions of logs and telemetry spans per second."
-                      }
-                    ].map((job, idx) => (
-                      <ScrollStackItem key={idx}>
-                        <div className="space-y-4">
-                          {/* Header row */}
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className={`w-11 h-11 rounded-2xl ${job.logoBg} flex items-center justify-center font-bold text-base shadow-md shrink-0 border border-white/10`}>
-                                {job.company[0]}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h4 className="font-bold text-base md:text-lg text-white truncate">{job.role}</h4>
-                                  <span className="text-[10px] font-semibold text-zinc-300 bg-white/10 border border-white/10 px-2.5 py-0.5 rounded-full">
-                                    {job.level}
-                                  </span>
+                {/* Mobile / Tablet Compact Company HUD */}
+                <div className="lg:hidden mb-6 p-4 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-7 h-7 rounded-lg ${currentJob.logoBg} flex items-center justify-center font-bold text-xs shrink-0`}
+                      >
+                        {currentJob.company[0]}
+                      </div>
+                      <span className="font-bold text-sm text-white">{currentJob.company}</span>
+                      <span className="text-[10px] text-zinc-400">• {currentJob.headquarters}</span>
+                    </div>
+                    <span className="text-[11px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                      Cutoff &ge; {currentJob.score}+
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-300 line-clamp-2">{currentJob.tagline}</p>
+                </div>
+
+                {/* Main 3-Column Layout: Left Dossier, Center Stacking Cards, Right Hiring Bar */}
+                <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start relative">
+                  {/* Left Column: Sticky Company Dossier Widget (lg:col-span-3) */}
+                  <div className="hidden lg:block lg:col-span-3 sticky top-28 space-y-4">
+                    <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md shadow-xl space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-11 h-11 rounded-xl ${currentJob.logoBg} flex items-center justify-center font-bold text-base shadow-md border border-white/10 shrink-0`}
+                        >
+                          {currentJob.company[0]}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="font-bold text-white text-base leading-none">{currentJob.company}</h4>
+                            <span
+                              className="w-2 h-2 rounded-full shrink-0"
+                              style={{ backgroundColor: currentJob.brandColor }}
+                            />
+                          </div>
+                          <p className="text-[11px] text-zinc-400 mt-1 font-mono">{currentJob.stage}</p>
+                        </div>
+                      </div>
+
+                      <div className="h-px bg-white/10" />
+
+                      <div>
+                        <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 flex items-center gap-1.5 mb-1.5">
+                          <Building className="w-3 h-3" /> Mission & Architecture
+                        </div>
+                        <p className="text-xs text-zinc-300 leading-relaxed">
+                          {currentJob.about}
+                        </p>
+                      </div>
+
+                      <div className="h-px bg-white/10" />
+
+                      <div>
+                        <div className="text-[10px] uppercase font-bold tracking-wider text-cyan-400 flex items-center gap-1.5 mb-1.5">
+                          <Cpu className="w-3 h-3" /> Engineering DNA
+                        </div>
+                        <p className="text-xs text-zinc-300 leading-relaxed">
+                          {currentJob.engineeringCulture}
+                        </p>
+                      </div>
+
+                      <div className="h-px bg-white/10" />
+
+                      <div>
+                        <div className="text-[10px] uppercase font-bold tracking-wider text-amber-400 flex items-center gap-1.5 mb-1.5">
+                          <Target className="w-3 h-3" /> Core Tech Focus
+                        </div>
+                        <div className="space-y-1">
+                          {currentJob.interviewFocus.map((f, fi) => (
+                            <div key={fi} className="text-[11px] text-zinc-300 flex items-center gap-1.5">
+                              <span className="w-1 h-1 rounded-full bg-emerald-400 shrink-0" />
+                              <span>{f}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Center Column: Full-width Interactive Stacking Cards (lg:col-span-6) */}
+                  <div className="lg:col-span-6 w-full max-w-2xl mx-auto relative">
+                    <ScrollStack
+                      useWindowScroll={true}
+                      itemDistance={80}
+                      itemScale={0.03}
+                      itemStackDistance={22}
+                      stackPosition="18%"
+                      scaleEndPosition="6%"
+                      baseScale={0.88}
+                      rotationAmount={0.5}
+                      onActiveIndexChange={setActiveJobIndex}
+                    >
+                      {MATCHING_JOBS.map((job, idx) => (
+                        <ScrollStackItem key={idx}>
+                          <div
+                            onMouseEnter={() => setActiveJobIndex(idx)}
+                            className="space-y-4"
+                          >
+                            {/* Header row */}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={`w-11 h-11 rounded-2xl ${job.logoBg} flex items-center justify-center font-bold text-base shadow-md shrink-0 border border-white/10`}>
+                                  {job.company[0]}
                                 </div>
-                                <p className="text-xs text-emerald-400 font-medium">{job.company}</p>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h4 className="font-bold text-base md:text-lg text-white truncate">{job.role}</h4>
+                                    <span className="text-[10px] font-semibold text-zinc-300 bg-white/10 border border-white/10 px-2.5 py-0.5 rounded-full">
+                                      {job.level}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-emerald-400 font-medium">{job.company}</p>
+                                </div>
                               </div>
-                            </div>
 
-                            <span className="text-xs font-extrabold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-3.5 py-1.5 rounded-full whitespace-nowrap shrink-0">
-                              Score &ge; {job.score}+
-                            </span>
-                          </div>
-
-                          {/* Description */}
-                          <p className="text-xs md:text-sm text-zinc-300 leading-relaxed">
-                            {job.description}
-                          </p>
-
-                          {/* Tags */}
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            {job.tags.map((tag) => (
-                              <span key={tag} className="text-[10px] px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-zinc-300 font-mono">
-                                {tag}
+                              <span className="text-xs font-extrabold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-3.5 py-1.5 rounded-full whitespace-nowrap shrink-0">
+                                Score &ge; {job.score}+
                               </span>
-                            ))}
-                          </div>
-
-                          {/* Footer with metadata & CTA */}
-                          <div className="flex items-center justify-between pt-4 border-t border-white/10 flex-wrap gap-3">
-                            <div className="flex items-center gap-5 text-xs text-zinc-400">
-                              <div className="flex items-center gap-1.5">
-                                <MapPin className="w-4 h-4 text-zinc-500" />
-                                <span>{job.location}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <DollarSign className="w-4 h-4 text-zinc-500" />
-                                <span className="font-semibold text-white">{job.salary}</span>
-                              </div>
                             </div>
 
-                            <Button
-                              onClick={handleAuthNavigation}
-                              className="bg-[#0F6B38] text-white border border-emerald-500/30 hover:bg-[#0B572D] rounded-xl text-xs px-5 h-9 flex items-center gap-2 transition-all duration-300 font-bold shadow-md group"
-                            >
-                              <span>Check Match</span>
-                              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                            </Button>
+                            {/* Description */}
+                            <p className="text-xs md:text-sm text-zinc-300 leading-relaxed">
+                              {job.description}
+                            </p>
+
+                            {/* Tags */}
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              {job.tags.map((tag) => (
+                                <span key={tag} className="text-[10px] px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-zinc-300 font-mono">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Footer with metadata & CTA */}
+                            <div className="flex items-center justify-between pt-4 border-t border-white/10 flex-wrap gap-3">
+                              <div className="flex items-center gap-5 text-xs text-zinc-400">
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin className="w-4 h-4 text-zinc-500" />
+                                  <span>{job.location}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <DollarSign className="w-4 h-4 text-zinc-500" />
+                                  <span className="font-semibold text-white">{job.salary}</span>
+                                </div>
+                              </div>
+
+                              <Button
+                                onClick={handleAuthNavigation}
+                                className="bg-[#0F6B38] text-white border border-emerald-500/30 hover:bg-[#0B572D] rounded-xl text-xs px-5 h-9 flex items-center gap-2 transition-all duration-300 font-bold shadow-md group cursor-pointer"
+                              >
+                                <span>Check Match</span>
+                                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                              </Button>
+                            </div>
+                          </div>
+                        </ScrollStackItem>
+                      ))}
+                    </ScrollStack>
+                  </div>
+
+                  {/* Right Column: Sticky Hiring Bar & Assessment Flow (lg:col-span-3) */}
+                  <div className="hidden lg:block lg:col-span-3 sticky top-28 space-y-4">
+                    <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md shadow-xl space-y-4">
+                      <div>
+                        <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-1">
+                          Voke Verified Readiness
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-3xl font-extrabold text-white">
+                            {currentJob.score}
+                          </span>
+                          <span className="text-xs text-zinc-400 font-medium">
+                            / 100 Minimum
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="h-px bg-white/10" />
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                          <div className="text-[10px] text-zinc-400 flex items-center gap-1">
+                            <Activity className="w-3 h-3 text-cyan-400" /> Difficulty
+                          </div>
+                          <div className="text-xs font-bold text-white mt-1">
+                            {currentJob.difficulty.split("•")[0]}
                           </div>
                         </div>
-                      </ScrollStackItem>
-                    ))}
-                  </ScrollStack>
+
+                        <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                          <div className="text-[10px] text-zinc-400 flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3 text-emerald-400" /> Acceptance
+                          </div>
+                          <div className="text-xs font-bold text-white mt-1">
+                            {currentJob.acceptanceRate}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="h-px bg-white/10" />
+
+                      <div>
+                        <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-1.5">
+                          Interview Pipeline
+                        </div>
+                        <p className="text-xs text-zinc-300 leading-relaxed font-mono">
+                          {currentJob.rounds}
+                        </p>
+                      </div>
+
+                      <Button
+                        onClick={handleAuthNavigation}
+                        className="w-full bg-[#0F6B38] text-white hover:bg-[#0B572D] rounded-xl text-xs py-2.5 h-10 font-bold border border-emerald-500/30 flex items-center justify-center gap-1.5 transition-all shadow-md group cursor-pointer"
+                      >
+                        <Briefcase className="w-3.5 h-3.5" />
+                        <span>Prep for {currentJob.company}</span>
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>

@@ -53,7 +53,7 @@ export function ScrollSplitCard({
   // Stage 1 (0 to 0.35): Separation
   const leftX = useTransform(smoothProgress, [0, 0.35, 0.72], [0, -42, -20]);
   const rightX = useTransform(smoothProgress, [0, 0.35, 0.72], [0, 42, 20]);
-  const scale = useTransform(smoothProgress, [0, 0.35, 0.72], [1, 0.94, 0.98]);
+  const scale = useTransform(smoothProgress, [0, 0.35, 0.72], [1, 0.95, 1]);
 
   // Stage 2 (0.32 to 0.72): 3D Flip 180°
   const rotateY = useTransform(smoothProgress, [0.32, 0.72], [0, 180]);
@@ -105,7 +105,7 @@ export function ScrollSplitCard({
           {cards.slice(0, 3).map((card, i) => (
             <motion.div
               key={i}
-              className="relative h-full flex-1 will-change-transform"
+              className="relative h-full flex-1"
               style={{
                 x: i === 0 ? leftX : i === 2 ? rightX : 0,
                 rotateY,
@@ -116,7 +116,7 @@ export function ScrollSplitCard({
             >
               {/* Front Side: Split Image */}
               <motion.div
-                className="absolute -inset-x-[1px] inset-y-0 overflow-hidden [backface-visibility:hidden] pointer-events-none will-change-transform"
+                className="absolute -inset-x-[1px] inset-y-0 overflow-hidden [backface-visibility:hidden] pointer-events-none"
                 style={{
                   zIndex: 2,
                   borderRadius: i === 0 ? borderRadiusLeft : i === 2 ? borderRadiusRight : borderRadiusMiddle,
@@ -143,10 +143,10 @@ export function ScrollSplitCard({
                 />
               </motion.div>
 
-              {/* Back Side: Rich Content / Pricing Tier Card */}
+              {/* Back Side: Rich Content / Pricing Tier Card (Crisp & Selectable) */}
               <motion.div
                 className={cn(
-                  "absolute inset-0 overflow-hidden flex flex-col [backface-visibility:hidden] will-change-transform pointer-events-auto",
+                  "absolute inset-0 overflow-hidden flex flex-col [backface-visibility:hidden] pointer-events-auto select-text",
                   i === 1
                     ? "border-2 border-[#0F6B38] shadow-[0_20px_45px_rgba(0,59,45,0.12)] rounded-[24px] sm:rounded-[28px]"
                     : "border border-[#DCE7DF] shadow-[0_12px_32px_rgba(0,59,45,0.07)] rounded-[24px] sm:rounded-[28px]"
@@ -160,12 +160,15 @@ export function ScrollSplitCard({
                   opacity: backOpacity,
                   backfaceVisibility: "hidden",
                   WebkitBackfaceVisibility: "hidden",
+                  WebkitFontSmoothing: "antialiased",
+                  MozOsxFontSmoothing: "grayscale",
+                  textRendering: "geometricPrecision",
                 }}
               >
                 {card.content ? (
                   card.content
                 ) : (
-                  <div className="flex flex-col justify-end p-8 h-full">
+                  <div className="flex flex-col justify-end p-8 h-full select-text">
                     <div className="relative z-10 mb-auto">{card.icon}</div>
                     <h3 className="relative z-10 mb-4 text-2xl font-medium leading-tight">
                       {card.title}
