@@ -34,7 +34,7 @@ export interface ScrollStackProps {
   onStackComplete?: () => void;
 }
 
-export const ScrollStack: React.FC<ScrollStackProps> = ({
+export const ScrollStack: React.FC<ScrollStackProps> = React.memo(({
   children,
   className = '',
   itemDistance = 60,
@@ -54,8 +54,11 @@ export const ScrollStack: React.FC<ScrollStackProps> = ({
   const wrapperRefs = useRef<HTMLElement[]>([]);
   const cardRefs = useRef<HTMLElement[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
+  const wrapperOffsetsRef = useRef<number[]>([]);
+  const endOffsetRef = useRef<number>(0);
   const lastTransformsRef = useRef<Map<number, { translateY: number; scale: number; rotation: number; blur: number }>>(new Map());
   const isUpdatingRef = useRef(false);
+  const viewportStateRef = useRef<'before' | 'active' | 'after'>('active');
 
   const calculateProgress = useCallback((scrollTop: number, start: number, end: number) => {
     if (scrollTop < start) return 0;
@@ -85,20 +88,36 @@ export const ScrollStack: React.FC<ScrollStackProps> = ({
     }
   }, [useWindowScroll]);
 
-  const getElementOffset = useCallback(
-    (element: HTMLElement) => {
-      if (useWindowScroll) {
-        const rect = element.getBoundingClientRect();
-        return rect.top + (window.scrollY || document.documentElement.scrollTop);
-      } else {
-        return element.offsetTop;
+  // Pre-measures static document offsets to avoid getBoundingClientRect layout thrashing during scroll
+  const measureOffsets = useCallback(() => {
+    if (useWindowScroll) {
+      const currentScrollY = window.scrollY || document.documentElement.scrollTop;
+      wrapperOffsetsRef.current = wrapperRefs.current.map((w, idx) => {
+        const el = w || cardRefs.current[idx];
+        if (!el) return 0;
+        return el.getBoundingClientRect().top + currentScrollY;
+      });
+      if (endRef.current) {
+        endOffsetRef.current = endRef.current.getBoundingClientRect().top + currentScrollY;
       }
-    },
-    [useWindowScroll]
-  );
+    } else {
+      wrapperOffsetsRef.current = wrapperRefs.current.map((w, idx) => {
+        const el = w || cardRefs.current[idx];
+        return el ? el.offsetTop : 0;
+      });
+      if (endRef.current) {
+        endOffsetRef.current = endRef.current.offsetTop;
+      }
+    }
+  }, [useWindowScroll]);
 
   const updateCardTransforms = useCallback(() => {
     if (!cardRefs.current.length || isUpdatingRef.current) return;
+
+    // Lazily initialize offsets if not yet measured
+    if (wrapperOffsetsRef.current.length === 0) {
+      measureOffsets();
+    }
 
     isUpdatingRef.current = true;
 
@@ -106,14 +125,30 @@ export const ScrollStack: React.FC<ScrollStackProps> = ({
     const stackPositionPx = parsePercentage(stackPosition, containerHeight);
     const scaleEndPositionPx = parsePercentage(scaleEndPosition, containerHeight);
 
-    const endElement = endRef.current;
-    const endElementTop = endElement ? getElementOffset(endElement) : 0;
+    const firstCardTop = wrapperOffsetsRef.current[0] || 0;
+    const endElementTop = endOffsetRef.current;
     const totalCards = cardRefs.current.length;
+
+    // Viewport culling: skip iteration if scrolled far away and already in steady state
+    if (firstCardTop > 0 && scrollTop + containerHeight < firstCardTop - 150) {
+      if (viewportStateRef.current === 'before') {
+        isUpdatingRef.current = false;
+        return;
+      }
+      viewportStateRef.current = 'before';
+    } else if (endElementTop > 0 && scrollTop > endElementTop + 150) {
+      if (viewportStateRef.current === 'after') {
+        isUpdatingRef.current = false;
+        return;
+      }
+      viewportStateRef.current = 'after';
+    } else {
+      viewportStateRef.current = 'active';
+    }
 
     cardRefs.current.forEach((card, i) => {
       if (!card) return;
-      const wrapper = wrapperRefs.current[i] || card;
-      const cardTop = getElementOffset(wrapper);
+      const cardTop = wrapperOffsetsRef.current[i] || 0;
 
       const triggerStart = cardTop - stackPositionPx - itemStackDistance * i;
       const triggerEnd = cardTop - scaleEndPositionPx;
@@ -129,13 +164,10 @@ export const ScrollStack: React.FC<ScrollStackProps> = ({
       if (blurAmount) {
         let topCardIndex = 0;
         for (let j = 0; j < totalCards; j++) {
-          const jWrapper = wrapperRefs.current[j] || cardRefs.current[j];
-          if (jWrapper) {
-            const jCardTop = getElementOffset(jWrapper);
-            const jTriggerStart = jCardTop - stackPositionPx - itemStackDistance * j;
-            if (scrollTop >= jTriggerStart) {
-              topCardIndex = j;
-            }
+          const jCardTop = wrapperOffsetsRef.current[j] || 0;
+          const jTriggerStart = jCardTop - stackPositionPx - itemStackDistance * j;
+          if (scrollTop >= jTriggerStart) {
+            topCardIndex = j;
           }
         }
 
@@ -205,7 +237,7 @@ export const ScrollStack: React.FC<ScrollStackProps> = ({
     calculateProgress,
     parsePercentage,
     getScrollData,
-    getElementOffset
+    measureOffsets
   ]);
 
   useIsomorphicLayoutEffect(() => {
@@ -240,15 +272,21 @@ export const ScrollStack: React.FC<ScrollStackProps> = ({
       animationFrameRef.current = requestAnimationFrame(updateCardTransforms);
     };
 
+    const onResize = () => {
+      measureOffsets();
+      onScrollTick();
+    };
+
     if (useWindowScroll) {
       window.addEventListener('scroll', onScrollTick, { passive: true });
-      window.addEventListener('resize', onScrollTick, { passive: true });
+      window.addEventListener('resize', onResize, { passive: true });
     } else {
       scroller.addEventListener('scroll', onScrollTick, { passive: true });
-      window.addEventListener('resize', onScrollTick, { passive: true });
+      window.addEventListener('resize', onResize, { passive: true });
     }
 
-    // Initial positioning
+    // Initial positioning with pre-measured offsets
+    measureOffsets();
     updateCardTransforms();
 
     return () => {
@@ -257,20 +295,22 @@ export const ScrollStack: React.FC<ScrollStackProps> = ({
       }
       if (useWindowScroll) {
         window.removeEventListener('scroll', onScrollTick);
-        window.removeEventListener('resize', onScrollTick);
+        window.removeEventListener('resize', onResize);
       } else {
         scroller.removeEventListener('scroll', onScrollTick);
-        window.removeEventListener('resize', onScrollTick);
+        window.removeEventListener('resize', onResize);
       }
       stackCompletedRef.current = false;
       wrapperRefs.current = [];
       cardRefs.current = [];
+      wrapperOffsetsRef.current = [];
       transformsCache.clear();
       isUpdatingRef.current = false;
     };
   }, [
     itemDistance,
     useWindowScroll,
+    measureOffsets,
     updateCardTransforms
   ]);
 
@@ -297,6 +337,6 @@ export const ScrollStack: React.FC<ScrollStackProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default ScrollStack;
