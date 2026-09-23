@@ -532,22 +532,15 @@ const Index = () => {
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
 
             {/* Job Match & Verified Score Placement */}
+            {/* Job Match & Verified Score Placement */}
             <section id="job-matching" style={{ contentVisibility: "auto", containIntrinsicSize: "850px" }} className="py-24 md:py-32 bg-transparent relative overflow-hidden transition-colors duration-700">
-              {/* Sticky Background Horizon: Stays pinned in viewport behind cards as user scrolls */}
-              <div className="sticky top-0 h-screen w-full pointer-events-none flex items-center justify-center -mb-[100vh] z-0 overflow-hidden">
-                {/* Dynamic Company Ambient Glow Aura */}
-                <div
-                  className="absolute inset-0 transition-all duration-700 opacity-60"
-                  style={{
-                    background: `radial-gradient(circle 800px at 50% 50%, ${currentJob.glowColor}, transparent 70%)`
-                  }}
-                />
-
-                {/* Giant Ambient Company Watermark - Stays fixed behind active cards throughout the section */}
-                <div className="font-black text-[18vw] md:text-[22vw] leading-none tracking-tighter uppercase select-none transition-all duration-700 opacity-[0.065] text-white whitespace-nowrap">
-                  {currentJob.company}
-                </div>
-              </div>
+              {/* Dynamic Company Ambient Glow Aura */}
+              <div
+                className="absolute inset-0 pointer-events-none transition-all duration-700 opacity-60"
+                style={{
+                  background: `radial-gradient(circle 800px at 50% 45%, ${currentJob.glowColor}, transparent 70%)`
+                }}
+              />
 
               <div className="container mx-auto px-4 md:px-6 relative z-10 max-w-5xl">
                 {/* Centered Heading */}
@@ -577,7 +570,7 @@ const Index = () => {
                     useWindowScroll={true}
                     itemDistance={80}
                     itemScale={0.03}
-                    itemStackDistance={22}
+                    itemStackDistance={36}
                     stackPosition="18%"
                     baseScale={0.88}
                     rotationAmount={0.5}
@@ -587,64 +580,92 @@ const Index = () => {
                       <ScrollStackItem key={idx}>
                         <div
                           onMouseEnter={() => setActiveJobIndex(idx)}
-                          className="space-y-4"
+                          className="relative w-full flex items-center justify-center"
                         >
-                          {/* Header row */}
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className={`w-11 h-11 rounded-2xl ${job.logoBg} flex items-center justify-center font-bold text-base shadow-md shrink-0 border border-white/10`}>
-                                {job.company[0]}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h4 className="font-bold text-base md:text-lg text-white truncate">{job.role}</h4>
-                                  <span className="text-[10px] font-semibold text-zinc-300 bg-white/10 border border-white/10 px-2.5 py-0.5 rounded-full">
-                                    {job.level}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-emerald-400 font-medium">{job.company}</p>
-                              </div>
-                            </div>
-
-                            <span className="text-xs font-extrabold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-3.5 py-1.5 rounded-full whitespace-nowrap shrink-0">
-                              Score &ge; {job.score}+
-                            </span>
+                          {/* Giant Company Watermark attached directly to this card's pinned position */}
+                          <div
+                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-black text-[18vw] md:text-[22vw] leading-none tracking-tighter uppercase select-none pointer-events-none text-white whitespace-nowrap z-0 transition-all duration-500"
+                            style={{
+                              opacity: 0.08,
+                              textShadow: `0 0 100px ${job.glowColor}`
+                            }}
+                          >
+                            {job.company}
                           </div>
 
-                          {/* Description */}
-                          <p className="text-xs md:text-sm text-zinc-300 leading-relaxed">
-                            {job.description}
-                          </p>
-
-                          {/* Tags */}
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            {job.tags.map((tag) => (
-                              <span key={tag} className="text-[10px] px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-zinc-300 font-mono">
-                                {tag}
+                          {/* The Physical Card Box */}
+                          <div className="relative z-10 w-full rounded-[28px] bg-[#0d0d16] border border-white/12 p-6 md:p-8 shadow-[0_24px_50px_-15px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)] transition-all duration-300 hover:border-emerald-500/40 space-y-4">
+                            {/* Top Header Tab: Visible even when stacked cards overlap */}
+                            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="w-2.5 h-2.5 rounded-full shadow-sm"
+                                  style={{ backgroundColor: job.brandColor }}
+                                />
+                                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                                  {job.company}
+                                </span>
+                                <span className="text-[10px] text-zinc-400 font-mono hidden sm:inline">
+                                  • {job.level}
+                                </span>
+                              </div>
+                              <span className="text-[11px] font-extrabold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                                Score &ge; {job.score}+
                               </span>
-                            ))}
-                          </div>
-
-                          {/* Footer with metadata & CTA */}
-                          <div className="flex items-center justify-between pt-4 border-t border-white/10 flex-wrap gap-3">
-                            <div className="flex items-center gap-5 text-xs text-zinc-400">
-                              <div className="flex items-center gap-1.5">
-                                <MapPin className="w-4 h-4 text-zinc-500" />
-                                <span>{job.location}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <DollarSign className="w-4 h-4 text-zinc-500" />
-                                <span className="font-semibold text-white">{job.salary}</span>
-                              </div>
                             </div>
 
-                            <Button
-                              onClick={handleAuthNavigation}
-                              className="bg-[#0F6B38] text-white border border-emerald-500/30 hover:bg-[#0B572D] rounded-xl text-xs px-5 h-9 flex items-center gap-2 transition-all duration-300 font-bold shadow-md group cursor-pointer"
-                            >
-                              <span>Check Match</span>
-                              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                            </Button>
+                            {/* Main Role & Salary Row */}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={`w-11 h-11 rounded-2xl ${job.logoBg} flex items-center justify-center font-bold text-base shadow-md shrink-0 border border-white/10`}>
+                                  {job.company[0]}
+                                </div>
+                                <div className="min-w-0">
+                                  <h4 className="font-bold text-lg md:text-xl text-white truncate">{job.role}</h4>
+                                  <p className="text-xs text-zinc-400 font-medium">{job.location}</p>
+                                </div>
+                              </div>
+
+                              <span className="font-bold text-base text-white font-mono shrink-0">
+                                {job.salary}
+                              </span>
+                            </div>
+
+                            {/* Description */}
+                            <p className="text-xs md:text-sm text-zinc-300 leading-relaxed">
+                              {job.description}
+                            </p>
+
+                            {/* Tags */}
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              {job.tags.map((tag) => (
+                                <span key={tag} className="text-[10px] px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-zinc-300 font-mono">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Footer CTA */}
+                            <div className="flex items-center justify-between pt-4 border-t border-white/10 flex-wrap gap-3">
+                              <div className="flex items-center gap-5 text-xs text-zinc-400">
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin className="w-4 h-4 text-zinc-500" />
+                                  <span>{job.location}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <DollarSign className="w-4 h-4 text-zinc-500" />
+                                  <span className="font-semibold text-white">{job.salary}</span>
+                                </div>
+                              </div>
+
+                              <Button
+                                onClick={handleAuthNavigation}
+                                className="bg-[#0F6B38] text-white border border-emerald-500/30 hover:bg-[#0B572D] rounded-xl text-xs px-5 h-9 flex items-center gap-2 transition-all duration-300 font-bold shadow-md group cursor-pointer"
+                              >
+                                <span>Check Match</span>
+                                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </ScrollStackItem>

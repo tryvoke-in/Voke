@@ -35,26 +35,9 @@
   width: 100%;
   will-change: transform;
   transform-origin: top center;
-  border-radius: 28px;
-  background: #0d0d16;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    0 24px 50px -15px rgba(0, 0, 0, 0.95),
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  padding: 2rem;
   box-sizing: border-box;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.scroll-stack-card:hover {
-  border-color: rgba(56, 189, 248, 0.35);
-  box-shadow:
-    0 30px 60px -15px rgba(0, 0, 0, 0.98),
-    0 0 30px -8px rgba(56, 189, 248, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .scroll-stack-end {
