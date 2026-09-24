@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { Check, ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollSplitCard, ScrollSplitCardItem } from "@/components/ui/scroll-split-card";
 
@@ -13,8 +13,8 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
       name: "Voke Pro",
       badge: "Targeted Practice",
       price: "₹399",
-      period: "Retail",
-      billingNote: "Instant full access • No recurring subscription",
+      period: "Monthly",
+      billingNote: "Billed monthly • Cancel anytime",
       desc: "Targeted practice for active job applicants.",
       cta: "Get Started with Pro",
       popular: false,
@@ -33,8 +33,8 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
       name: "Voke Elite",
       badge: "Most Popular",
       price: "₹599",
-      period: "Retail",
-      billingNote: "Complete multi-round interview prep suite",
+      period: "Monthly",
+      billingNote: "Billed monthly • Cancel anytime",
       desc: "Comprehensive power for serious tech job hunters.",
       cta: "Upgrade to Elite",
       popular: true,
@@ -77,7 +77,9 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
 
     return (
       <div
-        className="relative flex flex-col justify-between h-full p-6 sm:p-7 select-text bg-white text-[#111e17] antialiased"
+        className={`relative flex flex-col justify-between h-full p-6 sm:p-8 select-text text-[#111e17] antialiased rounded-[inherit] ${
+          isPopular ? "bg-[#FAFCFA]" : "bg-white"
+        }`}
         style={{
           WebkitFontSmoothing: "antialiased",
           MozOsxFontSmoothing: "grayscale",
@@ -85,62 +87,64 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
         }}
       >
         <div>
-          {/* Top Badge Row */}
-          <div className="flex items-center justify-between gap-2 mb-3.5">
-            {isPopular ? (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#0F6B38] text-white text-[11px] font-bold uppercase tracking-wider shadow-xs">
-                <Sparkles className="w-3 h-3 text-emerald-300" />
-                {plan.badge}
-              </span>
-            ) : (
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#EAF3ED] border border-[#CFDDD2] text-[#0F6B38] text-[11px] font-bold uppercase tracking-wider">
-                {plan.badge}
+          {/* Header Row: Plan Name & Highlight Badge */}
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h3 className="text-2xl sm:text-3xl font-bold text-[#002B20] tracking-tight">
+              {plan.name}
+            </h3>
+            {isPopular && (
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-wider uppercase text-white bg-[#0F6B38] px-3 py-1 rounded-full shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+                Recommended
               </span>
             )}
-            <span className="text-[11px] text-[#476654] font-semibold font-mono">
-              {plan.period}
-            </span>
           </div>
 
-          {/* Title & Desc */}
-          <h3 className="text-2xl sm:text-3xl font-extrabold text-[#002B20] tracking-tight mb-1">
-            {plan.name}
-          </h3>
-          <p className="text-xs text-[#476654] font-medium leading-relaxed mb-4">
+          <p className="text-xs text-[#557564] font-normal leading-relaxed mb-5 min-h-[32px]">
             {plan.desc}
           </p>
 
           {/* Clean Price Presentation */}
-          <div className="mb-4">
+          <div className="mb-5">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#002B20] tracking-tight">
+              <span className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#002B20] tracking-tight">
                 {plan.price}
               </span>
-              <span className="text-xs text-[#476654] font-semibold">
-                {plan.price === "Custom" ? "license" : `/ ${plan.period.toLowerCase()} pass`}
-              </span>
+              {plan.price !== "Custom" && (
+                <span className="text-xs text-[#557564] font-medium">
+                  / month
+                </span>
+              )}
             </div>
-            <p className="text-[11.5px] text-[#476654] font-medium mt-1">
+            <p className="text-xs text-[#557564] mt-1">
               {plan.billingNote}
             </p>
           </div>
 
-          {/* Delicate Divider */}
-          <div className="h-px bg-[#E2EBE5] mb-4" />
+          {/* Simple Divider Line */}
+          <div className="h-px bg-[#E2EBE5] mb-5 sm:mb-6" />
 
-          {/* Feature List */}
-          <div className="space-y-2.5">
-            <p className={`text-[11px] uppercase tracking-wider font-extrabold mb-1.5 ${isPopular ? "text-[#0F6B38]" : "text-[#002B20]"
-              }`}>
-              {isPopular ? "Everything in Pro, plus:" : "Included features:"}
-            </p>
+          {/* Features Header */}
+          <p className={`text-[11px] uppercase tracking-wider mb-4 sm:mb-4.5 ${
+            isPopular ? "font-bold text-[#0F6B38]" : "font-semibold text-[#557564]"
+          }`}>
+            {isPopular ? "Everything in Pro, plus:" : "What's included:"}
+          </p>
+
+          {/* Feature List with generous, proper spacing */}
+          <div className="space-y-4 sm:space-y-4.5">
             {plan.features.map((feat, idx) => (
-              <div key={idx} className="flex items-start gap-2.5">
-                <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isPopular ? "bg-[#0F6B38] text-white" : "bg-[#EAF3ED] text-[#0F6B38]"
-                  }`}>
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+              <div key={idx} className="flex items-start gap-3.5 py-0.5">
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                    isPopular
+                      ? "bg-[#0F6B38] text-white shadow-xs"
+                      : "bg-[#EAF3ED] text-[#0F6B38]"
+                  }`}
+                >
+                  <Check className="w-3 h-3 stroke-[2.5]" />
                 </div>
-                <span className="text-xs sm:text-[12.5px] text-[#14261C] leading-snug font-medium antialiased">
+                <span className="text-[13px] sm:text-[13.5px] lg:text-[14px] text-[#22382C] leading-snug font-normal">
                   {feat}
                 </span>
               </div>
@@ -149,16 +153,17 @@ export const PricingScrollSection: React.FC<PricingScrollSectionProps> = React.m
         </div>
 
         {/* Bottom CTA Button */}
-        <div className="pt-5 mt-auto">
+        <div className="pt-6 sm:pt-7 mt-auto">
           <Button
             onClick={(e) => {
               e.stopPropagation();
               onSelectPlan(plan.name);
             }}
-            className={`w-full py-3.5 h-11 rounded-full font-bold text-xs transition-all duration-300 shadow-xs hover:scale-[1.01] flex items-center justify-center gap-1.5 cursor-pointer ${isPopular
-              ? "bg-[#0F6B38] hover:bg-[#0B572D] text-white shadow-md shadow-emerald-950/20"
-              : "bg-[#EAF3ED] hover:bg-[#0F6B38] text-[#0F6B38] hover:text-white border border-[#CFDDD2] hover:border-emerald-600"
-              }`}
+            className={`w-full py-3.5 h-11 rounded-full font-bold text-xs transition-all duration-300 shadow-xs hover:scale-[1.01] flex items-center justify-center gap-1.5 cursor-pointer ${
+              isPopular
+                ? "bg-[#0F6B38] hover:bg-[#0B572D] text-white shadow-md shadow-emerald-950/20"
+                : "bg-[#EAF3ED] hover:bg-[#0F6B38] text-[#0F6B38] hover:text-white border border-[#CFDDD2] hover:border-emerald-600"
+            }`}
           >
             <span>{plan.cta}</span>
             <ArrowRight className="w-4 h-4 stroke-[2.5]" />

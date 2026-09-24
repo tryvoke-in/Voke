@@ -612,79 +612,79 @@ const Index = () => {
                                   : '0 24px 50px -15px rgba(0,0,0,0.95)'
                               }}
                             >
-                            {/* Top Header Tab: Visible even when stacked cards overlap */}
-                            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className="w-2.5 h-2.5 rounded-full shadow-sm"
-                                  style={{ backgroundColor: job.brandColor }}
-                                />
-                                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                                  {job.company}
-                                </span>
-                                <span className="text-[10px] text-zinc-400 font-mono hidden sm:inline">
-                                  • {job.level}
+                              {/* Top Header Tab: Visible even when stacked cards overlap */}
+                              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className="w-2.5 h-2.5 rounded-full shadow-sm"
+                                    style={{ backgroundColor: job.brandColor }}
+                                  />
+                                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                                    {job.company}
+                                  </span>
+                                  <span className="text-[10px] text-zinc-400 font-mono hidden sm:inline">
+                                    • {job.level}
+                                  </span>
+                                </div>
+                                <span className="text-[11px] font-extrabold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                                  Score &ge; {job.score}+
                                 </span>
                               </div>
-                              <span className="text-[11px] font-extrabold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
-                                Score &ge; {job.score}+
-                              </span>
-                            </div>
 
-                            {/* Main Role & Salary Row */}
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className={`w-11 h-11 rounded-2xl ${job.logoBg} flex items-center justify-center font-bold text-base shadow-md shrink-0 border border-white/10`}>
-                                  {job.company[0]}
+                              {/* Main Role & Salary Row */}
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className={`w-11 h-11 rounded-2xl ${job.logoBg} flex items-center justify-center font-bold text-base shadow-md shrink-0 border border-white/10`}>
+                                    {job.company[0]}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <h4 className="font-bold text-lg md:text-xl text-white truncate">{job.role}</h4>
+                                    <p className="text-xs text-zinc-400 font-medium">{job.location}</p>
+                                  </div>
                                 </div>
-                                <div className="min-w-0">
-                                  <h4 className="font-bold text-lg md:text-xl text-white truncate">{job.role}</h4>
-                                  <p className="text-xs text-zinc-400 font-medium">{job.location}</p>
-                                </div>
-                              </div>
 
-                              <span className="font-bold text-base text-white font-mono shrink-0">
-                                {job.salary}
-                              </span>
-                            </div>
-
-                            {/* Description */}
-                            <p className="text-xs md:text-sm text-zinc-300 leading-relaxed">
-                              {job.description}
-                            </p>
-
-                            {/* Tags */}
-                            <div className="flex flex-wrap gap-2 pt-1">
-                              {job.tags.map((tag) => (
-                                <span key={tag} className="text-[10px] px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-zinc-300 font-mono">
-                                  {tag}
+                                <span className="font-bold text-base text-white font-mono shrink-0">
+                                  {job.salary}
                                 </span>
-                              ))}
-                            </div>
-
-                            {/* Footer CTA */}
-                            <div className="flex items-center justify-between pt-4 border-t border-white/10 flex-wrap gap-3">
-                              <div className="flex items-center gap-5 text-xs text-zinc-400">
-                                <div className="flex items-center gap-1.5">
-                                  <MapPin className="w-4 h-4 text-zinc-500" />
-                                  <span>{job.location}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <DollarSign className="w-4 h-4 text-zinc-500" />
-                                  <span className="font-semibold text-white">{job.salary}</span>
-                                </div>
                               </div>
 
-                              <Button
-                                onClick={handleAuthNavigation}
-                                className="bg-[#0F6B38] text-white border border-emerald-500/30 hover:bg-[#0B572D] rounded-xl text-xs px-5 h-9 flex items-center gap-2 transition-all duration-300 font-bold shadow-md group cursor-pointer"
-                              >
-                                <span>Check Match</span>
-                                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                              </Button>
+                              {/* Description */}
+                              <p className="text-xs md:text-sm text-zinc-300 leading-relaxed">
+                                {job.description}
+                              </p>
+
+                              {/* Tags */}
+                              <div className="flex flex-wrap gap-2 pt-1">
+                                {job.tags.map((tag) => (
+                                  <span key={tag} className="text-[10px] px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-zinc-300 font-mono">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+
+                              {/* Footer CTA */}
+                              <div className="flex items-center justify-between pt-4 border-t border-white/10 flex-wrap gap-3">
+                                <div className="flex items-center gap-5 text-xs text-zinc-400">
+                                  <div className="flex items-center gap-1.5">
+                                    <MapPin className="w-4 h-4 text-zinc-500" />
+                                    <span>{job.location}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <DollarSign className="w-4 h-4 text-zinc-500" />
+                                    <span className="font-semibold text-white">{job.salary}</span>
+                                  </div>
+                                </div>
+
+                                <Button
+                                  onClick={handleAuthNavigation}
+                                  className="bg-[#0F6B38] text-white border border-emerald-500/30 hover:bg-[#0B572D] rounded-xl text-xs px-5 h-9 flex items-center gap-2 transition-all duration-300 font-bold shadow-md group cursor-pointer"
+                                >
+                                  <span>Check Match</span>
+                                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
                         </ScrollStackItem>
                       );
                     })}

@@ -107,7 +107,7 @@ export function ScrollSplitCard({
             transformStyle: isFlipped ? "flat" : "preserve-3d"
           }}
           className={cn(
-            "flex h-[520px] sm:h-[570px] lg:h-[610px] xl:h-[640px] w-full max-w-6xl lg:max-w-7xl relative",
+            "flex h-[530px] sm:h-[580px] lg:h-[610px] xl:h-[625px] w-full max-w-6xl lg:max-w-7xl relative",
             cardsContainerClassName
           )}
         >
@@ -169,7 +169,7 @@ export function ScrollSplitCard({
                   "absolute inset-0 overflow-hidden flex flex-col pointer-events-auto select-text",
                   !isFlipped && "[backface-visibility:hidden]",
                   i === 1
-                    ? "border-2 border-[#0F6B38] shadow-[0_20px_45px_rgba(0,59,45,0.12)] rounded-[24px] sm:rounded-[28px]"
+                    ? "border-2 border-[#0F6B38] shadow-[0_24px_55px_rgba(15,107,56,0.18),0_4px_16px_rgba(0,0,0,0.04)] ring-1 ring-[#0F6B38]/20 rounded-[24px] sm:rounded-[28px]"
                     : "border border-[#DCE7DF] shadow-[0_12px_32px_rgba(0,59,45,0.07)] rounded-[24px] sm:rounded-[28px]"
                 )}
                 style={{

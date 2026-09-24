@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Industry Problem Canvas (IPC) - Unit I</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 10mm 13mm 12mm 13mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #0F172A;
+      background: #FFFFFF;
+      font-size: 8.5pt;
+      line-height: 1.38;
+    }
+
+    .page-container {
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .page-container:last-child {
+      page-break-after: avoid;
+    }
+
+    /* Header Banner */
+    .header-banner {
+      border: 1.5px solid #0F172A;
+      background: #F8FAFC;
+      border-radius: 7px;
+      padding: 10px 16px;
+      margin-bottom: 8px;
+    }
+
+    .top-meta-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .unit-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.2pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .date-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.2pt;
+      font-weight: 600;
+      color: #64748B;
+    }
+
+    h1.doc-title {
+      font-size: 15.5pt;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: #0F172A;
+      margin-bottom: 2px;
+    }
+
+    .doc-subtitle {
+      font-size: 8.5pt;
+      color: #475569;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      border-top: 1px solid #E2E8F0;
+      padding-top: 5px;
+      font-size: 7.8pt;
+    }
+
+    .meta-item strong {
+      display: block;
+      color: #64748B;
+      font-size: 6.6pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .meta-item span {
+      font-weight: 600;
+      color: #0F172A;
+    }
+
+    /* Section Styling */
+    h2.section-title {
+      font-size: 11.2pt;
+      font-weight: 800;
+      color: #0F172A;
+      border-bottom: 1.5px solid #0F172A;
+      padding-bottom: 3px;
+      margin-top: 6px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h3.sub-section-title {
+      font-size: 9.6pt;
+      font-weight: 700;
+      color: #1E293B;
+      margin-top: 6px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .industry-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.8pt;
+      font-weight: 600;
+      padding: 1.5px 5px;
+      border-radius: 3px;
+      background: #E2E8F0;
+      color: #334155;
+    }
+
+    p {
+      margin-bottom: 6px;
+      color: #334155;
+      text-align: justify;
+    }
+
+    .executive-card {
+      background: #F1F5F9;
+      border-left: 3px solid #2563EB;
+      padding: 6px 10px;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 7px;
+      font-size: 8.2pt;
+      line-height: 1.36;
+      color: #1E293B;
+    }
+
+    /* Visual Pipeline Flow */
+    .pipeline-container {
+      display: grid;
+      grid-template-columns: 1fr 20px 1fr 20px 1fr;
+      align-items: center;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      padding: 6px 9px;
+      margin-bottom: 7px;
+    }
+
+    .pipeline-card {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-radius: 4px;
+      padding: 4.5px 7px;
+      font-size: 7.2pt;
+    }
+
+    .pipeline-card-title {
+      font-weight: 800;
+      color: #0F172A;
+      font-size: 7.5pt;
+      margin-bottom: 1.5px;
+    }
+
+    .pipeline-card-metrics {
+      color: #64748B;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5pt;
+      line-height: 1.25;
+    }
+
+    .pipeline-arrow {
+      text-align: center;
+      font-weight: 800;
+      color: #2563EB;
+      font-size: 10pt;
+    }
+
+    /* Problem Cards */
+    .problem-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4.5px;
+    }
+
+    .problem-item {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 5px;
+      padding: 5px 8px;
+    }
+
+    .problem-header {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      margin-bottom: 1.5px;
+    }
+
+    .problem-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #2563EB;
+      font-size: 7.8pt;
+    }
+
+    .problem-title {
+      font-weight: 700;
+      color: #0F172A;
+      font-size: 8.3pt;
+    }
+
+    .problem-desc {
+      font-size: 8pt;
+      color: #475569;
+      margin: 0;
+      line-height: 1.34;
+      text-align: left;
+    }
+
+    /* RCA Styling */
+    .rca-block {
+      background: #FFFFFF;
+      border: 1.2px solid #CBD5E1;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+
+    .rca-header {
+      background: #F8FAFC;
+      border-radius: 4px;
+      padding: 6px 10px;
+      margin-bottom: 7px;
+      border-left: 3.5px solid #DC2626;
+    }
+
+    .rca-problem-label {
+      font-size: 6.8pt;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #DC2626;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .rca-problem-text {
+      font-size: 8.8pt;
+      font-weight: 700;
+      color: #0F172A;
+      margin-top: 1px;
+    }
+
+    .five-why-box {
+      margin-bottom: 6px;
+    }
+
+    .why-row {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 4px;
+      align-items: flex-start;
+      font-size: 8.1pt;
+      line-height: 1.34;
+    }
+
+    .why-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.8pt;
+      font-weight: 700;
+      background: #EEF2F6;
+      color: #1E293B;
+      padding: 1.5px 5px;
+      border-radius: 3px;
+      min-width: 42px;
+      text-align: center;
+      margin-top: 1px;
+    }
+
+    .why-content {
+      flex: 1;
+      color: #334155;
+    }
+
+    .why-content strong {
+      color: #0F172A;
+    }
+
+    .root-cause-banner {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 4px;
+      padding: 6px 9px;
+      margin: 6px 0 7px 0;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      font-size: 8.1pt;
+      line-height: 1.34;
+    }
+
+    .root-cause-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #991B1B;
+      background: #FEE2E2;
+      padding: 1.5px 5px;
+      border-radius: 3px;
+      font-size: 6.8pt;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .fishbone-title {
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .fishbone-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+    }
+
+    .fishbone-cell {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 7.8pt;
+      line-height: 1.32;
+    }
+
+    .fishbone-category {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 6.8pt;
+      text-transform: uppercase;
+      color: #2563EB;
+      margin-bottom: 2px;
+    }
+
+    .fishbone-cell ul {
+      margin-left: 12px;
+      color: #475569;
+    }
+
+    .context-callout {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 5px;
+      padding: 8px 10px;
+      margin-top: 10px;
+      font-size: 8pt;
+      color: #475569;
+      line-height: 1.36;
+    }
+
+    .context-callout strong {
+      color: #0F172A;
+    }
+
+    /* 2x2 Priority Grid */
+    .matrix-2x2-wrapper {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 5px;
+      padding: 7px 10px;
+      margin-top: 6px;
+    }
+
+    .matrix-2x2-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 5px;
+    }
+
+    .matrix-quadrant {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-size: 7.8pt;
+      line-height: 1.34;
+    }
+
+    .matrix-quadrant-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 7pt;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Prioritisation Table */
+    table.matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0 10px 0;
+      font-size: 7.8pt;
+      line-height: 1.34;
+    }
+
+    table.matrix-table th {
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 5.5px 7px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 7pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    table.matrix-table td {
+      border-bottom: 1px solid #E2E8F0;
+      padding: 5.5px 7px;
+      vertical-align: top;
+      color: #334155;
+    }
+
+    table.matrix-table tr:nth-child(even) {
+      background: #F8FAFC;
+    }
+
+    .rank-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 9pt;
+      color: #2563EB;
+      text-align: center;
+      width: 24px;
+    }
+
+    .pill {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.2pt;
+      font-weight: 700;
+      padding: 1.5px 4.5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+
+    .pill-quick-win {
+      background: #DCFCE7;
+      color: #166534;
+      border: 1px solid #BBF7D0;
+    }
+
+    .pill-big-bet {
+      background: #FEF3C7;
+      color: #92400E;
+      border: 1px solid #FDE68A;
+    }
+
+    .pill-deprioritised {
+      background: #F1F5F9;
+      color: #475569;
+      border: 1px solid #E2E8F0;
+    }
+
+    .doc-footer-note {
+      border-top: 1px solid #E2E8F0;
+      padding-top: 5px;
+      margin-top: auto;
+      font-size: 7pt;
+      color: #64748B;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 1: COVER, EXECUTIVE CONTEXT, FLOW, AND INDUSTRY 1.1       -->
+  <!-- ============================================================== -->
+  <div class="page-container">
+    <div class="header-banner">
+      <div class="top-meta-line">
+        <span class="unit-tag">Course Assignment &bull; Unit I</span>
+        <span class="date-tag">Submission Deadline: 23 September 2026</span>
+      </div>
+      <h1 class="doc-title">INDUSTRY–PROBLEM CANVAS (IPC)</h1>
+      <div class="doc-subtitle">Entrepreneurial Mindset &amp; Industry Landscape &bull; Macro Scan, Root Cause Analysis &amp; Action Matrix</div>
+      
+      <div class="meta-grid">
+        <div class="meta-item">
+          <strong>Author &amp; Venture</strong>
+          <span>Anurag (Founder, Voke)</span>
+        </div>
+        <div class="meta-item">
+          <strong>Venture Domain</strong>
+          <span>AI Interview Prep &amp; Placement</span>
+        </div>
+        <div class="meta-item">
+          <strong>Target Geography</strong>
+          <span>Indian Higher Ed &amp; Tech Talent</span>
+        </div>
+        <div class="meta-item">
+          <strong>RCA Methodology</strong>
+          <span>5-Why &bull; Ishikawa Fishbone</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="executive-card">
+      <strong>Executive Context:</strong> This canvas scans three strategically interlocked industries across the Indian undergraduate talent lifecycle: <strong>Campus Recruitment &amp; Employability</strong>, <strong>Technical EdTech &amp; Bootcamps</strong>, and <strong>Enterprise Automated Talent Assessment</strong>. Operating directly as the founder of <strong>Voke</strong> (an AI-powered interview preparation and placement platform) provides primary ground-truth telemetry from Training &amp; Placement Officers (TPOs) and engineering students across Tier-1/2/3 campuses.
+    </div>
+
+    <!-- Visual Pipeline -->
+    <div class="pipeline-container">
+      <div class="pipeline-card">
+        <div class="pipeline-card-title">1. Technical EdTech &amp; Bootcamps</div>
+        <div class="pipeline-card-metrics">&bull; $3.2B skilling market<br>&bull; 75%+ cohort dropouts<br>&bull; Rote DSA vs engineering</div>
+      </div>
+      <div class="pipeline-arrow">&rarr;</div>
+      <div class="pipeline-card" style="border-color: #2563EB; background: #EFF6FF;">
+        <div class="pipeline-card-title" style="color: #1D4ED8;">2. Campus Placement (Voke Core)</div>
+        <div class="pipeline-card-metrics">&bull; 15L engineers/year<br>&bull; 50.3% national employability<br>&bull; 600:1 TPO bottleneck</div>
+      </div>
+      <div class="pipeline-arrow">&rarr;</div>
+      <div class="pipeline-card">
+        <div class="pipeline-card-title">3. Enterprise Assessment</div>
+        <div class="pipeline-card-metrics">&bull; 42%+ GenAI test cheating<br>&bull; 58% video link abandonment<br>&bull; Zero diagnostic telemetry</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">1. Macro Scan of Industries</h2>
+
+    <h3 class="sub-section-title">
+      1.1 Campus Recruitment and Early-Career Employability (India)
+      <span class="industry-badge">Primary Venture Vertical</span>
+    </h3>
+    <p>
+      India produces roughly <strong>15 lakh (1.5 million) engineering graduates annually</strong> across 3,500+ AICTE institutions. According to the <em>Wheebox India Skills Report (2024–2026)</em>, national engineering employability hovers at only <strong>50.3%</strong>. With traditional IT services recruiters (TCS, Infosys, Wipro, Cognizant) shifting toward skills-differentiated technical evaluations, college placement cells face unprecedented strain. Training &amp; Placement Officers (TPOs) in Tier-2/3 institutions operate under overwhelming student-to-counselor ratios (<strong>600:1 to 1,000:1</strong>), making individualized mock interview coaching virtually non-existent.
+    </p>
+
+    <div class="problem-list">
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P1.1</span>
+          <span class="problem-title">The "Syntax vs. Communication" Explanatory Paralysis</span>
+        </div>
+        <p class="problem-desc">
+          Students memorize code solutions on LeetCode/HackerRank but suffer communicative paralysis during live technical rounds. When asked to articulate logic or trade-offs, candidates freeze. Over <strong>68% of Indian tech recruiters</strong> cite inability to articulate technical reasoning as the chief reason for rejecting applicants who passed initial coding tests.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P1.2</span>
+          <span class="problem-title">Severe TPO Bandwidth Bottlenecks &amp; Lack of Scalable Mock Interviews</span>
+        </div>
+        <p class="problem-desc">
+          A single 30-minute mock interview requires ~45 minutes of evaluator time. For a cohort of 800 engineering students, conducting two rounds requires <strong>600 to 800 human evaluator hours</strong>. Consequently, over <strong>85% of Tier-2/3 engineering students graduate without ever experiencing a structured mock interview</strong>.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P1.3</span>
+          <span class="problem-title">Silent Rejection and Complete Absence of Diagnostic Telemetry</span>
+        </div>
+        <p class="problem-desc">
+          Eliminated students receive boilerplate rejections (<em>"We have moved forward with other candidates"</em>). Students receive zero telemetry on speech pace, filler words, technical depth, or STAR-method structuring, repeating identical mistakes across 20+ company drives.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P1.4</span>
+          <span class="problem-title">Tier-2 / Tier-3 Geographic and Institutional Invisibility</span>
+        </div>
+        <p class="problem-desc">
+          Top-tier product firms and Global Capability Centers (GCCs) physically visit fewer than <strong>4% of Indian colleges</strong> (primarily IITs, NITs, BITS). Students from the remaining 96% face crowded off-campus portals where applicant-to-opening ratios exceed 2,500:1 and resumes are discarded by keyword filters.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P1.5</span>
+          <span class="problem-title">Crippling Pre-Interview Performance Anxiety</span>
+        </div>
+        <p class="problem-desc">
+          Over <strong>72% of final-year engineering students</strong> report severe physiological anxiety and speech disfluency during campus placements. With no safe, low-stakes simulation environments available, their first live video interview takes place in high-stakes, life-defining campus drives.
+        </p>
+      </div>
+    </div>
+
+    <div class="doc-footer-note">
+      <span>Industry Problem Canvas (IPC) &bull; Unit I</span>
+      <span>Page 1 of 6</span>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 2: INDUSTRY 1.2 AND INDUSTRY 1.3                           -->
+  <!-- ============================================================== -->
+  <div class="page-container">
+    <h3 class="sub-section-title">
+      1.2 Technical EdTech, Coding Bootcamps and Skilling (India)
+      <span class="industry-badge">Upskilling Ecosystem</span>
+    </h3>
+    <p>
+      Valued at approximately <strong>USD 3.2 billion (2024)</strong>, India's technical upskilling market was propelled by platforms like Scaler, Newton School, Masai School, and AlmaBetter promising to bridge the college-industry divide via 6-to-12-month bootcamps. However, following the post-2022 tech hiring correction, audited placement rates dropped from advertised 85–90% figures down to <strong>35–45%</strong>. Exorbitant Customer Acquisition Costs (CAC) forced platforms to cut mentor pools and leave students stranded mid-journey.
+    </p>
+
+    <div class="problem-list">
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P2.1</span>
+          <span class="problem-title">Massive Cohort Attrition and Motivation Fatigue</span>
+        </div>
+        <p class="problem-desc">
+          Long-form technical bootcamps experience average completion rates of only <strong>15% to 22%</strong>. Lacking real-time accountability and proactive diagnostic interventions, students get stuck on complex milestones (dynamic programming, microservices) and silently drop out.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P2.2</span>
+          <span class="problem-title">Rote "DSA Grinding" Disconnected from Production Engineering</span>
+        </div>
+        <p class="problem-desc">
+          Bootcamps hyper-focus on algorithmic puzzles to clear legacy screening rounds, neglecting real-world software engineering realities: navigating legacy codebases, unit/integration testing, CI/CD pipelines, API error handling, and production debugging.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P2.3</span>
+          <span class="problem-title">Exorbitant CAC Starving Educational R&amp;D and Mentorship</span>
+        </div>
+        <p class="problem-desc">
+          High market saturation forced bootcamps to spend <strong>45% to 60% of gross tuition on Google/Meta ads and aggressive tele-calling sales</strong>. This commercial overhead starved educational R&amp;D, replacing experienced senior mentors with low-cost, recently graduated teaching assistants.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P2.4</span>
+          <span class="problem-title">Breakdown of the "Pay After Placement" (ISA) Trust Contract</span>
+        </div>
+        <p class="problem-desc">
+          As tech hiring slowed, disputes erupted over clauses forcing students into low-paying non-tech sales roles or unverified internships to satisfy contract thresholds, prompting Central Consumer Protection Authority (CCPA) scrutiny for misleading ads.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P2.5</span>
+          <span class="problem-title">Static Curriculum Velocity and the Doubt-Resolution Bottleneck</span>
+        </div>
+        <p class="problem-desc">
+          Lectures are broadcast to 300–600 students simultaneously at a fixed velocity. When a student hits a bug, community doubt queues (Discord/Slack) take 4 to 24 hours to respond, breaking learning momentum.
+        </p>
+      </div>
+    </div>
+
+    <h3 class="sub-section-title" style="margin-top: 10px;">
+      1.3 Enterprise Talent Assessment &amp; Automated Screening (India / Global)
+      <span class="industry-badge">Filtering &amp; Gatekeeping</span>
+    </h3>
+    <p>
+      The global talent assessment software market exceeds <strong>USD 3.5 billion (2025)</strong>, processing millions of candidate screenings through Mercer Mettl, HackerRank, HireVue, and eLitmus. In India, corporate recruiters rely heavily on automated screening suites to filter 50,000+ applicants for a few hundred entry-level roles. However, the rapid democratization of Generative AI tools (ChatGPT, GitHub Copilot, Claude) has broken traditional assessment models.
+    </p>
+
+    <div class="problem-list">
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P3.1</span>
+          <span class="problem-title">Collapse of Static Coding Tests Due to Generative AI</span>
+        </div>
+        <p class="problem-desc">
+          With stealth browser extensions and LLMs, unproctored coding assessments have experienced severe integrity loss. Audits report that <strong>over 42% of submissions in standard online coding tests show direct AI generation or external proxy assistance</strong>. Candidates with 100% scores often fail basic live coding demonstrations.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P3.2</span>
+          <span class="problem-title">Candidate Alienation in Asynchronous "Robot" Interviews</span>
+        </div>
+        <p class="problem-desc">
+          One-way asynchronous video interviews (speaking into a blank countdown timer with no human interaction) have triggered extreme candidate backlash. Industry benchmarks show that <strong>over 58% of candidates abandon asynchronous video interview links</strong>.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P3.3</span>
+          <span class="problem-title">Rigid Keyword-Based ATS Filters Masking True Competence</span>
+        </div>
+        <p class="problem-desc">
+          Enterprise ATS systems continue to filter resumes based on rigid string matching. Capable self-taught developers, open-source contributors, and hackathon winners are routinely rejected simply because resumes lack specific bureaucratic phrasing.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P3.4</span>
+          <span class="problem-title">Binary "Pass/Fail" Metrics Ignoring Problem-Solving Trajectory</span>
+        </div>
+        <p class="problem-desc">
+          Platforms evaluate code strictly on test-case execution (8/10 passed), ignoring *how* the candidate approached the problem: modularity, edge-case consideration, naming conventions, and resilience after encountering an error.
+        </p>
+      </div>
+
+      <div class="problem-item">
+        <div class="problem-header">
+          <span class="problem-number">P3.5</span>
+          <span class="problem-title">Zero-Sum Candidate Experience with Zero Value Returned</span>
+        </div>
+        <p class="problem-desc">
+          Applicants invest 3 to 6 hours completing custom tests and one-way video prompts for a single opening, only to receive complete radio silence or an automated rejection template, breeding deep cynicism.
+        </p>
+      </div>
+    </div>
+
+    <div class="doc-footer-note">
+      <span>Industry Problem Canvas (IPC) &bull; Unit I</span>
+      <span>Page 2 of 6</span>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 3: ROOT CAUSE ANALYSIS 2.1 (CAMPUS RECRUITMENT)           -->
+  <!-- ============================================================== -->
+  <div class="page-container">
+    <h2 class="section-title">2. Root Cause Analysis (RCA)</h2>
+    <p>
+      To uncover underlying systemic mechanisms rather than treating superficial symptoms, the single highest-impact problem from each industry was taken through a <strong>Five-Why Analysis</strong> and cross-checked via an <strong>Ishikawa (Fishbone) Summary</strong> across People, Process, Technology, and Environment / Policy.
+    </p>
+
+    <!-- RCA 1 -->
+    <div class="rca-block">
+      <div class="rca-header">
+        <div class="rca-problem-label">Campus Recruitment &bull; Prioritised Problem (Voke Core Focus)</div>
+        <div class="rca-problem-text">The "Syntax vs. Communication" Gap: Candidates solve code on compilers but experience explanatory paralysis in live technical/HR interviews.</div>
+      </div>
+
+      <div class="five-why-box">
+        <div class="why-row">
+          <span class="why-tag">Why 1</span>
+          <div class="why-content"><strong>Why do students fail live technical interviews despite having solved hundreds of coding problems on LeetCode/HackerRank?</strong> Because they cannot verbally articulate their thought process, justify their algorithmic trade-offs, or clearly structure their technical answers when speaking to an interviewer.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 2</span>
+          <div class="why-content"><strong>Why are students unable to articulate their technical thinking out loud?</strong> Because throughout their 4-year degree, all technical learning, assignments, and coding lab evaluations were conducted purely as silent, text-only, or IDE-based submissions with zero requirement for verbal technical defense.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 3</span>
+          <div class="why-content"><strong>Why don't colleges incorporate verbal technical defense and mock interview practice into the regular curriculum?</strong> Because campus placement cells (TPOs) and faculty departments do not have the manpower or time to conduct iterative, one-on-one personalized interview sessions for hundreds of students.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 4</span>
+          <div class="why-content"><strong>Why can't placement cells provide individual mock interview sessions?</strong> Because traditional mock interviews require a 1-to-1 human interviewer for 30 to 45 minutes per student, making frequent, high-fidelity practice logistically and financially impossible at an institutional scale of 500–2,000 students.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 5</span>
+          <div class="why-content"><strong>Why hasn't an automated, scalable alternative been deployed across college campuses?</strong> Because until recently, simulating a realistic, multi-modal technical interview (analyzing voice clarity, facial confidence, speech tempo, and semantic answer correctness) required expensive human coaches, and colleges have lacked an accessible, AI-powered conversational simulation platform integrated directly into their placement training flow.</div>
+        </div>
+      </div>
+
+      <div class="root-cause-banner">
+        <span class="root-cause-badge">Root Cause</span>
+        <div>The complete structural absence of scalable, low-stakes conversational interview simulation in the university ecosystem, creating an over-reliance on silent, text-only coding practice that fails to develop real-time technical articulation and confidence.</div>
+      </div>
+
+      <div class="fishbone-title">Fishbone (Ishikawa) Category Cross-Check:</div>
+      <div class="fishbone-grid">
+        <div class="fishbone-cell">
+          <div class="fishbone-category">People</div>
+          <ul>
+            <li>TPOs administratively overburdened (student-to-officer ratios > 600:1).</li>
+            <li>College faculty often lack recent corporate product-engineering interview exposure.</li>
+            <li>Students lack baseline awareness of their own delivery flaws (filler words, eye-contact avoidance, disjointed pacing).</li>
+          </ul>
+        </div>
+        <div class="fishbone-cell">
+          <div class="fishbone-category">Process</div>
+          <ul>
+            <li>Placement training is conducted as a rushed, one-off "aptitude crash course" in the 7th semester rather than longitudinal conversational habit-building.</li>
+            <li>No rubric-based feedback loop exists between mock performance and remedial training.</li>
+          </ul>
+        </div>
+        <div class="fishbone-cell">
+          <div class="fishbone-category">Technology</div>
+          <ul>
+            <li>Campus lab software is limited to basic MCQ portals or automated code compilers without conversational audio/video evaluation capabilities.</li>
+            <li>No diagnostic dashboards exist to help TPOs identify batch-wide communication weak spots.</li>
+          </ul>
+        </div>
+        <div class="fishbone-cell">
+          <div class="fishbone-category">Policy &amp; Environment</div>
+          <ul>
+            <li>University curricula (AICTE/UGC) evaluate students on written theoretical examinations and memorized definitions rather than technical demonstrations.</li>
+            <li>High cultural stigma around making mistakes in front of peers, discouraging voluntary public speaking.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-footer-note">
+      <span>Industry Problem Canvas (IPC) &bull; Unit I</span>
+      <span>Page 3 of 6</span>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 4: ROOT CAUSE ANALYSIS 2.2 (TECHNICAL EDTECH)             -->
+  <!-- ============================================================== -->
+  <div class="page-container">
+    <h2 class="section-title">2. Root Cause Analysis (RCA) &bull; Continued</h2>
+
+    <!-- RCA 2 -->
+    <div class="rca-block">
+      <div class="rca-header">
+        <div class="rca-problem-label">Technical EdTech &bull; Prioritised Problem</div>
+        <div class="rca-problem-text">Massive Cohort Attrition (>75% dropout) and collapsed placement outcomes in technical skilling bootcamps.</div>
+      </div>
+
+      <div class="five-why-box">
+        <div class="why-row">
+          <span class="why-tag">Why 1</span>
+          <div class="why-content"><strong>Why do learners disengage and abandon technical skilling courses mid-way?</strong> Because students hit conceptual roadblocks during complex modules (e.g., system design, backend architectures) and experience severe frustration when they cannot get immediate, contextual help.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 2</span>
+          <div class="why-content"><strong>Why can't learners get immediate, contextual help when stuck?</strong> Because bootcamps rely on stretched teaching assistants and asynchronous community channels where doubt resolution takes hours or days, halting learning momentum.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 3</span>
+          <div class="why-content"><strong>Why are teaching assistant and mentor layers so poorly resourced?</strong> Because bootcamps operate on razor-thin operating margins resulting from exorbitant Customer Acquisition Costs (CAC), leaving minimal capital for academic support staffing.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 4</span>
+          <div class="why-content"><strong>Why are Customer Acquisition Costs so exorbitant across Indian EdTech?</strong> Because platforms offer largely undifferentiated, generic curricula ("Become a Full Stack Developer in 6 Months"), forcing them to spend heavily on aggressive digital ad bidding and high-pressure tele-sales funnels to hit enrollment targets.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 5</span>
+          <div class="why-content"><strong>Why did bootcamps prioritize aggressive marketing funnels over differentiated learning technology?</strong> Because the venture-backed EdTech business model was architected around upfront enrollment volume and top-line GMV growth rather than long-term course completion, verified learning mastery, and sustained post-placement outcomes.</div>
+        </div>
+      </div>
+
+      <div class="root-cause-banner">
+        <span class="root-cause-badge">Root Cause</span>
+        <div>An acquisition-driven business model that diverts critical capital into top-of-funnel customer acquisition rather than investing in adaptive, automated 1-on-1 tutoring and real-time diagnostic learning infrastructure.</div>
+      </div>
+
+      <div class="fishbone-title">Fishbone (Ishikawa) Category Cross-Check:</div>
+      <div class="fishbone-grid">
+        <div class="fishbone-cell">
+          <div class="fishbone-category">People</div>
+          <ul>
+            <li>High turnover among low-paid junior teaching assistants who lack the pedagogical skill to unblock struggling students.</li>
+            <li>Working learners or college students struggling to balance rigid 20-hour weekly bootcamp workloads alongside primary responsibilities.</li>
+          </ul>
+        </div>
+        <div class="fishbone-cell">
+          <div class="fishbone-category">Process</div>
+          <ul>
+            <li>Rigid linear pacing where falling behind on a single assignment creates a compounding deficit that makes catch-up impossible.</li>
+            <li>Lack of early-warning systems to detect disengaged learners before they drop out.</li>
+          </ul>
+        </div>
+        <div class="fishbone-cell">
+          <div class="fishbone-category">Technology</div>
+          <ul>
+            <li>Heavy reliance on static video repositories and generic chat servers (Discord/Slack) instead of intelligent, IDE-integrated debugging companions.</li>
+            <li>Absence of adaptive curricula that automatically modulate difficulty based on learner mastery.</li>
+          </ul>
+        </div>
+        <div class="fishbone-cell">
+          <div class="fishbone-category">Policy &amp; Environment</div>
+          <ul>
+            <li>Macroeconomic tech hiring slowdown post-2022 reduced entry-level campus and off-campus openings, destroying the promise of guaranteed placements.</li>
+            <li>Increasing regulatory scrutiny on misleading placement claims and aggressive financing tie-ups.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="context-callout">
+      <strong>Synthesis Note:</strong> Bootcamps failed because they treated education as a media distribution problem rather than an individualized feedback problem. When students hit friction, human support collapsed under unit economic pressure. This validates why <strong>Voke</strong> focuses on low-marginal-cost AI feedback loops rather than human-heavy operational coaching models.
+    </div>
+
+    <div class="doc-footer-note">
+      <span>Industry Problem Canvas (IPC) &bull; Unit I</span>
+      <span>Page 4 of 6</span>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 5: ROOT CAUSE ANALYSIS 2.3 AND SECTION 3 INTRO MATRIX      -->
+  <!-- ============================================================== -->
+  <div class="page-container">
+    <h2 class="section-title">2. Root Cause Analysis (RCA) &bull; Continued</h2>
+
+    <!-- RCA 3 -->
+    <div class="rca-block">
+      <div class="rca-header">
+        <div class="rca-problem-label">Talent Assessment &bull; Prioritised Problem</div>
+        <div class="rca-problem-text">Breakdown of Static Automated Screening: Rampant GenAI-assisted cheating and extreme candidate abandonment in one-way video links.</div>
+      </div>
+
+      <div class="five-why-box">
+        <div class="why-row">
+          <span class="why-tag">Why 1</span>
+          <div class="why-content"><strong>Why are employers losing confidence in online coding assessments while candidates abandon video screening?</strong> Because online coding tests are compromised by AI code generation and proxy test-takers, while asynchronous one-way video links alienate genuine applicants.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 2</span>
+          <div class="why-content"><strong>Why can candidates easily cheat on coding tests, and why do video interviews alienate them?</strong> Because coding tests use static algorithm problems that LLMs solve instantaneously, while asynchronous video tools force candidates to speak into an empty timer without dialogue or interaction.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 3</span>
+          <div class="why-content"><strong>Why haven't screening tools evolved beyond static coding challenges and one-way video prompts?</strong> Because traditional assessment software was engineered a decade ago around static question banks and recorded media buckets built for cheap, passive filtering.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 4</span>
+          <div class="why-content"><strong>Why haven't enterprise assessment vendors replaced passive filtering with interactive evaluations?</strong> Because conducting dynamic, anti-cheat, interactive evaluations historically required human interviewers, and legacy assessment software providers had high-margin moats around their static question libraries.</div>
+        </div>
+        <div class="why-row">
+          <span class="why-tag">Why 5</span>
+          <div class="why-content"><strong>Why hasn't modern AI technology been deployed to fix this screening gap?</strong> Because legacy assessment vendors have been slow to rebuild their core architectures around real-time conversational agents, leaving a critical market void for dynamic, conversational, AI-driven assessment platforms.</div>
+        </div>
+      </div>
+
+      <div class="root-cause-banner">
+        <span class="root-cause-badge">Root Cause</span>
+        <div>Legacy assessment software architectures reliant on static, non-interactive question repositories that are fundamentally obsolete in the Generative AI era, failing both recruiters (rampant cheating) and candidates (impersonal alienation).</div>
+      </div>
+
+      <div class="fishbone-title">Fishbone (Ishikawa) Category Cross-Check:</div>
+      <div class="fishbone-grid">
+        <div class="fishbone-cell">
+          <div class="fishbone-category">People</div>
+          <ul>
+            <li>Recruiters overwhelmed by tens of thousands of homogeneous, AI-generated applications.</li>
+            <li>Candidates experiencing "assessment fatigue" after spending dozens of unrewarded hours on sterile automated test portals.</li>
+          </ul>
+        </div>
+        <div class="fishbone-cell">
+          <div class="fishbone-category">Process</div>
+          <ul>
+            <li>Flawed binary filtering that eliminates promising engineering talent based solely on rigid keyword matching or single-point algorithmic failures.</li>
+            <li>Lack of candidate-facing diagnostic feedback following test completion.</li>
+          </ul>
+        </div>
+        <div class="fishbone-cell">
+          <div class="fishbone-category">Technology</div>
+          <ul>
+            <li>Static LeetCode-style questions easily bypassed using dual-monitor setups and background LLM extensions.</li>
+            <li>Crude biometric and eye-tracking proctoring that produces high false-positive fraud flags for neurodivergent or nervous test-takers.</li>
+          </ul>
+        </div>
+        <div class="fishbone-cell">
+          <div class="fishbone-category">Policy &amp; Environment</div>
+          <ul>
+            <li>Democratization of ubiquitous LLM developer tools (ChatGPT, Copilot, Cursor) clashing directly with outdated corporate hiring protocols.</li>
+            <li>Enterprise procurement inertia locked into multi-year legacy vendor contracts.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title">3. Prioritised Shortlist of Problems</h2>
+    <p>
+      To formulate an actionable entrepreneurial strategy, problems were mapped onto an <strong>Impact vs. Effort Matrix</strong>. <strong>Impact</strong> measures candidate reach, career outcome leverage, and stakeholder willingness-to-pay. <strong>Effort</strong> measures technical build complexity, sales cycles, and reliance on institutional bureaucracy.
+    </p>
+
+    <!-- 2x2 Matrix Grid -->
+    <div class="matrix-2x2-wrapper">
+      <div style="font-size: 7.4pt; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.5px;">Impact vs. Effort Prioritisation Matrix</div>
+      <div class="matrix-2x2-grid">
+        <div class="matrix-quadrant" style="border-left: 3px solid #166534; background: #F0FDF4;">
+          <div class="matrix-quadrant-header" style="color: #166534;">
+            <span>Quick Wins (High Impact, Low-Med Effort)</span>
+            <span>RANK 1 &amp; 2</span>
+          </div>
+          <strong>&bull; P1.1 "Syntax vs. Communication" Gap (Voke Core)</strong><br>
+          Directly fixable via automated conversational AI simulation.<br>
+          <strong>&bull; P1.3 Silent Rejection &amp; Diagnostic Telemetry</strong><br>
+          Low build effort on existing audio/video evaluation pipeline.
+        </div>
+
+        <div class="matrix-quadrant" style="border-left: 3px solid #D97706; background: #FFFBEB;">
+          <div class="matrix-quadrant-header" style="color: #92400E;">
+            <span>Big Bets (High Impact, High Effort)</span>
+            <span>RANK 3 &amp; 4</span>
+          </div>
+          <strong>&bull; P3.1 GenAI Collapse of Static Screening</strong><br>
+          High-value B2B enterprise opportunity; requires robust conversational anti-cheat agents.<br>
+          <strong>&bull; P2.1 Bootcamp Attrition &amp; Broken CAC</strong><br>
+          Massive EdTech dysfunction; highly capital &amp; ops intensive.
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-footer-note">
+      <span>Industry Problem Canvas (IPC) &bull; Unit I</span>
+      <span>Page 5 of 6</span>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 6: PRIORITISED TABLE, SEQUENCING RATIONALE & CONCLUSION   -->
+  <!-- ============================================================== -->
+  <div class="page-container">
+    <h2 class="section-title" style="margin-top: 0;">3.1 Prioritised Problem Action Matrix</h2>
+
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th style="width: 24px; text-align: center;">#</th>
+          <th style="width: 25%;">Problem Statement &amp; Vertical</th>
+          <th style="width: 22%;">Impact &amp; Effort</th>
+          <th>Strategic Rationale &amp; Venture Fit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rank-cell">1</td>
+          <td>
+            <strong>The "Syntax vs. Communication" Gap</strong><br>
+            <span style="font-size: 6.8pt; color: #64748B;">Campus Recruitment &amp; Employability</span>
+          </td>
+          <td>
+            <span class="pill pill-quick-win">High Impact &bull; Med Effort</span><br>
+            <strong style="color: #166534; font-size: 7.2pt;">Core Venture Focus (Voke)</strong>
+          </td>
+          <td>
+            <strong>Primary Venture Anchor.</strong> Directly impacts 1.5M Indian engineering graduates annually. Colleges and TPOs have dedicated placement training budgets and are actively seeking automated mock interview solutions. This is the exact core problem <strong>Voke</strong> solves through AI-powered conversational video mock interviews with instant speech, body language, and technical reasoning feedback.
+          </td>
+        </tr>
+        <tr>
+          <td class="rank-cell">2</td>
+          <td>
+            <strong>Silent Rejection &amp; Diagnostic Telemetry</strong><br>
+            <span style="font-size: 6.8pt; color: #64748B;">Campus Recruitment &amp; Assessment</span>
+          </td>
+          <td>
+            <span class="pill pill-quick-win">High Impact &bull; Low Effort</span><br>
+            <strong style="color: #166534; font-size: 7.2pt;">Immediate Quick Win</strong>
+          </td>
+          <td>
+            Highly feasible immediate enhancement. Instead of providing binary pass/fail results, an automated interview session can immediately output granular diagnostic metrics (WPM speech tempo, filler word percentage, STAR structure adherence, technical depth score). Delivers immense immediate value to candidates at virtually zero incremental engineering cost.
+          </td>
+        </tr>
+        <tr>
+          <td class="rank-cell">3</td>
+          <td>
+            <strong>GenAI Collapse of Static Screening</strong><br>
+            <span style="font-size: 6.8pt; color: #64748B;">Enterprise Talent Assessment</span>
+          </td>
+          <td>
+            <span class="pill pill-big-bet">High Impact &bull; Med-High Effort</span><br>
+            <strong style="color: #92400E; font-size: 7.2pt;">Strategic Extension</strong>
+          </td>
+          <td>
+            Massive enterprise pain point. Corporate recruiters are desperate for screening methods that resist ChatGPT/Copilot cheating. Replacing static coding tests with dynamic, conversational AI technical interviews that ask follow-up questions represents a high-value B2B monetization opportunity for Voke's B2B roadmap.
+          </td>
+        </tr>
+        <tr>
+          <td class="rank-cell">4</td>
+          <td>
+            <strong>High Cohort Attrition &amp; Unsustainable CAC</strong><br>
+            <span style="font-size: 6.8pt; color: #64748B;">Technical EdTech &amp; Bootcamps</span>
+          </td>
+          <td>
+            <span class="pill pill-big-bet">High Impact &bull; High Effort</span><br>
+            <strong style="color: #92400E; font-size: 7.2pt;">Long-Term Big Bet</strong>
+          </td>
+          <td>
+            A legitimate multi-billion-dollar market dysfunction. However, reforming long-form EdTech bootcamps requires extensive full-stack curriculum creation, operational mentor management, and heavy marketing infrastructure, making it too capital-intensive for an early-stage startup build.
+          </td>
+        </tr>
+        <tr>
+          <td class="rank-cell">5</td>
+          <td>
+            <strong>Tier-2/3 Off-Campus Invisibility</strong><br>
+            <span style="font-size: 6.8pt; color: #64748B;">Campus Recruitment Ecosystem</span>
+          </td>
+          <td>
+            <span class="pill pill-deprioritised">Med-High Impact &bull; High Effort</span><br>
+            <strong style="color: #475569; font-size: 7.2pt;">Deprioritised for Early Stage</strong>
+          </td>
+          <td>
+            A deep-rooted systemic issue tied to employer recruitment biases, corporate travel budgets, and prestige brand signaling. Cannot be solved by software alone; requires multi-year ecosystem credibility and large-scale enterprise hiring partnerships.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 class="sub-section-title" style="margin-top: 6px;">3.2 Why This Order? (Sequencing &amp; Venture Rationale)</h3>
+    <p>
+      <strong>1. Prioritizing Controllable, High-Leverage Software Solutions (Ranks 1 &amp; 2):</strong><br>
+      Problems 1 and 2 are prioritised at the very top because they do not require changing corporate recruitment policies, overhauling university accreditation guidelines, or raising tens of millions in venture capital. They are solvable purely through superior software execution—specifically, multi-modal conversational AI that provides on-demand practice and objective diagnostic feedback. This directly aligns with <strong>Voke's</strong> active product architecture: voice and video AI simulation providing unlimited, low-stakes interview practice, with instant institutional ROI for TPOs who can monitor batch-wide placement readiness without burning hundreds of manual faculty hours.
+    </p>
+    <p>
+      <strong>2. Natural B2B Enterprise Expansion Path (Rank 3):</strong><br>
+      Once the conversational assessment engine is validated in college placement pilots (B2B2C / Campus Sales), the identical underlying technology can be offered directly to corporate talent acquisition teams (Rank 3). Because Voke's conversational interview actively asks spontaneous follow-up questions based on the candidate's code and verbal reasoning, it inherently eliminates ChatGPT copy-pasting, positioning Voke as a next-generation replacement for legacy HackerRank/Mettl screening suites.
+    </p>
+    <p>
+      <strong>3. Prudent Deprioritisation of Systemic Ecosystem Traps (Ranks 4 &amp; 5):</strong><br>
+      While EdTech cohort dropout (Rank 4) and Tier-2 institutional bias (Rank 5) are urgent real-world problems, attempting to tackle them at the seed/early stage would dissipate focus and deplete capital. They represent structural industry-level challenges rather than immediate, buildable product opportunities. They are cataloged as long-term strategic opportunities to revisit once Voke achieves dominant campus distribution and verified candidate assessment credibility.
+    </p>
+
+    <div class="doc-footer-note">
+      <span>Industry Problem Canvas (IPC) &bull; Unit I: Entrepreneurial Mindset and Industry Landscape</span>
+      <span>Voke &bull; Anurag &bull; Page 6 of 6</span>
+    </div>
+  </div>
+
+</body>
+</html>
