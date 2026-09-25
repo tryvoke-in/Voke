@@ -131,7 +131,7 @@ export const DSAPreparationBanner = () => {
             <div className="flex items-center gap-2.5 min-w-0">
               <motion.div
                 whileHover={{ rotate: 5, scale: 1.08 }}
-                className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200/60 dark:border-indigo-400/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/25 transition-colors"
+                className="w-9 h-9 rounded-xl bg-[#EAF3ED] dark:bg-emerald-500/15 border border-[#CFDDD2] dark:border-emerald-500/30 flex items-center justify-center text-[#0F6B38] dark:text-emerald-400 shrink-0 group-hover:bg-[#d8eade] dark:group-hover:bg-emerald-500/25 transition-colors"
               >
                 <Code2 className="w-4 h-4" />
               </motion.div>
@@ -153,7 +153,7 @@ export const DSAPreparationBanner = () => {
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mr-1.5">
+                <span className="text-xs font-bold text-[#0F6B38] dark:text-emerald-400 mr-1.5">
                   {progressPercentage}%
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
@@ -168,7 +168,7 @@ export const DSAPreparationBanner = () => {
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercentage}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-400 rounded-full"
+                className="h-full bg-gradient-to-r from-[#0F6B38] via-emerald-600 to-emerald-500 dark:from-emerald-600 dark:to-emerald-400 rounded-full"
               />
             </div>
           </div>
@@ -179,7 +179,7 @@ export const DSAPreparationBanner = () => {
               <span className="font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1">
                 Today's Goal ({QUESTIONS_PER_DAY} Problems)
               </span>
-              <span className="font-bold text-indigo-600 dark:text-indigo-400">
+              <span className="font-bold text-[#0F6B38] dark:text-emerald-400">
                 {todaySolvedCount} / {QUESTIONS_PER_DAY} Done
               </span>
             </div>
@@ -199,7 +199,7 @@ export const DSAPreparationBanner = () => {
                     transition={{ delay: index * 0.08, duration: 0.3 }}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
                       isFilled
-                        ? "bg-indigo-600 dark:bg-indigo-500 shadow-xs shadow-indigo-500/30"
+                        ? "bg-[#0F6B38] dark:bg-emerald-500 shadow-xs shadow-emerald-500/30"
                         : "bg-slate-100 dark:bg-muted/70"
                     }`}
                   />
@@ -212,7 +212,7 @@ export const DSAPreparationBanner = () => {
           <div className="pt-2">
             <Button
               onClick={() => navigate("/dsa-sheet")}
-              className="w-full relative overflow-hidden bg-[#5E37E8] hover:bg-[#522fd6] text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-[#5E37E8]/25 hover:shadow-md hover:shadow-[#5E37E8]/35 transition-all duration-200 active:scale-[0.99] group/btn cursor-pointer"
+              className="w-full relative overflow-hidden bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-[#0F6B38]/25 hover:shadow-md hover:shadow-[#0F6B38]/35 transition-all duration-200 active:scale-[0.99] group/btn cursor-pointer"
             >
               <span>Continue DSA Practice</span>
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />

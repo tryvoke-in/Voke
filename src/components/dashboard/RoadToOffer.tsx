@@ -171,7 +171,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
         <CardHeader className="p-4 pb-3 border-b border-border/40">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <Target className="w-4 h-4 text-[#5E37E8]" />
+              <Target className="w-4 h-4 text-[#0F6B38]" />
               Set Interview Target
             </CardTitle>
             {profile?.target_interview_date && (
@@ -224,7 +224,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
           <div className="flex justify-end pt-1">
             <Button
               size="sm"
-              className="h-7 px-3 text-xs bg-[#5E37E8] hover:bg-[#522fd6] text-white font-medium rounded-lg shadow-xs transition-all"
+              className="h-7 px-3 text-xs bg-[#0F6B38] hover:bg-[#0B572D] text-white font-medium rounded-lg shadow-xs transition-all"
               onClick={handleSave}
               disabled={loading || !date}
             >
@@ -306,10 +306,10 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
               <span className="font-semibold text-slate-700 dark:text-slate-200">
                 Milestone Progress
               </span>
-              <span className="font-bold text-[10.5px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200/60 dark:border-indigo-400/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+              <span className="font-bold text-[10.5px] text-[#0F6B38] dark:text-emerald-400 bg-[#EAF3ED] dark:bg-emerald-500/15 border border-[#CFDDD2] dark:border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#0F6B38] dark:bg-emerald-500"></span>
                 </span>
                 Stage 1 of 3
               </span>
@@ -319,11 +319,11 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
             <div className="grid grid-cols-3 gap-2">
               <motion.div
                 whileHover={{ scale: 1.03 }}
-                className="bg-indigo-50/80 dark:bg-indigo-500/15 border border-indigo-200/80 dark:border-indigo-500/40 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
+                className="bg-[#EAF3ED] dark:bg-emerald-500/15 border border-[#CFDDD2] dark:border-emerald-500/40 rounded-xl p-2 text-center flex flex-col items-center justify-center transition-all cursor-default"
               >
-                <span className="text-xs font-bold text-indigo-950 dark:text-indigo-200">DSA Prep</span>
-                <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse"></span>
+                <span className="text-xs font-bold text-[#003B2D] dark:text-emerald-200">DSA Prep</span>
+                <span className="text-[9px] font-bold text-[#0F6B38] dark:text-emerald-400 mt-0.5 flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-[#0F6B38] dark:bg-emerald-400 animate-pulse"></span>
                   Active
                 </span>
               </motion.div>
@@ -357,7 +357,7 @@ export const RoadToOffer = ({ profile, onUpdate }: RoadToOfferProps) => {
                   navigate("/companies");
                 }
               }}
-              className="w-full relative overflow-hidden bg-[#5E37E8] hover:bg-[#522fd6] text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-[#5E37E8]/25 hover:shadow-md hover:shadow-[#5E37E8]/35 transition-all duration-200 active:scale-[0.99] group/btn cursor-pointer"
+              className="w-full relative overflow-hidden bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-[#0F6B38]/25 hover:shadow-md hover:shadow-[#0F6B38]/35 transition-all duration-200 active:scale-[0.99] group/btn cursor-pointer"
             >
               <span>Explore {company || "Google"} Prep Guide</span>
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />

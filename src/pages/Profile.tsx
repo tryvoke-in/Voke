@@ -1104,25 +1104,25 @@ const Profile = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative overflow-hidden rounded-2xl bg-card/90 dark:bg-card/70 border border-amber-500/30 dark:border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-blue-500/5 dark:from-amber-500/10 dark:to-blue-500/10 p-4 mb-6 backdrop-blur-xl shadow-sm hover:shadow-md transition-shadow"
+                  className="relative overflow-hidden rounded-2xl bg-white dark:bg-card border border-emerald-600/20 dark:border-emerald-500/20 p-4 mb-6 shadow-xs hover:shadow-sm transition-all text-card-foreground"
                 >
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-[#EAF3ED] dark:bg-emerald-500/15 border border-[#CFDDD2] dark:border-emerald-500/30 flex items-center justify-center text-[#0F6B38] dark:text-emerald-400 shrink-0">
                         <Link2 className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-foreground flex flex-wrap items-center gap-2">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
                           <span>Complete Profile Integrations</span>
-                          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                          <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-[#EAF3ED] dark:bg-emerald-500/15 text-[#0F6B38] dark:text-emerald-400 border border-[#CFDDD2] dark:border-emerald-500/30">
                             RECOMMENDED
                           </span>
                         </h4>
-                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                           Connect your {(!formData.github_url && !profile?.github_url) ? 'GitHub account' : ''}{((!formData.github_url && !profile?.github_url) && !profile?.resume_url) ? ' & ' : ''}{!profile?.resume_url ? 'Resume' : ''} in the{' '}
-                          <button type="button" onClick={() => setActiveTab("settings")} className="text-blue-500 font-medium underline hover:text-blue-600 dark:text-blue-400 cursor-pointer">Settings</button>{' '}
+                          <button type="button" onClick={() => setActiveTab("settings")} className="text-[#0F6B38] dark:text-emerald-400 font-semibold underline hover:text-[#0B572D] cursor-pointer">Settings</button>{' '}
                           &{' '}
-                          <button type="button" onClick={() => setActiveTab("resume")} className="text-blue-500 font-medium underline hover:text-blue-600 dark:text-blue-400 cursor-pointer">Resume</button>{' '}
+                          <button type="button" onClick={() => setActiveTab("resume")} className="text-[#0F6B38] dark:text-emerald-400 font-semibold underline hover:text-[#0B572D] cursor-pointer">Resume</button>{' '}
                           tabs to enable tailored mock interviews.
                         </p>
                       </div>
@@ -1132,10 +1132,10 @@ const Profile = () => {
                       <Button
                         size="sm"
                         onClick={() => setActiveTab("settings")}
-                        className="bg-blue-500 dark:bg-blue-700 dark:hover:bg-blue-600 text-white font-semibold rounded-xl text-xs h-9 px-4 shadow-sm shadow-blue-500/20 flex items-center gap-1 transition-all active:scale-95 cursor-pointer shrink-0"
+                        className="bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold rounded-xl text-xs h-9 px-4 shadow-sm shadow-[#0F6B38]/25 hover:shadow-md hover:shadow-[#0F6B38]/35 flex items-center gap-1 transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
                       >
-                        Go to Settings
-                        <ChevronRight className="w-4 h-4 ml-1" />
+                        <span>Go to Settings</span>
+                        <ChevronRight className="w-4 h-4 ml-0.5" />
                       </Button>
                     </div>
                   </div>

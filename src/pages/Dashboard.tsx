@@ -705,7 +705,7 @@ const Dashboard = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative overflow-hidden rounded-3xl bg-[#5E37E8] text-white px-6 sm:px-8 py-5 shadow-xl flex flex-col justify-center min-h-[210px] sm:h-[222px]"
+                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#003B2D] via-[#0F6B38] to-[#0D5C30] text-white px-6 sm:px-8 py-5 shadow-xl shadow-[#003B2D]/15 flex flex-col justify-center min-h-[210px] sm:h-[222px]"
                 >
                   <div className="relative z-10 max-w-[480px]">
                     {/* Top Pill Badge: GOOD AFTERNOON, PRIYANSHU 👏 */}
@@ -728,9 +728,9 @@ const Dashboard = () => {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => navigate("/interview/new")}
-                        className="bg-white hover:bg-slate-50 text-slate-900 font-bold px-4 sm:px-5 py-2 rounded-xl shadow-xs text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer"
+                        className="bg-white hover:bg-emerald-50 text-[#003B2D] font-bold px-4 sm:px-5 py-2 rounded-xl shadow-xs text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer"
                       >
-                        <Play className="w-3.5 h-3.5 fill-slate-900 text-slate-900" />
+                        <Play className="w-3.5 h-3.5 fill-[#003B2D] text-[#003B2D]" />
                         <span>Start an Interview</span>
                       </button>
                       <button
@@ -743,10 +743,10 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  {/* Right Side Complete Artwork from Reference Image */}
+                  {/* Right Side Complete Artwork */}
                   <div className="hidden sm:block absolute right-0 top-0 bottom-0 h-full w-[48%] max-w-[490px] pointer-events-none select-none">
                     <img
-                      src="/images/hero_illustration_purple.png?v=1"
+                      src="/images/hero_illustration_green.png?v=2"
                       alt="AI Interview Prep"
                       className="h-full w-full object-cover object-right"
                       style={{

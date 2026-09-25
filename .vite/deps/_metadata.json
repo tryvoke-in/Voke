@@ -1,0 +1,82 @@
+{
+  "hash": "40d5f244",
+  "configHash": "9cd1f6f6",
+  "lockfileHash": "2301727d",
+  "browserHash": "1afea61b",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "e9b1b302",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "2c869fb4",
+      "needsInterop": true
+    },
+    "@tanstack/react-query": {
+      "src": "../../node_modules/@tanstack/react-query/build/modern/index.js",
+      "file": "@tanstack_react-query.js",
+      "fileHash": "380990be",
+      "needsInterop": false
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.js",
+      "file": "react-router-dom.js",
+      "fileHash": "97d0d6b8",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "cf61bffe",
+      "needsInterop": true
+    },
+    "sonner": {
+      "src": "../../node_modules/sonner/dist/index.mjs",
+      "file": "sonner.js",
+      "fileHash": "86890340",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "279d0dbc",
+      "needsInterop": false
+    },
+    "motion/react": {
+      "src": "../../node_modules/motion/dist/es/react.mjs",
+      "file": "motion_react.js",
+      "fileHash": "ad43bde2",
+      "needsInterop": false
+    },
+    "framer-motion": {
+      "src": "../../node_modules/framer-motion/dist/es/index.mjs",
+      "file": "framer-motion.js",
+      "fileHash": "32b4055b",
+      "needsInterop": false
+    },
+    "lenis/react": {
+      "src": "../../node_modules/lenis/dist/lenis-react.mjs",
+      "file": "lenis_react.js",
+      "fileHash": "99b1e564",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-EZ6OMBHA": {
+      "file": "chunk-EZ6OMBHA.js"
+    },
+    "chunk-OCYYMFIA": {
+      "file": "chunk-OCYYMFIA.js"
+    },
+    "chunk-7SMOR72J": {
+      "file": "chunk-7SMOR72J.js"
+    },
+    "chunk-HE7FADMI": {
+      "file": "chunk-HE7FADMI.js"
+    }
+  }
+}

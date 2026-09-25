@@ -42,9 +42,9 @@ export const ReferralCard = () => {
   };
 
   const features = [
-    { label: "AI Voice Agent", icon: Mic, credits: totalCredited, color: "text-pink-500", bg: "bg-pink-500/10" },
-    { label: "Text Interview", icon: Zap, credits: totalCredited, color: "text-sky-500", bg: "bg-sky-500/10" },
-    { label: "Video Practice", icon: Play, credits: totalCredited, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "AI Voice Agent", icon: Mic, credits: totalCredited, color: "text-[#0F6B38] dark:text-emerald-400", bg: "bg-[#EAF3ED] dark:bg-emerald-500/15" },
+    { label: "Text Interview", icon: Zap, credits: totalCredited, color: "text-[#0F6B38] dark:text-emerald-400", bg: "bg-[#EAF3ED] dark:bg-emerald-500/15" },
+    { label: "Video Practice", icon: Play, credits: totalCredited, color: "text-[#0F6B38] dark:text-emerald-400", bg: "bg-[#EAF3ED] dark:bg-emerald-500/15" },
   ];
 
   return (
@@ -54,17 +54,13 @@ export const ReferralCard = () => {
       transition={{ delay: 0.15 }}
       className="w-full"
     >
-      <Card className="relative overflow-hidden border-sky-500/20 bg-gradient-to-br from-sky-500/5 via-card to-blue-500/5 shadow-lg">
-        {/* Decorative blobs */}
-        <div className="absolute top-0 right-0 w-40 h-40 bg-sky-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-
+      <Card className="relative overflow-hidden border border-[#CFDDD2] dark:border-emerald-500/20 bg-white dark:bg-card shadow-xl">
         <CardHeader className="pb-3 relative z-10">
           <CardTitle className="text-base flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center shadow-lg shadow-sky-500/20">
-              <Gift className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-xl bg-[#0F6B38] flex items-center justify-center shadow-md shadow-[#0F6B38]/20 text-white">
+              <Gift className="w-4 h-4" />
             </div>
-            <span className="bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent font-bold">
+            <span className="text-[#003B2D] dark:text-white font-bold">
               Refer & Earn Credits
             </span>
           </CardTitle>
@@ -73,7 +69,7 @@ export const ReferralCard = () => {
         <CardContent className="space-y-4 relative z-10">
           {/* Tagline */}
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Share your link. When a friend signs up, you <span className="text-sky-500 font-semibold">both win</span> —
+            Share your link. When a friend signs up, you <span className="text-[#0F6B38] dark:text-emerald-400 font-semibold">both win</span> —
             you earn <span className="font-semibold text-foreground">+1 credit</span> for each of the 3 features below.
           </p>
 
@@ -81,14 +77,14 @@ export const ReferralCard = () => {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-muted/50 border border-border/50">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <Users className="w-4 h-4 text-sky-500" />
+                <Users className="w-4 h-4 text-[#0F6B38] dark:text-emerald-400" />
                 <span className="text-xl font-bold">{loading ? "—" : totalReferred}</span>
               </div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Referred</p>
             </div>
             <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-muted/50 border border-border/50">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <Gift className="w-4 h-4 text-emerald-500" />
+                <Gift className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span className="text-xl font-bold">{loading ? "—" : totalCredited * 3}</span>
               </div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Credits Earned</p>
@@ -123,10 +119,10 @@ export const ReferralCard = () => {
                 size="sm"
                 onClick={handleCopy}
                 disabled={loading || !referralLink}
-                className={`shrink-0 rounded-xl px-3 h-9 transition-all duration-300 ${
+                className={`shrink-0 rounded-xl px-3 h-9 transition-all duration-300 cursor-pointer ${
                   copied
-                    ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
-                    : "bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white shadow-lg shadow-sky-500/25"
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/25"
+                    : "bg-[#0F6B38] hover:bg-[#0B572D] text-white shadow-md shadow-[#0F6B38]/25"
                 }`}
               >
                 {copied ? (
@@ -141,18 +137,18 @@ export const ReferralCard = () => {
           {/* Share CTA */}
           <div className="pt-1">
             <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-              <Share2 className="w-3 h-3 text-sky-500" />
+              <Share2 className="w-3 h-3 text-[#0F6B38] dark:text-emerald-400" />
               <span>Share on WhatsApp, LinkedIn, or with classmates!</span>
             </div>
           </div>
 
           {/* How it works mini-note */}
           <details className="group">
-            <summary className="flex items-center gap-1 text-[11px] text-sky-500 cursor-pointer select-none hover:text-sky-400 transition-colors list-none">
+            <summary className="flex items-center gap-1 text-[11px] text-[#0F6B38] dark:text-emerald-400 cursor-pointer select-none hover:text-[#0B572D] transition-colors list-none font-medium">
               <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
               How does it work?
             </summary>
-            <div className="mt-2 text-[11px] text-muted-foreground space-y-1 pl-4 border-l-2 border-sky-500/30">
+            <div className="mt-2 text-[11px] text-muted-foreground space-y-1 pl-4 border-l-2 border-[#0F6B38]/40">
               <p>1️⃣ Share your unique link above</p>
               <p>2️⃣ Friend clicks it and creates an account</p>
               <p>3️⃣ You automatically get <strong className="text-foreground">+1 credit</strong> for Voice, Text &amp; Video</p>

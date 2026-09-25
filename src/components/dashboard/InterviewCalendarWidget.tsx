@@ -59,16 +59,16 @@ const EVENT_TYPE_CONFIG: Record<EventType, {
 }> = {
   interview: {
     label: "Interview",
-    badgeClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    badgeClass: "bg-[#EAF3ED] text-[#0F6B38] dark:text-emerald-400 border-[#CFDDD2] dark:border-emerald-500/20",
     icon: Briefcase,
-    borderClass: "border-l-4 border-l-blue-500",
+    borderClass: "border-l-4 border-l-[#0F6B38]",
     categoryGroup: "interview"
   },
   mock: {
     label: "Mock Session",
-    badgeClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+    badgeClass: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
     icon: Target,
-    borderClass: "border-l-4 border-l-indigo-500",
+    borderClass: "border-l-4 border-l-emerald-600",
     categoryGroup: "interview"
   },
   oa: {
@@ -427,7 +427,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
       {/* Top Header Row inside Main Card */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/40">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 shadow-xs">
+          <div className="w-10 h-10 rounded-2xl bg-[#EAF3ED] dark:bg-emerald-500/15 border border-[#CFDDD2] dark:border-emerald-500/30 flex items-center justify-center text-[#0F6B38] dark:text-emerald-400 shrink-0 shadow-xs">
             <CalendarIcon className="w-5 h-5" />
           </div>
           <div>
@@ -436,7 +436,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                 Upcoming Schedules
               </h3>
               {matchedCollegeName && (
-                <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 text-[10px] font-medium py-0 px-2 h-5 flex items-center">
+                <Badge variant="outline" className="bg-[#EAF3ED] text-[#0F6B38] dark:text-emerald-400 border-[#CFDDD2] dark:border-emerald-500/30 text-[10px] font-medium py-0 px-2 h-5 flex items-center">
                   <GraduationCap className="w-3 h-3 mr-1" /> {matchedCollegeName} Partner
                 </Badge>
               )}
@@ -448,7 +448,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
           <Button
             size="sm"
             onClick={() => handleOpenAddDialog("interview")}
-            className="h-9 px-3.5 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl gap-1.5 shadow-xs transition-all cursor-pointer"
+            className="h-9 px-3.5 text-xs bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold rounded-xl gap-1.5 shadow-sm shadow-[#0F6B38]/25 hover:shadow-md hover:shadow-[#0F6B38]/35 transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Schedule Event</span>
@@ -456,7 +456,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
 
           <div className="h-4 w-px bg-border/60 mx-1 hidden sm:block"></div>
 
-          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
+          <Badge variant="outline" className="bg-[#EAF3ED] text-[#0F6B38] dark:text-emerald-400 border-[#CFDDD2] dark:border-emerald-500/30 text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
             {totalActiveCount} Active
           </Badge>
         </div>
@@ -465,7 +465,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
       {totalActiveCount === 0 ? (
         /* Clean Zero State */
         <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-border/70 bg-muted/20 flex flex-col items-center justify-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+          <div className="w-12 h-12 rounded-2xl bg-[#EAF3ED] dark:bg-emerald-500/15 border border-[#CFDDD2] dark:border-emerald-500/30 flex items-center justify-center text-[#0F6B38] dark:text-emerald-400">
             <CalendarIcon className="w-6 h-6" />
           </div>
           <div className="space-y-1 max-w-sm">
@@ -482,11 +482,11 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-[#0F6B38]"></div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
                     Scheduled Interviews
                   </h4>
-                  <Badge className="text-[10px] bg-blue-600/40 dark:bg-blue-600/40 text-black dark:text-gray-100 font-bold px-1.5 py-0 rounded-md">
+                  <Badge className="text-[10px] bg-[#EAF3ED] dark:bg-emerald-500/20 text-[#0F6B38] dark:text-emerald-300 border border-[#CFDDD2] font-bold px-1.5 py-0 rounded-md">
                     {interviewEvents.length}
                   </Badge>
                 </div>
@@ -495,7 +495,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                   variant="ghost"
                   size="sm"
                   onClick={() => handleOpenAddDialog("interview")}
-                  className="h-7 px-2 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-500 font-semibold cursor-pointer gap-1"
+                  className="h-7 px-2 text-[11px] text-[#0F6B38] dark:text-emerald-400 hover:text-[#0B572D] font-semibold cursor-pointer gap-1"
                 >
                   <Plus className="w-3 h-3" />
                   <span className="hidden sm:inline">Add Interview</span>
@@ -527,8 +527,8 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                           </span>
 
                           {isAdminControlled && (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-md border bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30 flex items-center gap-1">
-                              <ShieldCheck className="w-3 h-3 text-blue-500" />
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-md border bg-[#EAF3ED] text-[#0F6B38] border-[#CFDDD2] flex items-center gap-1">
+                              <ShieldCheck className="w-3 h-3 text-[#0F6B38]" />
                               {evt.isCollegeDrive ? "College Scheduled" : "Admin Scheduled"}
                             </span>
                           )}
@@ -596,7 +596,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                         {isAdminControlled ? (
                           /* Admin card: NO mark done, NO edit, NO delete */
                           <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
-                            <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
+                            <ShieldCheck className="w-3.5 h-3.5 text-[#0F6B38]" />
                             <span>Official Interview</span>
                           </div>
                         ) : (
@@ -655,8 +655,8 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
                               className={cn(
                                 "inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-tight transition-all duration-200 cursor-pointer shadow-xs",
                                 isAdminControlled
-                                  ? "bg-blue-600 hover:bg-blue-500 text-white hover:shadow-sm hover:shadow-blue-500/25 active:scale-[0.98]"
-                                  : "bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 active:scale-[0.98]"
+                                  ? "bg-[#0F6B38] hover:bg-[#0B572D] text-white hover:shadow-sm hover:shadow-[#0F6B38]/25 active:scale-[0.98]"
+                                  : "bg-[#EAF3ED] hover:bg-[#0F6B38] text-[#0F6B38] hover:text-white border border-[#CFDDD2] active:scale-[0.98]"
                               )}
                             >
                               <span>Join Interview</span>
@@ -821,7 +821,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
         <DialogContent className="sm:max-w-[480px] rounded-3xl p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-blue-500" />
+              <CalendarIcon className="w-5 h-5 text-[#0F6B38]" />
               {editingEventId ? "Edit Scheduled Item" : "Schedule Interview or Event"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -944,7 +944,7 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
               </Button>
               <Button
                 type="submit"
-                className="h-9 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl cursor-pointer"
+                className="h-9 text-xs bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold rounded-xl shadow-sm shadow-[#0F6B38]/25 cursor-pointer"
               >
                 {editingEventId ? "Save Changes" : "Schedule Event"}
               </Button>

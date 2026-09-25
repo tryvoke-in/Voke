@@ -122,7 +122,7 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ questi
             <div className="flex items-center gap-2.5 min-w-0">
               <motion.div
                 whileHover={{ rotate: 15, scale: 1.08 }}
-                className="w-9 h-9 rounded-xl bg-orange-50 dark:bg-orange-500/15 border border-orange-200/60 dark:border-orange-500/30 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0 group-hover:bg-orange-100 dark:group-hover:bg-orange-500/25 transition-colors"
+                className="w-9 h-9 rounded-xl bg-[#EAF3ED] dark:bg-emerald-500/15 border border-[#CFDDD2] dark:border-emerald-500/30 flex items-center justify-center text-[#0F6B38] dark:text-emerald-400 shrink-0 group-hover:bg-[#d8eade] dark:group-hover:bg-emerald-500/25 transition-colors"
               >
                 <Target className="w-4 h-4" />
               </motion.div>
@@ -139,7 +139,7 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ questi
           {/* Problem Title & Category Subtitle */}
           <div className="space-y-1">
             <h4
-              className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 hover:text-[#5E37E8] dark:hover:text-indigo-400 transition-colors cursor-pointer line-clamp-1"
+              className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 hover:text-[#0F6B38] dark:hover:text-emerald-400 transition-colors cursor-pointer line-clamp-1"
               onClick={() => navigate("/daily-challenge/solve")}
             >
               {dailyQuestion.title}
@@ -177,7 +177,7 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ questi
           <div className="pt-2">
             <Button
               onClick={() => navigate("/daily-challenge/solve")}
-              className="w-full relative overflow-hidden bg-[#5E37E8] hover:bg-[#522fd6] text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-[#5E37E8]/25 hover:shadow-md hover:shadow-[#5E37E8]/35 transition-all duration-200 active:scale-[0.99] group/btn cursor-pointer"
+              className="w-full relative overflow-hidden bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-[#0F6B38]/25 hover:shadow-md hover:shadow-[#0F6B38]/35 transition-all duration-200 active:scale-[0.99] group/btn cursor-pointer"
             >
               <span>Solve Today's Practice</span>
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />

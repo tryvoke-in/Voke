@@ -364,7 +364,7 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
           {/* XP Progress Capsule */}
           <div className="bg-slate-50 dark:bg-muted/40 border border-slate-200/80 dark:border-border/80 px-3.5 py-1.5 rounded-2xl flex items-center gap-3 shadow-2xs">
             <div className="flex items-center gap-1.5">
-              <Award className="w-4 h-4 text-indigo-500" />
+              <Award className="w-4 h-4 text-[#0F6B38] dark:text-emerald-400" />
               <div className="text-left">
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block leading-none">
                   Total XP
@@ -380,7 +380,7 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-indigo-500 to-[#5E37E8] rounded-full"
+                className="h-full bg-gradient-to-r from-[#0F6B38] to-emerald-500 rounded-full"
               />
             </div>
           </div>
@@ -459,16 +459,16 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
 
-              {/* Completed Path Gradient: Emerald into Purple */}
+              {/* Completed Path Gradient: Emerald into Forest Green */}
               <linearGradient id="completedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#10B981" />
-                <stop offset="60%" stopColor="#6366F1" />
-                <stop offset="100%" stopColor="#5E37E8" />
+                <stop offset="0%" stopColor="#0F6B38" />
+                <stop offset="60%" stopColor="#10B981" />
+                <stop offset="100%" stopColor="#059669" />
               </linearGradient>
 
               {/* Future Path Gradient */}
               <linearGradient id="futureGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#6366F1" stopOpacity="0.4" />
+                <stop offset="0%" stopColor="#10B981" stopOpacity="0.4" />
                 <stop offset="100%" stopColor="#94A3B8" stopOpacity="0.2" />
               </linearGradient>
             </defs>
@@ -538,7 +538,7 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
               style={{ left: `${(dot.x / 1080) * 100}%`, top: `${(dot.y / 210) * 100}%` }}
               className={`absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full pointer-events-none transition-all ${
                 dot.completed
-                  ? "bg-indigo-500 shadow-sm shadow-indigo-500/50 ring-2 ring-indigo-200 dark:ring-indigo-900/60"
+                  ? "bg-[#0F6B38] shadow-sm shadow-[#0F6B38]/50 ring-2 ring-emerald-200 dark:ring-emerald-900/60"
                   : "bg-slate-300 dark:bg-slate-700"
               }`}
             />
@@ -564,11 +564,11 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                     transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
                     className="absolute -top-10 flex flex-col items-center z-30 pointer-events-none"
                   >
-                    <div className="px-2.5 py-0.5 rounded-full bg-[#5E37E8] text-white text-[10px] font-extrabold shadow-lg shadow-[#5E37E8]/40 tracking-wider uppercase flex items-center gap-1 border border-white/30 whitespace-nowrap">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    <div className="px-2.5 py-0.5 rounded-full bg-[#0F6B38] text-white text-[10px] font-extrabold shadow-lg shadow-[#0F6B38]/40 tracking-wider uppercase flex items-center gap-1 border border-white/30 whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-ping" />
                       <span>YOU ARE HERE</span>
                     </div>
-                    <div className="w-0 h-0 border-x-4 border-x-transparent border-t-5 border-t-[#5E37E8] drop-shadow-xs" />
+                    <div className="w-0 h-0 border-x-4 border-x-transparent border-t-5 border-t-[#0F6B38] drop-shadow-xs" />
                   </motion.div>
                 )}
 
@@ -596,9 +596,9 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                     node.status === "completed"
                       ? "bg-emerald-600 text-white shadow-emerald-600/25 ring-3 ring-emerald-500/20"
                       : node.status === "active"
-                      ? "bg-gradient-to-tr from-[#5E37E8] to-indigo-500 text-white ring-4 ring-[#5E37E8]/30 shadow-[#5E37E8]/40 animate-pulse-subtle"
+                      ? "bg-[#0F6B38] text-white ring-4 ring-[#0F6B38]/30 shadow-[#0F6B38]/40 animate-pulse-subtle"
                       : node.status === "unlocked"
-                      ? "bg-white dark:bg-card border-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 shadow-indigo-500/20"
+                      ? "bg-white dark:bg-card border-2 border-[#0F6B38] text-[#0F6B38] dark:text-emerald-400 hover:bg-[#EAF3ED] dark:hover:bg-emerald-500/15 shadow-[#0F6B38]/20"
                       : node.boss
                       ? "bg-gradient-to-tr from-amber-600 to-orange-500 text-white shadow-orange-500/30 ring-3 ring-orange-500/25"
                       : node.status === "summit"
@@ -608,7 +608,7 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                 >
                   {/* Radar beacon for active node */}
                   {node.status === "active" && (
-                    <span className="absolute inset-0 rounded-2xl ring-2 ring-[#5E37E8] animate-ping opacity-50 pointer-events-none" />
+                    <span className="absolute inset-0 rounded-2xl ring-2 ring-[#0F6B38] animate-ping opacity-50 pointer-events-none" />
                   )}
 
                   <IconComponent className={`w-5 h-5 ${node.status === "completed" ? "stroke-[2.5]" : ""}`} />
@@ -629,9 +629,9 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                       node.status === "completed"
                         ? "text-emerald-600 dark:text-emerald-400"
                         : node.status === "active"
-                        ? "text-[#5E37E8] dark:text-indigo-400 font-extrabold"
+                        ? "text-[#0F6B38] dark:text-emerald-400 font-extrabold"
                         : node.status === "unlocked"
-                        ? "text-indigo-600 dark:text-indigo-400"
+                        ? "text-[#0F6B38] dark:text-emerald-400"
                         : node.boss
                         ? "text-orange-600 dark:text-orange-400 font-bold"
                         : node.status === "summit"
@@ -662,7 +662,7 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
 
         <button
           onClick={() => navigate(isDsaCompleted ? "/interview/new" : "/dsa-sheet")}
-          className="h-8 px-4 rounded-xl bg-[#5E37E8] hover:bg-[#522fd6] text-white text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
+          className="h-8 px-4 rounded-xl bg-[#0F6B38] hover:bg-[#0B572D] text-white text-xs font-semibold shadow-xs shadow-[#0F6B38]/25 flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
         >
           <span>{isDsaCompleted ? "Start AI Interview" : "Start DSA Practice"}</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -681,7 +681,7 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
               className="w-full max-w-md rounded-3xl bg-white dark:bg-card border border-slate-200 dark:border-border p-6 shadow-2xl space-y-4 relative overflow-hidden"
             >
               {/* Background gradient banner */}
-              <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-emerald-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 pointer-events-none" />
+              <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-emerald-500/10 via-[#0F6B38]/10 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20 pointer-events-none" />
 
               {/* Close Button */}
               <button
@@ -698,19 +698,19 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                     selectedNode.status === "completed"
                       ? "bg-emerald-600 shadow-emerald-600/30"
                       : selectedNode.status === "active"
-                      ? "bg-[#5E37E8] shadow-[#5E37E8]/40"
+                      ? "bg-[#0F6B38] shadow-[#0F6B38]/40"
                       : selectedNode.boss
                       ? "bg-orange-600 shadow-orange-600/40"
                       : selectedNode.status === "summit"
                       ? "bg-amber-500 shadow-amber-500/40"
-                      : "bg-indigo-600 shadow-indigo-600/30"
+                      : "bg-[#0F6B38] shadow-[#0F6B38]/30"
                   }`}
                 >
                   <selectedNode.icon className="w-6 h-6" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10.5px] font-bold uppercase tracking-wider text-[#5E37E8] dark:text-indigo-400">
+                    <span className="text-[10.5px] font-bold uppercase tracking-wider text-[#0F6B38] dark:text-emerald-400">
                       {selectedNode.stage} • {selectedNode.category}
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-muted font-bold text-slate-700 dark:text-slate-300">
@@ -770,7 +770,7 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                     setSelectedNode(null);
                     navigate(selectedNode.ctaPath);
                   }}
-                  className="h-9 text-xs rounded-xl bg-[#5E37E8] hover:bg-[#522fd6] text-white font-semibold flex items-center gap-1.5 shadow-sm shadow-[#5E37E8]/25 cursor-pointer"
+                  className="h-9 text-xs rounded-xl bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold flex items-center gap-1.5 shadow-sm shadow-[#0F6B38]/25 cursor-pointer"
                 >
                   <span>{selectedNode.ctaText}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -909,7 +909,7 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                     setShowStreakModal(false);
                     navigate("/dsa-sheet");
                   }}
-                  className="h-9 text-xs rounded-xl bg-[#5E37E8] hover:bg-[#522fd6] text-white font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  className="h-9 text-xs rounded-xl bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold flex items-center gap-1.5 shadow-sm shadow-[#0F6B38]/25 cursor-pointer"
                 >
                   <span>{isDsaCompleted ? "Practice Questions" : "Start First Practice"}</span>
                   <ArrowRight className="w-3.5 h-3.5" />

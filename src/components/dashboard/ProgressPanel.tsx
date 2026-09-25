@@ -11,16 +11,16 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-slate-900 border border-sky-500/30 rounded-xl p-3 shadow-2xl text-xs space-y-1.5 z-50 text-white min-w-[170px]">
+      <div className="bg-slate-900 border border-emerald-500/30 rounded-xl p-3 shadow-2xl text-xs space-y-1.5 z-50 text-white min-w-[170px]">
         <div className="font-semibold text-white border-b border-white/10 pb-1.5 flex items-center justify-between gap-3">
           <span>{data.fullDate || data.name}</span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium">
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
             {data.type || 'Interview'}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3 pt-1">
           <span className="text-slate-400">Overall Score:</span>
-          <span className="font-bold text-sky-400 text-sm">{data.score}%</span>
+          <span className="font-bold text-emerald-400 text-sm">{data.score}%</span>
         </div>
         {typeof data.confidence === 'number' && (
           <div className="flex items-center justify-between gap-3 text-[11px]">
@@ -240,9 +240,9 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-2xl sm:text-3xl font-extrabold text-foreground/95 min-w-[56px]">{currentScore}%</span>
-          <div className="flex-1 h-2.5 bg-muted/60 rounded-full relative overflow-hidden">
+          <div className="flex-1 h-2.5 bg-slate-100 dark:bg-muted/60 rounded-full relative overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+              className="h-full bg-gradient-to-r from-[#0F6B38] via-emerald-600 to-emerald-500 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(15,107,56,0.3)]"
               style={{ width: `${Math.max(2, currentScore)}%` }}
             />
           </div>
@@ -255,15 +255,15 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
           <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Recent Interviews Trend</div>
         </div>
         {chartData.length === 0 ? (
-          <div className="h-[160px] w-full flex flex-col items-center justify-center border border-dashed border-border/60 rounded-2xl bg-muted/10 p-4 mt-1 text-center">
-            <TrendingUp className="h-8 w-8 text-sky-500/70 mb-2 animate-bounce" />
+          <div className="h-[160px] w-full flex flex-col items-center justify-center border border-dashed border-[#CFDDD2] dark:border-emerald-500/30 rounded-2xl bg-[#EAF3ED]/40 dark:bg-emerald-500/5 p-4 mt-1 text-center">
+            <TrendingUp className="h-8 w-8 text-[#0F6B38] dark:text-emerald-400 mb-2 animate-bounce" />
             <span className="text-xs text-foreground font-semibold">No interview chart data yet</span>
             <span className="text-[11px] text-muted-foreground max-w-[200px] mt-1">
               Complete your first AI mock or question practice to visualize real score trends.
             </span>
             <button
               onClick={() => navigate("/interview/new")}
-              className="mt-3 px-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium hover:bg-orange-700 transition-colors shadow-md"
+              className="mt-3 px-3.5 py-1.5 bg-[#0F6B38] hover:bg-[#0B572D] text-white rounded-lg text-xs font-semibold shadow-sm shadow-[#0F6B38]/25 hover:shadow-md hover:shadow-[#0F6B38]/35 transition-all cursor-pointer"
             >
               Start First Interview
             </button>
@@ -296,10 +296,10 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
                 <Line
                   type="monotone"
                   dataKey="score"
-                  stroke="#2ee696ff"
+                  stroke="#0F6B38"
                   strokeWidth={3}
-                  dot={{ r: 4, fill: '#000', stroke: '#2ee696ff', strokeWidth: 2 }}
-                  activeDot={{ r: 6, fill: '#000', stroke: '#2ee696ff', strokeWidth: 2 }}
+                  dot={{ r: 4, fill: '#003B2D', stroke: '#0F6B38', strokeWidth: 2 }}
+                  activeDot={{ r: 6, fill: '#003B2D', stroke: '#10B981', strokeWidth: 2 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -310,8 +310,8 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
       {/* Dynamic Insights Row */}
       <div className="grid grid-cols-2 gap-4 pt-1">
         {/* Biggest Improvement */}
-        <div className="bg-white/40 dark:bg-muted/40 backdrop-blur-md border border-gray-200/50 dark:border-border/60 rounded-2xl p-4 flex flex-col hover:border-emerald-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
-          <div className="text-emerald-500 text-xs font-semibold flex items-center gap-1">
+        <div className="bg-white/40 dark:bg-muted/40 backdrop-blur-md border border-gray-200/50 dark:border-border/60 rounded-2xl p-4 flex flex-col hover:border-[#0F6B38]/40 dark:hover:border-emerald-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
+          <div className="text-[#0F6B38] dark:text-emerald-400 text-xs font-semibold flex items-center gap-1">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Biggest improvement</span>
           </div>
@@ -337,7 +337,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         id="tour-view-details-btn"
         type="button"
         onClick={() => navigate("/profile", { state: { tab: "analytics" } })}
-        className="w-full py-3 px-4 rounded-xl border border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/5 hover:bg-blue-500/10 dark:hover:bg-blue-500/15 backdrop-blur-sm font-semibold text-sm active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-xs"
+        className="w-full py-3 px-4 rounded-xl border border-emerald-500/30 text-[#0F6B38] dark:text-emerald-400 bg-[#EAF3ED]/70 hover:bg-[#0F6B38] hover:text-white dark:bg-emerald-500/10 dark:hover:bg-[#0F6B38] dark:hover:text-white backdrop-blur-sm font-semibold text-sm active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-xs"
       >
         <span>View Detailed Analytics</span>
         <ArrowRight className="w-4 h-3 group-hover:translate-x-1 transition-transform" />
