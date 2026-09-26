@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ChevronDown, MousePointer2, Play } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronDown, MousePointer2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ElitePrepScreenPreview } from "./ElitePrepScreenPreview";
@@ -83,6 +83,7 @@ export const MacBookHero3D: React.FC<MacBookHero3DProps> = React.memo(({
   const auroraRef = useRef<HTMLDivElement>(null);
   const spotlightRef = useRef<HTMLDivElement>(null);
   const catchyRef = useRef<HTMLDivElement>(null);
+  const heroSignInRef = useRef<HTMLDivElement>(null);
   const leftTextRef = useRef<HTMLDivElement>(null);
   const leftAtmosphereRef = useRef<HTMLDivElement>(null);
 
@@ -91,7 +92,7 @@ export const MacBookHero3D: React.FC<MacBookHero3DProps> = React.memo(({
   const [isInteractiveActive, setIsInteractiveActive] = useState(false);
   const isSkipVisibleRef = useRef<boolean>(false);
   const [isSkipVisible, setIsSkipVisible] = useState(false);
-  const lastHeaderVisibleRef = useRef<boolean | null>(null);
+  const lastHeaderVisibleRef = useRef<boolean | null>(false);
 
   // Container metrics cache to avoid layout thrashing
   const boundsRef = useRef({ top: 0, height: 0, scrollable: 0 });
@@ -178,6 +179,22 @@ export const MacBookHero3D: React.FC<MacBookHero3DProps> = React.memo(({
         catchyRef.current.style.display = "none";
         catchyRef.current.style.opacity = "0";
         catchyRef.current.style.pointerEvents = "none";
+      }
+    }
+
+    // Hero top-right Sign In button fade - synchronizes with initial hero view
+    if (heroSignInRef.current) {
+      if (sp < 0.05) {
+        const p = sp / 0.05;
+        const btnOpacity = Math.max(1 - p, 0);
+        heroSignInRef.current.style.display = "block";
+        heroSignInRef.current.style.opacity = String(btnOpacity);
+        heroSignInRef.current.style.transform = `translateY(${-p * 20}px)`;
+        heroSignInRef.current.style.pointerEvents = sp < 0.01 ? "auto" : "none";
+      } else {
+        heroSignInRef.current.style.display = "none";
+        heroSignInRef.current.style.opacity = "0";
+        heroSignInRef.current.style.pointerEvents = "none";
       }
     }
 
@@ -767,6 +784,25 @@ export const MacBookHero3D: React.FC<MacBookHero3DProps> = React.memo(({
           <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/25 via-emerald-400/20 to-transparent" />
         </div>
 
+        {/* Top-Right Standalone Sign In Button on Initial Hero View */}
+        <div
+          ref={heroSignInRef}
+          style={{
+            opacity: 1,
+            transform: "translateY(0px)",
+            pointerEvents: "auto",
+          }}
+          className="absolute top-4 sm:top-5 right-4 sm:right-6 md:right-8 lg:right-12 z-30"
+        >
+          <Button
+            onClick={handleAuthNavigation}
+            className="bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold text-xs px-3.5 sm:px-4 h-8.5 rounded-full border border-emerald-500/30 flex items-center gap-1 transition-all duration-300 hover:scale-105 shrink-0 shadow-md shadow-emerald-950/40"
+          >
+            <span className="whitespace-nowrap">Sign In</span>
+            <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
+          </Button>
+        </div>
+
         {/* Initial Big White Catchy Hook (Centered on TOP of MacBook, rotates from time to time) */}
         <div
           ref={catchyRef}
@@ -778,7 +814,7 @@ export const MacBookHero3D: React.FC<MacBookHero3DProps> = React.memo(({
           onClick={() => {
             window.scrollTo({ top: window.innerHeight * 0.45, behavior: "smooth" });
           }}
-          className="absolute top-10 sm:top-14 md:top-16 lg:top-20 left-1/2 z-20 w-full max-w-4xl px-4 flex flex-col items-center text-center select-none cursor-pointer group"
+          className="absolute top-12 sm:top-14 md:top-16 lg:top-20 left-1/2 z-20 w-full max-w-4xl px-4 flex flex-col items-center text-center select-none cursor-pointer group"
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -792,7 +828,7 @@ export const MacBookHero3D: React.FC<MacBookHero3DProps> = React.memo(({
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] leading-[1.12]">
                 {CATCHY_LINES[catchyIndex].headline}
               </h2>
-              <p className="mt-6 sm:mt-7 md:mt-8 text-sm sm:text-base md:text-lg font-medium flex items-center justify-center gap-2 drop-shadow-[0_2px_12px_rgba(52,211,153,0.3)] transition-colors">
+              <p className="mt-4 sm:mt-5 md:mt-6 text-sm sm:text-base md:text-lg font-medium flex items-center justify-center gap-2 drop-shadow-[0_2px_12px_rgba(52,211,153,0.3)] transition-colors">
                 <span className="text-emerald-400 group-hover:text-emerald-300 font-semibold tracking-wide">
                   {CATCHY_LINES[catchyIndex].subline}
                 </span>
