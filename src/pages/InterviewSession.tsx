@@ -342,8 +342,8 @@ Tell me about a time you had to learn something quickly in order to deliver on a
       <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
         <div className="flex flex-col items-center gap-4 relative z-10">
           <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-            <Bot className="w-8 h-8 text-blue-500 absolute inset-0 m-auto animate-pulse" />
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#0F6B38] dark:border-emerald-400"></div>
+            <Bot className="w-8 h-8 text-[#0F6B38] dark:text-emerald-400 absolute inset-0 m-auto animate-pulse" />
           </div>
           <p className="text-muted-foreground font-medium tracking-wide animate-pulse">Initializing AI Interview Studio...</p>
         </div>
@@ -371,14 +371,14 @@ Tell me about a time you had to learn something quickly in order to deliver on a
             />
             <div>
               <h1 className="font-bold text-lg tracking-tight text-foreground">Voke AI</h1>
-              <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider">Interview Suite</p>
+              <p className="text-[10px] text-[#0F6B38] dark:text-emerald-400 font-semibold uppercase tracking-wider">Interview Suite</p>
             </div>
           </div>
           <Button
             onClick={() => navigate("/dashboard")}
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-secondary/40 rounded-lg shrink-0"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-[#EAF3ED]/60 dark:hover:bg-emerald-500/10 rounded-lg shrink-0 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -388,10 +388,10 @@ Tell me about a time you had to learn something quickly in order to deliver on a
         <div className="p-6 border-b border-border/50 space-y-5">
           <div className="space-y-3">
             <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Active Session</h2>
-            <div className="p-4 rounded-2xl bg-secondary/15 border border-border/50 space-y-4">
+            <div className="p-4 rounded-2xl bg-secondary/15 border border-[#CFDDD2]/60 dark:border-border/50 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground font-medium">Focus Topic</span>
-                <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] py-0.5 px-2 hover:bg-blue-500/10">
+                <Badge className="bg-[#EAF3ED] dark:bg-emerald-500/15 text-[#0F6B38] dark:text-emerald-400 border border-[#CFDDD2] dark:border-emerald-500/30 text-[10px] py-0.5 px-2 font-semibold hover:bg-[#EAF3ED]">
                   {config.topic}
                 </Badge>
               </div>
@@ -401,9 +401,9 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                 <div className="flex items-center gap-2">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0F6B38] dark:bg-emerald-500"></span>
                   </span>
-                  <span className="font-mono text-sm font-bold text-emerald-400">{formatTime(elapsedTime)}</span>
+                  <span className="font-mono text-sm font-bold text-[#0F6B38] dark:text-emerald-400">{formatTime(elapsedTime)}</span>
                 </div>
               </div>
 
@@ -412,7 +412,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                   <span>Questions Progress</span>
                   <span>{progressPercent}% ({currentQuestionIndex}/{totalQuestions})</span>
                 </div>
-                <Progress value={progressPercent} className="h-1.5 bg-secondary [&>div]:bg-blue-600" />
+                <Progress value={progressPercent} className="h-1.5 bg-secondary [&>div]:bg-gradient-to-r [&>div]:from-[#0F6B38] [&>div]:to-emerald-500" />
               </div>
             </div>
           </div>
@@ -421,7 +421,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
         {/* Past Sessions List */}
         <div className="flex-1 overflow-hidden flex flex-col p-6 min-h-0">
           <div className="flex items-center gap-2 mb-4">
-            <History className="w-3.5 h-3.5 text-blue-400" />
+            <History className="w-3.5 h-3.5 text-[#0F6B38] dark:text-emerald-400" />
             <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Past Sessions</h2>
           </div>
           
@@ -436,10 +436,10 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                   <div
                     key={session.id}
                     onClick={() => navigate(`/interview/results/${session.id}`)}
-                    className="p-3.5 rounded-xl bg-secondary/15 hover:bg-secondary/35 border border-border/50 hover:border-blue-500/30 transition-all duration-200 cursor-pointer group flex justify-between items-center"
+                    className="p-3.5 rounded-xl bg-secondary/15 hover:bg-secondary/35 border border-border/50 hover:border-[#0F6B38]/30 transition-all duration-200 cursor-pointer group flex justify-between items-center"
                   >
                     <div className="space-y-1">
-                      <h4 className="text-xs font-bold text-foreground group-hover:text-blue-400 transition-colors capitalize truncate max-w-[140px]">
+                      <h4 className="text-xs font-bold text-foreground group-hover:text-[#0F6B38] dark:group-hover:text-emerald-400 transition-colors capitalize truncate max-w-[140px]">
                         {session.interview_type || "General"}
                       </h4>
                       <p className="text-[10px] text-muted-foreground font-medium">
@@ -492,7 +492,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
             />
             <span className="font-bold text-sm tracking-tight text-foreground md:hidden">Voke AI Arena</span>
             <div className="hidden md:flex items-center gap-2">
-              <span className="text-xs text-blue-400 font-semibold uppercase tracking-wider">Practice Arena</span>
+              <span className="text-xs text-[#0F6B38] dark:text-emerald-400 font-semibold uppercase tracking-wider">Practice Arena</span>
               <span className="h-1 w-1 bg-border rounded-full" />
               <span className="text-xs text-muted-foreground">Text Simulation</span>
             </div>
@@ -504,7 +504,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
               size="sm"
               variant={activeTab === 'history' ? 'secondary' : 'ghost'}
               onClick={() => setActiveTab('history')}
-              className={`h-7 px-2.5 text-[11px] rounded-lg transition-all ${activeTab === 'history' ? 'bg-blue-600 text-white hover:bg-blue-600' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`h-7 px-2.5 text-[11px] rounded-lg transition-all ${activeTab === 'history' ? 'bg-[#0F6B38] text-white hover:bg-[#0B572D]' : 'text-muted-foreground hover:text-foreground'}`}
             >
               History
             </Button>
@@ -512,7 +512,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
               size="sm"
               variant={activeTab === 'arena' ? 'secondary' : 'ghost'}
               onClick={() => setActiveTab('arena')}
-              className={`h-7 px-2.5 text-[11px] rounded-lg transition-all ${activeTab === 'arena' ? 'bg-blue-600 text-white hover:bg-blue-600' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`h-7 px-2.5 text-[11px] rounded-lg transition-all ${activeTab === 'arena' ? 'bg-[#0F6B38] text-white hover:bg-[#0B572D]' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Arena
             </Button>
@@ -520,7 +520,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
               size="sm"
               variant={activeTab === 'timeline' ? 'secondary' : 'ghost'}
               onClick={() => setActiveTab('timeline')}
-              className={`h-7 px-2.5 text-[11px] rounded-lg transition-all ${activeTab === 'timeline' ? 'bg-blue-600 text-white hover:bg-blue-600' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`h-7 px-2.5 text-[11px] rounded-lg transition-all ${activeTab === 'timeline' ? 'bg-[#0F6B38] text-white hover:bg-[#0B572D]' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Timeline
             </Button>
@@ -546,10 +546,10 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.3 }}
-                  className="relative p-6 md:p-8 rounded-2xl bg-card/60 border border-border/60 shadow-xl backdrop-blur-xl"
+                  className="relative p-6 md:p-8 rounded-2xl bg-card/60 border border-[#CFDDD2]/60 dark:border-border/60 shadow-xl backdrop-blur-xl"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-md border border-blue-500/20">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0F6B38] dark:text-emerald-400 bg-[#EAF3ED] dark:bg-emerald-500/15 px-2.5 py-1 rounded-md border border-[#CFDDD2] dark:border-emerald-500/30">
                       Question {currentQuestionIndex} of {totalQuestions}
                     </span>
                   </div>
@@ -563,9 +563,9 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="p-8 rounded-2xl bg-card/40 border border-border/50 border-dashed flex flex-col items-center justify-center py-16 gap-4 text-center"
+                    className="p-8 rounded-2xl bg-[#EAF3ED]/20 dark:bg-emerald-950/15 border border-[#CFDDD2] dark:border-emerald-500/30 border-dashed flex flex-col items-center justify-center py-16 gap-4 text-center"
                   >
-                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-[#0F6B38] dark:text-emerald-400 animate-spin" />
                     <div className="space-y-1">
                       <h4 className="text-sm font-bold text-foreground">Voke is reviewing...</h4>
                       <p className="text-xs text-muted-foreground">Evaluating answer depth and aligning skill metrics.</p>
@@ -578,13 +578,13 @@ Tell me about a time you had to learn something quickly in order to deliver on a
             {/* Answer Workspace Editor */}
             <div className={`p-4 rounded-2xl bg-card/60 border ${
               isEditorFocused 
-                ? 'border-blue-500/40 shadow-sm' 
-                : 'border-border/60'
+                ? 'border-[#0F6B38]/60 ring-2 ring-[#0F6B38]/20 dark:border-emerald-500/60 dark:ring-emerald-500/20 shadow-sm' 
+                : 'border-[#CFDDD2] dark:border-border/60'
             } transition-all duration-200 space-y-4`}>
               <div className="flex justify-between items-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider px-1">
                 <span>Your Response Area</span>
                 <span className="flex items-center gap-1">
-                  <Activity className="w-3 h-3 text-blue-400" />
+                  <Activity className="w-3 h-3 text-[#0F6B38] dark:text-emerald-400" />
                   Press Enter to submit
                 </span>
               </div>
@@ -618,9 +618,9 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                 <Button
                   onClick={() => handleSendMessage(input)}
                   disabled={!input.trim() || sending}
-                  className={`h-9 px-5 font-semibold text-xs rounded-xl transition-all duration-200 ${
+                  className={`h-9 px-5 font-semibold text-xs rounded-xl transition-all duration-200 cursor-pointer ${
                     input.trim() && !sending
-                      ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm'
+                      ? 'bg-[#0F6B38] hover:bg-[#0B572D] text-white shadow-sm shadow-[#0F6B38]/25 hover:shadow-md hover:shadow-[#0F6B38]/35'
                       : 'bg-secondary/30 text-muted-foreground/40 cursor-not-allowed border border-border/30'
                   }`}
                 >
@@ -651,10 +651,10 @@ Tell me about a time you had to learn something quickly in order to deliver on a
         {/* Title Header */}
         <div className="p-6 border-b border-border/50 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <MessageSquare className="w-4 h-4 text-blue-400" />
+            <MessageSquare className="w-4 h-4 text-[#0F6B38] dark:text-emerald-400" />
             <h2 className="font-bold text-sm tracking-tight text-foreground">Interview Timeline</h2>
           </div>
-          <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">
+          <span className="text-[10px] font-bold text-[#0F6B38] dark:text-emerald-400 bg-[#EAF3ED] dark:bg-emerald-500/15 px-2 py-0.5 rounded-md border border-[#CFDDD2] dark:border-emerald-500/30">
             {completedTurns.length} Completed
           </span>
         </div>
@@ -664,7 +664,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
           {completedTurns.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-20 gap-3">
               <div className="w-10 h-10 rounded-full bg-secondary/30 flex items-center justify-center border border-border/40">
-                <Activity className="w-4 h-4 text-blue-400/60" />
+                <Activity className="w-4 h-4 text-[#0F6B38]/60 dark:text-emerald-400/60" />
               </div>
               <p className="text-xs text-muted-foreground max-w-[180px]">
                 Previous responses and AI evaluations will construct here as the session flows.
@@ -681,8 +681,8 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                 return (
                   <div key={index} className="relative space-y-3">
                     {/* Node Dot Indicator */}
-                    <div className="absolute -left-[24px] top-1.5 w-4 h-4 rounded-full bg-emerald-500/10 border-2 border-emerald-400 flex items-center justify-center shadow-sm">
-                      <Check className="w-2.5 h-2.5 text-emerald-400 stroke-[3]" />
+                    <div className="absolute -left-[24px] top-1.5 w-4 h-4 rounded-full bg-[#EAF3ED] dark:bg-emerald-500/15 border-2 border-[#0F6B38] dark:border-emerald-400 flex items-center justify-center shadow-xs">
+                      <Check className="w-2.5 h-2.5 text-[#0F6B38] dark:text-emerald-400 stroke-[3]" />
                     </div>
 
                     {/* Question summary badge */}
@@ -711,10 +711,10 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                         <div className="mt-2.5 pt-2.5 border-t border-border/40">
                           <button
                             onClick={() => toggleFeedback(index)}
-                            className="w-full flex items-center justify-between text-[11px] text-blue-400 font-bold hover:text-blue-300 transition-colors"
+                            className="w-full flex items-center justify-between text-[11px] text-[#0F6B38] dark:text-emerald-400 font-bold hover:text-[#0B572D] dark:hover:text-emerald-300 transition-colors cursor-pointer"
                           >
                             <span className="flex items-center gap-1">
-                              <Sparkles className="w-3 h-3 text-blue-400" />
+                              <Sparkles className="w-3 h-3 text-[#0F6B38] dark:text-emerald-400" />
                               AI Feedback Summary
                             </span>
                             {isExpanded ? (
@@ -733,7 +733,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                                 transition={{ duration: 0.3 }}
                                 className="overflow-hidden"
                               >
-                                <div className="mt-3 p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/15 text-[11px] text-foreground/80 leading-relaxed prose prose-sm prose-invert max-w-none">
+                                <div className="mt-3 p-3.5 rounded-2xl bg-[#EAF3ED]/60 dark:bg-emerald-950/30 border border-[#CFDDD2] dark:border-emerald-500/20 text-[11px] text-foreground/85 leading-relaxed prose prose-sm dark:prose-invert max-w-none">
                                   <ReactMarkdown>{turn.feedback}</ReactMarkdown>
                                 </div>
                               </motion.div>
@@ -756,7 +756,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
         <DialogContent className="sm:max-w-lg bg-card border border-border/60 text-foreground rounded-2xl p-6 shadow-2xl relative overflow-hidden">
           <DialogHeader className="pt-2">
             <DialogTitle className="text-xl font-bold flex items-center gap-2.5 text-foreground">
-              <Award className="h-5.5 w-5.5 text-amber-400" />
+              <Award className="h-5.5 w-5.5 text-amber-500" />
               Complete Evaluation Session
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-xs">
@@ -765,10 +765,10 @@ Tell me about a time you had to learn something quickly in order to deliver on a
           </DialogHeader>
 
           <div className="space-y-5 py-4">
-            <div className="flex items-center justify-between p-4 bg-secondary/15 border border-border/50 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-secondary/15 border border-[#CFDDD2]/60 dark:border-border/50 rounded-2xl">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Estimated Score</span>
-                <p className="text-2xl font-extrabold text-blue-400">
+                <p className="text-2xl font-extrabold text-[#0F6B38] dark:text-emerald-400">
                   Evaluating...
                 </p>
               </div>
@@ -780,7 +780,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
 
             <div className="p-4 rounded-xl bg-secondary/10 border border-border/40 space-y-3">
               <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-[#0F6B38] dark:text-emerald-400" />
                 What's Analyzed:
               </h4>
               <ul className="text-xs text-muted-foreground space-y-1.5 pl-5 list-disc font-medium leading-relaxed">
@@ -796,7 +796,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
               variant="outline"
               onClick={() => navigate("/dashboard")}
               disabled={isCompleting}
-              className="border-border/50 bg-secondary/20 text-foreground hover:bg-secondary/40 rounded-xl text-xs h-10 flex-1 order-2 sm:order-1"
+              className="border-border/50 bg-secondary/20 text-foreground hover:bg-secondary/40 rounded-xl text-xs h-10 flex-1 order-2 sm:order-1 cursor-pointer"
             >
               Back to Dashboard
             </Button>
@@ -851,7 +851,7 @@ Tell me about a time you had to learn something quickly in order to deliver on a
                 }
               }}
               disabled={isCompleting}
-              className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold h-10 flex-1 order-1 sm:order-2 shadow-sm flex items-center justify-center gap-1.5"
+              className="bg-[#0F6B38] hover:bg-[#0B572D] text-white rounded-xl text-xs font-bold h-10 flex-1 order-1 sm:order-2 shadow-md shadow-[#0F6B38]/25 hover:shadow-lg hover:shadow-[#0F6B38]/35 flex items-center justify-center gap-1.5 cursor-pointer"
             >
               {isCompleting ? (
                 <>

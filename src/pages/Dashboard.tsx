@@ -10,7 +10,7 @@ import {
   FileText, LogOut, TrendingUp, Upload, Play, Target, Users, Mic, Settings,
   Flame, Trophy, Clock, Star, ArrowRight, Zap, Code, MessageSquare, Bell, Search, X,
   Globe, Briefcase, FileQuestion, ChevronRight, ChevronDown, ChevronUp, Sparkles, Lock, LayoutDashboard,
-  Bot, Video, Compass, Crown, Terminal, Brain, GraduationCap, Award, CalendarDays
+  Bot, Video, Compass, Crown, Terminal, Brain, GraduationCap, Award, CalendarDays, Check
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ProgressPanel } from "@/components/dashboard/ProgressPanel";
@@ -703,24 +703,25 @@ const Dashboard = () => {
 
                 {/* Hero Section */}
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#003B2D] via-[#0F6B38] to-[#0D5C30] text-white px-6 sm:px-8 py-5 shadow-xl shadow-[#003B2D]/15 flex flex-col justify-center min-h-[210px] sm:h-[222px]"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#003B2D] via-[#054533] to-[#04422F] text-white px-6 sm:px-8 py-5 sm:py-6 shadow-xl shadow-[#003B2D]/15 flex flex-col justify-center min-h-[210px] sm:h-[222px] antialiased [text-rendering:optimizeLegibility]"
                 >
-                  <div className="relative z-10 max-w-[480px]">
-                    {/* Top Pill Badge: GOOD AFTERNOON, PRIYANSHU 👏 */}
-                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-white text-[10.5px] font-semibold tracking-wider uppercase mb-2">
-                      <span>GOOD AFTERNOON, {profile?.full_name?.split(' ')[0]?.toUpperCase() || "PRIYANSHU"}</span>
+                  <div className="relative z-10 max-w-[420px]">
+                    {/* Top Pill Badge: GOOD AFTERNOON, ANURAG 👏 */}
+                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 border border-white/25 text-white text-[11px] font-semibold tracking-wider uppercase mb-2">
+                      <span>GOOD AFTERNOON, {profile?.full_name?.split(' ')[0]?.toUpperCase() || "ANURAG"}</span>
                       <span>👏</span>
                     </div>
 
                     {/* Main Heading */}
-                    <h2 className="text-2xl sm:text-[28px] font-extrabold text-white tracking-tight leading-tight mb-1">
+                    <h2 className="text-2xl sm:text-[26px] font-extrabold text-white tracking-tight leading-tight mb-1.5">
                       Ready to ace your next interview?
                     </h2>
 
                     {/* Subheadline */}
-                    <p className="text-white/90 text-xs sm:text-[13px] font-normal mb-4">
+                    <p className="text-white/90 text-xs sm:text-[13.5px] font-normal leading-normal mb-4 sm:mb-4.5">
                       Practice with AI. Get real feedback. Build your confidence.
                     </p>
 
@@ -728,14 +729,14 @@ const Dashboard = () => {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => navigate("/interview/new")}
-                        className="bg-white hover:bg-emerald-50 text-[#003B2D] font-bold px-4 sm:px-5 py-2 rounded-xl shadow-xs text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer"
+                        className="bg-white hover:bg-emerald-50 text-[#003B2D] font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer hover:shadow-md active:scale-[0.98]"
                       >
                         <Play className="w-3.5 h-3.5 fill-[#003B2D] text-[#003B2D]" />
                         <span>Start an Interview</span>
                       </button>
                       <button
                         onClick={() => navigate("/job-recommendations")}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/35 font-medium px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer"
+                        className="bg-white/10 hover:bg-white/20 text-white border border-white/30 font-medium text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
                       >
                         <Compass className="w-4 h-4 text-white" />
                         <span>Explore Roles</span>
@@ -744,15 +745,11 @@ const Dashboard = () => {
                   </div>
 
                   {/* Right Side Complete Artwork */}
-                  <div className="hidden sm:block absolute right-0 top-0 bottom-0 h-full w-[48%] max-w-[490px] pointer-events-none select-none">
+                  <div className="hidden sm:block absolute right-0 top-0 bottom-0 h-full w-[49%] max-w-[490px] pointer-events-none select-none">
                     <img
-                      src="/images/hero_illustration_green.png?v=2"
+                      src="/images/hero_illustration_green.png?v=12"
                       alt="AI Interview Prep"
                       className="h-full w-full object-cover object-right"
-                      style={{
-                        maskImage: "linear-gradient(to right, transparent 0%, black 30px)",
-                        WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30px)"
-                      }}
                     />
                   </div>
                 </motion.div>

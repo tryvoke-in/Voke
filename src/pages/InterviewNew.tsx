@@ -28,7 +28,7 @@ import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 
 // Interview Categories
 const CATEGORIES = [
-  { id: 'general', label: 'General Technical & Behavioral', icon: MessageSquare, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  { id: 'general', label: 'General Technical & Behavioral', icon: MessageSquare, color: 'text-[#0F6B38] dark:text-emerald-400', bg: 'bg-[#EAF3ED] dark:bg-emerald-500/15' },
 ];
 
 interface Message {
@@ -410,7 +410,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
             onClick={() => navigate("/dashboard")}
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-secondary/40 rounded-lg shrink-0"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-[#0F6B38]/10 rounded-lg shrink-0 cursor-pointer"
             title="Back to Dashboard"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -422,34 +422,28 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
               alt="Voke Logo" 
               className="w-7 h-7 object-contain"
             />
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-sm tracking-tight text-foreground">Voke AI</span>
-              <span className="hidden sm:inline-block text-border">/</span>
-              <Badge className="hidden sm:flex bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[11px] py-0.5 px-2 font-medium hover:bg-blue-500/10">
-                Mock Interview
-              </Badge>
-            </div>
+            <span className="font-bold text-sm tracking-tight text-foreground">Voke AI</span>
           </div>
         </div>
 
         {/* Center: Live Status & Progress (Visible when active) */}
         {!isConfiguring && (
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/20 border border-border/40">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-card border-2 border-[#0F6B38] shadow-xs">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0F6B38] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0F6B38]"></span>
               </span>
-              <span className="font-mono text-xs font-semibold text-emerald-400">
+              <span className="font-mono text-xs font-bold text-[#0F6B38]">
                 {formatTime(elapsedTime)}
               </span>
             </div>
 
             <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-muted-foreground">
               <span>Question {Math.min(currentQuestionIndex, totalQuestions)} of {totalQuestions}</span>
-              <div className="w-24 h-1.5 bg-secondary rounded-full overflow-hidden">
+              <div className="w-24 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-blue-600 transition-all duration-300 rounded-full"
+                  className="h-full bg-[#0F6B38] transition-all duration-300 rounded-full"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
@@ -465,10 +459,10 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowCoachPanel(!showCoachPanel)}
-                className={`h-8 px-2.5 text-xs rounded-lg transition-colors gap-1.5 ${
+                className={`h-8 px-2.5 text-xs rounded-lg transition-colors gap-1.5 font-semibold cursor-pointer ${
                   showCoachPanel 
-                    ? "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20" 
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-[#0F6B38] text-white border border-[#0F6B38] hover:bg-[#0B572D] shadow-xs" 
+                    : "text-muted-foreground hover:text-[#0F6B38] hover:bg-[#0F6B38]/10"
                 }`}
                 title="Toggle Live Interview Coach & STAR Guide"
               >
@@ -481,7 +475,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                 size="sm"
                 onClick={completeSession}
                 disabled={isCompleting}
-                className="h-8 px-3 text-xs font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-all"
+                className="h-8 px-3 text-xs font-medium bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-all cursor-pointer"
               >
                 <StopCircle className="w-3.5 h-3.5 mr-1.5" />
                 {isCompleting ? "Evaluating..." : "End Session"}
@@ -502,43 +496,45 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="max-w-xl w-full p-6 md:p-8 rounded-2xl bg-card/60 border border-border/60 shadow-xl space-y-6 text-center sm:text-left backdrop-blur-xl"
+              className="relative max-w-xl w-full p-6 sm:p-8 rounded-3xl bg-card/90 dark:bg-card/75 border border-[#0F6B38]/30 dark:border-emerald-500/25 shadow-2xl shadow-[#0F6B38]/10 space-y-6 text-center sm:text-left backdrop-blur-xl overflow-hidden"
             >
+              {/* Top ambient green accent line */}
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#0F6B38] to-transparent opacity-90" />
+
               <div className="space-y-2">
-                <div className="flex items-center justify-center sm:justify-start gap-2.5">
-                  
-                  <h3 className="text-xl font-bold text-foreground">AI Mock Text Interview</h3>
-                </div>
-                <p className="text-xs text-muted-foreground">
+                <h3 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">AI Mock Text Interview</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Simulate a realistic text-based technical & behavioral interview. Get dynamic follow-up questions and instant feedback on your answers.
                 </p>
               </div>
 
-              <div className="space-y-3 pt-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                  Select Interview Length
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {[
-                    { value: 3, label: "Express Mock", count: "3 Questions", duration: "~10 mins" },
-                    { value: 5, label: "Standard Session", count: "5 Questions", duration: "~15 mins" },
-                    { value: 15, label: "Deep Drill", count: "15 Questions", duration: "~45 mins" }
-                  ].map((opt) => (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                {[
+                  { value: 3, label: "Express Mock", count: "3 Questions", duration: "~10 mins" },
+                  { value: 5, label: "Standard Session", count: "5 Questions", duration: "~15 mins" },
+                  { value: 15, label: "Deep Drill", count: "15 Questions", duration: "~45 mins" }
+                ].map((opt) => {
+                  const isSelected = totalQuestions === opt.value;
+                  return (
                     <div
                       key={opt.value}
                       onClick={() => setTotalQuestions(opt.value)}
-                      className={`p-4 rounded-xl border text-center cursor-pointer transition-all duration-150 ${
-                        totalQuestions === opt.value
-                          ? "bg-blue-500/10 border-blue-500 text-foreground font-semibold shadow-sm"
-                          : "bg-secondary/15 hover:bg-secondary/30 border-border/40 text-muted-foreground hover:text-foreground"
+                      className={`p-4 rounded-2xl border text-center cursor-pointer transition-all duration-200 ${
+                        isSelected
+                          ? "bg-white dark:bg-[#0F6B38]/15 border-2 border-[#0F6B38] text-foreground font-bold shadow-md shadow-[#0F6B38]/20 ring-2 ring-[#0F6B38]/20"
+                          : "bg-card/70 hover:bg-slate-50 dark:hover:bg-emerald-500/5 border-border/70 hover:border-[#0F6B38]/60 text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      <h4 className="font-bold text-sm text-foreground">{opt.label}</h4>
-                      <p className="text-xs font-semibold mt-1 text-foreground/80">{opt.count}</p>
-                      <p className="text-[10px] opacity-60 mt-0.5">{opt.duration}</p>
+                      <h4 className={`text-sm font-bold ${isSelected ? "text-[#0F6B38] dark:text-emerald-200" : "text-foreground"}`}>
+                        {opt.label}
+                      </h4>
+                      <p className={`text-xs mt-1 font-bold ${isSelected ? "text-[#0F6B38] dark:text-emerald-400" : "text-foreground/75"}`}>
+                        {opt.count}
+                      </p>
+                      <p className="text-[10px] opacity-65 mt-0.5">{opt.duration}</p>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
 
               <div className="pt-4 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -547,10 +543,10 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                 </div>
                 <Button
                   onClick={() => handleStartInterview(totalQuestions)}
-                  className="w-full sm:w-auto px-6 h-10 font-semibold text-xs rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-sm transition-colors"
+                  className="w-full sm:w-auto px-6 h-11 font-semibold text-xs sm:text-sm rounded-xl bg-[#0F6B38] hover:bg-[#0B572D] text-white shadow-md shadow-[#0F6B38]/25 hover:shadow-lg hover:shadow-[#0F6B38]/35 transition-all duration-200 active:scale-[0.99] group/btn cursor-pointer flex items-center justify-center gap-2"
                 >
-                  Start Practice Session
-                  <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                  <span>Start Practice Session</span>
+                  <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
                 </Button>
               </div>
             </motion.div>
@@ -564,19 +560,6 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
               {/* Scrollable Conversation History */}
               <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
                 <div className="max-w-3xl mx-auto space-y-6">
-                  
-                  {/* Welcoming Banner */}
-                  <div className="p-4 rounded-xl bg-secondary/15 border border-border/40 flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 shrink-0 mt-0.5">
-                      <Bot className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-bold text-foreground">Voke AI Interviewer</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        I will ask you questions one at a time. Provide thoughtful, structured answers. Use the STAR guide on the right if you want quick advice!
-                      </p>
-                    </div>
-                  </div>
 
                   {/* Completed Question & Answer Turns */}
                   {completedTurns.map((turn, index) => {
@@ -586,19 +569,19 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                       <div key={index} className="space-y-4 pt-2">
                         {/* Interviewer Question */}
                         <div className="flex items-start gap-3">
-                          <Avatar className="w-8 h-8 rounded-xl border border-blue-500/20 shrink-0">
-                            <AvatarFallback className="bg-blue-500/10 text-blue-400 text-xs font-bold">
+                          <Avatar className="w-8 h-8 rounded-xl border border-[#0F6B38] shrink-0">
+                            <AvatarFallback className="bg-[#0F6B38] text-white text-xs font-bold">
                               AI
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 space-y-2">
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-bold text-foreground">Voke AI</span>
-                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-border/50 text-muted-foreground">
+                              <Badge className="text-[10px] py-0 px-2 bg-[#0F6B38] text-white border border-[#0F6B38] font-bold">
                                 Question {index + 1}
                               </Badge>
                             </div>
-                            <div className="p-4 rounded-2xl bg-card/60 border border-border/50 text-[14px] leading-relaxed text-foreground">
+                            <div className="p-4 rounded-2xl bg-card border border-border/70 dark:border-border/60 text-[14px] leading-relaxed text-foreground shadow-xs">
                               <ReactMarkdown>{turn.question}</ReactMarkdown>
                             </div>
                           </div>
@@ -614,12 +597,12 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                                 </span>
                                 <span className="text-xs font-bold text-foreground">You</span>
                               </div>
-                              <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-[14px] leading-relaxed text-foreground text-left whitespace-pre-line">
+                              <div className="p-4 rounded-2xl bg-white dark:bg-card border-2 border-[#0F6B38]/50 text-[14px] leading-relaxed text-foreground text-left whitespace-pre-line shadow-xs">
                                 {turn.answer}
                               </div>
                             </div>
-                            <Avatar className="w-8 h-8 rounded-xl border border-border/50 shrink-0">
-                              <AvatarFallback className="bg-secondary text-foreground text-xs font-bold">
+                            <Avatar className="w-8 h-8 rounded-xl border border-[#0F6B38] shrink-0">
+                              <AvatarFallback className="bg-[#003B2D] text-white text-xs font-bold">
                                 You
                               </AvatarFallback>
                             </Avatar>
@@ -631,12 +614,13 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                           <div className="ml-11 mr-11">
                             <button
                               onClick={() => toggleFeedback(index)}
-                              className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/15 hover:bg-secondary/30 border border-border/40 text-xs font-semibold text-blue-400 transition-colors"
+                              className="w-full flex items-center justify-between p-3 rounded-xl bg-white dark:bg-card hover:bg-slate-50 border-2 border-[#0F6B38] text-xs font-bold text-[#0F6B38] dark:text-emerald-400 transition-colors cursor-pointer shadow-xs"
                             >
                               <span className="flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-[#0F6B38]" />
                                 Review Feedback for Question {index + 1}
                               </span>
-                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                              {isExpanded ? <ChevronUp className="w-4 h-4 text-[#0F6B38]" /> : <ChevronDown className="w-4 h-4 text-[#0F6B38]" />}
                             </button>
 
                             <AnimatePresence>
@@ -648,7 +632,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                                   transition={{ duration: 0.2 }}
                                   className="overflow-hidden"
                                 >
-                                  <div className="mt-2 p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 text-xs text-foreground/90 leading-relaxed prose prose-sm prose-invert max-w-none">
+                                  <div className="mt-2 p-4 rounded-2xl bg-white dark:bg-card border-2 border-[#0F6B38]/30 dark:border-emerald-500/20 text-xs text-foreground leading-relaxed prose prose-sm dark:prose-invert max-w-none shadow-xs">
                                     <ReactMarkdown>{turn.feedback}</ReactMarkdown>
                                   </div>
                                 </motion.div>
@@ -663,8 +647,8 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                   {/* ACTIVE QUESTION CARD */}
                   {activeQuestion && (
                     <div className="flex items-start gap-3 pt-2">
-                      <Avatar className="w-8 h-8 rounded-xl border border-blue-500/20 shrink-0">
-                        <AvatarFallback className="bg-blue-500/10 text-blue-400 text-xs font-bold">
+                      <Avatar className="w-8 h-8 rounded-xl border border-[#0F6B38] shrink-0">
+                        <AvatarFallback className="bg-[#0F6B38] text-white text-xs font-bold">
                           AI
                         </AvatarFallback>
                       </Avatar>
@@ -672,21 +656,23 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-bold text-foreground">Voke AI</span>
-                            
+                            <Badge className="text-[10px] py-0.5 px-2.5 bg-[#0F6B38] text-white border border-[#0F6B38] font-bold rounded-full shadow-xs">
+                              Current Question
+                            </Badge>
                           </div>
                           
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowHint(!showHint)}
-                            className="h-7 px-2 text-[11px] text-muted-foreground hover:text-blue-400 gap-1 rounded-md"
+                            className="h-7 px-2 text-[11px] text-muted-foreground hover:text-[#0F6B38] hover:bg-[#0F6B38]/10 gap-1 rounded-md cursor-pointer"
                           >
-                            <Lightbulb className="w-3 h-3 text-amber-400" />
+                            <Lightbulb className="w-3 h-3 text-amber-500" />
                             {showHint ? "Hide Hint" : "Need a Hint?"}
                           </Button>
                         </div>
 
-                        <div className="p-5 rounded-2xl bg-card/80 border border-border/60 shadow-sm text-[15px] font-medium leading-relaxed text-foreground">
+                        <div className="p-5 rounded-2xl bg-card border-2 border-[#0F6B38] shadow-sm shadow-[#0F6B38]/10 text-[15px] font-medium leading-relaxed text-foreground">
                           <ReactMarkdown>{activeQuestion}</ReactMarkdown>
                         </div>
 
@@ -695,9 +681,9 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                           <motion.div
                             initial={{ opacity: 0, y: -5 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-amber-200/90 space-y-1.5"
+                            className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-900 dark:text-amber-200 space-y-1.5"
                           >
-                            <div className="font-bold flex items-center gap-1.5 text-amber-400 text-xs">
+                            <div className="font-bold flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-xs">
                               <Lightbulb className="w-3.5 h-3.5" />
                               Strategy Tip for This Question:
                             </div>
@@ -715,10 +701,10 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="p-6 rounded-2xl bg-card/40 border border-border/50 border-dashed flex items-center justify-center gap-3 text-center"
+                      className="p-6 rounded-2xl bg-white dark:bg-card border-2 border-[#0F6B38] border-dashed flex items-center justify-center gap-3 text-center shadow-xs"
                     >
-                      <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
-                      <span className="text-xs font-semibold text-muted-foreground">
+                      <Loader2 className="w-5 h-5 text-[#0F6B38] animate-spin" />
+                      <span className="text-xs font-bold text-[#0F6B38]">
                         Voke AI is evaluating your response and preparing the next turn...
                       </span>
                     </motion.div>
@@ -729,9 +715,9 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-6 rounded-2xl bg-card/80 border border-border/60 shadow-lg text-center space-y-4"
+                      className="p-6 rounded-2xl bg-card/90 border-2 border-[#0F6B38] shadow-xl text-center space-y-4"
                     >
-                      <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400">
+                      <div className="w-12 h-12 rounded-2xl bg-[#0F6B38] border border-[#0F6B38] flex items-center justify-center mx-auto text-white shadow-xs">
                         <CheckCircle2 className="w-6 h-6" />
                       </div>
                       <div className="space-y-1">
@@ -743,7 +729,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                       <Button
                         onClick={completeSession}
                         disabled={isCompleting}
-                        className="px-6 h-11 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-sm rounded-xl transition-all gap-2"
+                        className="px-6 h-11 bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold text-xs shadow-md shadow-[#0F6B38]/25 hover:shadow-lg hover:shadow-[#0F6B38]/35 rounded-xl transition-all gap-2 cursor-pointer"
                       >
                         {isCompleting ? (
                           <>
@@ -777,10 +763,10 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                           variant="outline"
                           size="sm"
                           onClick={insertStarTemplate}
-                          className="h-7 px-2 text-[11px] border-border/50 text-muted-foreground hover:text-blue-400 hover:border-blue-500/30 gap-1 rounded-lg"
+                          className="h-7 px-2.5 text-[11px] border-2 border-[#0F6B38] text-[#0F6B38] hover:bg-[#0F6B38] hover:text-white gap-1.5 rounded-lg font-bold transition-all cursor-pointer shadow-xs"
                           title="Insert Situation, Task, Action, Result framework"
                         >
-                          <Layers className="w-3 h-3 text-blue-400" />
+                          <Layers className="w-3.5 h-3.5 text-[#0F6B38]" />
                           Insert STAR Template
                         </Button>
 
@@ -799,23 +785,23 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
 
                       {/* Word count quality indicator */}
                       <div className="flex items-center gap-2 font-mono text-[11px]">
-                        <span className={wordCount >= 50 ? "text-emerald-400" : "text-muted-foreground"}>
+                        <span className={wordCount >= 50 ? "text-[#0F6B38] font-bold" : "text-muted-foreground"}>
                           {wordCount} words
                         </span>
                         {wordCount > 0 && wordCount < 30 && (
                           <span className="text-[10px] text-muted-foreground">(aim for 50+ words)</span>
                         )}
                         {wordCount >= 50 && (
-                          <span className="text-[10px] text-emerald-400 font-sans">✓ Good depth</span>
+                          <span className="text-[10px] text-[#0F6B38] font-sans font-bold">✓ Good depth</span>
                         )}
                       </div>
                     </div>
 
                     {/* Textarea Input */}
-                    <div className={`p-3 rounded-2xl bg-card border ${
+                    <div className={`p-3 rounded-2xl bg-card border-2 ${
                       isEditorFocused 
-                        ? "border-blue-500/50 ring-1 ring-blue-500/20" 
-                        : "border-border/60"
+                        ? "border-[#0F6B38] ring-2 ring-[#0F6B38]/20" 
+                        : "border-border/70"
                     } transition-all duration-200 space-y-2`}>
                       <Textarea
                         ref={textareaRef}
@@ -835,17 +821,17 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                       />
 
                       <div className="flex items-center justify-between pt-2 border-t border-border/40">
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <Activity className="w-3 h-3 text-blue-400" />
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
+                          <Activity className="w-3.5 h-3.5 text-[#0F6B38]" />
                           Enter ↵ to submit answer
                         </span>
 
                         <Button
                           onClick={() => handleSendMessage(input)}
                           disabled={!input.trim() || sending || !sessionActive || isCompleting}
-                          className={`h-8 px-4 font-semibold text-xs rounded-xl transition-all duration-200 ${
+                          className={`h-8 px-4 font-semibold text-xs rounded-xl transition-all duration-200 cursor-pointer ${
                             input.trim() && !sending && sessionActive && !isCompleting
-                              ? "bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
+                              ? "bg-[#0F6B38] hover:bg-[#0B572D] text-white shadow-sm shadow-[#0F6B38]/20 hover:shadow-md hover:shadow-[#0F6B38]/30 active:scale-[0.99]"
                               : "bg-secondary/30 text-muted-foreground/40 cursor-not-allowed border border-border/30"
                           }`}
                         >
@@ -873,7 +859,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
               <aside className="w-80 lg:w-88 border-l border-border/50 bg-card/40 backdrop-blur-xl shrink-0 h-full hidden md:flex flex-col relative z-20 overflow-hidden">
                 <div className="p-4 border-b border-border/50 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+                    <div className="p-1.5 rounded-xl bg-[#0F6B38] text-white shadow-xs">
                       <Target className="w-4 h-4" />
                     </div>
                     <div>
@@ -885,7 +871,7 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowCoachPanel(false)}
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-lg"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-lg cursor-pointer"
                     title="Hide Coach Panel"
                   >
                     <PanelRightClose className="w-4 h-4" />
@@ -896,77 +882,38 @@ ${data.feedback.verification_note ? `### 🔍 Verification Note\n${data.feedback
                   <div className="space-y-4">
                     
                     {/* STAR Framework Card */}
-                    <div className="p-4 rounded-xl bg-secondary/15 border border-border/50 space-y-3">
+                    <div className="p-4 rounded-2xl bg-white dark:bg-card border-2 border-[#0F6B38] shadow-sm space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">STAR Blueprint</span>
+                        <span className="text-[11px] font-extrabold text-[#0F6B38] uppercase tracking-wider">STAR Blueprint</span>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={insertStarTemplate}
-                          className="h-6 px-2 text-[10px] text-blue-400 hover:bg-blue-500/10 rounded-md"
+                          className="h-6 px-2.5 text-[10px] font-bold text-white bg-[#0F6B38] hover:bg-[#0B572D] rounded-lg cursor-pointer shadow-xs"
                         >
                           Use Template
                         </Button>
                       </div>
 
                       <div className="space-y-2.5 text-xs">
-                        <div className="p-2 rounded-lg bg-card/60 border border-border/40">
-                          <span className="font-bold text-blue-400 mr-1.5">S • Situation:</span>
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-card/80 border border-slate-200 dark:border-border/40">
+                          <span className="font-extrabold text-[#0F6B38] mr-1.5">S • Situation:</span>
                           <span className="text-muted-foreground text-[11px]">Set context, project background, or company scope.</span>
                         </div>
-                        <div className="p-2 rounded-lg bg-card/60 border border-border/40">
-                          <span className="font-bold text-blue-400 mr-1.5">T • Task:</span>
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-card/80 border border-slate-200 dark:border-border/40">
+                          <span className="font-extrabold text-[#0F6B38] mr-1.5">T • Task:</span>
                           <span className="text-muted-foreground text-[11px]">Define the specific challenge, requirement, or obstacle.</span>
                         </div>
-                        <div className="p-2 rounded-lg bg-card/60 border border-border/40">
-                          <span className="font-bold text-blue-400 mr-1.5">A • Action:</span>
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-card/80 border border-slate-200 dark:border-border/40">
+                          <span className="font-extrabold text-[#0F6B38] mr-1.5">A • Action:</span>
                           <span className="text-muted-foreground text-[11px]">Explain the exact technical steps & tools YOU implemented.</span>
                         </div>
-                        <div className="p-2 rounded-lg bg-card/60 border border-border/40">
-                          <span className="font-bold text-blue-400 mr-1.5">R • Result:</span>
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-card/80 border border-slate-200 dark:border-border/40">
+                          <span className="font-extrabold text-[#0F6B38] mr-1.5">R • Result:</span>
                           <span className="text-muted-foreground text-[11px]">Quantify impact (e.g. 40% faster, 0 bugs, key learnings).</span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Live Answer Best Practices */}
-                    <div className="p-4 rounded-xl bg-secondary/15 border border-border/50 space-y-2.5">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        High-Scoring Tactics
-                      </span>
-                      <ul className="space-y-2 text-[11px] text-muted-foreground leading-relaxed">
-                        <li className="flex items-start gap-1.5">
-                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                          <span><strong>Quantify Results:</strong> Include numbers, percentages, or scale.</span>
-                        </li>
-                        <li className="flex items-start gap-1.5">
-                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                          <span><strong>Show Ownership:</strong> Use "I designed" or "I resolved" instead of passive voice.</span>
-                        </li>
-                        <li className="flex items-start gap-1.5">
-                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                          <span><strong>Name Tech Stack:</strong> Mention specific libraries, DBs, and patterns.</span>
-                        </li>
-                      </ul>
-                    </div>
-
-                    {/* Candidate Profile Context Badge */}
-                    {/* {profileContext?.targetRole && (
-                      <div className="p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/15 space-y-1.5">
-                        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          Target Profile
-                        </span>
-                        <p className="text-xs font-semibold text-foreground">
-                          {profileContext.targetRole}
-                        </p>
-                        {profileContext.dreamCompany && (
-                          <p className="text-[10px] text-muted-foreground">
-                            Target Company: {profileContext.dreamCompany}
-                          </p>
-                        )}
-                      </div>
-                    )} */}
 
                   </div>
                 </ScrollArea>

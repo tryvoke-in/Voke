@@ -310,24 +310,24 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
       {/* Dynamic Insights Row */}
       <div className="grid grid-cols-2 gap-4 pt-1">
         {/* Biggest Improvement */}
-        <div className="bg-white/40 dark:bg-muted/40 backdrop-blur-md border border-gray-200/50 dark:border-border/60 rounded-2xl p-4 flex flex-col hover:border-[#0F6B38]/40 dark:hover:border-emerald-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
-          <div className="text-[#0F6B38] dark:text-emerald-400 text-xs font-semibold flex items-center gap-1">
+        <div className="bg-white dark:bg-card border border-gray-200/80 dark:border-border/60 rounded-2xl p-4 flex flex-col hover:border-[#0F6B38]/50 dark:hover:border-emerald-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
+          <div className="text-[#0F6B38] dark:text-emerald-400 text-xs font-bold flex items-center gap-1">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Biggest improvement</span>
           </div>
           <div className="mt-2">
-            <div className="text-sm font-medium text-foreground/90 line-clamp-1">{biggestImprovementLabel}</div>
+            <div className="text-sm font-semibold text-foreground/90 line-clamp-1">{biggestImprovementLabel}</div>
           </div>
         </div>
 
         {/* Needs Attention */}
-        <div className="bg-white/40 dark:bg-muted/40 backdrop-blur-md border border-gray-200/50 dark:border-border/60 rounded-2xl p-4 flex flex-col hover:border-orange-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
-          <div className="text-orange-500 text-xs font-semibold flex items-center gap-1">
+        <div className="bg-white dark:bg-card border border-gray-200/80 dark:border-border/60 rounded-2xl p-4 flex flex-col hover:border-orange-500/40 transition-all duration-300 min-h-[80px] shadow-2xs">
+          <div className="text-orange-500 text-xs font-bold flex items-center gap-1">
             <AlertCircle className="w-3.5 h-3.5" />
             <span>Needs attention</span>
           </div>
           <div className="mt-2 space-y-1">
-            <div className="text-sm font-medium text-foreground/90 truncate">{needsAttentionLabel}</div>
+            <div className="text-sm font-semibold text-foreground/90 truncate">{needsAttentionLabel}</div>
           </div>
         </div>
       </div>
@@ -337,7 +337,7 @@ export const ProgressPanel = ({ allSessions = [] }: ProgressPanelProps) => {
         id="tour-view-details-btn"
         type="button"
         onClick={() => navigate("/profile", { state: { tab: "analytics" } })}
-        className="w-full py-3 px-4 rounded-xl border border-emerald-500/30 text-[#0F6B38] dark:text-emerald-400 bg-[#EAF3ED]/70 hover:bg-[#0F6B38] hover:text-white dark:bg-emerald-500/10 dark:hover:bg-[#0F6B38] dark:hover:text-white backdrop-blur-sm font-semibold text-sm active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-xs"
+        className="w-full py-3 px-4 rounded-xl border border-emerald-500/30 text-[#0F6B38] dark:text-emerald-400 bg-[#EAF3ED]/80 hover:bg-[#0F6B38] hover:text-white dark:bg-emerald-500/10 dark:hover:bg-[#0F6B38] dark:hover:text-white font-semibold text-sm active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-xs"
       >
         <span>View Detailed Analytics</span>
         <ArrowRight className="w-4 h-3 group-hover:translate-x-1 transition-transform" />

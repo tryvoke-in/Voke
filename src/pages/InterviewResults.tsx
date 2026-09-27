@@ -53,7 +53,7 @@ const InterviewResults = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background dark:bg-[#0c0d14] transition-colors duration-300">
-        <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-[#0F6B38] dark:text-emerald-400 animate-spin" />
       </div>
     );
   }
@@ -76,9 +76,9 @@ const InterviewResults = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start w-full">
           
           {/* LEFT COLUMN: Completion status, Score, Metrics and Actions (5 spans) */}
-          <div className="lg:col-span-5 rounded-3xl bg-card/80 dark:bg-[#0e1017]/40 border border-border/60 dark:border-white/5 shadow-xl shadow-black/5 dark:shadow-2xl backdrop-blur-xl p-6 md:p-8 space-y-6 relative overflow-hidden transition-colors duration-300">
+          <div className="lg:col-span-5 rounded-3xl bg-card/85 dark:bg-[#0e1017]/60 border border-[#CFDDD2] dark:border-emerald-500/20 shadow-xl shadow-[#003B2D]/5 dark:shadow-2xl backdrop-blur-xl p-6 md:p-8 space-y-6 relative overflow-hidden transition-colors duration-300">
             {/* Top glowing boundary line */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-sky-500 to-transparent opacity-80" />
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#0F6B38] dark:via-emerald-400 to-transparent opacity-90" />
 
             {/* Header completion banner */}
             <div className="text-center space-y-2">
@@ -86,14 +86,14 @@ const InterviewResults = () => {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg shadow-emerald-500/10 dark:shadow-emerald-500/5"
+                className="w-14 h-14 bg-[#EAF3ED] dark:bg-emerald-500/15 border border-[#CFDDD2] dark:border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-md shadow-[#0F6B38]/10"
               >
-                <CheckCircle className="w-7 h-7 text-emerald-500 dark:text-emerald-400" />
+                <CheckCircle className="w-7 h-7 text-[#0F6B38] dark:text-emerald-400" />
               </motion.div>
-              <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-foreground dark:bg-gradient-to-r dark:from-sky-200 dark:to-white dark:bg-clip-text dark:text-transparent">
+              <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-[#003B2D] dark:text-emerald-100">
                 Interview Completed!
               </h2>
-              <p className="text-[10px] text-sky-600 dark:text-sky-400/80 font-bold uppercase tracking-wider">
+              <p className="text-[10px] text-[#0F6B38] dark:text-emerald-400 font-bold uppercase tracking-wider">
                 {session.interview_type || "General"} Practice Session
               </p>
             </div>
@@ -103,9 +103,9 @@ const InterviewResults = () => {
               const getScoreTheme = (s: number) => {
                 if (s >= 80) {
                   return {
-                    stop1: "#10b981", // emerald-500
-                    stop2: "#059669", // emerald-600
-                    textColor: "text-emerald-600 dark:text-emerald-400",
+                    stop1: "#0F6B38", // Voke Primary Green
+                    stop2: "#10b981", // emerald-500
+                    textColor: "text-[#0F6B38] dark:text-emerald-400",
                   };
                 }
                 if (s >= 60) {
@@ -125,8 +125,8 @@ const InterviewResults = () => {
               const scoreTheme = getScoreTheme(score || 0);
 
               return (
-                <div className="flex flex-col items-center justify-center p-5 bg-background/60 dark:bg-white/[0.01] border border-border/60 dark:border-white/5 rounded-2xl transition-colors duration-300">
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-muted-foreground dark:text-sky-300/40 mb-3">Overall score</span>
+                <div className="flex flex-col items-center justify-center p-5 bg-background/60 dark:bg-white/[0.01] border border-[#CFDDD2]/60 dark:border-white/5 rounded-2xl transition-colors duration-300">
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-muted-foreground dark:text-emerald-300/40 mb-3">Overall score</span>
                   <div className="relative flex items-center justify-center">
                     <svg className="w-28 h-28 transform -rotate-90">
                       <circle
@@ -167,31 +167,31 @@ const InterviewResults = () => {
 
             {/* Stats Block */}
             <div className="grid grid-cols-2 gap-3.5">
-              <div className="p-3.5 bg-background/60 dark:bg-white/[0.01] border border-border/60 dark:border-white/5 rounded-2xl flex items-center gap-3 transition-colors duration-300">
-                <div className="p-2 bg-blue-500/10 border border-blue-500/20 dark:border-blue-500/10 rounded-xl">
-                  <Clock className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+              <div className="p-3.5 bg-background/60 dark:bg-white/[0.01] border border-[#CFDDD2]/60 dark:border-white/5 rounded-2xl flex items-center gap-3 transition-colors duration-300">
+                <div className="p-2 bg-[#EAF3ED] dark:bg-emerald-500/15 border border-[#CFDDD2] dark:border-emerald-500/30 rounded-xl">
+                  <Clock className="w-4 h-4 text-[#0F6B38] dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-[9px] text-muted-foreground dark:text-sky-300/40 font-bold uppercase">Duration</p>
-                  <p className="text-xs font-bold text-foreground dark:text-sky-100">{session.duration || 15} mins</p>
+                  <p className="text-[9px] text-muted-foreground dark:text-emerald-300/40 font-bold uppercase">Duration</p>
+                  <p className="text-xs font-bold text-foreground dark:text-slate-100">{session.duration || 15} mins</p>
                 </div>
               </div>
 
-              <div className="p-3.5 bg-background/60 dark:bg-white/[0.01] border border-border/60 dark:border-white/5 rounded-2xl flex items-center gap-3 transition-colors duration-300">
+              <div className="p-3.5 bg-background/60 dark:bg-white/[0.01] border border-[#CFDDD2]/60 dark:border-white/5 rounded-2xl flex items-center gap-3 transition-colors duration-300">
                 <div className="p-2 bg-amber-500/10 border border-amber-500/20 dark:border-amber-500/10 rounded-xl">
                   <Trophy className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[9px] text-muted-foreground dark:text-sky-300/40 font-bold uppercase">Questions</p>
-                  <p className="text-xs font-bold text-foreground dark:text-sky-100">{(session as any).questions_answered || 5} Ans</p>
+                  <p className="text-[9px] text-muted-foreground dark:text-emerald-300/40 font-bold uppercase">Questions</p>
+                  <p className="text-xs font-bold text-foreground dark:text-slate-100">{(session as any).questions_answered || 5} Ans</p>
                 </div>
               </div>
             </div>
 
             {/* Metric breakdown progress sliders */}
             <div className="space-y-3.5">
-              <h3 className="text-[10px] font-bold text-muted-foreground dark:text-sky-300/40 uppercase tracking-wider">Skill Metrics Calibration</h3>
-              <div className="space-y-3.5 bg-background/60 dark:bg-white/[0.01] border border-border/60 dark:border-white/5 rounded-2xl p-4.5 transition-colors duration-300">
+              <h3 className="text-[10px] font-bold text-muted-foreground dark:text-emerald-300/40 uppercase tracking-wider">Skill Metrics Calibration</h3>
+              <div className="space-y-3.5 bg-background/60 dark:bg-white/[0.01] border border-[#CFDDD2]/60 dark:border-white/5 rounded-2xl p-4.5 transition-colors duration-300">
                 {[
                   {
                     label: "Technical Accuracy",
@@ -208,7 +208,7 @@ const InterviewResults = () => {
                 ].map((metric, i) => {
                   const metricGradient =
                     metric.score >= 80
-                      ? "bg-gradient-to-r from-emerald-500 to-teal-500"
+                      ? "bg-gradient-to-r from-[#0F6B38] to-emerald-500"
                       : metric.score >= 60
                       ? "bg-gradient-to-r from-amber-500 to-orange-500"
                       : "bg-gradient-to-r from-rose-500 to-red-500";
@@ -216,8 +216,8 @@ const InterviewResults = () => {
                   return (
                     <div key={i} className="space-y-1.5">
                       <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-foreground/80 dark:text-sky-200/70">{metric.label}</span>
-                        <span className="font-bold text-foreground dark:text-sky-100">{metric.score}%</span>
+                        <span className="text-foreground/80 dark:text-slate-200">{metric.label}</span>
+                        <span className="font-bold text-foreground dark:text-slate-100">{metric.score}%</span>
                       </div>
                       <Progress value={metric.score} className="h-1.5 bg-muted/80 dark:bg-white/5 border-0" indicatorClassName={metricGradient} />
                     </div>
@@ -229,7 +229,7 @@ const InterviewResults = () => {
             {/* Action buttons stack */}
             <div className="flex flex-col gap-2.5 pt-2">
               <Button
-                className="w-full h-10 text-xs font-bold rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white shadow-lg shadow-sky-500/20 dark:shadow-sky-500/15 transition-all duration-300 hover:scale-[1.01]"
+                className="w-full h-11 text-xs font-bold rounded-xl bg-[#0F6B38] hover:bg-[#0B572D] text-white shadow-md shadow-[#0F6B38]/25 hover:shadow-lg hover:shadow-[#0F6B38]/35 transition-all duration-200 active:scale-[0.99] cursor-pointer"
                 onClick={() => navigate("/dashboard")}
               >
                 <LayoutDashboard className="w-4 h-4 mr-2" />
@@ -238,7 +238,7 @@ const InterviewResults = () => {
               </Button>
               <Button
                 variant="outline"
-                className="w-full h-10 text-xs font-bold rounded-xl bg-card/80 dark:bg-transparent border-border/70 dark:border-white/10 text-foreground/80 dark:text-sky-200/80 hover:bg-muted/60 dark:hover:bg-white/5 hover:text-foreground dark:hover:text-white shadow-sm dark:shadow-none transition-all duration-200"
+                className="w-full h-10 text-xs font-bold rounded-xl bg-card/80 dark:bg-transparent border-[#CFDDD2] dark:border-emerald-500/20 text-foreground/85 hover:bg-[#EAF3ED] dark:hover:bg-emerald-500/10 hover:text-[#0F6B38] dark:hover:text-emerald-400 shadow-xs transition-all duration-200 cursor-pointer"
                 onClick={() => navigate("/interview/new")}
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
@@ -251,17 +251,17 @@ const InterviewResults = () => {
           {/* RIGHT COLUMN: AI Feedback commentary and bullet breakdowns (7 spans) */}
           <div className="lg:col-span-7 space-y-6">
             
-            {/* Sarah's AI Assessment Card */}
+            {/* Voke AI Assessment Card */}
             {evaluation?.feedback && (
-              <div className="p-6 rounded-3xl bg-card/80 dark:bg-[#0e1017]/40 border border-sky-500/20 dark:border-sky-500/10 shadow-xl shadow-black/5 dark:shadow-2xl backdrop-blur-xl space-y-3.5 relative overflow-hidden transition-colors duration-300">
-                <div className="absolute top-0 right-0 p-4 opacity-[0.05] dark:opacity-[0.03] pointer-events-none">
-                  <Sparkles className="w-20 h-20 text-sky-500 dark:text-sky-400" />
+              <div className="p-6 rounded-3xl bg-card/85 dark:bg-[#0e1017]/60 border border-[#CFDDD2] dark:border-emerald-500/20 shadow-xl shadow-[#003B2D]/5 dark:shadow-2xl backdrop-blur-xl space-y-3.5 relative overflow-hidden transition-colors duration-300">
+                <div className="absolute top-0 right-0 p-4 opacity-[0.05] dark:opacity-[0.04] pointer-events-none">
+                  <Sparkles className="w-20 h-20 text-[#0F6B38] dark:text-emerald-400" />
                 </div>
-                <h3 className="text-[10px] font-bold text-sky-700 dark:text-sky-300 flex items-center gap-2 uppercase tracking-wider">
-                  <Sparkles className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                <h3 className="text-[10px] font-bold text-[#0F6B38] dark:text-emerald-400 flex items-center gap-2 uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-[#0F6B38] dark:text-emerald-400" />
                   Voke's AI Assessment Summary
                 </h3>
-                <p className="text-[13px] text-foreground/85 dark:text-sky-200/75 leading-relaxed font-sans font-medium whitespace-pre-line">
+                <p className="text-[13px] text-foreground/85 dark:text-slate-200 leading-relaxed font-sans font-medium whitespace-pre-line">
                   {evaluation.feedback}
                 </p>
               </div>
