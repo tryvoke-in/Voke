@@ -13,6 +13,7 @@ const MemoizedElitePrepScreenPreview = React.memo(ElitePrepScreenPreview);
 import { generateElitePrepScreenTexture } from "./generateElitePrepScreenTexture";
 import { WAITLIST_CONFIG } from "@/config/waitlist";
 import { useNavigate } from "react-router-dom";
+import { VokeLoader } from "@/components/ui/VokeLoader";
 
 interface MacBookHero3DProps {
   onScrollToFeatures?: () => void;
@@ -910,11 +911,12 @@ export const MacBookHero3D: React.FC<MacBookHero3DProps> = React.memo(({
 
           {/* Loading Spinner */}
           {!isLoaded && !loadError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#06070a]/90 backdrop-blur-md z-30">
-              <div className="w-10 h-10 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shadow-[0_0_20px_rgba(16,185,129,0.5)]" />
-              <p className="font-mono text-xs text-emerald-300 font-semibold tracking-wider">
-                Booting Voke 3D Studio...
-              </p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#06070a]/90 backdrop-blur-md z-30">
+              <VokeLoader
+                fullScreen={false}
+                variant="dark"
+                message="Loading 3D Studio..."
+              />
             </div>
           )}
 

@@ -6,6 +6,7 @@ interface VokeLoaderProps {
   submessage?: string;
   fullScreen?: boolean;
   size?: "sm" | "md" | "lg";
+  variant?: "default" | "dark";
   className?: string;
 }
 
@@ -14,8 +15,11 @@ export const VokeLoader: React.FC<VokeLoaderProps> = ({
   submessage,
   fullScreen = true,
   size = "md",
+  variant = "default",
   className = "",
 }) => {
+  const isDark = variant === "dark";
+
   const spinnerSize =
     size === "sm"
       ? "w-11 h-11"
@@ -33,12 +37,24 @@ export const VokeLoader: React.FC<VokeLoaderProps> = ({
   const content = (
     <div className={`relative flex flex-col items-center justify-center ${className}`}>
       {/* Subtle Ambient Emerald Glow */}
-      <div className="absolute w-44 h-44 rounded-full bg-[#0F6B38]/[0.07] dark:bg-emerald-500/[0.09] blur-2xl pointer-events-none -z-10" />
+      <div
+        className={`absolute w-44 h-44 rounded-full blur-2xl pointer-events-none -z-10 ${
+          isDark
+            ? "bg-emerald-500/[0.14]"
+            : "bg-[#0F6B38]/[0.07] dark:bg-emerald-500/[0.09]"
+        }`}
+      />
 
       {/* Ring Spinner & Center Logo */}
       <div className={`relative ${spinnerSize} flex items-center justify-center`}>
         {/* Sleek single-track emerald spinner */}
-        <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-[#0F6B38] dark:border-t-emerald-400 animate-spin" />
+        <div
+          className={`absolute inset-0 rounded-full border-2 border-emerald-500/20 animate-spin ${
+            isDark
+              ? "border-t-emerald-400"
+              : "border-t-[#0F6B38] dark:border-t-emerald-400"
+          }`}
+        />
 
         {/* Center Voke Logo */}
         <motion.div
@@ -56,12 +72,20 @@ export const VokeLoader: React.FC<VokeLoaderProps> = ({
 
       {/* Simple, clean text */}
       {message && (
-        <p className="mt-3.5 text-xs font-medium text-muted-foreground/80 tracking-wide text-center">
+        <p
+          className={`mt-3.5 text-xs font-medium tracking-wide text-center ${
+            isDark ? "text-zinc-300" : "text-muted-foreground/80"
+          }`}
+        >
           {message}
         </p>
       )}
       {submessage && (
-        <p className="mt-1 text-[11px] text-muted-foreground/60 text-center max-w-[220px]">
+        <p
+          className={`mt-1 text-[11px] text-center max-w-[220px] ${
+            isDark ? "text-zinc-400/80" : "text-muted-foreground/60"
+          }`}
+        >
           {submessage}
         </p>
       )}
