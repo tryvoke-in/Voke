@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain } from "lucide-react";
+import { VokeLoader } from "@/components/ui/VokeLoader";
 
 export const ProfileCompletionGuard = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
@@ -51,14 +51,7 @@ export const ProfileCompletionGuard = ({ children }: { children: React.ReactNode
     }, [location.pathname]);
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
-                <div className="animate-pulse flex flex-col items-center gap-4">
-                    <Brain className="h-12 w-12 text-primary" />
-                    <span className="text-sm text-muted-foreground font-medium">Loading Voke...</span>
-                </div>
-            </div>
-        );
+        return <VokeLoader message="Loading Voke..." submessage="Initializing your experience" />;
     }
 
     return <>{children}</>;

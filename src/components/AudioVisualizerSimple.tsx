@@ -48,26 +48,26 @@ export const AudioVisualizerSimple: React.FC<AudioVisualizerSimpleProps> = ({
         const render = () => {
             ctx.clearRect(0, 0, rect.width, rect.height);
 
-            // Palette definitions based on speaking state
-            let primaryGlow = '#8b5cf6'; // Sky 500
-            let secondaryGlow = '#6366f1'; // Indigo 500
-            let innerCore = '#c4b5fd'; // Sky 300
+            // Palette definitions based on speaking state (Brand Emerald Green Theme)
+            let primaryGlow = '#10B981'; // Emerald 500
+            let secondaryGlow = '#0F6B38'; // Brand Forest Green
+            let innerCore = '#6EE7B7'; // Emerald 300
             let radiusMultiplier = 1;
             let pulseSpeed = 0.03;
 
             if (isUserSpeaking) {
-                // Electric Cyan / Blue for candidate speech
-                primaryGlow = '#06b6d4'; // Cyan 500
-                secondaryGlow = '#3b82f6'; // Blue 500
-                innerCore = '#a5f3fc'; // Cyan 200
+                // Energetic bright mint/emerald for candidate speech
+                primaryGlow = '#34D399'; // Emerald 400
+                secondaryGlow = '#059669'; // Emerald 600
+                innerCore = '#A7F3D0'; // Emerald 200
                 const normalizedVol = Math.min(Math.max(volume * 1.6, 0.05), 1.2);
                 radiusMultiplier = 1 + normalizedVol * 0.55;
                 pulseSpeed = 0.12;
             } else if (isAiSpeaking) {
-                // Vibrant Blue / Magenta for AI response
-                primaryGlow = '#a855f7'; // Blue 500
-                secondaryGlow = '#ec4899'; // Pink 500
-                innerCore = '#f5d0fe'; // Blue 200
+                // Vibrant rich emerald / jade pulse for AI response
+                primaryGlow = '#0F6B38'; // Brand Green
+                secondaryGlow = '#047857'; // Deep Emerald 700
+                innerCore = '#34D399'; // Emerald 400
                 radiusMultiplier = 1.15 + Math.sin(phase * 2.5) * 0.14;
                 pulseSpeed = 0.08;
             }

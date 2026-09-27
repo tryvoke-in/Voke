@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useParams, useSearchParams } from "react-router-dom";
 import Index from "./pages/Index";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { VokeLoader } from "./components/ui/VokeLoader";
 
 const CollegeAssessmentRoute: React.FC = () => {
   const { driveId } = useParams();
@@ -67,9 +68,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Waitlist = lazy(() => import("./pages/Waitlist"));
 
 const PageFallback: React.FC = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-  </div>
+  <VokeLoader message="Loading page..." />
 );
 
 export const AppRoutes: React.FC = () => {

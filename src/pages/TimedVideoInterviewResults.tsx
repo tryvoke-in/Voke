@@ -8,6 +8,7 @@ import { LogOut, ArrowLeft, Clock, Award, CheckCircle2, AlertCircle, Play } from
 import { Progress } from "@/components/ui/progress";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
+import { VokeLoader } from "@/components/ui/VokeLoader";
 
 interface InterviewSession {
     id: string;
@@ -108,12 +109,10 @@ const TimedVideoInterviewResults = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
-                    <p className="text-muted-foreground animate-pulse">Loading your results...</p>
-                </div>
-            </div>
+            <VokeLoader
+                message="Loading interview analysis..."
+                submessage="Retrieving your timed responses and evaluation"
+            />
         );
     }
 

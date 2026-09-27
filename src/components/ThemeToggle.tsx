@@ -3,7 +3,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/ui/button";
 
-export const ThemeToggle = () => {
+interface ThemeToggleProps {
+  className?: string;
+  iconClassName?: string;
+}
+
+export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className, iconClassName }) => {
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("theme");
@@ -81,7 +86,7 @@ export const ThemeToggle = () => {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="text-muted-foreground hover:text-foreground hover:bg-muted/50 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center cursor-pointer overflow-hidden"
+      className={className || "text-muted-foreground hover:text-foreground hover:bg-muted/50 relative h-9 w-9 rounded-full transition-colors flex items-center justify-center cursor-pointer overflow-hidden"}
       title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
       aria-label="Toggle theme"
     >
@@ -94,14 +99,14 @@ export const ThemeToggle = () => {
       )}
       <span className="relative flex items-center justify-center w-5 h-5 pointer-events-none">
         <Sun
-          className={`w-5 h-5 text-amber-400 absolute transition-all duration-300 transform ${
+          className={`w-4.5 h-4.5 ${iconClassName || "text-amber-400"} absolute transition-all duration-300 transform ${
             theme === "dark"
               ? "rotate-0 scale-100 opacity-100"
               : "rotate-90 scale-0 opacity-0"
           }`}
         />
         <Moon
-          className={`w-5 h-5 text-slate-700 dark:text-slate-200 absolute transition-all duration-300 transform ${
+          className={`w-4.5 h-4.5 ${iconClassName || "text-slate-700 dark:text-slate-200"} absolute transition-all duration-300 transform ${
             theme === "light"
               ? "rotate-0 scale-100 opacity-100"
               : "-rotate-90 scale-0 opacity-0"

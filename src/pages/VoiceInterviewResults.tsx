@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import SixQAnalysis from "@/components/SixQAnalysis";
 import { motion } from "framer-motion";
+import { VokeLoader } from "@/components/ui/VokeLoader";
 
 const VoiceInterviewResults = () => {
   const { id } = useParams();
@@ -170,36 +171,37 @@ const VoiceInterviewResults = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-4 text-center max-w-md">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
-          <p className="text-muted-foreground animate-pulse font-medium">Analyzing your conversation...</p>
-          
-          {loadingTimeout && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-6 p-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl w-full"
-            >
-              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                Loading is taking longer than expected. You can check the current query status or force the page to render.
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button size="sm" variant="outline" className="text-xs font-semibold rounded-xl" onClick={() => {
-                  setDiagnosticError(`Loading timed out. Session state: ${session ? 'Loaded' : 'Null'}`);
-                }}>
-                  Show Load Logs & Diagnostics
-                </Button>
-                <Button size="sm" variant="ghost" className="text-xs font-semibold rounded-xl text-sky-500 hover:bg-sky-500/10" onClick={() => {
-                  logMessage("Bypassing load screen manually.");
-                  setLoading(false);
-                }}>
-                  Force Try Render
-                </Button>
-              </div>
-            </motion.div>
-          )}
-        </div>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <VokeLoader
+          fullScreen={false}
+          message="Analyzing your conversation..."
+          submessage="Evaluating your interview clarity, tone, and answers"
+        />
+
+        {loadingTimeout && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 p-4 bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl max-w-sm w-full text-center"
+          >
+            <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+              Loading is taking longer than expected. You can check the current query status or force the page to render.
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button size="sm" variant="outline" className="text-xs font-semibold rounded-xl" onClick={() => {
+                setDiagnosticError(`Loading timed out. Session state: ${session ? 'Loaded' : 'Null'}`);
+              }}>
+                Show Load Logs & Diagnostics
+              </Button>
+              <Button size="sm" variant="ghost" className="text-xs font-semibold rounded-xl text-emerald-600 hover:bg-emerald-500/10" onClick={() => {
+                logMessage("Bypassing load screen manually.");
+                setLoading(false);
+              }}>
+                Force Try Render
+              </Button>
+            </div>
+          </motion.div>
+        )}
       </div>
     );
   }

@@ -1754,7 +1754,7 @@ IMPORTANT:
           <Button
             onClick={handleAnalyzeResume}
             disabled={analyzing}
-            className="bg-sky-600 hover:bg-sky-700 text-white transition-all text-xs h-9 rounded-xl font-bold"
+            className="bg-[#0F6B38] hover:bg-[#0B572D] text-white transition-all text-xs h-9 rounded-xl font-bold shadow-xs cursor-pointer"
           >
             ATS Audit
           </Button>
@@ -1770,7 +1770,7 @@ IMPORTANT:
 
           <Button
             onClick={handlePrint}
-            className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs h-9 rounded-xl shadow-xs transition-all border-0"
+            className="bg-[#0F6B38] hover:bg-[#0B572D] text-white font-bold text-xs h-9 rounded-xl shadow-xs transition-all border-0 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 mr-1.5" />
             Export PDF
@@ -1811,8 +1811,8 @@ IMPORTANT:
                       </div>
                     </div>
                     {sec.isComplete ? (
-                      <div className="h-4 w-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                        <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                      <div className="h-4 w-4 rounded-full bg-[#0F6B38] text-white flex items-center justify-center shrink-0 shadow-xs">
+                        <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
                       </div>
                     ) : (
                       <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30 shrink-0 group-hover:bg-muted-foreground/60 transition-colors" />

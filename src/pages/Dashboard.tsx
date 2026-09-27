@@ -42,6 +42,7 @@ import { FeedbackFormDialog } from "@/components/FeedbackFormDialog";
 import { DashboardSearchBar } from "@/components/dashboard/DashboardSearchBar";
 import { CodingProfilesDialog } from "@/components/CodingProfilesDialog";
 import { InteractiveTour } from "@/components/dashboard/InteractiveTour";
+import { VokeLoader } from "@/components/ui/VokeLoader";
 
 interface Notification {
   id: string;
@@ -560,14 +561,7 @@ const Dashboard = () => {
   ];
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 border-t-2 border-sky-500 rounded-full animate-spin"></div>
-          <div className="absolute inset-3 border-t-2 border-blue-500 rounded-full animate-spin-reverse"></div>
-        </div>
-      </div>
-    );
+    return <VokeLoader message="Loading dashboard..." />;
   }
 
   const scoredSessions = (allSessions || [])

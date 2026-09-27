@@ -705,79 +705,28 @@ CRITICAL INTERVIEW GUIDELINES:
         <div className="absolute -bottom-32 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 dark:bg-cyan-500/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Header Bar */}
-      <header className="sticky top-0 z-50 w-full px-4 sm:px-6 py-2.5 flex items-center justify-between backdrop-blur-xl bg-background/80 dark:bg-background/70 border-b border-border/70 transition-all">
-        {/* Left: Brand / Back */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/dashboard')}
-            className="rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-medium hover:bg-[#D8D3C9] dark:hover:bg-[#D8D3C9]/10 text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Dashboard</span>
-          </Button>
+      {/* Top Floating Controls (No Header Bar) */}
+      <div className="w-full px-4 sm:px-6 pt-4 pb-2 flex items-center justify-between z-30 select-none">
+        {/* Dashboard Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/dashboard')}
+          className="rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-medium hover:bg-muted text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5 cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Dashboard</span>
+        </Button>
 
-          <div className="h-4 w-[1px] bg-border/80 hidden sm:block" />
-
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
-              <img
-                src="/images/voke_logo.png"
-                alt="Voke"
-                className="w-6 h-6 object-contain"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-              <span className="font-extrabold text-sm tracking-tight text-foreground">
-                Voke
-              </span>
-            </div>
-
-            <Badge className="bg-primary/15 hover:bg-primary/20 text-primary border border-primary/30 text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">
-              Pro Interview
-            </Badge>
-
-            {collegeDrive && (
-              <Badge className="hidden md:inline-flex bg-sky-500/15 text-sky-600 dark:text-sky-300 border-sky-500/30 text-xs px-2.5 py-0.5 rounded-full font-medium">
-                <Building2 className="w-3 h-3 mr-1" />
-                {collegeDrive.collegeName} Drive
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Center: Live Mode / Timer Status */}
+        {/* Right Actions: Connected controls (if active) + Theme Toggle */}
         <div className="flex items-center gap-2">
-
-
-          {/* {isConnected && (
-            <Badge variant="outline" className="hidden sm:inline-flex text-xs px-2.5 py-1 rounded-full bg-card/80 border-border font-medium text-muted-foreground">
-              {interviewMode === 'coding' ? (
-                <span className="flex items-center gap-1.5 text-blue-500">
-                  <Code2 className="w-3.5 h-3.5" /> Coding Round
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5 text-emerald-500">
-                  <Radio className="w-3.5 h-3.5 animate-pulse" /> Voice Dialogue
-                </span>
-              )}
-            </Badge>
-          )} */}
-        </div>
-
-        {/* Right: Theme Toggle & Actions */}
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
           {isConnected && (
             <>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => window.location.reload()}
-                className="rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5"
+                className="rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5 h-8.5 px-3"
                 title="Cancel Session & Start Over"
               >
                 <X className="w-3.5 h-3.5" />
@@ -788,15 +737,18 @@ CRITICAL INTERVIEW GUIDELINES:
                 size="sm"
                 onClick={handleEndInterview}
                 disabled={isSaving}
-                className="rounded-xl text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 shadow-xs transition-all flex items-center gap-1.5"
+                className="rounded-xl text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30 shadow-xs transition-all flex items-center gap-1.5 h-8.5 px-3.5"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>End & Score</span>
               </Button>
             </>
           )}
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
         </div>
-      </header>
+      </div>
 
       {/* Main Container Area */}
       <div className="z-10 flex-1 flex flex-col w-full relative">
@@ -847,7 +799,7 @@ CRITICAL INTERVIEW GUIDELINES:
 
                     {/* Top Status Header Pill */}
                     <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-background/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-border/80 text-xs font-bold text-foreground shadow-xs">
-                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                      <div className="w-2 h-2 rounded-full bg-[#0F6B38] animate-pulse" />
                       <span>AI Lead Interviewer</span>
                     </div>
 
@@ -855,7 +807,7 @@ CRITICAL INTERVIEW GUIDELINES:
                     {status === LiveStatus.CONNECTING && (
                       <div className="absolute inset-0 flex items-center justify-center z-30 bg-background/80 backdrop-blur-sm">
                         <div className="flex flex-col items-center gap-3">
-                          <div className="w-9 h-9 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                          <div className="w-9 h-9 border-4 border-[#0F6B38] border-t-transparent rounded-full animate-spin" />
                           <span className="text-xs font-bold text-foreground">
                             Connecting AI interviewer...
                           </span>
@@ -973,9 +925,9 @@ CRITICAL INTERVIEW GUIDELINES:
                       onClick={handleStartConfiguredInterview}
                       disabled={status === LiveStatus.CONNECTING || loadingContext}
                       size="lg"
-                      className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm shadow-xl shadow-primary/25 transition-all hover:scale-105 active:scale-95 flex items-center gap-2.5"
+                      className="h-14 px-8 rounded-2xl bg-[#0F6B38] hover:bg-[#0B572D] text-white font-bold text-sm shadow-xl shadow-[#0F6B38]/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2.5 cursor-pointer"
                     >
-                      <Mic className="w-5 h-5" />
+                      <Mic className="w-5 h-5 text-white" />
                       <span>Start Pro Interview</span>
                     </Button>
                   ) : (
@@ -986,7 +938,7 @@ CRITICAL INTERVIEW GUIDELINES:
                         onClick={submitCurrentSpeech}
                         variant="outline"
                         size="sm"
-                        className="h-10 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 font-semibold text-xs gap-1.5 transition-all"
+                        className="h-10 rounded-xl bg-[#0F6B38]/10 hover:bg-[#0F6B38]/20 text-[#0F6B38] dark:text-emerald-400 border-[#0F6B38]/30 font-semibold text-xs gap-1.5 transition-all"
                         title="Submit current answer immediately (or press Enter)"
                       >
                         <Send className="w-3.5 h-3.5" />

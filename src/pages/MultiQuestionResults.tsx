@@ -7,6 +7,7 @@ import { LogOut, ArrowLeft, Eye, Mic, TrendingUp, Award, CheckCircle2, AlertCirc
 import { Progress } from "@/components/ui/progress";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import SixQAnalysis from "@/components/SixQAnalysis";
+import { VokeLoader } from "@/components/ui/VokeLoader";
 
 const MultiQuestionResults = () => {
     const { sessionId } = useParams();
@@ -80,12 +81,10 @@ const MultiQuestionResults = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
-                    <p className="text-muted-foreground animate-pulse">Loading your results...</p>
-                </div>
-            </div>
+            <VokeLoader
+                message="Loading your results..."
+                submessage="Calculating your scores and feedback"
+            />
         );
     }
 
