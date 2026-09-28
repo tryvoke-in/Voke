@@ -182,7 +182,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                         <button className="relative p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-colors">
                                             <Bell className="w-4 h-4" />
                                             {unreadCount > 0 && (
-                                                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-[#090d16]" />
+                                                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#0F6B38] dark:bg-emerald-500 ring-2 ring-[#090d16]" />
                                             )}
                                         </button>
                                     </PopoverTrigger>
@@ -190,7 +190,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                         <div className="p-3 border-b border-slate-800 flex items-center justify-between">
                                             <span className="text-xs font-bold text-slate-200">Community Notifications</span>
                                             {unreadCount > 0 && (
-                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-[#0F6B38] dark:text-emerald-400 font-semibold border border-emerald-500/30">
                                                     {unreadCount} new
                                                 </span>
                                             )}
@@ -204,7 +204,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                                         key={n.id}
                                                         onClick={() => markAsRead(n.id)}
                                                         className={`p-3 border-b border-slate-800/50 text-xs hover:bg-slate-800/30 cursor-pointer ${
-                                                            !n.read ? 'bg-blue-500/10' : ''
+                                                            !n.read ? 'bg-emerald-500/10' : ''
                                                         }`}
                                                     >
                                                         <p className="font-semibold text-slate-200">{n.title || 'Community Update'}</p>
@@ -225,7 +225,7 @@ export const Navbar = ({ variant }: NavbarProps = {}) => {
                                 className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 hover:text-white hover:bg-slate-800/50 border border-slate-800 rounded-xl px-3 h-9"
                             >
                                 <span>Voke Interviews</span>
-                                <ArrowUpRight className="w-3.5 h-3.5 text-blue-400" />
+                                <ArrowUpRight className="w-3.5 h-3.5 text-[#0F6B38] dark:text-emerald-400" />
                             </Button>
 
                             {/* Theme Toggle */}

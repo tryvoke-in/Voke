@@ -264,7 +264,7 @@ const QuestionPractice = () => {
         return (
             <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden font-sans">
                 {/* Ambient glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-sky-500/10 rounded-full blur-[120px] pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col items-center">
                     <div className="relative mb-8">
@@ -297,8 +297,8 @@ const QuestionPractice = () => {
 
                     <div className="flex items-center gap-3 text-xs text-muted-foreground font-semibold tracking-widest uppercase">
                         <span className="relative flex h-2.5 w-2.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/70 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
                         </span>
                         Connecting to practice arena...
                     </div>
@@ -308,7 +308,7 @@ const QuestionPractice = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-sky-500/30">
+        <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-primary/20">
             <Navbar />
 
             {/* Sidebar + Main Content Layout */}
@@ -323,18 +323,18 @@ const QuestionPractice = () => {
                             <motion.div
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="lg:col-span-2 flex flex-col justify-center space-y-4 bg-gradient-to-br from-sky-500/5 via-indigo-500/5 to-transparent p-6 sm:p-8 rounded-3xl border border-border/70 shadow-xs backdrop-blur-xs relative overflow-hidden"
+                                className="lg:col-span-2 flex flex-col justify-center space-y-4 bg-card border border-emerald-500/25 dark:border-emerald-500/20 text-card-foreground p-6 sm:p-8 rounded-3xl shadow-xs relative overflow-hidden ring-1 ring-emerald-500/10"
                             >
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-[80px] pointer-events-none -translate-y-1/2 translate-x-1/3" />
+                                <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-[90px] pointer-events-none -translate-y-1/2 translate-x-1/3" />
 
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs font-semibold border border-sky-500/20 w-fit">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0F6B38]/10 dark:bg-emerald-500/15 text-[#0F6B38] dark:text-emerald-400 text-xs font-semibold border border-[#0F6B38]/20 dark:border-emerald-500/30 w-fit">
                                     <Code2 className="w-3.5 h-3.5" />
                                     <span>Coding Arena • 1,800+ Problems</span>
                                 </div>
 
-                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground leading-[1.15]">
+                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground leading-[1.15]">
                                     Master the Code. <br className="hidden sm:inline" />
-                                    <span className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 dark:from-sky-400 dark:via-blue-400 dark:to-indigo-300 bg-clip-text text-transparent">
+                                    <span className="bg-gradient-to-r from-[#0F6B38] via-emerald-600 to-teal-500 dark:from-emerald-400 dark:via-emerald-300 dark:to-teal-300 bg-clip-text text-transparent">
                                         Crack Your Interviews.
                                     </span>
                                 </h1>
@@ -350,15 +350,15 @@ const QuestionPractice = () => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.15 }}
                             >
-                                <Card className="h-full border border-border/70 bg-card text-card-foreground shadow-xs rounded-3xl p-6 flex flex-col justify-between space-y-5 relative overflow-hidden">
+                                <Card className="h-full border border-border/70 dark:border-emerald-500/20 bg-card text-card-foreground shadow-xs rounded-3xl p-6 flex flex-col justify-between space-y-5 relative overflow-hidden">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                            <div className="w-8 h-8 rounded-xl bg-[#0F6B38]/10 dark:bg-emerald-500/15 flex items-center justify-center text-[#0F6B38] dark:text-emerald-400">
                                                 <Trophy className="w-4 h-4" />
                                             </div>
                                             <span className="font-bold text-base text-foreground">Your Progress</span>
                                         </div>
-                                        <span className="text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">
+                                        <span className="text-xs font-bold text-[#0F6B38] dark:text-emerald-400 bg-[#0F6B38]/10 dark:bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-[#0F6B38]/20 dark:border-emerald-500/30">
                                             {progressPercentage}% Completed
                                         </span>
                                     </div>
@@ -368,7 +368,12 @@ const QuestionPractice = () => {
                                             <span className="text-muted-foreground">Total Solved</span>
                                             <span className="font-bold text-foreground">{solvedStats.total} / {QUESTIONS.length}</span>
                                         </div>
-                                        <Progress value={progressPercentage} className="h-2 bg-muted/60" />
+                                        <div className="h-2 w-full bg-muted/60 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-[#0F6B38] to-emerald-500 dark:from-emerald-600 dark:to-emerald-400 rounded-full transition-all duration-500"
+                                                style={{ width: `${progressPercentage}%` }}
+                                            />
+                                        </div>
                                     </div>
 
                                     {/* 3 Difficulty Metric Boxes */}
@@ -396,10 +401,10 @@ const QuestionPractice = () => {
 
                                 {/* Search Input */}
                                 <div className="relative w-full xl:max-w-sm group shrink-0">
-                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-sky-500 transition-colors" />
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-[#0F6B38] dark:group-focus-within:text-emerald-400 transition-colors" />
                                     <Input
                                         placeholder="Search by title, topic, or keywords..."
-                                        className="pl-10 h-10 bg-muted/40 border-border/60 focus:border-sky-500 focus:bg-background rounded-xl text-xs sm:text-sm transition-all"
+                                        className="pl-10 h-10 bg-muted/40 border-border/60 focus:border-[#0F6B38] dark:focus:border-emerald-500 focus:bg-background rounded-xl text-xs sm:text-sm transition-all"
                                         value={searchQuery}
                                         onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                                     />
@@ -425,7 +430,7 @@ const QuestionPractice = () => {
                                                                     ? "bg-amber-500 text-white shadow-xs"
                                                                     : diff === "Hard"
                                                                         ? "bg-rose-500 text-white shadow-xs"
-                                                                        : "bg-primary text-primary-foreground shadow-xs")
+                                                                        : "bg-[#0F6B38] dark:bg-emerald-600 text-white shadow-xs")
                                                             : "text-muted-foreground hover:text-foreground hover:bg-background/60"
                                                     )}
                                                 >
@@ -450,7 +455,7 @@ const QuestionPractice = () => {
                                                     </span>
                                                 ) : (
                                                     <span className="flex items-center gap-1.5 text-foreground truncate">
-                                                        <Briefcase className="w-3.5 h-3.5 text-sky-500" /> {selectedCompany}
+                                                        <Briefcase className="w-3.5 h-3.5 text-[#0F6B38] dark:text-emerald-400" /> {selectedCompany}
                                                     </span>
                                                 )}
                                                 <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
@@ -687,7 +692,7 @@ const QuestionPractice = () => {
                                                     </div>
 
                                                     {/* Title */}
-                                                    <h3 className="text-base sm:text-lg font-bold text-foreground group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors leading-snug line-clamp-2">
+                                                    <h3 className="text-base sm:text-lg font-bold text-foreground group-hover:text-[#0F6B38] dark:group-hover:text-emerald-400 transition-colors leading-snug line-clamp-2">
                                                         {question.title}
                                                     </h3>
 
@@ -710,54 +715,43 @@ const QuestionPractice = () => {
                                                     {/* Tags */}
                                                     <div className="flex flex-wrap gap-1.5 pt-0.5">
                                                         {question.tags.slice(0, 3).map(tag => (
-                                                            <span key={tag} className="text-[10.5px] font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">
+                                                            <span key={tag} className="text-[10.5px] font-semibold px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
                                                                 {tag}
                                                             </span>
                                                         ))}
                                                     </div>
                                                 </div>
 
-                                                {/* Action Buttons */}
-                                                <div className="pt-5 space-y-2">
-                                                    <Button
-                                                        className={cn(
-                                                            "w-full h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm",
-                                                            isSolved
-                                                                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20"
-                                                                : "bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-sky-500/20 group/btn"
-                                                        )}
-                                                        onClick={() => navigate(
-                                                            `/playground?title=${encodeURIComponent(question.title)}&difficulty=${question.difficulty}&questionId=${question.id}&mode=problem`
-                                                        )}
-                                                    >
-                                                        {isSolved ? (
-                                                            <>
-                                                                <CheckCircle2 className="w-4 h-4" />
-                                                                <span>Review in Playground</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Play className="w-4 h-4 fill-current" />
-                                                                <span>Solve in Playground</span>
-                                                                <ExternalLink className="w-3.5 h-3.5 opacity-80 group-hover/btn:translate-x-0.5 transition-transform" />
-                                                            </>
-                                                        )}
-                                                    </Button>
-
+                                                {/* Action Buttons: Swapped LeetCode (primary green) and Playground (ghost) */}
+                                                <div className="pt-5 space-y-1.5">
                                                     {question.url && (
                                                         <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="w-full h-8 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg gap-1"
+                                                            className="w-full h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm bg-[#0F6B38] hover:bg-[#0B572D] dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white shadow-[#0F6B38]/20 dark:shadow-emerald-500/20 group/btn cursor-pointer"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 window.open(question.url, '_blank');
                                                             }}
                                                         >
-                                                            <span>Open on {question.platform}</span>
-                                                            <ExternalLink className="w-3 h-3 opacity-70" />
+                                                            <span>Solve on {question.platform || "LeetCode"}</span>
+                                                            <ExternalLink className="w-3.5 h-3.5 opacity-80 group-hover/btn:translate-x-0.5 transition-transform" />
                                                         </Button>
                                                     )}
+
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="w-full h-8 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg gap-1 flex items-center justify-center cursor-pointer"
+                                                        onClick={() => navigate(
+                                                            `/playground?title=${encodeURIComponent(question.title)}&difficulty=${question.difficulty}&questionId=${question.id}&mode=problem`
+                                                        )}
+                                                    >
+                                                        <span>{isSolved ? "Review in Playground" : "Solve in Playground"}</span>
+                                                        {isSolved ? (
+                                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                                        ) : (
+                                                            <Play className="w-3 h-3 fill-current opacity-70" />
+                                                        )}
+                                                    </Button>
                                                 </div>
                                             </Card>
                                         </motion.div>

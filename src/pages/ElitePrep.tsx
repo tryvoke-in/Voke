@@ -330,7 +330,7 @@ const ElitePrep: React.FC = () => {
           <div className="relative w-full max-w-md bg-[#0d0e17] border border-white/10 rounded-2xl p-6 shadow-2xl text-center space-y-4 overflow-hidden">
             {/* Ambient Background Glow */}
             <div className="absolute -top-12 -left-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
 
             {/* Icon Header */}
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/10">
@@ -350,7 +350,7 @@ const ElitePrep: React.FC = () => {
             {/* Feature Chips */}
             <div className="grid grid-cols-2 gap-2 text-left pt-1">
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="text-[11px] font-medium text-zinc-300">Live AI Engine</span>
               </div>
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-2">
@@ -364,7 +364,7 @@ const ElitePrep: React.FC = () => {
               <button
                 type="button"
                 onClick={handleAcknowledgeBeta}
-                className="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-sky-600/25 transition-all cursor-pointer transform hover:scale-[1.01] active:scale-[0.99]"
+                className="w-full py-2.5 rounded-xl bg-[#0F6B38] hover:bg-[#0B572D] dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-extrabold text-xs tracking-wide shadow-lg shadow-[#0F6B38]/25 dark:shadow-emerald-600/25 transition-all cursor-pointer transform hover:scale-[1.01] active:scale-[0.99]"
               >
                 Acknowledge
               </button>
