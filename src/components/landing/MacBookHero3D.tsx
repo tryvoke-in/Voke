@@ -432,7 +432,7 @@ export const MacBookHero3D: React.FC<MacBookHero3DProps> = React.memo(({
 
     const isMobile = window.innerWidth < 1024;
     laptopRoot.scale.setScalar(isMobile ? 0.076 : 0.096);
-    laptopRoot.position.set(0, isMobile ? -0.36 : -0.30, 0);
+    laptopRoot.position.set(0, isMobile ? -0.42 : -0.36, 0);
     laptopRoot.rotation.set(0.06, 0.0, 0);
 
     // 6. Load 3D Model with DracoLoader
@@ -627,12 +627,12 @@ export const MacBookHero3D: React.FC<MacBookHero3DProps> = React.memo(({
         const sideP = Math.min(Math.max((sp - 0.30) / 0.25, 0), 1);
         const easedSide = smoothstep(sideP);
 
-        const centeredStartY = isMobile ? -0.36 : -0.30;
-        const centeredOpenY = isMobile ? -0.56 : -0.52;
+        const centeredStartY = isMobile ? -0.42 : -0.36;
+        const centeredOpenY = isMobile ? -0.62 : -0.58;
         const currentOpenY = THREE.MathUtils.lerp(centeredStartY, centeredOpenY, easedOpen);
 
         const sideX = isMobile ? 0 : 1.48;
-        const sideY = isMobile ? -0.54 : -0.44;
+        const sideY = isMobile ? -0.66 : -0.58;
         const sideRotY = isMobile ? -0.05 : -0.26;
         const sideScale = isMobile ? 0.065 : 0.085;
 
