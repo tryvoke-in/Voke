@@ -38,22 +38,23 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2. Parse request and determine price server-side
-    const { plan, couponCode } = await req.json();
+    const { plan, couponCode, isAnnual, billingCycle } = await req.json();
+    const isAnnualBilling = isAnnual === true || billingCycle === "annual";
 
     let amount = 0;
     const currency = "INR";
     const normalizedCoupon = typeof couponCode === "string" ? couponCode.trim().toLowerCase() : "";
     let appliedDiscount = "0%";
     
-    // Map the plan identifier to a fixed server-side amount
-    if (plan === "elite_pro") {
-      const BASE_PRICE_RUPEES = 399;
+    // Map the plan identifier to fixed server-side amounts for monthly vs annual packs
+    if (plan === "voke_elite" || plan === "elite" || plan === "elite_pro") {
+      // Monthly: ₹599 | Annual Pack: ₹479/mo × 12 = ₹5,748
+      const BASE_PRICE_RUPEES = isAnnualBilling ? 5748 : 599;
 
       if (normalizedCoupon) {
         if (normalizedCoupon === "vickybyte30") {
-          // 30% discount on ₹399 -> ₹279
-          const discountedPriceRupees = Math.round(BASE_PRICE_RUPEES * 0.70); // 279
-          amount = discountedPriceRupees * 100; // 27900 paise (₹279)
+          const discountedPriceRupees = Math.round(BASE_PRICE_RUPEES * 0.70);
+          amount = discountedPriceRupees * 100;
           appliedDiscount = "30%";
         } else {
           return new Response(JSON.stringify({ error: "Invalid coupon code" }), { 
@@ -61,7 +62,24 @@ Deno.serve(async (req: Request) => {
           });
         }
       } else {
-        amount = BASE_PRICE_RUPEES * 100; // 39900 paise (₹399)
+        amount = BASE_PRICE_RUPEES * 100;
+      }
+    } else if (plan === "voke_pro" || plan === "pro") {
+      // Monthly: ₹399 | Annual Pack: ₹319/mo × 12 = ₹3,828
+      const BASE_PRICE_RUPEES = isAnnualBilling ? 3828 : 399;
+
+      if (normalizedCoupon) {
+        if (normalizedCoupon === "vickybyte30") {
+          const discountedPriceRupees = Math.round(BASE_PRICE_RUPEES * 0.70);
+          amount = discountedPriceRupees * 100;
+          appliedDiscount = "30%";
+        } else {
+          return new Response(JSON.stringify({ error: "Invalid coupon code" }), { 
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          });
+        }
+      } else {
+        amount = BASE_PRICE_RUPEES * 100;
       }
     } else {
       return new Response(JSON.stringify({ error: "Invalid plan specified" }), { 
@@ -95,6 +113,7 @@ Deno.serve(async (req: Request) => {
         notes: {
           user_id: user.id,
           plan: plan,
+          billing_cycle: isAnnualBilling ? "annual" : "monthly",
           coupon_code: normalizedCoupon || "none",
           discount: appliedDiscount,
         }
