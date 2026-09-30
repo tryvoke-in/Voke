@@ -499,7 +499,7 @@ export const Pricing = () => {
                   onClick={() => setIsAnnual(false)}
                   className={`px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                     !isAnnual
-                      ? "bg-white dark:bg-card text-foreground shadow-xs"
+                      ? "bg-[#003B2D] dark:bg-emerald-600 text-white shadow-xs"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -1035,8 +1035,9 @@ export const Pricing = () => {
                 <Button
                   onClick={() => navigate("/college/auth")}
                   variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10 text-xs h-11 px-5 rounded-xl cursor-pointer"
+                  className="border border-white/30 bg-white/10 hover:bg-white/20 text-white hover:text-white text-xs sm:text-sm font-bold h-12 px-6 rounded-xl cursor-pointer transition-all active:scale-[0.98] flex items-center justify-center gap-2 backdrop-blur-xs"
                 >
+                  <GraduationCap className="w-4 h-4 text-emerald-300" />
                   <span>College Admin Portal</span>
                 </Button>
               </div>
