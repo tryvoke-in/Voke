@@ -267,18 +267,13 @@ export default function CollegeAssessmentSession() {
       try {
         const { data: aiResult, error: aiError } = await supabase.functions.invoke("evaluate-interview", {
           body: {
-              interview_type: drive?.targetRole || "Software Engineer",
-              messages: [
-                { 
-                  role: "assistant", 
-                  content: `Question: ${currentQ.question}\n\nExpected Answer Rubric: ${currentQ.expectedAnswerOrKeyPoints || "Evaluate candidate knowledge and clarity."}` 
-                },
-                { 
-                  role: "user", 
-                  content: combinedResponse 
-                }
-              ]
-            }
+            question: currentQ.question,
+            expectedKeyPoints: currentQ.expectedAnswerOrKeyPoints,
+            candidateAnswer: combinedResponse,
+            targetRole: drive?.targetRole || "Software Engineer",
+            difficulty: currentQ.difficulty || "Medium",
+            questionType: currentQ.type || "theoretical"
+          }
         });
 
         if (!aiError && aiResult?.score) {
