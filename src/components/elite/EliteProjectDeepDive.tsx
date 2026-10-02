@@ -1106,15 +1106,33 @@ At the end of Phase 5, when the verdict is clear, close naturally — as a human
                   <button
                     type="button"
                     onClick={async () => {
-                      const { error } = await supabase.auth.signInWithOAuth({
-                        provider: 'github',
-                        options: {
-                          scopes: 'read:user repo read:org',
-                          redirectTo: `${window.location.origin}/elite-prep`
+                        try {
+                          const { data: { session } } = await supabase.auth.getSession();
+                          if (session?.user) {
+                            const { data, error } = await supabase.auth.linkIdentity({
+                              provider: 'github',
+                              options: {
+                                scopes: 'user:email read:user repo read:org',
+                                redirectTo: `${window.location.origin}/elite-prep`,
+                                queryParams: { prompt: 'select_account' }
+                              }
+                            });
+                            if (error) { toast.error(`Linking failed: ${error.message}`); return; }
+                            if (data?.url) { window.location.href = data.url; return; }
+                          }
+                          const { error } = await supabase.auth.signInWithOAuth({
+                            provider: 'github',
+                            options: {
+                              scopes: 'user:email read:user repo read:org',
+                              redirectTo: `${window.location.origin}/elite-prep`,
+                              queryParams: { prompt: 'select_account' }
+                            }
+                          });
+                          if (error) toast.error(error.message);
+                        } catch (err: any) {
+                          toast.error(err.message || 'OAuth error');
                         }
-                      });
-                      if (error) toast.error(error.message);
-                    }}
+                      }}
                     className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs inline-flex items-center gap-2 shadow-lg shadow-sky-600/20 cursor-pointer transition-all transform hover:scale-[1.02]"
                   >
                     <Github className="w-4 h-4" /> Connect GitHub Account

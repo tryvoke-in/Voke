@@ -90,6 +90,17 @@ const ElitePrep: React.FC = () => {
     setProgress(prog);
   };
 
+  // Rescue GitHub OAuth token from URL hash to fix GoTrue clock skew dropping session
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash.includes('provider_token=')) {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const providerToken = hashParams.get('provider_token');
+      if (providerToken) {
+        localStorage.setItem('voke_github_oauth_token', providerToken);
+      }
+    }
+  }, []);
+
   // Initialize Profile and User on Mount (without auto-opening downstream steps)
   useEffect(() => {
     const initProfileAndUser = async () => {
