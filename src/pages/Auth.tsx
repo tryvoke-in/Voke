@@ -36,46 +36,6 @@ const Auth = () => {
   const [resetLinkSent, setResetLinkSent] = useState(false);
 
   useEffect(() => {
-    // Check for OAuth redirect errors in the URL hash or query
-    const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
-    const queryParams = new URLSearchParams(window.location.search);
-    
-    let errorDesc = hashParams.get("error_description") || queryParams.get("error_description");
-    
-    // If we were bounced back from a protected route, the error might be inside the redirect param
-    const redirectParam = queryParams.get("redirect");
-    if (!errorDesc && redirectParam) {
-      try {
-        // redirectParam looks like "/dashboard?error=...&error_description=..."
-        const embeddedUrl = new URL(redirectParam, window.location.origin);
-        errorDesc = embeddedUrl.searchParams.get("error_description");
-      } catch (e) {
-        // ignore parsing errors
-      }
-    }
-    
-    if (errorDesc) {
-      if (errorDesc.includes("Multiple accounts")) {
-        toast({
-          title: "Account Already Exists",
-          description: "An account with this email already exists via another provider (like Google). Please log in with Google first, then connect your GitHub from your Profile page.",
-          variant: "destructive",
-          duration: 8000,
-        });
-      } else {
-        toast({
-          title: "Login Error",
-          description: decodeURIComponent(errorDesc).replace(/\+/g, ' '),
-          variant: "destructive",
-        });
-      }
-      
-      // Clean up the URL so it doesn't keep showing the error on refresh
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
-
-  useEffect(() => {
     // If user arrived via referral link, store it persistently for OAuth/Magic Link support
     const searchParams = new URLSearchParams(window.location.search);
     const ref = searchParams.get("ref");
@@ -317,27 +277,6 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleGithubSignIn = async () => {
-    try {
-      trackEvent("github_signin_click", "/auth");
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "github",
-        options: {
-          scopes: "user:email read:user repo read:org",
           redirectTo: `${window.location.origin}/dashboard`,
         },
       });
@@ -853,8 +792,8 @@ const Auth = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={handleGithubSignIn}
                   className="h-12 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-gray-300"
+                  disabled
                 >
                   <Github className="mr-2 h-5 w-5" />
                   GitHub
