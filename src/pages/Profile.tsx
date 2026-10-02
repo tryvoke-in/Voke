@@ -99,6 +99,67 @@ const Profile = () => {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [diagLog, setDiagLog] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Check for OAuth redirect errors or success in the URL hash or query
+    const hashStr = window.location.hash;
+    const searchStr = window.location.search;
+    
+    const hashParams = new URLSearchParams(hashStr.replace('#', '?'));
+    const queryParams = new URLSearchParams(searchStr);
+    
+    const errorDesc = hashParams.get("error_description") || queryParams.get("error_description");
+    const providerToken = hashParams.get("provider_token");
+    
+    if (errorDesc) {
+      setTimeout(() => {
+        toast.error(`GitHub Connection Failed: ${errorDesc.replace(/\\+/g, ' ')}`, {
+          duration: 8000,
+        });
+      }, 500);
+      window.history.replaceState(null, '', window.location.pathname);
+    } else if (providerToken) {
+      // Manual rescue of provider_token in case GoTrue drops it due to clock skew
+      localStorage.setItem('voke_github_oauth_token', providerToken);
+      
+      const rescueGitHubAccount = async () => {
+        try {
+          toast.loading("Finalizing GitHub connection...");
+          const res = await fetch("https://api.github.com/user", {
+            headers: { Authorization: `Bearer ${providerToken}` }
+          });
+          if (res.ok) {
+            const ghUser = await res.json();
+            if (ghUser && ghUser.login) {
+              const fullUrl = `https://github.com/${ghUser.login}`;
+              localStorage.setItem('voke_github_username', ghUser.login);
+              setFormData(prev => ({ ...prev, github_url: fullUrl }));
+              
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                await supabase.from('profiles').update({ github_url: fullUrl }).eq('id', user.id);
+              }
+              
+              // Force fetch repos
+              const repos = await fetchUserGithubRepos(ghUser.login);
+              if (repos && repos.length > 0) {
+                setUserRepos(repos);
+              }
+              toast.dismiss();
+              toast.success(`Successfully connected @${ghUser.login} via OAuth!`);
+            }
+          }
+        } catch (e) {
+          console.error("Rescue failed", e);
+          toast.dismiss();
+        }
+      };
+      rescueGitHubAccount();
+      
+      // Clean URL
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
   
   const logDiag = (msg: string) => {
     setDiagLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
@@ -1950,50 +2011,93 @@ const Profile = () => {
                                     <div>
                                       <div className="text-xs font-bold text-foreground">GitHub Account</div>
                                       <div className="text-[11px] text-muted-foreground dark:text-zinc-300">
-                                        {formData.github_url || profile?.github_url
-                                          ? `@${(formData.github_url || profile?.github_url || '').replace(/\/$/, '').split('/').pop()} linked`
-                                          : 'Connect or enter your GitHub handle'}
+                                        {(authUser?.identities?.find((i: any) => i.provider === 'github') || formData.github_url || profile?.github_url) ? ((formData.github_url || profile?.github_url) ? `@${(formData.github_url || profile?.github_url || '').replace(/\/$/, '').split('/').pop()} linked` : 'Account linked') : 'Connect or enter your GitHub handle'}
                                       </div>
                                     </div>
                                   </div>
 
-                                  <button
-                                    type="button"
-                                    onClick={async () => {
-                                      try {
-                                        const { data: { session } } = await supabase.auth.getSession();
-                                        if (session?.user) {
-                                          const { data, error } = await supabase.auth.linkIdentity({
+                                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                                    {(authUser?.identities?.find((i: any) => i.provider === 'github') || formData.github_url || profile?.github_url) && (
+                                      <button
+                                        type="button"
+                                        onClick={async () => {
+                                          try {
+                                            toast.loading("Disconnecting GitHub...");
+                                            const githubIdentity = authUser?.identities?.find((i: any) => i.provider === 'github');
+                                            if (githubIdentity) {
+                                              await supabase.auth.unlinkIdentity(githubIdentity);
+                                            }
+                                            if (authUser) {
+                                              await supabase.from('profiles').update({ github_url: null }).eq('id', authUser.id);
+                                            }
+                                            localStorage.removeItem('voke_github_oauth_token');
+                                            localStorage.removeItem('voke_github_username');
+                                            setFormData(prev => ({ ...prev, github_url: '' }));
+                                            setUserRepos([]);
+                                            
+                                            const { data: { user } } = await supabase.auth.getUser();
+                                            setAuthUser(user);
+                                            
+                                            toast.dismiss();
+                                            toast.success("GitHub account disconnected!");
+                                          } catch (err: any) {
+                                            toast.dismiss();
+                                            toast.error(err.message || 'Error disconnecting');
+                                          }
+                                        }}
+                                        className="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1.5 cursor-pointer transition-colors bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 hover:bg-red-500/20"
+                                      >
+                                        Disconnect
+                                      </button>
+                                    )}
+                                    {!(authUser?.identities?.find((i: any) => i.provider === 'github') || formData.github_url || profile?.github_url) && (<button
+                                      type="button"
+                                      onClick={async () => {
+                                        try {
+                                          const { data: { session } } = await supabase.auth.getSession();
+                                          if (session?.user) {
+                                            const { data, error } = await supabase.auth.linkIdentity({
+                                              provider: 'github',
+                                              options: {
+                                                scopes: 'user:email read:user repo read:org',
+                                                redirectTo: `${window.location.origin}/profile`,
+                                                queryParams: { prompt: 'select_account' }
+                                              }
+                                            });
+                                            
+                                            if (error) {
+                                              toast.error(`Linking failed: ${error.message}`);
+                                              return;
+                                            }
+                                            
+                                            if (data?.url) {
+                                              window.location.href = data.url;
+                                              return;
+                                            }
+                                          }
+                                          
+                                          // Only reachable if there is NO session
+                                          const { error } = await supabase.auth.signInWithOAuth({
                                             provider: 'github',
                                             options: {
-                                              scopes: 'read:user repo read:org',
-                                              redirectTo: `${window.location.origin}/profile`
+                                              scopes: 'user:email read:user repo read:org',
+                                              redirectTo: `${window.location.origin}/profile`,
+                                              queryParams: { prompt: 'select_account' }
                                             }
                                           });
-                                          if (!error && data?.url) {
-                                            window.location.href = data.url;
-                                            return;
-                                          }
+                                          if (error) toast.error(error.message);
+                                        } catch (err: any) {
+                                          toast.error(err.message || 'OAuth error');
                                         }
-                                        const { error } = await supabase.auth.signInWithOAuth({
-                                          provider: 'github',
-                                          options: {
-                                            scopes: 'read:user repo read:org',
-                                            redirectTo: `${window.location.origin}/profile`
-                                          }
-                                        });
-                                        if (error) toast.error(error.message);
-                                      } catch (err: any) {
-                                        toast.error(err.message || 'OAuth error');
-                                      }
-                                    }}
-                                    className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1.5 cursor-pointer transition-colors bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-500/20 self-start sm:self-auto"
-                                  >
-                                    <Github className="w-3.5 h-3.5" /> ⚡ {formData.github_url || profile?.github_url ? 'Re-link via OAuth' : 'Connect via OAuth'}
-                                  </button>
+                                      }}
+                                      className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1.5 cursor-pointer transition-colors bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-500/20"
+                                    >
+                                      <Github className="w-3.5 h-3.5" /> Connect via OAuth
+                                    </button>)}
+                                  </div>
                                 </div>
 
-                                <div className="flex gap-2 items-center pt-2 border-t border-border/40">
+                                {!(authUser?.identities?.find((i: any) => i.provider === 'github') || formData.github_url || profile?.github_url) && (<div className="flex gap-2 items-center pt-2 border-t border-border/40">
                                   <Input
                                     placeholder="Enter username or URL (e.g. alexmorgan or github.com/alexmorgan)"
                                     value={formData.github_url}
@@ -2030,7 +2134,7 @@ const Profile = () => {
                                   >
                                     Save & Sync
                                   </Button>
-                                </div>
+                                </div>)}
                               </div>
                             </div>
                             <div className="space-y-2">
