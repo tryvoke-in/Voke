@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ADMIN_EMAIL, isAdminEmail } from "@/config/admin";
 import { useToast } from "@/components/ui/use-toast";
-import { Mail, Lock, User, ArrowRight, Sparkles, Github, Loader2, Eye, EyeOff, GraduationCap, Building2 } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Sparkles, Github, Loader2, Eye, EyeOff, GraduationCap, Building2, Target, Mic, Trophy, ChevronRight, Briefcase, Video, TrendingUp, Rocket } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isDisposableEmail } from "@/utils/emailValidation";
 import { collegeService } from "@/services/collegeService";
@@ -496,58 +496,130 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-black text-white">
+    <div className="min-h-screen w-full bg-[#0c0f14] text-white selection:bg-emerald-500/30 font-sans antialiased relative overflow-x-hidden">
+      {/* Global Unified Precision Grid & Ambient Glow across entire screen */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Subtle Deep Slate Base */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_60%_at_25%_40%,rgba(15,23,42,0.3)_0%,rgba(12,15,20,0)_72%),radial-gradient(ellipse_75%_60%_at_75%_40%,rgba(15,23,42,0.3)_0%,rgba(12,15,20,0)_72%)]" />
+        {/* Soft Subdued Emerald Glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_25%_45%,rgba(16,185,129,0.04)_0%,rgba(15,107,56,0.015)_40%,transparent_75%),radial-gradient(ellipse_50%_40%_at_75%_45%,rgba(16,185,129,0.04)_0%,rgba(15,107,56,0.015)_40%,transparent_75%)]" />
+        {/* Subtle Precision Orthogonal Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]" />
+      </div>
+
       {/* Left Side - Feature Showcase (fixed so it never moves) */}
-      <div className="hidden lg:flex w-1/2 fixed inset-y-0 left-0 items-center justify-center p-12 overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-black">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(124,58,237,0.1),transparent_70%)]" />
-          <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[120px] -z-10" />
-          <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-sky-600/10 rounded-full blur-[100px] -z-10" />
+      <div className="hidden lg:flex w-1/2 fixed inset-y-0 left-0 items-center justify-center p-8 xl:p-14 overflow-hidden z-10">
+        {/* Top corner branding */}
+        <div 
+          onClick={() => navigate("/")}
+          className="absolute top-8 left-8 xl:top-10 xl:left-14 cursor-pointer inline-flex items-center gap-1.5 group z-20"
+        >
+          <img
+            src="/images/voke_logo.png"
+            alt="Voke Logo"
+            className="w-12 h-12 xl:w-14 xl:h-14 object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+          <span className="font-extrabold text-2xl xl:text-3xl tracking-tight text-white group-hover:text-emerald-300 transition-colors">
+            Voke
+          </span>
         </div>
 
-        <div className="relative z-10 max-w-lg">
+        <div className="relative z-10 max-w-[480px] w-full mt-5 xl:mt-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="mb-12"
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <img
-              src="/images/voke_logo.png"
-              alt="Voke Logo"
-              className="w-20 h-20 object-contain mb-8 hover:scale-110 transition-transform duration-300"
-            />
-            <h1 className="text-5xl font-bold mb-6 leading-tight">
+            <h1 className="text-4xl sm:text-[44px] lg:text-[46px] font-bold tracking-tight mb-3.5 text-white leading-[1.14]">
               Master Your <br />
-              <span className="bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="text-emerald-400 font-bold">
                 Interview Skills
               </span>
             </h1>
-            <p className="text-xl text-gray-400 leading-relaxed">
+            <p className="text-base text-zinc-400 leading-relaxed max-w-md mb-8">
               Join thousands of candidates who are acing their interviews with our AI-powered practice platform.
             </p>
+
+            {/* Interview Flow Steps */}
+            <div className="space-y-0 relative">
+              {/* Vertical connector line */}
+              <div className="absolute left-[20px] top-[38px] bottom-[38px] w-px bg-gradient-to-b from-white/10 via-white/5 to-white/10 pointer-events-none" />
+
+              {[{
+                icon: Briefcase,
+                title: "Pick a Role",
+                desc: "Choose from 50+ roles across top tech companies",
+                step: 1,
+                badgeBg: "bg-[#1d1230] border border-purple-500/30 text-purple-400 group-hover:bg-[#281845] group-hover:border-purple-400/50",
+                hoverText: "group-hover:text-purple-300",
+              }, {
+                icon: Video,
+                title: "Practice",
+                desc: "Real-time AI mock interviews with voice & video",
+                step: 2,
+                badgeBg: "bg-[#0b1d2e] border border-sky-500/30 text-sky-400 group-hover:bg-[#102942] group-hover:border-sky-400/50",
+                hoverText: "group-hover:text-sky-300",
+              }, {
+                icon: TrendingUp,
+                title: "Get Scored",
+                desc: "Detailed feedback on content, delivery & confidence",
+                step: 3,
+                badgeBg: "bg-[#271906] border border-amber-500/30 text-amber-400 group-hover:bg-[#382409] group-hover:border-amber-400/50",
+                hoverText: "group-hover:text-amber-300",
+              }, {
+                icon: Rocket,
+                title: "Land the Job",
+                desc: "Walk into your interview fully prepared",
+                step: 4,
+                badgeBg: "bg-[#0a2316] border border-emerald-500/30 text-emerald-400 group-hover:bg-[#0f3320] group-hover:border-emerald-400/50",
+                hoverText: "group-hover:text-emerald-300",
+              }].map((item, i) => (
+                <motion.div
+                  key={item.step}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.15 * i, ease: "easeOut" }}
+                  className="flex items-center gap-4 py-3.5 group cursor-default"
+                >
+                  <div className={`relative z-10 w-10 h-10 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300 ${item.badgeBg}`}>
+                    <item.icon className="w-4.5 h-4.5" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className={`text-[15.5px] font-semibold text-white transition-colors ${item.hoverText}`}>{item.title}</h4>
+                    <p className="text-[12.5px] text-zinc-400 mt-0.5 leading-relaxed">{item.desc}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-300 transition-colors shrink-0" />
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
-
-
         </div>
       </div>
 
-      {/* Right Side - Auth Form */}
-      <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col items-center justify-center p-6 sm:p-12 relative bg-black/95 min-h-screen overflow-y-auto">
-        <div className="absolute top-6 right-6 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/")}
-            className="text-gray-400 hover:text-white hover:bg-white/10"
-          >
-            Back to Home
-          </Button>
-        </div>
+      {/* Right Side - Auth Form Column */}
+      <div className="w-full lg:w-1/2 lg:ml-[50%] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 relative min-h-screen z-10">
+        {/* Single rounded dark panel */}
+        <div className="w-full max-w-[470px] bg-black rounded-[32px] border border-white/[0.08] shadow-[0_12px_48px_rgba(0,0,0,0.85)] p-8 sm:p-10 space-y-6 relative overflow-hidden">
+          <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/25 to-transparent pointer-events-none" />
 
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-white mb-2">
+          {/* Mobile-only brand identifier */}
+          <div 
+            onClick={() => navigate("/")} 
+            className="lg:hidden flex items-center justify-center gap-2 mb-1 cursor-pointer"
+          >
+            <img
+              src="/images/voke_logo_nav.png"
+              alt="Voke Logo"
+              className="h-7 w-auto object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/images/voke_logo.png";
+              }}
+            />
+            <span className="font-extrabold text-xl tracking-tight text-white">Voke</span>
+          </div>
+
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               {authMode === "signin" 
                 ? "Welcome Back" 
                 : authMode === "signup" 
@@ -556,7 +628,7 @@ const Auth = () => {
                 ? "Reset Password" 
                 : "Set New Password"}
             </h2>
-            <p className="text-gray-400">
+            <p className="text-xs sm:text-sm text-zinc-400">
               {authMode === "signin"
                 ? "Enter your details to access your account"
                 : authMode === "signup"
@@ -569,27 +641,31 @@ const Auth = () => {
 
           {/* Custom Tabs */}
           {(authMode === "signin" || authMode === "signup") && (
-            <div className="bg-white/10 p-1 rounded-full flex relative">
+            <div className="bg-white/[0.04] border border-white/[0.08] p-1.5 rounded-full flex relative">
               <motion.div
-                className="absolute top-1 bottom-1 bg-sky-600 rounded-full shadow-lg"
+                className="absolute top-1.5 bottom-1.5 bg-[#0F6B38] rounded-full shadow-md shadow-emerald-950/40 border border-emerald-500/30"
                 initial={false}
                 animate={{
-                  x: authMode === "signin" ? 0 : "100%",
+                  x: authMode === "signin" ? "0%" : "100%",
                   width: "50%"
                 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                transition={{ type: "spring", stiffness: 350, damping: 32 }}
               />
               <button
+                type="button"
                 onClick={() => setAuthMode("signin")}
-                className={`flex-1 py-3 text-sm font-medium rounded-full relative z-10 transition-colors duration-200 ${authMode === "signin" ? "text-white" : "text-gray-400 hover:text-white"
-                  }`}
+                className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-full relative z-10 transition-colors duration-200 cursor-pointer ${
+                  authMode === "signin" ? "text-white" : "text-zinc-400 hover:text-white"
+                }`}
               >
                 Sign In
               </button>
               <button
+                type="button"
                 onClick={() => setAuthMode("signup")}
-                className={`flex-1 py-3 text-sm font-medium rounded-xl relative z-10 transition-colors duration-200 ${authMode === "signup" ? "text-white" : "text-gray-400 hover:text-white"
-                  }`}
+                className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-full relative z-10 transition-colors duration-200 cursor-pointer ${
+                  authMode === "signup" ? "text-white" : "text-zinc-400 hover:text-white"
+                }`}
               >
                 Sign Up
               </button>
@@ -599,31 +675,31 @@ const Auth = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={authMode + (resetLinkSent ? "-sent" : "")}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
             >
               {authMode === "forgot" && resetLinkSent ? (
-                <div className="space-y-6 text-center py-4 bg-white/5 border border-white/10 p-8 rounded-3xl shadow-2xl relative">
-                  <div className="mx-auto w-16 h-16 bg-sky-500/10 border border-sky-500/20 rounded-full flex items-center justify-center text-sky-400">
-                    <Mail className="w-8 h-8" />
+                <div className="space-y-4 text-center py-2 bg-white/[0.03] border border-white/10 p-6 rounded-2xl shadow-xl relative">
+                  <div className="mx-auto w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400">
+                    <Mail className="w-6 h-6" />
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold">Check your email</h3>
-                    <p className="text-gray-400 text-sm leading-relaxed">
-                      We have sent a password reset link to <span className="text-sky-400 font-medium">{email}</span>.
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-white">Check your email</h3>
+                    <p className="text-zinc-400 text-xs leading-relaxed">
+                      We have sent a password reset link to <span className="text-emerald-400 font-medium">{email}</span>.
                     </p>
                   </div>
-                  <div className="space-y-3 pt-2">
+                  <div className="space-y-2.5 pt-1">
                     <Button
                       type="button"
                       onClick={() => handleForgotPassword()}
                       disabled={loading}
-                      className="w-full h-12 bg-white hover:bg-gray-200 text-black font-semibold rounded-xl transition-all"
+                      className="w-full h-11 text-sm bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold rounded-xl border border-emerald-500/30 transition-all cursor-pointer"
                     >
                       {loading ? (
-                        <Loader2 className="h-5 w-5 animate-spin mx-auto text-black" />
+                        <Loader2 className="h-4 w-4 animate-spin mx-auto text-white" />
                       ) : (
                         "Resend Reset Link"
                       )}
@@ -636,7 +712,7 @@ const Auth = () => {
                         setEmail("");
                         setAuthMode("signin");
                       }}
-                      className="w-full text-gray-400 hover:text-white"
+                      className="w-full text-xs text-zinc-400 hover:text-white cursor-pointer"
                     >
                       Back to Sign In
                     </Button>
@@ -656,157 +732,157 @@ const Auth = () => {
                   className="space-y-5"
                 >
                   {authMode === "signup" && (
-                    <div className="bg-sky-950/40 border border-sky-500/30 rounded-xl p-3 flex items-start gap-2.5">
-                      <GraduationCap className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
-                      <div className="text-xs text-gray-300">
-                        <span className="font-semibold text-sky-300">College / University Student?</span> Sign up with your official campus email (e.g. <code className="text-white font-mono bg-white/10 px-1 py-0.5 rounded text-[11px]">@nst.rishihood.edu.in</code>) to automatically link your institutional placement drives!
+                    <div className="bg-emerald-950/30 border border-emerald-500/25 rounded-xl p-3 flex items-start gap-2.5 mb-2">
+                      <GraduationCap className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="text-xs text-zinc-300 leading-snug">
+                        <span className="font-semibold text-emerald-300">College / University Student?</span> Use official campus email to link your institutional drives!
                       </div>
                     </div>
                   )}
 
                   {authMode === "signup" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-gray-300">Full Name</Label>
-                    <div className="relative group">
-                      <User className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-sky-500 transition-colors" />
-                      <Input
-                        id="fullName"
-                        type="text"
-                        placeholder="John Doe"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 focus:ring-sky-500/20 rounded-xl h-12 transition-all"
-                        required
-                      />
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName" className="text-xs sm:text-sm font-medium text-zinc-300 block">Full Name</Label>
+                      <div className="relative group">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-zinc-500 group-focus-within:text-emerald-400 transition-colors pointer-events-none" />
+                        <Input
+                          id="fullName"
+                          type="text"
+                          placeholder="John Doe"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="pl-11 bg-white/[0.04] border-white/10 text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl h-12 text-sm transition-all"
+                          required
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {authMode !== "reset" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-300">Email Address</Label>
-                    <div className="relative group">
-                      <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-sky-500 transition-colors" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 focus:ring-sky-500/20 rounded-xl h-12 transition-all"
-                        required
-                      />
+                  {authMode !== "reset" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-xs sm:text-sm font-medium text-zinc-300 block">Email Address</Label>
+                      <div className="relative group">
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-zinc-500 group-focus-within:text-emerald-400 transition-colors pointer-events-none" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="name@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-11 bg-white/[0.04] border-white/10 text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl h-12 text-sm transition-all"
+                          required
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {authMode !== "forgot" && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor="password" className="text-gray-300">
-                        {authMode === "reset" ? "New Password" : "Password"}
-                      </Label>
-                      {authMode === "signin" && (
+                  {authMode !== "forgot" && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label htmlFor="password" className="text-xs sm:text-sm font-medium text-zinc-300">
+                          {authMode === "reset" ? "New Password" : "Password"}
+                        </Label>
+                        {authMode === "signin" && (
+                          <button
+                            type="button"
+                            onClick={() => setAuthMode("forgot")}
+                            className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors focus:outline-none cursor-pointer"
+                          >
+                            Forgot password?
+                          </button>
+                        )}
+                      </div>
+                      <div className="relative group">
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-zinc-500 group-focus-within:text-emerald-400 transition-colors pointer-events-none" />
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="pl-11 pr-11 bg-white/[0.04] border-white/10 text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl h-12 text-sm transition-all"
+                          required
+                          minLength={6}
+                        />
                         <button
                           type="button"
-                          onClick={() => setAuthMode("forgot")}
-                          className="text-xs text-sky-400 hover:text-sky-300 focus:outline-none"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer p-1"
                         >
-                          Forgot password?
+                          {showPassword ? (
+                            <EyeOff className="h-4.5 w-4.5" />
+                          ) : (
+                            <Eye className="h-4.5 w-4.5" />
+                          )}
                         </button>
-                      )}
+                      </div>
                     </div>
-                    <div className="relative group">
-                      <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-sky-500 transition-colors" />
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 focus:ring-sky-500/20 rounded-xl h-12 transition-all"
-                        required
-                        minLength={6}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-gray-500 hover:text-white transition-colors focus:outline-none"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {(authMode === "signup" || authMode === "reset") && (
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-gray-300">
-                      {authMode === "reset" ? "Confirm New Password" : "Confirm Password"}
-                    </Label>
-                    <div className="relative group">
-                      <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500 group-focus-within:text-sky-500 transition-colors" />
-                      <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-sky-500 focus:ring-sky-500/20 rounded-xl h-12 transition-all"
-                        required
-                        minLength={6}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-3 text-gray-500 hover:text-white transition-colors focus:outline-none"
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white h-12 rounded-xl font-semibold shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all duration-300 hover:scale-[1.02]"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      {authMode === "signin" 
-                        ? "Sign In" 
-                        : authMode === "signup" 
-                        ? "Create Account" 
-                        : authMode === "forgot" 
-                        ? "Send Reset Link" 
-                        : "Update Password"}
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </>
                   )}
-                </Button>
 
-                {authMode === "forgot" && (
-                  <div className="text-center pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode("signin")}
-                      className="text-sm text-gray-400 hover:text-white transition-colors focus:outline-none"
-                    >
-                      Back to Sign In
-                    </button>
-                  </div>
-                )}
+                  {(authMode === "signup" || authMode === "reset") && (
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword" className="text-xs sm:text-sm font-medium text-zinc-300 block">
+                        {authMode === "reset" ? "Confirm New Password" : "Confirm Password"}
+                      </Label>
+                      <div className="relative group">
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-zinc-500 group-focus-within:text-emerald-400 transition-colors pointer-events-none" />
+                        <Input
+                          id="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="pl-11 pr-11 bg-white/[0.04] border-white/10 text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl h-12 text-sm transition-all"
+                          required
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none cursor-pointer p-1"
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4.5 w-4.5" />
+                          ) : (
+                            <Eye className="h-4.5 w-4.5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-[#0F6B38] hover:bg-[#0B572D] text-white h-12 rounded-xl font-semibold border border-emerald-500/30 shadow-md shadow-emerald-950/40 hover:shadow-emerald-900/40 transition-all duration-200 cursor-pointer active:scale-[0.99] text-sm sm:text-base !mt-6"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mx-auto text-white" />
+                    ) : (
+                      <>
+                        {authMode === "signin" 
+                          ? "Sign In" 
+                          : authMode === "signup" 
+                          ? "Create Account" 
+                          : authMode === "forgot" 
+                          ? "Send Reset Link" 
+                          : "Update Password"}
+                        <ArrowRight className="ml-1.5 h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+
+                  {authMode === "forgot" && (
+                    <div className="text-center pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setAuthMode("signin")}
+                        className="text-xs sm:text-sm text-zinc-400 hover:text-white transition-colors focus:outline-none cursor-pointer"
+                      >
+                        Back to Sign In
+                      </button>
+                    </div>
+                  )}
                 </form>
               )}
             </motion.div>
@@ -814,24 +890,25 @@ const Auth = () => {
 
           {(authMode === "signin" || authMode === "signup") && (
             <>
-              <div className="relative py-4">
+              <div className="relative py-2.5">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/10" />
+                  <span className="w-full border-t border-white/[0.08]" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-black px-2 text-gray-500">
+                <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                  <span className="bg-black px-3 text-zinc-500 font-medium">
                     Or continue with
                   </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <Button
+                  type="button"
                   variant="outline"
-                  className="h-12 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-gray-300"
+                  className="h-12 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 hover:text-white text-zinc-300 font-medium text-sm transition-all cursor-pointer"
                   onClick={handleGoogleSignIn}
                 >
-                  <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                     <path
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                       fill="#4285F4"
@@ -852,37 +929,16 @@ const Auth = () => {
                   Google
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={handleGithubSignIn}
-                  className="h-12 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-gray-300"
+                  className="h-12 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 hover:text-white text-zinc-300 font-medium text-sm transition-all cursor-pointer"
                 >
-                  <Github className="mr-2 h-5 w-5" />
+                  <Github className="mr-2 h-4 w-4" />
                   GitHub
                 </Button>
               </div>
 
-              <div className="pt-5 mt-3 border-t border-white/10">
-                <div className="p-3.5 rounded-xl bg-sky-950/20 border border-sky-500/20 flex items-center justify-between gap-3">
-                  <div className="text-left">
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-                      <GraduationCap className="w-4 h-4 text-sky-400" />
-                      <span>College Placement Cell?</span>
-                    </div>
-                    <p className="text-[11px] text-gray-400 mt-0.5">
-                      Access student directory & schedule campus mock drives
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate("/college/auth")}
-                    className="border-sky-500/30 bg-sky-600/10 text-sky-300 hover:bg-sky-600 hover:text-white text-xs h-8 px-3 shrink-0"
-                  >
-                    College Portal →
-                  </Button>
-                </div>
-              </div>
             </>
           )}
         </div>
@@ -898,14 +954,14 @@ const Auth = () => {
           }
         }}
       >
-        <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-md">
+        <DialogContent className="bg-[#0b0d14] border-white/10 text-white sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <Mail className="h-5 w-5 text-sky-500" />
+              <Mail className="h-5 w-5 text-emerald-400" />
               Verify your email
             </DialogTitle>
-            <DialogDescription className="text-gray-400 pt-2 text-sm leading-relaxed">
-              We've sent a verification link to <span className="text-sky-400 font-medium">{email}</span>.
+            <DialogDescription className="text-zinc-400 pt-2 text-sm leading-relaxed">
+              We've sent a verification link to <span className="text-emerald-400 font-medium">{email}</span>.
               <br /><br />
               Please check your inbox (and spam folder) and click the link to verify your account before signing in.
             </DialogDescription>
@@ -914,7 +970,7 @@ const Auth = () => {
             <Button
               type="button"
               variant="ghost"
-              className="w-full sm:w-auto border border-white/10 hover:bg-white/5 hover:text-white text-gray-300"
+              className="w-full sm:w-auto border border-white/10 hover:bg-white/5 hover:text-white text-zinc-300"
               onClick={handleResendVerification}
               disabled={resendLoading}
             >
@@ -924,7 +980,7 @@ const Auth = () => {
             <Button
               type="button"
               variant="default"
-              className="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white"
+              className="w-full sm:w-auto bg-[#0F6B38] hover:bg-[#0B572D] text-white border border-emerald-500/30"
               onClick={() => {
                 setShowVerificationDialog(false);
                 setEmail("");
