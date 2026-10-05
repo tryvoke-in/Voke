@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Calendar, Clock, Sparkles, Users, Award, Briefcase, Bot, Video, Code, Layers, 
   CheckCircle2, Plus, Trash2, BookOpen, ShieldCheck, FileText, UploadCloud, Check, HelpCircle, 
-  ChevronDown, ChevronUp, FileSpreadsheet, Download, Code2, Filter, Mail, RefreshCw
+  ChevronDown, ChevronUp, FileSpreadsheet, Download, Code2, Filter, Mail, RefreshCw, Search
 } from "lucide-react";
 import { College, CollegeStudent, CollegeCustomQuestion, CollegeScheduledDrive, collegeService } from "@/services/collegeService";
 import { toast } from "sonner";
@@ -112,11 +112,12 @@ export const ScheduleInterviewModal = ({
   const targetRole = "Software Development Engineer (SDE-1)";
   const interviewType: "system_design" | "technical_ai" | "video_interview" | "dsa_coding" | "behavioral_hr" = "technical_ai";
   const [audienceType, setAudienceType] = useState<"all" | "branch" | "selected_emails" | "paste_emails">(
-    preSelectedStudentEmails.length > 0 ? "selected_emails" : "all"
+    "selected_emails"
   );
   const [selectedEmails, setSelectedEmails] = useState<string[]>(
     preSelectedStudentEmails.length > 0 ? preSelectedStudentEmails : students.map(s => s.email)
   );
+  const [studentSearchQuery, setStudentSearchQuery] = useState("");
   const [customPastedEmails, setCustomPastedEmails] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("Batch 2025");
   const [selectedBranch, setSelectedBranch] = useState("All Branches");
@@ -164,7 +165,9 @@ export const ScheduleInterviewModal = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isOpen && existingDrive) {
+    if (!isOpen) return;
+
+    if (existingDrive) {
       setTitle(existingDrive.title);
       if (existingDrive.scheduledDate) setScheduledDate(existingDrive.scheduledDate.split("T")[0]);
       if (existingDrive.deadlineDate) setDeadlineDate(existingDrive.deadlineDate.split("T")[0]);
@@ -191,8 +194,18 @@ export const ScheduleInterviewModal = ({
       if (existingDrive.targetEmails && existingDrive.targetEmails.length > 0) {
         setSelectedEmails(existingDrive.targetEmails);
       }
+    } else {
+      // New Drive: sync pre-selected student(s) or default to roster selection
+      if (preSelectedStudentEmails && preSelectedStudentEmails.length > 0) {
+        setAudienceType("selected_emails");
+        setSelectedEmails(preSelectedStudentEmails);
+      } else {
+        setAudienceType("selected_emails");
+        setSelectedEmails(students.map(s => s.email));
+      }
+      setStudentSearchQuery("");
     }
-  }, [isOpen, existingDrive]);
+  }, [isOpen, existingDrive, preSelectedStudentEmails, students]);
 
   // Excel Template Download
   const handleDownloadTemplate = () => {
@@ -423,18 +436,37 @@ export const ScheduleInterviewModal = ({
   };
 
   const toggleEmail = (email: string) => {
+    if (audienceType === "all") {
+      setAudienceType("selected_emails");
+      setSelectedEmails(students.map(s => s.email).filter(e => e !== email));
+      return;
+    }
     setSelectedEmails(prev => 
       prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
     );
   };
 
   const handleSelectAllEmails = () => {
-    if (selectedEmails.length === students.length) {
-      setSelectedEmails([]);
-    } else {
-      setSelectedEmails(students.map(s => s.email));
-    }
+    setAudienceType("selected_emails");
+    setSelectedEmails(students.map(s => s.email));
   };
+
+  const handleDeselectAllEmails = () => {
+    setAudienceType("selected_emails");
+    setSelectedEmails([]);
+  };
+
+  const filteredRosterStudents = students.filter(s => {
+    const q = studentSearchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      s.fullName.toLowerCase().includes(q) ||
+      s.email.toLowerCase().includes(q) ||
+      (s.branch && s.branch.toLowerCase().includes(q)) ||
+      (s.batch && s.batch.toLowerCase().includes(q)) ||
+      (s.targetRole && s.targetRole.toLowerCase().includes(q))
+    );
+  });
 
   const getPastedEmailList = (): string[] => {
     if (!customPastedEmails.trim()) return [];
@@ -1072,26 +1104,70 @@ export const ScheduleInterviewModal = ({
               </Label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
+                  { id: "selected_emails", label: "Select Students", desc: "Pick individual students" },
                   { id: "all", label: "All Students", desc: `All ${students.length} registered` },
-                  { id: "branch", label: "By Branch", desc: "Filtered group" },
-                  { id: "selected_emails", label: "From Roster", desc: "Select students" },
+                  { id: "branch", label: "By Branch", desc: "Filtered department" },
                   { id: "paste_emails", label: "Google Form", desc: "Paste emails/CSV" }
                 ].map(opt => (
                   <button
                     key={opt.id}
                     type="button"
-                    onClick={() => setAudienceType(opt.id as any)}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                    onClick={() => {
+                      if (opt.id === "all") {
+                        setAudienceType("all");
+                        setSelectedEmails(students.map(s => s.email));
+                      } else if (opt.id === "selected_emails") {
+                        setAudienceType("selected_emails");
+                      } else {
+                        setAudienceType(opt.id as any);
+                      }
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                       audienceType === opt.id
-                        ? "bg-blue-500/15 border-blue-500 text-foreground shadow-xs"
+                        ? "bg-blue-500/15 border-blue-500 text-foreground shadow-xs ring-1 ring-blue-500/20"
                         : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   >
-                    <div className="font-semibold text-xs text-foreground">{opt.label}</div>
+                    <div className="font-semibold text-xs text-foreground flex items-center justify-between">
+                      <span>{opt.label}</span>
+                      {opt.id === "selected_emails" && selectedEmails.length > 0 && audienceType === "selected_emails" && (
+                        <span className="text-[10px] bg-blue-600 text-white rounded-full px-1.5 py-0.2 font-mono">
+                          {selectedEmails.length}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</div>
                   </button>
                 ))}
               </div>
+
+              {/* By Branch Filter Option */}
+              {audienceType === "branch" && (
+                <div className="mt-3 p-3.5 rounded-xl border border-border bg-card space-y-2 shadow-xs animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <Filter className="w-3.5 h-3.5 text-blue-500" />
+                      Filter Candidates by Department / Branch
+                    </Label>
+                    <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[10px] font-mono">
+                      {targetEmailsCount} candidate{targetEmailsCount !== 1 ? "s" : ""} targeted
+                    </Badge>
+                  </div>
+                  <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                    <SelectTrigger className="bg-background border-border text-foreground text-xs h-9">
+                      <SelectValue placeholder="Select Department / Branch" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border text-foreground text-xs">
+                      <SelectItem value="All Branches">All Branches ({students.length} students)</SelectItem>
+                      {Array.from(new Set(students.map(s => s.branch).filter(Boolean))).map(branch => (
+                        <SelectItem key={branch} value={branch}>
+                          {branch} ({students.filter(s => s.branch === branch).length} students)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Paste Google Form Emails Option */}
               {audienceType === "paste_emails" && (
@@ -1117,46 +1193,165 @@ export const ScheduleInterviewModal = ({
                 </div>
               )}
 
-              {/* Student Checklist from College Roster */}
-              {audienceType === "selected_emails" && (
-                <div className="mt-3 p-3 rounded-xl border border-border bg-card space-y-2 shadow-xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-border text-xs">
-                    <span className="text-muted-foreground font-medium">Select candidate email IDs from roster:</span>
-                    <button
-                      type="button"
-                      onClick={handleSelectAllEmails}
-                      className="text-blue-600 dark:text-blue-400 hover:underline font-medium text-xs"
-                    >
-                      {selectedEmails.length === students.length ? "Deselect All" : "Select All"}
-                    </button>
+              {/* Student Checklist from College Roster (Shown for Select Students and All Students) */}
+              {(audienceType === "selected_emails" || audienceType === "all") && (
+                <div className="mt-3 p-3 rounded-xl border border-border bg-card space-y-2.5 shadow-xs animate-in fade-in duration-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-semibold text-foreground">
+                        {audienceType === "all" ? "All Registered Candidates" : "Select Individual Candidates"}
+                      </span>
+                      <Badge variant="outline" className="text-[11px] font-mono border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                        {selectedEmails.length} of {students.length} selected
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleSelectAllEmails}
+                        className="h-7 px-2.5 text-[11px] font-medium border-border hover:bg-muted cursor-pointer"
+                      >
+                        Select All
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleDeselectAllEmails}
+                        className="h-7 px-2.5 text-[11px] font-medium border-border hover:bg-muted cursor-pointer text-muted-foreground hover:text-foreground"
+                      >
+                        Deselect All
+                      </Button>
+                    </div>
                   </div>
-                  <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+
+                  {/* Quick Search Filter */}
+                  {students.length > 0 && (
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      <Input
+                        placeholder="Search students by name, email, branch..."
+                        value={studentSearchQuery}
+                        onChange={e => setStudentSearchQuery(e.target.value)}
+                        className="pl-8 pr-7 h-8 text-xs bg-background border-border text-foreground focus:border-blue-500"
+                      />
+                      {studentSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setStudentSearchQuery("")}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground hover:text-foreground font-bold cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Interactive Checklist */}
+                  <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1 divide-y divide-border/20">
                     {students.length === 0 ? (
-                      <p className="text-xs text-muted-foreground py-2 text-center">No students registered yet in roster. Use "Google Form" option to paste emails.</p>
+                      <div className="py-6 text-center text-xs text-muted-foreground space-y-1">
+                        <Users className="w-6 h-6 mx-auto text-muted-foreground/60 mb-1" />
+                        <p className="font-medium text-foreground">No students registered in college roster yet.</p>
+                        <p className="text-[11px]">Enroll students in the Roster tab or switch to "Google Form" to paste candidate emails.</p>
+                      </div>
+                    ) : filteredRosterStudents.length === 0 ? (
+                      <div className="py-6 text-center text-xs text-muted-foreground">
+                        <p>No students match "{studentSearchQuery}".</p>
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          onClick={() => setStudentSearchQuery("")}
+                          className="text-xs text-blue-600 dark:text-blue-400 p-0 h-auto mt-1"
+                        >
+                          Clear filter
+                        </Button>
+                      </div>
                     ) : (
-                      students.map(s => {
+                      filteredRosterStudents.map(s => {
                         const isChecked = selectedEmails.includes(s.email);
+                        const initials = (s.fullName || "Student")
+                          .split(" ")
+                          .map(n => n[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase();
+
                         return (
                           <div
-                            key={s.id}
+                            key={s.id || s.email}
                             onClick={() => toggleEmail(s.email)}
-                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer text-xs transition-colors ${
-                              isChecked ? "bg-blue-500/15 text-foreground" : "hover:bg-muted text-muted-foreground"
+                            className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer text-xs transition-all border ${
+                              isChecked
+                                ? "bg-blue-500/10 border-blue-500/30 text-foreground shadow-2xs"
+                                : "bg-background/60 hover:bg-muted/70 border-transparent text-muted-foreground"
                             }`}
                           >
-                            <div className="flex items-center gap-2 truncate">
-                              <Checkbox checked={isChecked} onCheckedChange={() => toggleEmail(s.email)} />
-                              <span className="font-medium text-foreground truncate">{s.fullName}</span>
-                              <span className="text-muted-foreground text-[11px] truncate font-mono">({s.email})</span>
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+                              <Checkbox
+                                checked={isChecked}
+                                onCheckedChange={() => toggleEmail(s.email)}
+                                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                              />
+                              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                isChecked
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-muted text-muted-foreground border border-border"
+                              }`}>
+                                {initials}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-semibold text-foreground text-xs truncate">
+                                    {s.fullName}
+                                  </span>
+                                  {s.branch && (
+                                    <Badge variant="outline" className="text-[9px] py-0 px-1 border-border/80 text-muted-foreground">
+                                      {s.branch}
+                                    </Badge>
+                                  )}
+                                  {s.batch && (
+                                    <Badge variant="outline" className="text-[9px] py-0 px-1 border-border/80 text-muted-foreground">
+                                      {s.batch}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-muted-foreground text-[11px] truncate font-mono mt-0.5">
+                                  {s.email}
+                                </div>
+                              </div>
                             </div>
-                            <Badge variant="outline" className="text-[10px] border-border text-muted-foreground shrink-0 bg-background/50">
-                              Score: {s.averageScore}%
-                            </Badge>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] font-medium shrink-0 ${
+                                  s.averageScore >= 75
+                                    ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                                    : s.averageScore > 0
+                                    ? "border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10"
+                                    : "border-border text-muted-foreground bg-background/50"
+                                }`}
+                              >
+                                {s.averageScore > 0 ? `${s.averageScore}% Avg` : "New Candidate"}
+                              </Badge>
+                            </div>
                           </div>
                         );
                       })
                     )}
                   </div>
+
+                  {selectedEmails.length === 0 && students.length > 0 && (
+                    <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs flex items-center gap-1.5">
+                      <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>No candidates selected. Check at least one student above to dispatch this assessment.</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1210,10 +1405,12 @@ export const ScheduleInterviewModal = ({
             <Button
               type="submit"
               disabled={isSubmitting || targetEmailsCount === 0 || selectedQuestionsCount === 0}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold shadow-lg shadow-blue-600/20 px-6"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold shadow-lg shadow-blue-600/20 px-6 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 existingDrive ? "Updating Assessment..." : "Scheduling Assessment..."
+              ) : targetEmailsCount === 0 ? (
+                "Select at least 1 student"
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 mr-2" />
