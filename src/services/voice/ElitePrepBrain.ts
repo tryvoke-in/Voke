@@ -57,7 +57,7 @@ export class ElitePrepBrain implements IVoiceBrain {
                     body: {
                         messages: fullMessages,
                         interviewType: isHRRound ? 'behavioral' : 'pro_interview',
-                        systemPrompt: sysPrompt
+                        systemPrompt: sysPrompt + `\n\nCRITICAL ROUND ${this.roundNumber} MANDATE: This round is strictly verbal, theoretical, and conceptual. NEVER ask candidate to write code, implement algorithms, or solve coding puzzles.`
                     }
                 });
 
@@ -99,7 +99,8 @@ export class ElitePrepBrain implements IVoiceBrain {
                     } else {
                         customDirective += `\n\nSTRICT CRISP QUESTION MANDATE:
 1. STRICT LENGTH: Maximum 1 to 2 short sentences (under 35 words total).
-2. ONE DIRECT QUESTION: Ask exactly ONE sharp, focused technical question.`;
+2. ONE DIRECT QUESTION: Ask exactly ONE sharp, focused technical question.
+3. THEORETICAL & RESUME FOCUS: This is Round ${this.roundNumber}. Ask theoretical, architectural, and conceptual questions. NEVER ask candidate to write code or solve coding problems.`;
                     }
 
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${proInterviewGeminiKey}`, {

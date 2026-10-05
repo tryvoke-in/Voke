@@ -36,8 +36,8 @@ const ALL_PRESET_QUESTIONS: CollegeCustomQuestion[] = [
   },
   {
     id: "q2",
-    question: "How would you design and implement an LRU (Least Recently Used) Cache with O(1) time complexity for get and put operations?",
-    type: "coding",
+    question: "Explain the architecture and design of an LRU (Least Recently Used) Cache. How do hash maps and doubly linked lists combine to achieve O(1) get and put operations, and what happens during cache eviction?",
+    type: "theoretical",
     difficulty: "Medium",
     expectedAnswerOrKeyPoints: "Doubly linked list combined with hash map. Node movement to head on access, tail node eviction on capacity reach."
   },

@@ -181,10 +181,13 @@ export function useGroqVoice(props?: UseGroqVoiceProps): UseGroqVoiceReturn {
 
         // Strip out tokens and hidden content for speech
         let speechText = text
-            .replace(/\[START_CODING\]/g, '')
-            .replace(/\[END_CODING\]/g, '')
-            .replace(/\[VERDICT:[^\]]*\]/g, '')
-            .replace(/\[REASON:[^\]]*\]/g, '');
+            .replace(/\[START_CODING\]/gi, '')
+            .replace(/\[END_CODING\]/gi, '')
+            .replace(/\[VERDICT:[^\]]*\]/gi, '')
+            .replace(/\[REASON:[^\]]*\]/gi, '')
+            .replace(/\[(?:Theoretical Concept|Coding Challenge|Coding Question)[^\]]*\]:?\s*/gi, '')
+            .replace(/\[APPROACH_VERIFIED\]/gi, '')
+            .replace(/\[.*?\]/g, '');
 
         if (speechText.includes('[DETAILED_FEEDBACK]')) {
             speechText = speechText.split('[DETAILED_FEEDBACK]')[0];

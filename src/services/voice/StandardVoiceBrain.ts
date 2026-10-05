@@ -23,6 +23,8 @@ export class StandardVoiceBrain implements IVoiceBrain {
             this.hasTriggeredCoding = true;
         } else if (elapsedMinutes >= 25) {
             timeDirective = "\n\n[SYSTEM NOTE: The interview time limit is up. You MUST end the interview NOW by saying '[VERDICT:PASS]' or '[VERDICT:FAIL]'. Do not ask any more questions.]";
+        } else if (!this.hasTriggeredCoding) {
+            timeDirective = "\n\n[SYSTEM NOTE: Current Phase = THEORETICAL & ARCHITECTURAL DEPTH. You MUST ask purely theoretical, conceptual, and architectural questions about their domain, technical stack, internals, or project architecture. DO NOT ask coding problems, DSA puzzle questions, or ask the candidate to write code. Only verbal theoretical questions are allowed.]";
         }
 
         const finalSysPrompt = sysPrompt + timeDirective;
@@ -100,7 +102,8 @@ export class StandardVoiceBrain implements IVoiceBrain {
 
                     let customDirective = antiRepetitionRule + `\n\nSTRICT CRISP QUESTION MANDATE:
 1. STRICT LENGTH: Maximum 1 to 2 short sentences (under 35 words total).
-2. ONE DIRECT QUESTION: Ask exactly ONE sharp, focused technical question.`;
+2. ONE DIRECT QUESTION: Ask exactly ONE sharp, focused technical question.
+3. THEORETICAL FOCUS: Ask theoretical, conceptual, and architectural questions. DO NOT ask candidate to write code or solve coding puzzles unless [START_CODING] is explicitly requested.`;
 
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${proInterviewGeminiKey}`, {
                         method: 'POST',

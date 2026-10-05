@@ -46,7 +46,13 @@ CRITICAL MANDATES:
     geminiContents.unshift({ role: 'user', parts: [{ text: 'Hello! I am ready to start the interview session.' }] });
   }
 
-  const isCodingRound = /round\s*3|coding|live\s*coding|assessment|two\s*sum|algorithm|debugging/i.test(systemPrompt) || interviewType === "coding" || interviewType === "round3";
+  // Only enter strict live coding mandate if specifically designated as a coding assessment round
+  const isCodingRound = (
+    interviewType === "coding" ||
+    interviewType === "round3" ||
+    (typeof systemPrompt === 'string' && systemPrompt.includes('[START_CODING]') && !systemPrompt.includes('MANDATORY QUESTION PROGRESSION'))
+  ) && interviewType !== "pro_interview" && interviewType !== "behavioral";
+
   let turnDirective = "";
   if (isCodingRound) {
     turnDirective = `CRITICAL ROUND 3 TECHNICAL CODING MANDATE:
@@ -56,6 +62,21 @@ You are a Principal Software Engineer conducting a FAANG-tier Live Technical Ass
 3. CODING PHASE: When the candidate is coding, be COMPLETELY SILENT. Do NOT speak, comment, or ask questions.
 4. POST-RUN PHASE (AFTER TESTS PASS): Ask: (a) Time Complexity Big-O, (b) Auxiliary Space Complexity, (c) Edge cases, (d) Optimizations.
 5. ABSOLUTE PROHIBITION: NEVER ask resume, background, or introductory questions. EVER. Keep responses concise.`;
+  } else {
+    turnDirective = `CRITICAL THEORETICAL & CONCEPTUAL INTERVIEW MANDATE:
+You are conducting a thorough Technical Interview focused on THEORETICAL FOUNDATIONS, ARCHITECTURAL DESIGN, AND ENGINEERING CONCEPTS.
+1. STRICTLY ASK THEORETICAL & CONCEPTUAL QUESTIONS:
+   - Ask deep conceptual questions testing internal mechanisms (how things work under the hood, memory management, garbage collection, event loops, execution contexts, protocols).
+   - Ask architectural and system design questions (distributed systems, database indexing internals, ACID vs BASE, caching strategies, API protocols like REST vs gRPC vs WebSockets).
+   - Ask comparative and trade-off analysis questions (e.g. SQL vs NoSQL, process vs thread, synchronization primitives, concurrency models, scaling bottlenecks).
+2. ABSOLUTE PROHIBITION:
+   - NEVER ask direct coding problems, DSA puzzle problems (e.g., Two Sum, Reverse a Linked List, Palindrome), or ask the candidate to write or type code.
+   - Do NOT ask the candidate for algorithmic implementation syntax.
+   - This phase is purely verbal and conceptual.
+3. STRUCTURE:
+   - Ask exactly ONE clear, sharp theoretical question per turn.
+   - Maximum 1-2 short sentences (under 35 words).
+   - End with a question mark.`;
   }
 
   const languageMandate = "CRITICAL MANDATE: You MUST communicate, ask questions, and respond ONLY in clear, natural, professional English. NEVER output Japanese, Chinese, or any other language.";

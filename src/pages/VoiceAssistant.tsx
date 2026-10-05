@@ -259,15 +259,11 @@ const VoiceAssistant: React.FC = () => {
       const lastMsg = logs[logs.length - 1];
       if (lastMsg.role === 'assistant') {
 
-        // Handle START_CODING or any detected coding question to transition to coding mode
-        const textLower = lastMsg.text.toLowerCase();
+        // Handle START_CODING or explicit coding tags to transition to coding mode
         const isCodingTrigger = 
           lastMsg.text.includes('[START_CODING]') ||
           lastMsg.text.includes('[Coding Challenge') ||
-          lastMsg.text.includes('[Coding Question') ||
-          textLower.includes('coding challenge') ||
-          textLower.includes('coding question') ||
-          (textLower.includes('write a function') && (textLower.includes('return') || textLower.includes('array') || textLower.includes('string') || textLower.includes('time complexity')));
+          lastMsg.text.includes('[Coding Question');
 
         if (isCodingTrigger) {
           if (interviewMode !== 'coding') {
@@ -470,9 +466,13 @@ CRITICAL INTERVIEW GUIDELINES:
 2. DEEP RESUME & GITHUB PROJECT VERIFICATION: Ask questions targeting the candidate's real GitHub projects BY NAME and the technologies listed in their resume.
 3. SINGLE DIRECT QUESTION: Always end with exactly ONE clear, sharp technical question.
 4. MANDATORY QUESTION PROGRESSION — Follow this STRICTLY in order:
-   - Intro: Ask candidate to introduce themselves and their background.
-   - Theoretical Phase: Progress from easy conceptual questions, to medium system design, to hard algorithm questions.
-   - Coding Phase: When the SYSTEM NOTE tells you the theoretical portion is complete, you MUST output the exact tag [START_CODING] and present a strict Data Structures & Algorithms coding challenge. The challenge MUST follow this pattern: (1) Clear problem statement, (2) Expected Input format, (3) Expected Output format. Do not ask vague or abstract questions. If you do not output the [START_CODING] text, the candidate's code editor will remain permanently locked and the system will break.
+   - Phase 1: Verbal Introduction & Background Screening.
+   - Phase 2: Theoretical & Architectural Depth (MANDATORY THEORETICAL PHASE).
+     * Ask deep conceptual questions on language runtimes, memory model, concurrency, database indexing, caching strategies, and distributed architecture.
+     * DO NOT ask coding problems, DSA puzzle challenges (e.g. reverse linked list, two sum), or ask candidate to write code in this phase.
+     * Test conceptual depth, tradeoffs, and design thinking purely through verbal dialogue.
+   - Phase 3: Coding Assessment (ONLY when SYSTEM NOTE explicitly signals theoretical portion is complete).
+     * In that turn, output [START_CODING] and present ONE strict Data Structures & Algorithms coding challenge with clear statement, input format, and output format.
 5. INTERVIEW LENGTH: After coding round is complete (candidate submits code or explains solution), give verdict with "[VERDICT:PASS]" or "[VERDICT:FAIL]" and end naturally.`;
 
     setUserContext(context);

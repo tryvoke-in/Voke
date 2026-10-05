@@ -2008,11 +2008,68 @@ export const collegeService = {
 
   // Sample randomized questions for candidate (e.g. 8 random theoretical + 1 random coding question)
   sampleQuestionsForCandidate(drive: CollegeScheduledDrive, candidateEmail?: string): CollegeCustomQuestion[] {
-    if (!drive || !drive.customQuestions || drive.customQuestions.length === 0) {
-      return [];
-    }
+    const defaultPresetQuestions: CollegeCustomQuestion[] = [
+      {
+        id: "pq1",
+        question: "Explain the difference between process and thread, and how context switching works in modern operating systems.",
+        type: "theoretical",
+        difficulty: "Medium"
+      },
+      {
+        id: "pq2",
+        question: "Explain the architecture and design of an LRU (Least Recently Used) Cache. How do hash maps and doubly linked lists combine to achieve O(1) get and put operations?",
+        type: "theoretical",
+        difficulty: "Medium"
+      },
+      {
+        id: "pq3",
+        question: "Explain Time and Space complexity of QuickSort vs MergeSort, and in which real-world scenarios you would pick one over the other.",
+        type: "theoretical",
+        difficulty: "Medium"
+      },
+      {
+        id: "pq4",
+        question: "Describe how database indexing (B+ Tree) optimizes SELECT queries and what trade-offs it introduces during INSERT/UPDATE operations.",
+        type: "theoretical",
+        difficulty: "Medium"
+      },
+      {
+        id: "pq5",
+        question: "Explain React's Virtual DOM diffing algorithm, how reconciliation works, and why keys are essential in list rendering.",
+        type: "theoretical",
+        difficulty: "Medium"
+      },
+      {
+        id: "pq6",
+        question: "How do you secure a REST API against common vulnerabilities like CSRF, XSS, and SQL Injection?",
+        type: "theoretical",
+        difficulty: "Hard"
+      },
+      {
+        id: "pq7",
+        question: "Design a distributed rate limiter for an API gateway handling 100,000 requests per minute. Which algorithm and datastore would you use?",
+        type: "theoretical",
+        difficulty: "Hard"
+      },
+      {
+        id: "pq8",
+        question: "Explain the ACID properties in database transactions and how write-ahead logging guarantees durability.",
+        type: "theoretical",
+        difficulty: "Medium"
+      },
+      {
+        id: "pq9",
+        question: "Implement an algorithm to find the maximum sum contiguous subarray (Kadane's Algorithm) and return the maximum sum.",
+        type: "coding",
+        difficulty: "Medium"
+      }
+    ];
 
-    const rawQuestions = drive.customQuestions.filter(q =>
+    const sourceQuestions = (drive?.customQuestions && drive.customQuestions.length > 0)
+      ? drive.customQuestions
+      : defaultPresetQuestions;
+
+    const rawQuestions = sourceQuestions.filter(q =>
       !q.question.toLowerCase().includes("introduce yourself") &&
       !q.question.toLowerCase().includes("tell me about yourself")
     );
