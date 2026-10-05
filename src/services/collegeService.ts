@@ -2066,6 +2066,8 @@ export const collegeService = {
     score: number;
     feedback?: string;
     durationMinutes?: number;
+    isPassed?: boolean;
+    selectionVerdict?: "SELECTED" | "NOT_SELECTED";
     detailedScores?: {
       technicalAccuracy?: number;
       communication?: number;
@@ -2082,8 +2084,10 @@ export const collegeService = {
       return null;
     }
 
-    const isPassed = result.score >= (targetDrive.passingScore || 75);
-    const selectionVerdict: "SELECTED" | "NOT_SELECTED" = isPassed ? "SELECTED" : "NOT_SELECTED";
+    const isPassed = result.isPassed !== undefined 
+      ? result.isPassed 
+      : result.score >= (targetDrive.passingScore || 75);
+    const selectionVerdict: "SELECTED" | "NOT_SELECTED" = result.selectionVerdict || (isPassed ? "SELECTED" : "NOT_SELECTED");
 
     const candidateData: ScheduledDriveCandidate = {
       studentEmail: cleanEmail,
@@ -2332,13 +2336,37 @@ export const collegeService = {
         }
       })();
 
-    return allDrives.filter(drive => {
+    const filtered = allDrives.filter(drive => {
       const cand = drive.candidates?.find(c => c.studentEmail.toLowerCase() === cleanEmail);
       if (cand && (cand.status === "Completed" || cand.selectionVerdict !== undefined || cand.score !== undefined)) {
         return false;
       }
+      try {
+        if (localStorage.getItem(`voke_feedback_submitted_${drive.id}`) === "true" ||
+            localStorage.getItem(`voke_feedback_submitted_${drive.id}_${cleanEmail}`) === "true") {
+          return false;
+        }
+      } catch (e) { }
+
       return this.isStudentEligibleForDrive(cleanEmail, drive);
     });
+
+    // Deduplicate drives by college + title + targetRole (keep latest)
+    const sorted = [...filtered].sort((a, b) => {
+      const timeA = new Date(a.createdAt || 0).getTime();
+      const timeB = new Date(b.createdAt || 0).getTime();
+      return timeB - timeA;
+    });
+
+    const deduplicatedMap = new Map<string, CollegeScheduledDrive>();
+    for (const drive of sorted) {
+      const key = `${(drive.collegeId || drive.collegeName || '').toLowerCase().trim()}::${(drive.title || '').toLowerCase().trim()}::${(drive.targetRole || '').toLowerCase().trim()}`;
+      if (!deduplicatedMap.has(key)) {
+        deduplicatedMap.set(key, drive);
+      }
+    }
+
+    return Array.from(deduplicatedMap.values());
   },
 
   async getStudentDrivesAsync(studentEmail: string): Promise<CollegeScheduledDrive[]> {
@@ -2382,7 +2410,7 @@ export const collegeService = {
       });
     } catch (e) { }
 
-    // 3. Filter: strictly only drives where this student is genuinely eligible
+    // 3. Filter: strictly only drives where this student is genuinely eligible and has not completed
     const matchingDrives: CollegeScheduledDrive[] = [];
     for (const drive of allDrivesMap.values()) {
       // Check if student already completed this drive
@@ -2390,13 +2418,35 @@ export const collegeService = {
       if (cand && (cand.status === "Completed" || cand.selectionVerdict !== undefined || cand.score !== undefined)) {
         continue;
       }
+      try {
+        if (localStorage.getItem(`voke_feedback_submitted_${drive.id}`) === "true" ||
+            localStorage.getItem(`voke_feedback_submitted_${drive.id}_${cleanEmail}`) === "true") {
+          continue;
+        }
+      } catch (e) { }
 
       if (this.isStudentEligibleForDrive(cleanEmail, drive)) {
         matchingDrives.push(drive);
       }
     }
 
-    return matchingDrives;
+    // Sort newest drives first
+    matchingDrives.sort((a, b) => {
+      const timeA = new Date(a.createdAt || 0).getTime();
+      const timeB = new Date(b.createdAt || 0).getTime();
+      return timeB - timeA;
+    });
+
+    // Deduplicate by college + title + targetRole (keep latest)
+    const uniqueDrivesMap = new Map<string, CollegeScheduledDrive>();
+    for (const drive of matchingDrives) {
+      const key = `${(drive.collegeId || drive.collegeName || '').toLowerCase().trim()}::${(drive.title || '').toLowerCase().trim()}::${(drive.targetRole || '').toLowerCase().trim()}`;
+      if (!uniqueDrivesMap.has(key)) {
+        uniqueDrivesMap.set(key, drive);
+      }
+    }
+
+    return Array.from(uniqueDrivesMap.values());
   },
 
   // Analytics Computation on Real Students

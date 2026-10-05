@@ -511,44 +511,89 @@ CRITICAL INTERVIEW GUIDELINES:
 
     try {
       const userLogs = logs.filter(log => log.role === 'user');
-      const userSpeechLength = userLogs.reduce((sum, log) => sum + (log.text || '').trim().length, 0);
+      const userResponses = userLogs.map(log => (log.text || '').trim()).filter(Boolean);
+      const userSpeechLength = userResponses.reduce((sum, text) => sum + text.length, 0);
 
-      // Baseline evaluation guaranteed to exist even if remote edge function fails
-      const calculatedScore = userLogs.length >= 3 
-        ? Math.min(88, 70 + userLogs.length * 3) 
-        : (userLogs.length > 0 ? 68 : 0);
+      // Rigorous Candidate Response Quality Analysis: Detect "don't know", evasive, gibberish, or empty answers
+      const DONT_KNOW_PATTERNS = [
+        "don't know", "dont know", "no idea", "not sure", "idk", "have no idea", 
+        "skip", "pass", "cannot answer", "can't answer", "cant answer", 
+        "no clue", "haven't studied", "haven't prepared", "don't remember", 
+        "dont remember", "no answer", "leave this", "leave it"
+      ];
+
+      let dontKnowCount = 0;
+      let shortResponseCount = 0;
+      let substantiveCount = 0;
+
+      for (const text of userResponses) {
+        const lower = text.toLowerCase();
+        const words = text.split(/\s+/).filter(Boolean);
+        const hasDontKnow = DONT_KNOW_PATTERNS.some(p => lower.includes(p));
+        if (hasDontKnow) {
+          dontKnowCount++;
+        } else if (words.length <= 4 || text.length < 15) {
+          shortResponseCount++;
+        } else {
+          substantiveCount++;
+        }
+      }
+
+      const totalResponses = userResponses.length;
+      const isSevereFailure = totalResponses === 0 || 
+        dontKnowCount >= Math.max(1, Math.ceil(totalResponses * 0.35)) || 
+        (substantiveCount === 0 && totalResponses > 0);
+
+      // Baseline evaluation: if candidate repeatedly said "don't know", give an authentic failing score
+      let calculatedScore = 0;
+      if (totalResponses === 0) {
+        calculatedScore = 0;
+      } else if (isSevereFailure) {
+        // Severe failure: repeated "I don't know" or zero substantive answers
+        calculatedScore = Math.min(28, Math.max(5, Math.round(15 - dontKnowCount * 3 + substantiveCount * 4)));
+      } else if (dontKnowCount > 0) {
+        // Minor failure: some "I don't know" but some substantive answers
+        calculatedScore = Math.min(52, Math.max(25, 40 + substantiveCount * 4 - dontKnowCount * 12));
+      } else {
+        // Genuine substantive attempts
+        calculatedScore = Math.min(88, Math.max(58, 62 + substantiveCount * 4));
+      }
 
       let evaluation: any = {
         score: calculatedScore,
-        feedback: calculatedScore > 0 
-          ? "Candidate demonstrated foundational technical competencies and engaged with the interview prompts. Communication was consistent throughout the assessment."
-          : "Interview attempt incomplete as no candidate speech was recorded.",
-        strengths: userLogs.length > 0 
-          ? ["Clear articulation of technical concepts", "Active engagement during questioning", "Structured problem-solving approach"]
+        feedback: isSevereFailure
+          ? "The candidate failed to demonstrate fundamental technical knowledge for this role, repeatedly responding with 'I don't know' or providing non-substantive responses. Candidate did not qualify for the placement shortlist."
+          : calculatedScore < 60
+          ? "The candidate attempted the interview but struggled with core technical concepts and depth. Further structured preparation is required."
+          : "Candidate demonstrated foundational technical competencies and engaged with the interview prompts. Communication was consistent throughout the assessment.",
+        strengths: isSevereFailure
+          ? ["Attempted the scheduled session"]
+          : substantiveCount > 0
+          ? ["Engaged with technical interview prompts", "Active participation during questioning"]
           : ["Session initiated"],
-        weaknesses: userLogs.length > 0
-          ? ["Further deepen edge-case coverage in coding challenges", "Elaborate more on architectural trade-offs"]
-          : ["No candidate responses recorded"],
+        weaknesses: isSevereFailure
+          ? ["Inability to explain fundamental computer science and programming concepts", "High frequency of unanswered questions ('I don't know')", "Complete lack of technical depth required for the role"]
+          : ["Deepen edge-case coverage in technical problems", "Elaborate more on architectural and implementation trade-offs"],
         metrics: {
-          communication: calculatedScore > 0 ? Math.min(90, calculatedScore + 4) : 0,
-          problem_solving: calculatedScore > 0 ? Math.max(55, calculatedScore - 2) : 0,
+          communication: isSevereFailure ? Math.min(30, calculatedScore + 5) : Math.min(90, calculatedScore + 4),
+          problem_solving: isSevereFailure ? Math.min(25, calculatedScore) : Math.max(50, calculatedScore - 2),
         },
         six_q_score: {
           iq: calculatedScore,
-          eq: Math.min(95, calculatedScore + 5),
-          cq: Math.min(90, calculatedScore + 2),
-          aq: Math.min(85, calculatedScore),
-          sq: Math.min(88, calculatedScore + 3),
-          mq: Math.min(92, calculatedScore + 4)
+          eq: isSevereFailure ? Math.min(35, calculatedScore + 5) : Math.min(95, calculatedScore + 5),
+          cq: isSevereFailure ? Math.min(30, calculatedScore) : Math.min(90, calculatedScore + 2),
+          aq: isSevereFailure ? Math.min(25, calculatedScore) : Math.min(85, calculatedScore),
+          sq: isSevereFailure ? Math.min(30, calculatedScore) : Math.min(88, calculatedScore + 3),
+          mq: isSevereFailure ? Math.min(25, calculatedScore) : Math.min(92, calculatedScore + 4)
         },
-        personality_cluster: calculatedScore >= 75 ? "Analytical Architect" : "Developing Explorer"
+        personality_cluster: isSevereFailure ? "Needs Substantial Foundation" : calculatedScore >= 75 ? "Analytical Architect" : "Developing Explorer"
       };
 
       setEvaluationStage("Generating 6Q competency matrix & scorecard...");
 
       // Safely attempt remote AI evaluation
       try {
-        if (userLogs.length > 0 && userSpeechLength > 0) {
+        if (userResponses.length > 0 && userSpeechLength > 0) {
           const formattedMessages = logs.map(log => ({
             role: log.role,
             content: log.text
@@ -562,11 +607,23 @@ CRITICAL INTERVIEW GUIDELINES:
           });
 
           if (!evalError && remoteEval) {
-            const finalScoreVal = remoteEval.score ?? remoteEval.overall_score ?? evaluation.score;
+            let finalScoreVal = typeof remoteEval.score === "number" ? remoteEval.score : (remoteEval.overall_score ?? evaluation.score);
+            
+            // STRICT ENFORCEMENT: If candidate said "don't know" repeatedly or gave no substantive answers,
+            // cap score strictly to prevent false positive pass verdicts!
+            if (isSevereFailure) {
+              finalScoreVal = Math.min(finalScoreVal, 28);
+            } else if (dontKnowCount > 0) {
+              finalScoreVal = Math.min(finalScoreVal, 55);
+            }
+
             evaluation = {
               ...evaluation,
               ...remoteEval,
-              score: finalScoreVal
+              score: finalScoreVal,
+              feedback: (isSevereFailure && (!remoteEval.feedback || remoteEval.feedback.length < 20))
+                ? "The candidate failed to demonstrate fundamental technical knowledge for this role, repeatedly responding with 'I don't know'. Candidate did not meet the placement selection threshold."
+                : remoteEval.feedback || evaluation.feedback
             };
           }
         }
@@ -650,15 +707,18 @@ CRITICAL INTERVIEW GUIDELINES:
       // Synchronize candidate score and selection status to College Admin Portal
       if (collegeDrive) {
         try {
-          const finalScore = evaluation.score || 75;
+          const finalScore = typeof evaluation.score === "number" ? Math.max(0, Math.min(100, Math.round(evaluation.score))) : 0;
           const benchmark = collegeDrive.passingScore || 75;
-          const isPassed = finalScore >= benchmark;
+          const isPassed = !isSevereFailure && finalScore >= benchmark && dontKnowCount === 0;
+          const selectionVerdict: "SELECTED" | "NOT_SELECTED" = isPassed ? "SELECTED" : "NOT_SELECTED";
 
           collegeService.recordStudentDriveResult({
             driveId: collegeDrive.id,
             studentEmail: activeEmail,
             studentName: candidateName,
             score: finalScore,
+            isPassed,
+            selectionVerdict,
             durationMinutes: Math.ceil(duration / 60) || 1,
             feedback: evaluation.feedback || (isPassed ? "Candidate exceeded institutional passing criteria with strong technical depth." : "Below benchmark score threshold."),
           });
@@ -679,7 +739,7 @@ CRITICAL INTERVIEW GUIDELINES:
           if (isPassed) {
             toast.success(`🎉 CONGRATULATIONS! Score: ${finalScore}% >= ${benchmark}%. You are SELECTED for the campus shortlist!`, { duration: 7000 });
           } else {
-            toast.info(`Score: ${finalScore}% (Benchmark: ${benchmark}%). Results synchronized to college placement cell.`, { duration: 7000 });
+            toast.error(`Assessment Result: ${finalScore}% (Benchmark: ${benchmark}%). Status: NOT SELECTED. Evaluation report synchronized to college placement cell.`, { duration: 7000 });
           }
         } catch (colSyncErr) {
           console.error("College sync error:", colSyncErr);

@@ -245,6 +245,13 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
           continue; // Skip completed drive from upcoming calendar
         }
 
+        try {
+          if (localStorage.getItem(`voke_feedback_submitted_${drive.id}`) === "true" ||
+              localStorage.getItem(`voke_feedback_submitted_${drive.id}_${activeEmail.toLowerCase()}`) === "true") {
+            continue;
+          }
+        } catch (e) { }
+
         const driveEvtId = `college-drive-${drive.id}`;
         const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:5173";
         const interviewPath = `/voice-assistant?driveId=${drive.id}&role=${encodeURIComponent(drive.targetRole)}`;
@@ -270,7 +277,17 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
         });
       }
 
-      baseEvents = [...driveEvents, ...userOnlyEvents];
+      // Deduplicate drive events by college + title to ensure no duplicates ever show up
+      const uniqueDriveMap = new Map<string, CalendarEvent>();
+      for (const evt of driveEvents) {
+        const key = `${(evt.collegeName || evt.company || '').toLowerCase().trim()}::${(evt.title || '').toLowerCase().trim()}`;
+        if (!uniqueDriveMap.has(key)) {
+          uniqueDriveMap.set(key, evt);
+        }
+      }
+      const uniqueDriveEvents = Array.from(uniqueDriveMap.values());
+
+      baseEvents = [...uniqueDriveEvents, ...userOnlyEvents];
     } else {
       setMatchedCollegeName("");
       baseEvents = userOnlyEvents;
@@ -412,7 +429,15 @@ export const InterviewCalendarWidget: React.FC<InterviewCalendarWidgetProps> = (
 
   // Section 1: Scheduled Interviews
   const interviewEvents = useMemo(() => {
-    return activeEvents.filter(evt => evt.type === "interview" || evt.type === "mock");
+    const raw = activeEvents.filter(evt => evt.type === "interview" || evt.type === "mock");
+    const uniqueMap = new Map<string, CalendarEvent>();
+    for (const evt of raw) {
+      const key = `${(evt.collegeName || evt.company || '').toLowerCase().trim()}::${(evt.title || '').toLowerCase().trim()}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, evt);
+      }
+    }
+    return Array.from(uniqueMap.values());
   }, [activeEvents]);
 
   // Section 2: Upcoming Events & Assessments
