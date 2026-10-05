@@ -115,6 +115,9 @@ const CollegeAdminDashboard = () => {
       .on("broadcast", { event: "student_registered" }, () => {
         loadCollegeData(false);
       })
+      .on("broadcast", { event: "students_batch_registered" }, () => {
+        loadCollegeData(false);
+      })
       .on("broadcast", { event: "college_drive_scheduled" }, () => {
         loadCollegeData(false);
       })
@@ -253,17 +256,18 @@ const CollegeAdminDashboard = () => {
     }
   };
 
-  const handleAddStudentSubmit = (e: React.FormEvent) => {
+  const handleAddStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newStudentEmail.trim() || !newStudentEmail.includes("@")) {
+    const cleanEmail = newStudentEmail.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
       toast.error("Please enter a valid student email address.");
       return;
     }
     if (!currentCollege) return;
 
-    collegeService.addStudentToCollege(currentCollege.id, {
-      fullName: newStudentName.trim() || newStudentEmail.split("@")[0].replace(/[._]/g, " "),
-      email: newStudentEmail.trim().toLowerCase(),
+    const studentToAdd: Partial<CollegeStudent> = {
+      fullName: newStudentName.trim() || cleanEmail.split("@")[0].replace(/[._]/g, " "),
+      email: cleanEmail,
       targetRole: newStudentRole,
       branch: newStudentBranch,
       batch: newStudentBatch,
@@ -271,16 +275,46 @@ const CollegeAdminDashboard = () => {
       averageScore: newStudentReadiness === "Placement Ready" ? 85 : newStudentReadiness === "Intermediate" ? 65 : 45,
       readinessStatus: newStudentReadiness,
       enrollmentType: "manual"
-    });
+    };
 
-    toast.success(`Student ${newStudentEmail.trim().toLowerCase()} successfully added to ${currentCollege.name}!`);
+    // 1. Instant optimistic update so the student appears immediately with 0ms delay
+    const optimisticStudent: CollegeStudent = {
+      id: `std-temp-${Date.now()}`,
+      collegeId: currentCollege.id,
+      collegeName: currentCollege.name,
+      fullName: studentToAdd.fullName!,
+      email: cleanEmail,
+      branch: studentToAdd.branch!,
+      batch: studentToAdd.batch!,
+      targetRole: studentToAdd.targetRole!,
+      interviewsCompleted: 0,
+      averageScore: studentToAdd.averageScore!,
+      readinessStatus: studentToAdd.readinessStatus!,
+      lastActive: "Active today",
+      registeredAt: new Date().toISOString().split("T")[0],
+      codingRating: 1600,
+      skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 },
+      enrollmentType: "manual"
+    };
+
+    setStudents(prev => [optimisticStudent, ...prev.filter(s => s.email.toLowerCase().trim() !== cleanEmail)]);
     setNewStudentName("");
     setNewStudentEmail("");
     setAddStudentOpen(false);
-    loadCollegeData(false);
+    toast.success(`Student ${cleanEmail} successfully added to ${currentCollege.name}!`);
+
+    try {
+      const added = await collegeService.addStudentToCollege(currentCollege.id, studentToAdd);
+      setStudents(prev => [added, ...prev.filter(s => s.email.toLowerCase().trim() !== cleanEmail)]);
+    } catch (err) {
+      console.error("Failed to add student:", err);
+      toast.error("Failed to persist student record.");
+    } finally {
+      await loadCollegeData(false);
+    }
   };
 
-  const handleBulkAddSubmit = (e: React.FormEvent) => {
+  const handleBulkAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentCollege) return;
 
@@ -315,11 +349,42 @@ const CollegeAdminDashboard = () => {
       enrollmentType: "manual"
     }));
 
-    collegeService.addStudentsBatchToCollege(currentCollege.id, studentsToEnroll);
-    toast.success(`Successfully enrolled ${studentsToEnroll.length} students into ${currentCollege.name}!`);
+    // 1. Instant optimistic update for bulk enrolled students
+    const optimisticList: CollegeStudent[] = studentsToEnroll.map((st, idx) => ({
+      id: `std-bulk-${Date.now()}-${idx}`,
+      collegeId: currentCollege.id,
+      collegeName: currentCollege.name,
+      fullName: st.fullName || "Student",
+      email: st.email!,
+      branch: st.branch || "Computer Science & AI",
+      batch: st.batch || "2025",
+      targetRole: st.targetRole || "Software Development Engineer (SDE-1)",
+      interviewsCompleted: 0,
+      averageScore: 0,
+      readinessStatus: "Needs Practice",
+      lastActive: "Active today",
+      registeredAt: new Date().toISOString().split("T")[0],
+      codingRating: 1600,
+      skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 },
+      enrollmentType: "manual"
+    }));
+
+    const addedEmails = new Set(optimisticList.map(s => s.email.toLowerCase().trim()));
+    setStudents(prev => [...optimisticList, ...prev.filter(s => !addedEmails.has(s.email.toLowerCase().trim()))]);
     setBulkEmailsText("");
     setAddStudentOpen(false);
-    loadCollegeData(false);
+    toast.success(`Enrolled ${studentsToEnroll.length} students into ${currentCollege.name}!`);
+
+    try {
+      const added = await collegeService.addStudentsBatchToCollege(currentCollege.id, studentsToEnroll);
+      const serverEmails = new Set(added.map(s => s.email.toLowerCase().trim()));
+      setStudents(prev => [...added, ...prev.filter(s => !serverEmails.has(s.email.toLowerCase().trim()))]);
+    } catch (err) {
+      console.error("Failed to bulk enroll students:", err);
+      toast.error("Failed to enroll some students.");
+    } finally {
+      await loadCollegeData(false);
+    }
   };
 
   const handleRemoveStudent = async (studentEmail: string, studentName?: string) => {
