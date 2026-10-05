@@ -64,40 +64,82 @@ const VoiceInterviewResults = () => {
   const checkAuth = async () => {
     try {
       logMessage("Checking auth session...");
-      const { data: { session: authSession }, error } = await supabase.auth.getSession();
-      if (error) throw error;
+      const { data: { session: authSession } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
       if (!authSession) {
-        logMessage("No active auth session found, redirecting to /auth");
-        navigate("/auth");
+        // If candidate just completed interview and has local session, allow viewing results
+        const hasLocal = localStorage.getItem(`voke_voice_session_${id}`) || localStorage.getItem('voke_last_voice_session');
+        if (hasLocal) {
+          logMessage("No active auth session found, but local interview session exists. Proceeding as assessment candidate.");
+        } else {
+          logMessage("No active auth session found, redirecting to /auth");
+          navigate("/auth");
+        }
       } else {
         logMessage(`Authenticated as user: ${authSession.user?.email}`);
       }
     } catch (error: any) {
-      logMessage(`Auth check failed: ${error.message}`);
-      setDiagnosticError(`Authentication Error: ${error.message}`);
+      logMessage(`Auth check notice: ${error.message}`);
     }
   };
 
   const loadResults = async () => {
     try {
-      logMessage(`Starting supabase select query for session id: ${id}`);
-      const { data, error } = await supabase
-        .from("interview_sessions")
-        .select("*")
-        .eq("id", id)
-        .single();
+      logMessage(`Loading interview results for session id: ${id}`);
+      let sessionData: any = null;
 
-      if (error) {
-        logMessage(`Query returned error: ${error.message} (${error.code})`);
-        throw error;
+      // 1. Check local cache first
+      try {
+        const cached = localStorage.getItem(`voke_voice_session_${id}`) || 
+          (!id || id === 'latest' ? localStorage.getItem('voke_last_voice_session') : null);
+        if (cached) {
+          sessionData = JSON.parse(cached);
+          logMessage("Found session in local cache!");
+        }
+      } catch (e) {
+        logMessage("Local cache parse error: " + e);
       }
-      
-      logMessage(`Query success! Session retrieved: ${data ? 'Yes' : 'No'}`);
-      setSession(data);
+
+      // 2. If valid UUID, attempt Supabase query
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
+      if (isUUID) {
+        try {
+          const { data, error } = await supabase
+            .from("interview_sessions")
+            .select("*")
+            .eq("id", id)
+            .maybeSingle();
+
+          if (data) {
+            sessionData = data;
+            logMessage("Supabase session query succeeded!");
+          } else if (error) {
+            logMessage(`Supabase query notice: ${error.message}`);
+          }
+        } catch (dbErr: any) {
+          logMessage(`Supabase query failed: ${dbErr?.message}`);
+        }
+      }
+
+      // 3. Fallback to last voice session if not yet found
+      if (!sessionData) {
+        try {
+          const last = localStorage.getItem('voke_last_voice_session');
+          if (last) {
+            sessionData = JSON.parse(last);
+            logMessage("Loaded fallback last session from localStorage");
+          }
+        } catch (e) {}
+      }
+
+      if (sessionData) {
+        setSession(sessionData);
+      } else {
+        throw new Error("Could not find session data. Please return to the dashboard or try again.");
+      }
     } catch (error: any) {
       console.error("Error loading results:", error);
       logMessage(`Query catch error: ${error.message}`);
-      setDiagnosticError(`Database Query Error: ${error.message || JSON.stringify(error)}`);
+      setDiagnosticError(`Results Error: ${error.message || JSON.stringify(error)}`);
     } finally {
       logMessage("Query finally block reached. Setting loading to false.");
       setLoading(false);

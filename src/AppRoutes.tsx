@@ -113,7 +113,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/video-interview" element={<ProtectedRoute><Navigate to="/voice-assistant" replace /></ProtectedRoute>} />
         <Route path="/video-interview/results/:id" element={<ProtectedRoute><VideoInterviewResults /></ProtectedRoute>} />
         <Route path="/timed-interview/results/:id" element={<ProtectedRoute><TimedVideoInterviewResults /></ProtectedRoute>} />
-        <Route path="/voice-interview/results/:id" element={<ProtectedRoute><VoiceInterviewResults /></ProtectedRoute>} />
+        <Route path="/voice-interview/results/:id" element={<VoiceInterviewResults />} />
         <Route path="/multi-question-results/:id" element={<ProtectedRoute><MultiQuestionResults /></ProtectedRoute>} />
         <Route path="/voice-assistant" element={<ProtectedRoute><VoiceAssistant /></ProtectedRoute>} />
         

@@ -228,18 +228,9 @@ export const FeedbackFormDialog = ({
     setIsSubmitting(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Not Authenticated",
-          description: "Please sign in to submit feedback.",
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return;
-      }
+      const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
 
-      // Insert extended feedback into Supabase
+      // Insert extended feedback into Supabase if user exists
       const feedbackLiked = collegeContext
         ? `[College Assessment: ${collegeContext.collegeName || 'Placement Drive'}${collegeContext.driveTitle ? ` - ${collegeContext.driveTitle}` : ''}] ${liked.trim()}`
         : (liked.trim() || null);
@@ -248,22 +239,28 @@ export const FeedbackFormDialog = ({
         ? modesPracticed
         : (collegeContext ? ["Voice & Video Call", "Coding Assessment"] : []);
 
-      const { error } = await supabase.from("user_feedback").insert([
-        {
-          user_id: user.id,
-          rating,
-          liked: feedbackLiked,
-          improvements: improvements.trim() || null,
-          modes_practiced: effectiveModes,
-          technical_performance: technicalPerformance || null,
-          difficulty_level: difficultyLevel || null,
-          feedback_helpfulness: feedbackHelpfulness || null,
-          valuable_feedback_part: valuableFeedbackPart || null,
-          input_issues: inputIssues.trim() || null,
-          recommended: recommended || null,
-          bugs_faced: bugsFaced.trim() || null,
-        },
-      ]);
+      if (user?.id) {
+        try {
+          await supabase.from("user_feedback").insert([
+            {
+              user_id: user.id,
+              rating,
+              liked: feedbackLiked,
+              improvements: improvements.trim() || null,
+              modes_practiced: effectiveModes,
+              technical_performance: technicalPerformance || null,
+              difficulty_level: difficultyLevel || null,
+              feedback_helpfulness: feedbackHelpfulness || null,
+              valuable_feedback_part: valuableFeedbackPart || null,
+              input_issues: inputIssues.trim() || null,
+              recommended: recommended || null,
+              bugs_faced: bugsFaced.trim() || null,
+            },
+          ]);
+        } catch (dbErr) {
+          console.warn("Feedback insert error:", dbErr);
+        }
+      }
 
       if (collegeContext?.driveId) {
         try {
@@ -694,8 +691,8 @@ export const FeedbackFormDialog = ({
 
               <Button
                 onClick={() => {
-                  onOpenChange(false);
                   if (onSuccess) onSuccess();
+                  onOpenChange(false);
                 }}
                 className="w-full bg-white hover:bg-zinc-200 text-black font-semibold rounded-xl h-11 transition-all duration-300 cursor-pointer"
               >
