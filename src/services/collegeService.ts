@@ -219,7 +219,8 @@ const STORAGE_KEYS = {
   COLLEGES: "voke_partner_colleges",
   COLLEGE_SESSION: "voke_college_session",
   COLLEGE_DRIVES: "voke_college_drives",
-  REGISTERED_STUDENTS: "voke_college_registered_students"
+  REGISTERED_STUDENTS: "voke_college_registered_students",
+  REMOVED_STUDENTS: "voke_college_removed_students"
 };
 
 // Self-healing: Purge and immediately rename any inappropriate or banned entries in browser storage
@@ -1043,6 +1044,10 @@ export const collegeService = {
     const college = this.getCollegeById(collegeId);
     const cleanEmail = (studentData.email || "").toLowerCase().trim();
 
+    if (cleanEmail) {
+      this.unmarkStudentAsRemoved(college?.id || collegeId, cleanEmail);
+    }
+
     const newStudent: CollegeStudent = {
       id: `std-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       collegeId: college?.id || collegeId,
@@ -1102,6 +1107,8 @@ export const collegeService = {
       const cleanEmail = (data.email || "").toLowerCase().trim();
       if (!cleanEmail || !cleanEmail.includes("@")) continue;
 
+      this.unmarkStudentAsRemoved(college?.id || collegeId, cleanEmail);
+
       const newStudent: CollegeStudent = {
         id: `std-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         collegeId: college?.id || collegeId,
@@ -1151,28 +1158,212 @@ export const collegeService = {
     return addedStudents;
   },
 
-  // Remove a student manually from a college roster
-  removeStudentFromCollege(collegeId: string, studentEmail: string): boolean {
-    const cleanEmail = studentEmail.toLowerCase().trim();
+  // Get all removed/deleted student emails for a college (synchronous from localStorage)
+  getRemovedStudents(collegeId: string): Set<string> {
+    const set = new Set<string>();
     try {
+      if (typeof localStorage !== "undefined" && localStorage.getItem) {
+        const stored = localStorage.getItem(`${STORAGE_KEYS.REMOVED_STUDENTS}_${collegeId}`);
+        if (stored) {
+          const arr: string[] = JSON.parse(stored);
+          arr.forEach(e => {
+            if (e) set.add(e.toLowerCase().trim());
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to get removed students:", e);
+    }
+    return set;
+  },
+
+  // Get all removed/deleted student emails for a college (async checking localStorage and Supabase)
+  async getRemovedStudentsAsync(collegeId: string): Promise<Set<string>> {
+    const set = this.getRemovedStudents(collegeId);
+
+    try {
+      const { data } = await supabase
+        .from('waitlist')
+        .select('email, phone_number')
+        .eq('status', 'college_removed_student')
+        .eq('college_name', collegeId);
+
+      if (data && data.length > 0) {
+        for (const row of data) {
+          let email = "";
+          if (row.phone_number) {
+            try {
+              const parsed = JSON.parse(row.phone_number);
+              email = parsed.email || "";
+            } catch {}
+          }
+          if (!email && row.email) {
+            email = row.email.split("#removed#")[0];
+          }
+          if (email) {
+            set.add(email.toLowerCase().trim());
+          }
+        }
+
+        // Cache into localStorage
+        try {
+          if (typeof localStorage !== "undefined" && localStorage.setItem) {
+            localStorage.setItem(`${STORAGE_KEYS.REMOVED_STUDENTS}_${collegeId}`, JSON.stringify(Array.from(set)));
+          }
+        } catch {}
+      }
+    } catch (e) {
+      console.warn("Failed to fetch removed students from Supabase:", e);
+    }
+
+    return set;
+  },
+
+  // Mark a student as removed persistently
+  async markStudentAsRemoved(collegeId: string, studentEmail: string): Promise<void> {
+    const cleanEmail = studentEmail.toLowerCase().trim();
+    if (!cleanEmail) return;
+
+    // 1. Update localStorage
+    try {
+      const set = this.getRemovedStudents(collegeId);
+      set.add(cleanEmail);
+      if (typeof localStorage !== "undefined" && localStorage.setItem) {
+        localStorage.setItem(`${STORAGE_KEYS.REMOVED_STUDENTS}_${collegeId}`, JSON.stringify(Array.from(set)));
+      }
+    } catch (e) {}
+
+    // 2. Sync to Supabase waitlist
+    try {
+      await supabase.from('waitlist').upsert({
+        email: `${cleanEmail}#removed#${collegeId}`,
+        college_name: collegeId,
+        status: 'college_removed_student',
+        phone_number: JSON.stringify({
+          email: cleanEmail,
+          collegeId,
+          removedAt: new Date().toISOString()
+        })
+      }, { onConflict: 'email' });
+    } catch (e) {
+      console.warn("Failed to sync removed student record to Supabase:", e);
+    }
+  },
+
+  // Unmark a student if they are manually re-enrolled
+  async unmarkStudentAsRemoved(collegeId: string, studentEmail: string): Promise<void> {
+    const cleanEmail = studentEmail.toLowerCase().trim();
+    if (!cleanEmail) return;
+
+    // 1. Update localStorage
+    try {
+      const set = this.getRemovedStudents(collegeId);
+      set.delete(cleanEmail);
+      if (typeof localStorage !== "undefined" && localStorage.setItem) {
+        localStorage.setItem(`${STORAGE_KEYS.REMOVED_STUDENTS}_${collegeId}`, JSON.stringify(Array.from(set)));
+      }
+    } catch (e) {}
+
+    // 2. Delete from Supabase
+    try {
+      await supabase.from('waitlist').delete().eq('email', `${cleanEmail}#removed#${collegeId}`);
+    } catch (e) {}
+  },
+
+  // Remove a student permanently from a college roster, active drives, and storage
+  async removeStudentFromCollege(collegeId: string, studentEmail: string): Promise<boolean> {
+    const cleanEmail = studentEmail.toLowerCase().trim();
+    const college = this.getCollegeById(collegeId);
+    const targetCollegeId = college?.id || collegeId;
+
+    try {
+      // 1. Mark as permanently removed in exclusion list
+      await this.markStudentAsRemoved(targetCollegeId, cleanEmail);
+
+      // 2. Remove from STORAGE_KEYS.REGISTERED_STUDENTS
       if (typeof localStorage !== "undefined" && localStorage.getItem) {
         const stored = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
         if (stored) {
           const list: CollegeStudent[] = JSON.parse(stored);
-          const filtered = list.filter(s => s.email.toLowerCase() !== cleanEmail);
+          const filtered = list.filter(s => s.email.toLowerCase().trim() !== cleanEmail);
           localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(filtered));
         }
       }
 
-      // Also clean in waitlist table
-      supabase.from('waitlist').delete().eq('email', cleanEmail).eq('status', 'registered_student').then(() => { }, () => { });
+      // 3. Delete student from Supabase waitlist
+      try {
+        await supabase.from('waitlist').delete().eq('email', cleanEmail);
+      } catch (e) {}
 
-      const channel = getCollegeRealtimeChannel();
-      channel.send({
-        type: "broadcast",
-        event: "student_registered",
-        payload: { removed: cleanEmail }
-      }).then(() => { }, () => { });
+      // 4. Prune candidate from ALL college drives (targetEmails & candidates) in localStorage
+      try {
+        const storedDrives = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
+        if (storedDrives) {
+          const drives: CollegeScheduledDrive[] = JSON.parse(storedDrives);
+          let changed = false;
+          for (const d of drives) {
+            if (d.collegeId === targetCollegeId || d.collegeId === collegeId || (college && d.collegeName.toLowerCase() === college.name.toLowerCase())) {
+              if (d.targetEmails && d.targetEmails.some(e => e.toLowerCase().trim() === cleanEmail)) {
+                d.targetEmails = d.targetEmails.filter(e => e.toLowerCase().trim() !== cleanEmail);
+                changed = true;
+              }
+              if (d.candidates && d.candidates.some(c => c.studentEmail.toLowerCase().trim() === cleanEmail)) {
+                d.candidates = d.candidates.filter(c => c.studentEmail.toLowerCase().trim() !== cleanEmail);
+                changed = true;
+              }
+            }
+          }
+          if (changed) {
+            localStorage.setItem(STORAGE_KEYS.COLLEGE_DRIVES, JSON.stringify(drives));
+          }
+        }
+      } catch (e) {}
+
+      // 5. Prune candidate from remote Supabase college drive records
+      try {
+        const { data: dbDrives } = await supabase
+          .from('waitlist')
+          .select('*')
+          .eq('status', 'college_drive_record');
+
+        if (dbDrives && dbDrives.length > 0) {
+          for (const row of dbDrives) {
+            if (row.phone_number) {
+              try {
+                const drive: CollegeScheduledDrive = JSON.parse(row.phone_number);
+                if (drive && (drive.collegeId === targetCollegeId || drive.collegeId === collegeId || (college && drive.collegeName.toLowerCase() === college.name.toLowerCase()))) {
+                  let updated = false;
+                  if (drive.targetEmails && drive.targetEmails.some(e => e.toLowerCase().trim() === cleanEmail)) {
+                    drive.targetEmails = drive.targetEmails.filter(e => e.toLowerCase().trim() !== cleanEmail);
+                    updated = true;
+                  }
+                  if (drive.candidates && drive.candidates.some(c => c.studentEmail.toLowerCase().trim() === cleanEmail)) {
+                    drive.candidates = drive.candidates.filter(c => c.studentEmail.toLowerCase().trim() !== cleanEmail);
+                    updated = true;
+                  }
+                  if (updated) {
+                    await supabase.from('waitlist').update({
+                      phone_number: JSON.stringify(drive)
+                    }).eq('id', row.id);
+                  }
+                }
+              } catch (pe) {}
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to prune student from remote drives:", e);
+      }
+
+      // 6. Broadcast realtime deletion
+      try {
+        const channel = getCollegeRealtimeChannel();
+        await channel.send({
+          type: "broadcast",
+          event: "student_registered",
+          payload: { removed: cleanEmail, collegeId: targetCollegeId }
+        });
+      } catch (e) {}
 
       return true;
     } catch (e) {
@@ -1181,12 +1372,23 @@ export const collegeService = {
     }
   },
 
+  // Remove multiple students at once
+  async removeStudentsBatchFromCollege(collegeId: string, studentEmails: string[]): Promise<boolean> {
+    for (const email of studentEmails) {
+      await this.removeStudentFromCollege(collegeId, email);
+    }
+    return true;
+  },
+
   // Get ALL REAL registered students dynamically belonging to a college
   async getCollegeStudents(collegeId: string): Promise<CollegeStudent[]> {
     // Ensure we have all colleges from Supabase (cross-device)
     await ensureCollegesFromDb();
     const college = this.getCollegeById(collegeId);
     if (!college) return [];
+
+    // Load persistent removed students exclusion set
+    const removedSet = await this.getRemovedStudentsAsync(college.id);
 
     let registeredList: CollegeStudent[] = [];
 
@@ -1197,6 +1399,8 @@ export const collegeService = {
         const allRegistered: CollegeStudent[] = JSON.parse(stored);
         const filtered = allRegistered.filter(s => {
           if (!s.email) return false;
+          const clean = s.email.toLowerCase().trim();
+          if (removedSet.has(clean)) return false;
           // Directly assigned to this college
           if (s.collegeId === college.id || (s.collegeName && s.collegeName.toLowerCase() === college.name.toLowerCase())) {
             return true;
@@ -1219,10 +1423,11 @@ export const collegeService = {
       if (waitlistRows && waitlistRows.length > 0) {
         for (const row of waitlistRows) {
           if (!row.email) continue;
-          // Skip college drive internal records and college registration records
-          if (row.status === 'college_drive_record' || row.status === 'college_registration') continue;
+          // Skip college drive internal records, college registrations, and removed students
+          if (row.status === 'college_drive_record' || row.status === 'college_registration' || row.status === 'college_removed_student') continue;
           const cleanEmail = row.email.toLowerCase().trim();
-          if (cleanEmail.includes('@drives.voke.internal')) continue;
+          if (cleanEmail.includes('@drives.voke.internal') || cleanEmail.includes('#removed#')) continue;
+          if (removedSet.has(cleanEmail)) continue;
 
           let parsedStudent: Partial<CollegeStudent> | null = null;
           if (row.phone_number) {
@@ -1274,7 +1479,7 @@ export const collegeService = {
         for (const _prof of dbProfiles) {
           const prof = _prof as any;
           const profEmail = (prof.email || "").toLowerCase().trim();
-          if (!profEmail) continue;
+          if (!profEmail || removedSet.has(profEmail)) continue;
 
           const matchesDirectly =
             prof.college_id === college.id ||
@@ -1317,6 +1522,7 @@ export const collegeService = {
           for (const cand of drive.candidates) {
             if (cand.studentEmail) {
               const cleanEmail = cand.studentEmail.toLowerCase().trim();
+              if (removedSet.has(cleanEmail)) continue;
 
               registeredList.push({
                 id: `cand-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
@@ -1347,13 +1553,15 @@ export const collegeService = {
     const uniqueMap = new Map<string, CollegeStudent>();
     for (const student of registeredList) {
       if (student.email) {
+        const clean = student.email.toLowerCase().trim();
+        if (removedSet.has(clean)) continue;
+
         const isMatch =
           student.collegeId === college.id ||
           (student.collegeName && student.collegeName.toLowerCase() === college.name.toLowerCase()) ||
           this.isEmailMatchingCollege(student.email, college);
 
         if (isMatch) {
-          const clean = student.email.toLowerCase().trim();
           if (!uniqueMap.has(clean)) {
             uniqueMap.set(clean, student);
           } else {

@@ -322,13 +322,47 @@ const CollegeAdminDashboard = () => {
     loadCollegeData(false);
   };
 
-  const handleRemoveStudent = (studentEmail: string, studentName?: string) => {
+  const handleRemoveStudent = async (studentEmail: string, studentName?: string) => {
     if (!currentCollege) return;
     const name = studentName || studentEmail;
+    const cleanEmail = studentEmail.toLowerCase().trim();
     if (window.confirm(`Are you sure you want to remove ${name} (${studentEmail}) from ${currentCollege.name}'s roster?`)) {
-      collegeService.removeStudentFromCollege(currentCollege.id, studentEmail);
-      toast.success(`Removed ${studentEmail} from college roster.`);
-      loadCollegeData(false);
+      // 1. Optimistic removal: remove immediately from UI state
+      setStudents(prev => prev.filter(s => s.email.toLowerCase().trim() !== cleanEmail));
+      setSelectedStudentEmails(prev => prev.filter(e => e.toLowerCase().trim() !== cleanEmail));
+
+      try {
+        await collegeService.removeStudentFromCollege(currentCollege.id, studentEmail);
+        toast.success(`Removed ${studentEmail} from college roster.`);
+      } catch (e) {
+        console.error("Failed to remove student:", e);
+        toast.error(`Failed to remove ${studentEmail}`);
+      } finally {
+        await loadCollegeData(false);
+      }
+    }
+  };
+
+  const handleRemoveSelectedStudents = async () => {
+    if (!currentCollege || selectedStudentEmails.length === 0) return;
+    const count = selectedStudentEmails.length;
+    if (window.confirm(`Are you sure you want to remove ${count} selected student(s) from ${currentCollege.name}'s roster?`)) {
+      const emailsToRemove = [...selectedStudentEmails];
+      const emailsSet = new Set(emailsToRemove.map(e => e.toLowerCase().trim()));
+
+      // 1. Optimistic removal
+      setStudents(prev => prev.filter(s => !emailsSet.has(s.email.toLowerCase().trim())));
+      setSelectedStudentEmails([]);
+
+      try {
+        await collegeService.removeStudentsBatchFromCollege(currentCollege.id, emailsToRemove);
+        toast.success(`Removed ${count} student(s) from college roster.`);
+      } catch (e) {
+        console.error("Failed to batch remove students:", e);
+        toast.error("Failed to remove some students.");
+      } finally {
+        await loadCollegeData(false);
+      }
     }
   };
 
@@ -638,10 +672,19 @@ const CollegeAdminDashboard = () => {
                   <Button
                     size="sm"
                     onClick={handleScheduleForSelectedStudents}
-                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
+                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" />
                     Schedule Interview
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRemoveSelectedStudents}
+                    className="border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 text-xs h-8 cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" />
+                    Remove Selected
                   </Button>
                 </div>
               )}
