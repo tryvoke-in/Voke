@@ -105,8 +105,8 @@ const CollegeAuth = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regCollegeName.trim() || !regAdminEmail.trim() || !regDomain.trim()) {
-      toast.error("Please fill in College Name, Official Email Domain, and Admin Email.");
+    if (!regCollegeName.trim() || !regAdminEmail.trim()) {
+      toast.error("Please fill in College Name and Admin Email.");
       return;
     }
 
@@ -123,14 +123,16 @@ const CollegeAuth = () => {
     setIsLoading(true);
     try {
       const cleanDomains = regDomain
-        .split(",")
-        .map(d => d.trim().replace(/^@/, ""))
-        .filter(Boolean);
+        ? regDomain
+          .split(",")
+          .map(d => d.trim().replace(/^@/, "").toLowerCase())
+          .filter(Boolean)
+        : [];
 
       const newCollege = await collegeService.registerCollegeAsync({
         name: regCollegeName.trim(),
         shortName: regShortName.trim() || regCollegeName.slice(0, 4).toUpperCase(),
-        domains: cleanDomains.length > 0 ? cleanDomains : [`${regCollegeName.toLowerCase().replace(/\s+/g, '')}.edu.in`],
+        domains: cleanDomains,
         adminEmail: regAdminEmail.trim(),
         adminName: regAdminName.trim() || "Placement Cell Head",
         password: regPassword.trim(),
@@ -333,16 +335,21 @@ const CollegeAuth = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Official Student Email Domain(s) <span className="text-red-500">*</span>
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Official Student Email Domain(s) <span className="text-xs font-normal text-muted-foreground lowercase">(optional)</span>
+                      </Label>
+                      <span className="text-[11px] text-muted-foreground/70">Not required for manual student management</span>
+                    </div>
                     <Input
-                      placeholder="nst.edu.in (without @)"
+                      placeholder="e.g. nst.edu.in (optional – leave blank to add students manually)"
                       value={regDomain}
                       onChange={e => setRegDomain(e.target.value)}
                       className="text-sm"
-                      required
                     />
+                    <p className="text-[11px] text-muted-foreground/70">
+                      Optional: Students with this domain can automatically map to your portal. If not set, you can manually add students directly from your dashboard.
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

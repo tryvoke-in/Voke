@@ -1,7 +1,7 @@
 [
   {
-    "collegeId": "college-1787481204396",
-    "collegeName": "anurag",
+    "collegeId": "college-1791171848352",
+    "collegeName": "Brahma valley 1st drive",
     "title": "Campus Placement Mock Drive 2025",
     "targetRole": "Software Development Engineer (SDE-1)",
     "interviewType": "technical_ai",
@@ -9,12 +9,10 @@
     "targetBatch": "Batch 2025",
     "targetBranch": "All Branches",
     "targetEmails": [
-      "anurag.s25561@nst.rishihood.edu.in",
-      "anuragsonawane2006@gmail.com",
-      "drive-1787481239569-bk0r@drives.voke.internal"
+      "kumarnarendar7744@gmail.com"
     ],
-    "scheduledDate": "2026-08-24",
-    "deadlineDate": "2026-08-30",
+    "scheduledDate": "2026-10-06",
+    "deadlineDate": "2026-10-12",
     "durationMinutes": 45,
     "passingScore": 75,
     "passingCriteriaDescription": "Candidate must achieve >= 75% overall score on the custom question set to qualify for the placement shortlist.",
@@ -22,7 +20,7 @@
       {
         "id": "q1",
         "question": "Explain the difference between process and thread, and how context switching works in modern operating systems.",
-        "type": "technical",
+        "type": "theoretical",
         "difficulty": "Medium",
         "expectedAnswerOrKeyPoints": "Memory space isolation, virtual address space vs shared heap, PCB/TCB state save/restore overhead."
       },
@@ -36,189 +34,65 @@
       {
         "id": "q3",
         "question": "Explain Time and Space complexity of QuickSort vs MergeSort, and in which real-world scenarios you would pick one over the other.",
-        "type": "technical",
+        "type": "theoretical",
         "difficulty": "Medium",
         "expectedAnswerOrKeyPoints": "QuickSort O(N log N) avg / O(N^2) worst with O(log N) in-place space. MergeSort guaranteed O(N log N) with O(N) auxiliary space, stability."
       },
       {
         "id": "q4",
         "question": "Describe how database indexing (B+ Tree) optimizes SELECT queries and what trade-offs it introduces during INSERT/UPDATE operations.",
-        "type": "system_design",
+        "type": "theoretical",
         "difficulty": "Medium",
         "expectedAnswerOrKeyPoints": "B+ Tree balanced tree search O(log N), range queries on leaf nodes, write amplification and index rebalancing overhead on updates."
-      }
-    ],
-    "customQuestionsOnly": true,
-    "questionCountLimit": 5,
-    "instructions": "Focus on Core Data Structures, Dynamic Programming, Time-Space Complexity Analysis, and Clear Technical Articulation.",
-    "targetCompanies": [
-      "Google",
-      "Amazon",
-      "Microsoft",
-      "Uber"
-    ],
-    "status": "active",
-    "candidatesCount": 3,
-    "completedCount": 1,
-    "avgScore": 75,
-    "id": "drive-1787481665936-kvdq",
-    "createdAt": "2026-08-23T10:41:05.936Z",
-    "interviewUrl": "http://localhost:5173/college/assessment/drive-1787481665936-kvdq?role=Software%20Development%20Engineer%20(SDE-1)",
-    "candidates": [
-      {
-        "studentEmail": "anurag.s25561@nst.rishihood.edu.in",
-        "studentName": "anurag",
-        "status": "Completed",
-        "score": 75,
-        "isPassed": true,
-        "selectionVerdict": "SELECTED",
-        "completedAt": "2026-08-25T10:59:09.284Z",
-        "durationMinutes": 1,
-        "feedback": "Demonstrated good technical comprehension and structured problem-solving skills across the assessment questions."
       },
       {
-        "studentEmail": "anuragsonawane2006@gmail.com",
-        "studentName": "anuragsonawane2006",
-        "status": "Pending"
-      },
-      {
-        "studentEmail": "drive-1787481239569-bk0r@drives.voke.internal",
-        "studentName": "drive-1787481239569-bk0r",
-        "status": "Pending"
-      }
-    ]
-  },
-  {
-    "collegeId": "college-1787481204396",
-    "collegeName": "anurag",
-    "title": "jhgf",
-    "targetRole": "Software Development Engineer (SDE-1)",
-    "interviewType": "technical_ai",
-    "targetAudience": "all",
-    "targetBatch": "Batch 2025",
-    "targetBranch": "All Branches",
-    "targetEmails": [
-      "anurag.s25561@nst.rishihood.edu.in",
-      "anuragsonawane2006@gmail.com"
-    ],
-    "scheduledDate": "2026-08-24",
-    "deadlineDate": "2026-08-30",
-    "durationMinutes": 45,
-    "passingScore": 75,
-    "passingCriteriaDescription": "Candidate must achieve >= 75% overall score on the custom question set to qualify for the placement shortlist.",
-    "customQuestions": [
-      {
-        "id": "q1",
-        "question": "Explain the difference between process and thread, and how context switching works in modern operating systems.",
-        "type": "technical",
-        "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "Memory space isolation, virtual address space vs shared heap, PCB/TCB state save/restore overhead."
-      },
-      {
-        "id": "q2",
-        "question": "How would you design and implement an LRU (Least Recently Used) Cache with O(1) time complexity for get and put operations?",
+        "id": "q5",
+        "question": "Write an algorithm to detect a cycle in a linked list and return the starting node of the cycle.",
         "type": "coding",
         "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "Doubly linked list combined with hash map. Node movement to head on access, tail node eviction on capacity reach."
+        "expectedAnswerOrKeyPoints": "Floyd's Tortoise and Hare algorithm with slow and fast pointers. Reset slow to head upon collision to find entry node."
       },
       {
-        "id": "q3",
-        "question": "Explain Time and Space complexity of QuickSort vs MergeSort, and in which real-world scenarios you would pick one over the other.",
-        "type": "technical",
+        "id": "q6",
+        "question": "Explain React's Virtual DOM diffing algorithm, how reconciliation works, and why keys are essential in list rendering.",
+        "type": "theoretical",
         "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "QuickSort O(N log N) avg / O(N^2) worst with O(log N) in-place space. MergeSort guaranteed O(N log N) with O(N) auxiliary space, stability."
+        "expectedAnswerOrKeyPoints": "Tree diffing heuristics, O(N) comparison, key stability for identity tracking, avoiding full component remounts."
       },
       {
-        "id": "q4",
-        "question": "Describe how database indexing (B+ Tree) optimizes SELECT queries and what trade-offs it introduces during INSERT/UPDATE operations.",
-        "type": "system_design",
-        "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "B+ Tree balanced tree search O(log N), range queries on leaf nodes, write amplification and index rebalancing overhead on updates."
-      }
-    ],
-    "customQuestionsOnly": true,
-    "questionCountLimit": 5,
-    "instructions": "Focus on Core Data Structures, Dynamic Programming, Time-Space Complexity Analysis, and Clear Technical Articulation.",
-    "targetCompanies": [
-      "Google",
-      "Amazon",
-      "Microsoft",
-      "Uber"
-    ],
-    "status": "active",
-    "candidatesCount": 2,
-    "completedCount": 1,
-    "avgScore": 75,
-    "id": "drive-1787481239569-bk0r",
-    "createdAt": "2026-08-23T10:33:59.569Z",
-    "interviewUrl": "http://localhost:5173/college/assessment/drive-1787481239569-bk0r?role=Software%20Development%20Engineer%20(SDE-1)",
-    "candidates": [
-      {
-        "studentEmail": "anurag.s25561@nst.rishihood.edu.in",
-        "studentName": "anurag",
-        "status": "Completed",
-        "score": 75,
-        "isPassed": true,
-        "selectionVerdict": "SELECTED",
-        "completedAt": "2026-08-25T10:58:07.003Z",
-        "durationMinutes": 1,
-        "feedback": "Demonstrated good technical comprehension and structured problem-solving skills across the assessment questions."
-      },
-      {
-        "studentEmail": "anuragsonawane2006@gmail.com",
-        "studentName": "anuragsonawane2006",
-        "status": "Pending"
-      }
-    ]
-  },
-  {
-    "collegeId": "college-1787481204396",
-    "collegeName": "anurag",
-    "title": "kaali",
-    "targetRole": "Software Development Engineer (SDE-1)",
-    "interviewType": "technical_ai",
-    "targetAudience": "selected_emails",
-    "targetBatch": "Batch 2025",
-    "targetBranch": "All Branches",
-    "targetEmails": [],
-    "scheduledDate": "2026-08-24",
-    "deadlineDate": "2026-08-30",
-    "durationMinutes": 45,
-    "passingScore": 75,
-    "passingCriteriaDescription": "Candidate must achieve >= 75% overall score on the custom question set to qualify for the placement shortlist.",
-    "customQuestions": [
-      {
-        "id": "q1",
-        "question": "Explain the difference between process and thread, and how context switching works in modern operating systems.",
-        "type": "technical",
-        "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "Memory space isolation, virtual address space vs shared heap, PCB/TCB state save/restore overhead."
-      },
-      {
-        "id": "q2",
-        "question": "How would you design and implement an LRU (Least Recently Used) Cache with O(1) time complexity for get and put operations?",
+        "id": "q7",
+        "question": "Implement an algorithm to find the maximum sum contiguous subarray (Kadane's Algorithm) and return the maximum sum.",
         "type": "coding",
         "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "Doubly linked list combined with hash map. Node movement to head on access, tail node eviction on capacity reach."
+        "expectedAnswerOrKeyPoints": "Kadane's algorithm maintaining maxSoFar and currentMax in O(N) time and O(1) space."
       },
       {
-        "id": "q3",
-        "question": "Explain Time and Space complexity of QuickSort vs MergeSort, and in which real-world scenarios you would pick one over the other.",
-        "type": "technical",
-        "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "QuickSort O(N log N) avg / O(N^2) worst with O(log N) in-place space. MergeSort guaranteed O(N log N) with O(N) auxiliary space, stability."
+        "id": "q8",
+        "question": "How do you secure a REST API against common vulnerabilities like CSRF, XSS, and SQL Injection?",
+        "type": "theoretical",
+        "difficulty": "Hard",
+        "expectedAnswerOrKeyPoints": "Parameterized queries/ORMs, HttpOnly SameSite cookies, anti-CSRF tokens, input sanitization, CSP headers."
       },
       {
-        "id": "q4",
-        "question": "Describe how database indexing (B+ Tree) optimizes SELECT queries and what trade-offs it introduces during INSERT/UPDATE operations.",
-        "type": "system_design",
+        "id": "q9",
+        "question": "Design a distributed rate limiter for an API gateway handling 100,000 requests per minute. Which algorithm would you use?",
+        "type": "theoretical",
+        "difficulty": "Hard",
+        "expectedAnswerOrKeyPoints": "Token Bucket or Sliding Window Log with Redis atomic INCR and EXPIRE or Lua scripts, distributed clock synchronization."
+      },
+      {
+        "id": "q10",
+        "question": "Implement a function to check if a binary tree is a valid Binary Search Tree (BST).",
+        "type": "coding",
         "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "B+ Tree balanced tree search O(log N), range queries on leaf nodes, write amplification and index rebalancing overhead on updates."
+        "expectedAnswerOrKeyPoints": "Recursive boundary checking (minVal, maxVal) or inorder traversal checking for strictly increasing order."
       }
     ],
     "customQuestionsOnly": true,
-    "questionCountLimit": 5,
-    "instructions": "Focus on Core Data Structures, Dynamic Programming, Time-Space Complexity Analysis, and Clear Technical Articulation.",
+    "theoreticalQuestionCount": 5,
+    "codingQuestionCount": 1,
+    "questionCountLimit": 6,
+    "instructions": "Focus on DSA, DP, Code Quality, and Clear Articulation.",
     "targetCompanies": [
       "Google",
       "Amazon",
@@ -226,93 +100,16 @@
       "Uber"
     ],
     "status": "active",
-    "candidatesCount": 0,
+    "candidatesCount": 1,
     "completedCount": 0,
     "avgScore": 0,
-    "id": "drive-1787481724357-t24f",
-    "createdAt": "2026-08-23T10:42:04.357Z",
-    "interviewUrl": "http://localhost:5173/college/assessment/drive-1787481724357-t24f?role=Software%20Development%20Engineer%20(SDE-1)",
-    "candidates": []
-  },
-  {
-    "collegeId": "college-1787479089812",
-    "collegeName": "newton school of technolgoy",
-    "title": "kaali",
-    "targetRole": "Software Development Engineer (SDE-1)",
-    "interviewType": "technical_ai",
-    "targetAudience": "all",
-    "targetBatch": "Batch 2025",
-    "targetBranch": "All Branches",
-    "targetEmails": [
-      "anurag.s25561@nst.rishihood.edu.in",
-      "priyanshu.s25358@nst.rishihood.edu.in"
-    ],
-    "scheduledDate": "2026-08-24",
-    "deadlineDate": "2026-08-30",
-    "durationMinutes": 45,
-    "passingScore": 75,
-    "passingCriteriaDescription": "Candidate must achieve >= 75% overall score on the custom question set to qualify for the placement shortlist.",
-    "customQuestions": [
-      {
-        "id": "q1",
-        "question": "Explain the difference between process and thread, and how context switching works in modern operating systems.",
-        "type": "technical",
-        "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "Memory space isolation, virtual address space vs shared heap, PCB/TCB state save/restore overhead."
-      },
-      {
-        "id": "q2",
-        "question": "How would you design and implement an LRU (Least Recently Used) Cache with O(1) time complexity for get and put operations?",
-        "type": "coding",
-        "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "Doubly linked list combined with hash map. Node movement to head on access, tail node eviction on capacity reach."
-      },
-      {
-        "id": "q3",
-        "question": "Explain Time and Space complexity of QuickSort vs MergeSort, and in which real-world scenarios you would pick one over the other.",
-        "type": "technical",
-        "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "QuickSort O(N log N) avg / O(N^2) worst with O(log N) in-place space. MergeSort guaranteed O(N log N) with O(N) auxiliary space, stability."
-      },
-      {
-        "id": "q4",
-        "question": "Describe how database indexing (B+ Tree) optimizes SELECT queries and what trade-offs it introduces during INSERT/UPDATE operations.",
-        "type": "system_design",
-        "difficulty": "Medium",
-        "expectedAnswerOrKeyPoints": "B+ Tree balanced tree search O(log N), range queries on leaf nodes, write amplification and index rebalancing overhead on updates."
-      }
-    ],
-    "customQuestionsOnly": true,
-    "questionCountLimit": 5,
-    "instructions": "Focus on Core Data Structures, Dynamic Programming, Time-Space Complexity Analysis, and Clear Technical Articulation.",
-    "targetCompanies": [
-      "Google",
-      "Amazon",
-      "Microsoft",
-      "Uber"
-    ],
-    "status": "active",
-    "candidatesCount": 2,
-    "completedCount": 1,
-    "avgScore": 75,
-    "id": "drive-1787483451379-9cch",
-    "createdAt": "2026-08-23T11:10:51.379Z",
-    "interviewUrl": "https://www.tryvoke.in/college/assessment/drive-1787483451379-9cch?role=Software%20Development%20Engineer%20(SDE-1)",
+    "id": "drive-1791171954119-zr0u",
+    "createdAt": "2026-10-05T03:45:54.119Z",
+    "interviewUrl": "http://localhost:5173/college/assessment/drive-1791171954119-zr0u?role=Software%20Development%20Engineer%20(SDE-1)",
     "candidates": [
       {
-        "studentEmail": "anurag.s25561@nst.rishihood.edu.in",
-        "studentName": "anurag",
-        "status": "Completed",
-        "score": 75,
-        "isPassed": true,
-        "selectionVerdict": "SELECTED",
-        "completedAt": "2026-08-25T10:58:43.188Z",
-        "durationMinutes": 1,
-        "feedback": "Demonstrated good technical comprehension and structured problem-solving skills across the assessment questions."
-      },
-      {
-        "studentEmail": "priyanshu.s25358@nst.rishihood.edu.in",
-        "studentName": "priyanshu s25358",
+        "studentEmail": "kumarnarendar7744@gmail.com",
+        "studentName": "kumarnarendar7744",
         "status": "Pending"
       }
     ]
@@ -755,6 +552,395 @@
         "completedAt": "2026-08-25T10:59:48.715Z",
         "durationMinutes": 1,
         "feedback": "Demonstrated good technical comprehension and structured problem-solving skills across the assessment questions."
+      }
+    ]
+  },
+  {
+    "collegeId": "college-1787481204396",
+    "collegeName": "anurag",
+    "title": "Campus Placement Mock Drive 2025",
+    "targetRole": "Software Development Engineer (SDE-1)",
+    "interviewType": "technical_ai",
+    "targetAudience": "selected_emails",
+    "targetBatch": "Batch 2025",
+    "targetBranch": "All Branches",
+    "targetEmails": [
+      "akash.p25566@nst.rishihood.edu.in"
+    ],
+    "scheduledDate": "2026-09-17",
+    "deadlineDate": "2026-09-24",
+    "durationMinutes": 45,
+    "passingScore": 75,
+    "passingCriteriaDescription": "Candidate must achieve >= 75% overall score on the custom question set to qualify for the placement shortlist.",
+    "customQuestions": [
+      {
+        "id": "q1",
+        "question": "Explain the difference between process and thread, and how context switching works in modern operating systems.",
+        "type": "technical",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "Memory space isolation, virtual address space vs shared heap, PCB/TCB state save/restore overhead."
+      },
+      {
+        "id": "q2",
+        "question": "How would you design and implement an LRU (Least Recently Used) Cache with O(1) time complexity for get and put operations?",
+        "type": "coding",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "Doubly linked list combined with hash map. Node movement to head on access, tail node eviction on capacity reach."
+      },
+      {
+        "id": "q3",
+        "question": "Explain Time and Space complexity of QuickSort vs MergeSort, and in which real-world scenarios you would pick one over the other.",
+        "type": "technical",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "QuickSort O(N log N) avg / O(N^2) worst with O(log N) in-place space. MergeSort guaranteed O(N log N) with O(N) auxiliary space, stability."
+      },
+      {
+        "id": "q4",
+        "question": "Describe how database indexing (B+ Tree) optimizes SELECT queries and what trade-offs it introduces during INSERT/UPDATE operations.",
+        "type": "system_design",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "B+ Tree balanced tree search O(log N), range queries on leaf nodes, write amplification and index rebalancing overhead on updates."
+      }
+    ],
+    "customQuestionsOnly": true,
+    "questionCountLimit": 4,
+    "instructions": "Focus on DSA, DP, and Clear Articulation.",
+    "targetCompanies": [
+      "Google",
+      "Amazon",
+      "Microsoft",
+      "Uber"
+    ],
+    "status": "active",
+    "candidatesCount": 1,
+    "completedCount": 0,
+    "avgScore": 0,
+    "id": "drive-1789617093807-2tjh",
+    "createdAt": "2026-09-17T03:51:33.807Z",
+    "interviewUrl": "https://www.tryvoke.in/college/assessment/drive-1789617093807-2tjh?role=Software%20Development%20Engineer%20(SDE-1)",
+    "candidates": [
+      {
+        "studentEmail": "akash.p25566@nst.rishihood.edu.in",
+        "studentName": "akash p25566",
+        "status": "Pending"
+      }
+    ]
+  },
+  {
+    "collegeId": "college-1787481204396",
+    "collegeName": "anurag",
+    "title": "Campus Placement Mock Drive 2025",
+    "targetRole": "Software Development Engineer (SDE-1)",
+    "interviewType": "technical_ai",
+    "targetAudience": "all",
+    "targetBatch": "Batch 2025",
+    "targetBranch": "All Branches",
+    "targetEmails": [
+      "anurag.s25561@nst.rishihood.edu.in",
+      "anuragsonawane2006@gmail.com",
+      "drive-1787481239569-bk0r@drives.voke.internal"
+    ],
+    "scheduledDate": "2026-08-24",
+    "deadlineDate": "2026-08-30",
+    "durationMinutes": 45,
+    "passingScore": 75,
+    "passingCriteriaDescription": "Candidate must achieve >= 75% overall score on the custom question set to qualify for the placement shortlist.",
+    "customQuestions": [
+      {
+        "id": "q1",
+        "question": "Explain the difference between process and thread, and how context switching works in modern operating systems.",
+        "type": "technical",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "Memory space isolation, virtual address space vs shared heap, PCB/TCB state save/restore overhead."
+      },
+      {
+        "id": "q2",
+        "question": "How would you design and implement an LRU (Least Recently Used) Cache with O(1) time complexity for get and put operations?",
+        "type": "coding",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "Doubly linked list combined with hash map. Node movement to head on access, tail node eviction on capacity reach."
+      },
+      {
+        "id": "q3",
+        "question": "Explain Time and Space complexity of QuickSort vs MergeSort, and in which real-world scenarios you would pick one over the other.",
+        "type": "technical",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "QuickSort O(N log N) avg / O(N^2) worst with O(log N) in-place space. MergeSort guaranteed O(N log N) with O(N) auxiliary space, stability."
+      },
+      {
+        "id": "q4",
+        "question": "Describe how database indexing (B+ Tree) optimizes SELECT queries and what trade-offs it introduces during INSERT/UPDATE operations.",
+        "type": "system_design",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "B+ Tree balanced tree search O(log N), range queries on leaf nodes, write amplification and index rebalancing overhead on updates."
+      }
+    ],
+    "customQuestionsOnly": true,
+    "questionCountLimit": 5,
+    "instructions": "Focus on Core Data Structures, Dynamic Programming, Time-Space Complexity Analysis, and Clear Technical Articulation.",
+    "targetCompanies": [
+      "Google",
+      "Amazon",
+      "Microsoft",
+      "Uber"
+    ],
+    "status": "active",
+    "candidatesCount": 3,
+    "completedCount": 1,
+    "avgScore": 75,
+    "id": "drive-1787481665936-kvdq",
+    "createdAt": "2026-08-23T10:41:05.936Z",
+    "interviewUrl": "http://localhost:5173/college/assessment/drive-1787481665936-kvdq?role=Software%20Development%20Engineer%20(SDE-1)",
+    "candidates": [
+      {
+        "studentEmail": "anurag.s25561@nst.rishihood.edu.in",
+        "studentName": "anurag",
+        "status": "Completed",
+        "score": 75,
+        "isPassed": true,
+        "selectionVerdict": "SELECTED",
+        "completedAt": "2026-08-25T10:59:09.284Z",
+        "durationMinutes": 1,
+        "feedback": "Demonstrated good technical comprehension and structured problem-solving skills across the assessment questions."
+      },
+      {
+        "studentEmail": "anuragsonawane2006@gmail.com",
+        "studentName": "anuragsonawane2006",
+        "status": "Pending"
+      },
+      {
+        "studentEmail": "drive-1787481239569-bk0r@drives.voke.internal",
+        "studentName": "drive-1787481239569-bk0r",
+        "status": "Pending"
+      }
+    ]
+  },
+  {
+    "collegeId": "college-1787481204396",
+    "collegeName": "anurag",
+    "title": "jhgf",
+    "targetRole": "Software Development Engineer (SDE-1)",
+    "interviewType": "technical_ai",
+    "targetAudience": "all",
+    "targetBatch": "Batch 2025",
+    "targetBranch": "All Branches",
+    "targetEmails": [
+      "anurag.s25561@nst.rishihood.edu.in",
+      "anuragsonawane2006@gmail.com"
+    ],
+    "scheduledDate": "2026-08-24",
+    "deadlineDate": "2026-08-30",
+    "durationMinutes": 45,
+    "passingScore": 75,
+    "passingCriteriaDescription": "Candidate must achieve >= 75% overall score on the custom question set to qualify for the placement shortlist.",
+    "customQuestions": [
+      {
+        "id": "q1",
+        "question": "Explain the difference between process and thread, and how context switching works in modern operating systems.",
+        "type": "technical",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "Memory space isolation, virtual address space vs shared heap, PCB/TCB state save/restore overhead."
+      },
+      {
+        "id": "q2",
+        "question": "How would you design and implement an LRU (Least Recently Used) Cache with O(1) time complexity for get and put operations?",
+        "type": "coding",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "Doubly linked list combined with hash map. Node movement to head on access, tail node eviction on capacity reach."
+      },
+      {
+        "id": "q3",
+        "question": "Explain Time and Space complexity of QuickSort vs MergeSort, and in which real-world scenarios you would pick one over the other.",
+        "type": "technical",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "QuickSort O(N log N) avg / O(N^2) worst with O(log N) in-place space. MergeSort guaranteed O(N log N) with O(N) auxiliary space, stability."
+      },
+      {
+        "id": "q4",
+        "question": "Describe how database indexing (B+ Tree) optimizes SELECT queries and what trade-offs it introduces during INSERT/UPDATE operations.",
+        "type": "system_design",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "B+ Tree balanced tree search O(log N), range queries on leaf nodes, write amplification and index rebalancing overhead on updates."
+      }
+    ],
+    "customQuestionsOnly": true,
+    "questionCountLimit": 5,
+    "instructions": "Focus on Core Data Structures, Dynamic Programming, Time-Space Complexity Analysis, and Clear Technical Articulation.",
+    "targetCompanies": [
+      "Google",
+      "Amazon",
+      "Microsoft",
+      "Uber"
+    ],
+    "status": "active",
+    "candidatesCount": 2,
+    "completedCount": 1,
+    "avgScore": 75,
+    "id": "drive-1787481239569-bk0r",
+    "createdAt": "2026-08-23T10:33:59.569Z",
+    "interviewUrl": "http://localhost:5173/college/assessment/drive-1787481239569-bk0r?role=Software%20Development%20Engineer%20(SDE-1)",
+    "candidates": [
+      {
+        "studentEmail": "anurag.s25561@nst.rishihood.edu.in",
+        "studentName": "anurag",
+        "status": "Completed",
+        "score": 75,
+        "isPassed": true,
+        "selectionVerdict": "SELECTED",
+        "completedAt": "2026-08-25T10:58:07.003Z",
+        "durationMinutes": 1,
+        "feedback": "Demonstrated good technical comprehension and structured problem-solving skills across the assessment questions."
+      },
+      {
+        "studentEmail": "anuragsonawane2006@gmail.com",
+        "studentName": "anuragsonawane2006",
+        "status": "Pending"
+      }
+    ]
+  },
+  {
+    "collegeId": "college-1787481204396",
+    "collegeName": "anurag",
+    "title": "kaali",
+    "targetRole": "Software Development Engineer (SDE-1)",
+    "interviewType": "technical_ai",
+    "targetAudience": "selected_emails",
+    "targetBatch": "Batch 2025",
+    "targetBranch": "All Branches",
+    "targetEmails": [],
+    "scheduledDate": "2026-08-24",
+    "deadlineDate": "2026-08-30",
+    "durationMinutes": 45,
+    "passingScore": 75,
+    "passingCriteriaDescription": "Candidate must achieve >= 75% overall score on the custom question set to qualify for the placement shortlist.",
+    "customQuestions": [
+      {
+        "id": "q1",
+        "question": "Explain the difference between process and thread, and how context switching works in modern operating systems.",
+        "type": "technical",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "Memory space isolation, virtual address space vs shared heap, PCB/TCB state save/restore overhead."
+      },
+      {
+        "id": "q2",
+        "question": "How would you design and implement an LRU (Least Recently Used) Cache with O(1) time complexity for get and put operations?",
+        "type": "coding",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "Doubly linked list combined with hash map. Node movement to head on access, tail node eviction on capacity reach."
+      },
+      {
+        "id": "q3",
+        "question": "Explain Time and Space complexity of QuickSort vs MergeSort, and in which real-world scenarios you would pick one over the other.",
+        "type": "technical",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "QuickSort O(N log N) avg / O(N^2) worst with O(log N) in-place space. MergeSort guaranteed O(N log N) with O(N) auxiliary space, stability."
+      },
+      {
+        "id": "q4",
+        "question": "Describe how database indexing (B+ Tree) optimizes SELECT queries and what trade-offs it introduces during INSERT/UPDATE operations.",
+        "type": "system_design",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "B+ Tree balanced tree search O(log N), range queries on leaf nodes, write amplification and index rebalancing overhead on updates."
+      }
+    ],
+    "customQuestionsOnly": true,
+    "questionCountLimit": 5,
+    "instructions": "Focus on Core Data Structures, Dynamic Programming, Time-Space Complexity Analysis, and Clear Technical Articulation.",
+    "targetCompanies": [
+      "Google",
+      "Amazon",
+      "Microsoft",
+      "Uber"
+    ],
+    "status": "active",
+    "candidatesCount": 0,
+    "completedCount": 0,
+    "avgScore": 0,
+    "id": "drive-1787481724357-t24f",
+    "createdAt": "2026-08-23T10:42:04.357Z",
+    "interviewUrl": "http://localhost:5173/college/assessment/drive-1787481724357-t24f?role=Software%20Development%20Engineer%20(SDE-1)",
+    "candidates": []
+  },
+  {
+    "collegeId": "college-1787479089812",
+    "collegeName": "newton school of technolgoy",
+    "title": "kaali",
+    "targetRole": "Software Development Engineer (SDE-1)",
+    "interviewType": "technical_ai",
+    "targetAudience": "all",
+    "targetBatch": "Batch 2025",
+    "targetBranch": "All Branches",
+    "targetEmails": [
+      "anurag.s25561@nst.rishihood.edu.in",
+      "priyanshu.s25358@nst.rishihood.edu.in"
+    ],
+    "scheduledDate": "2026-08-24",
+    "deadlineDate": "2026-08-30",
+    "durationMinutes": 45,
+    "passingScore": 75,
+    "passingCriteriaDescription": "Candidate must achieve >= 75% overall score on the custom question set to qualify for the placement shortlist.",
+    "customQuestions": [
+      {
+        "id": "q1",
+        "question": "Explain the difference between process and thread, and how context switching works in modern operating systems.",
+        "type": "technical",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "Memory space isolation, virtual address space vs shared heap, PCB/TCB state save/restore overhead."
+      },
+      {
+        "id": "q2",
+        "question": "How would you design and implement an LRU (Least Recently Used) Cache with O(1) time complexity for get and put operations?",
+        "type": "coding",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "Doubly linked list combined with hash map. Node movement to head on access, tail node eviction on capacity reach."
+      },
+      {
+        "id": "q3",
+        "question": "Explain Time and Space complexity of QuickSort vs MergeSort, and in which real-world scenarios you would pick one over the other.",
+        "type": "technical",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "QuickSort O(N log N) avg / O(N^2) worst with O(log N) in-place space. MergeSort guaranteed O(N log N) with O(N) auxiliary space, stability."
+      },
+      {
+        "id": "q4",
+        "question": "Describe how database indexing (B+ Tree) optimizes SELECT queries and what trade-offs it introduces during INSERT/UPDATE operations.",
+        "type": "system_design",
+        "difficulty": "Medium",
+        "expectedAnswerOrKeyPoints": "B+ Tree balanced tree search O(log N), range queries on leaf nodes, write amplification and index rebalancing overhead on updates."
+      }
+    ],
+    "customQuestionsOnly": true,
+    "questionCountLimit": 5,
+    "instructions": "Focus on Core Data Structures, Dynamic Programming, Time-Space Complexity Analysis, and Clear Technical Articulation.",
+    "targetCompanies": [
+      "Google",
+      "Amazon",
+      "Microsoft",
+      "Uber"
+    ],
+    "status": "active",
+    "candidatesCount": 2,
+    "completedCount": 1,
+    "avgScore": 75,
+    "id": "drive-1787483451379-9cch",
+    "createdAt": "2026-08-23T11:10:51.379Z",
+    "interviewUrl": "https://www.tryvoke.in/college/assessment/drive-1787483451379-9cch?role=Software%20Development%20Engineer%20(SDE-1)",
+    "candidates": [
+      {
+        "studentEmail": "anurag.s25561@nst.rishihood.edu.in",
+        "studentName": "anurag",
+        "status": "Completed",
+        "score": 75,
+        "isPassed": true,
+        "selectionVerdict": "SELECTED",
+        "completedAt": "2026-08-25T10:58:43.188Z",
+        "durationMinutes": 1,
+        "feedback": "Demonstrated good technical comprehension and structured problem-solving skills across the assessment questions."
+      },
+      {
+        "studentEmail": "priyanshu.s25358@nst.rishihood.edu.in",
+        "studentName": "priyanshu s25358",
+        "status": "Pending"
       }
     ]
   },

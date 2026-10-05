@@ -22,6 +22,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import ReactMarkdown from 'react-markdown';
 import { useInterviewCredits } from "@/hooks/useInterviewCredits";
 import { InterviewGate } from "@/components/InterviewGate";
+import { FeedbackFormDialog } from "@/components/FeedbackFormDialog";
 import { loadUserProfileContext } from "@/utils/profileContext";
 import { useTokenCounter } from "@/contexts/TokenContext";
 import { collegeService, CollegeScheduledDrive } from "@/services/collegeService";
@@ -117,6 +118,11 @@ const VoiceAssistant: React.FC = () => {
 
   // Detailed Feedback State
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  // Mandatory College Interview Feedback State
+  const [showMandatoryFeedback, setShowMandatoryFeedback] = useState(false);
+  const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
+  const [hasCompletedFeedback, setHasCompletedFeedback] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -622,9 +628,14 @@ CRITICAL INTERVIEW GUIDELINES:
         }
       }
 
-      toast.success("Pro Interview session saved successfully!");
-      navigate(`/voice-interview/results/${sessionId}`);
-      if (!collegeDrive && !driveId) {
+      if (collegeDrive || driveId) {
+        toast.success("Institutional interview completed! Please submit mandatory feedback to finalize.");
+        stopCamera();
+        setCompletedSessionId(sessionId);
+        setShowMandatoryFeedback(true);
+      } else {
+        toast.success("Pro Interview session saved successfully!");
+        navigate(`/voice-interview/results/${sessionId}`);
         await consumeCredit();
       }
 
@@ -711,7 +722,13 @@ CRITICAL INTERVIEW GUIDELINES:
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => {
+            if (showMandatoryFeedback && !hasCompletedFeedback) {
+              toast.error("Please complete the compulsory interview feedback before exiting.");
+              return;
+            }
+            navigate('/dashboard');
+          }}
           className="rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-medium hover:bg-muted text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -1277,6 +1294,31 @@ CRITICAL INTERVIEW GUIDELINES:
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Compulsory College Portal Feedback Dialog */}
+      <FeedbackFormDialog
+        open={showMandatoryFeedback}
+        onOpenChange={(open) => {
+          if (!open && hasCompletedFeedback) {
+            setShowMandatoryFeedback(false);
+            if (completedSessionId) {
+              navigate(`/voice-interview/results/${completedSessionId}`);
+            } else {
+              navigate('/dashboard');
+            }
+          }
+        }}
+        compulsory={true}
+        collegeContext={{
+          collegeName: collegeDrive?.collegeName || "College Placement Cell",
+          driveTitle: collegeDrive?.title || customRole || targetRole,
+          studentEmail: user?.email || (collegeDrive?.targetEmails && collegeDrive.targetEmails[0]) || "student@voke.in",
+          driveId: collegeDrive?.id || driveId || undefined,
+        }}
+        onSuccess={() => {
+          setHasCompletedFeedback(true);
+        }}
+      />
 
     </div>
   );

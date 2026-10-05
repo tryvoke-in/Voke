@@ -45,8 +45,8 @@ export class StandardVoiceBrain implements IVoiceBrain {
         const userLogs = fullMessages.filter((m: any) => m.role !== 'system');
         const contents: any[] = [];
         for (const m of userLogs) {
-            const role = m.role === 'assistant' || m.role === 'model' ? 'model' : 'user';
-            const text = m.content || m.text || '';
+            const role = m.role === 'assistant' ? 'model' : 'user';
+            const text = m.content || '';
             if (!text.trim()) continue;
 
             if (contents.length > 0 && contents[contents.length - 1].role === role) {

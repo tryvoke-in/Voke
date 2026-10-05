@@ -54,6 +54,7 @@ export interface CollegeStudent {
   registeredAt: string;
   codingRating?: number;
   skills: { [skill: string]: number };
+  enrollmentType?: "manual" | "domain_mapped";
 }
 
 export interface CollegeCustomQuestion {
@@ -434,7 +435,24 @@ export const collegeService = {
 
   getCollegeByEmail(email: string): College | undefined {
     if (!email || !email.includes("@")) return undefined;
-    const domain = email.split("@")[1]?.toLowerCase().trim();
+    const cleanEmail = email.toLowerCase().trim();
+
+    // 1. Check if student was explicitly registered or manually enrolled in a partner college roster
+    try {
+      if (typeof localStorage !== "undefined" && localStorage.getItem) {
+        const stored = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
+        if (stored) {
+          const allRegistered: CollegeStudent[] = JSON.parse(stored);
+          const matchedStudent = allRegistered.find(s => s.email && s.email.toLowerCase().trim() === cleanEmail);
+          if (matchedStudent && matchedStudent.collegeId) {
+            const college = this.getCollegeById(matchedStudent.collegeId);
+            if (college) return college;
+          }
+        }
+      }
+    } catch { }
+
+    const domain = cleanEmail.split("@")[1]?.toLowerCase().trim();
     if (!domain) return undefined;
 
     const publicEmailProviders = [
@@ -450,8 +468,27 @@ export const collegeService = {
   },
 
   isEmailMatchingCollege(email: string, college: College): boolean {
-    if (!email || !email.includes("@") || !college || !college.domains) return false;
-    const domain = email.split("@")[1]?.toLowerCase().trim();
+    if (!email || !email.includes("@") || !college) return false;
+    const cleanEmail = email.toLowerCase().trim();
+
+    // 1. Check if directly enrolled to this specific college
+    try {
+      if (typeof localStorage !== "undefined" && localStorage.getItem) {
+        const stored = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
+        if (stored) {
+          const allRegistered: CollegeStudent[] = JSON.parse(stored);
+          const isManual = allRegistered.some(s =>
+            s.email && s.email.toLowerCase().trim() === cleanEmail &&
+            (s.collegeId === college.id || (s.collegeName && s.collegeName.toLowerCase() === college.name.toLowerCase()))
+          );
+          if (isManual) return true;
+        }
+      }
+    } catch { }
+
+    // 2. Check if student domain matches college domains (if college has domains configured)
+    if (!college.domains || college.domains.length === 0) return false;
+    const domain = cleanEmail.split("@")[1]?.toLowerCase().trim();
     if (!domain) return false;
 
     const publicEmailProviders = [
@@ -471,29 +508,41 @@ export const collegeService = {
 
   // Authenticate College Admin (Async with secure password validation)
   async authenticateCollegeAdminAsync(email: string, password?: string): Promise<{ success: boolean; college?: College; error?: string }> {
-    if (!email || !email.includes("@")) {
-      return { success: false, error: "Please enter a valid administrator email address." };
+    if (!email || !email.trim()) {
+      return { success: false, error: "Please enter your administrator email address." };
     }
 
     await ensureCollegesFromDb();
-    const cleanEmail = email.toLowerCase().trim();
+    const cleanInput = email.toLowerCase().trim();
     const colleges = this.getColleges();
 
-    let matchedCollege = colleges.find(c => c.adminEmail.toLowerCase() === cleanEmail);
+    // 1. Match by administrator email
+    let matchedCollege = colleges.find(c => c.adminEmail.toLowerCase() === cleanInput);
 
-    if (!matchedCollege) {
-      const emailDomain = cleanEmail.split("@")[1];
+    // 2. Match by email domain if college has domains configured
+    if (!matchedCollege && cleanInput.includes("@")) {
+      const emailDomain = cleanInput.split("@")[1];
       if (emailDomain) {
         matchedCollege = colleges.find(c =>
-          c.domains.some(d => emailDomain.toLowerCase() === d.toLowerCase() || emailDomain.toLowerCase().endsWith("." + d.toLowerCase()))
+          c.domains && c.domains.length > 0 && c.domains.some(d => emailDomain.toLowerCase() === d.toLowerCase() || emailDomain.toLowerCase().endsWith("." + d.toLowerCase()))
         );
       }
+    }
+
+    // 3. Match by college slug, ID, or name
+    if (!matchedCollege) {
+      matchedCollege = colleges.find(c =>
+        c.id.toLowerCase() === cleanInput ||
+        c.slug.toLowerCase() === cleanInput ||
+        c.shortName?.toLowerCase() === cleanInput ||
+        c.name.toLowerCase() === cleanInput
+      );
     }
 
     if (!matchedCollege) {
       return {
         success: false,
-        error: "College admin credentials not recognized. Check your email or onboard your university."
+        error: "College admin credentials not recognized. Check your email or register your college partnership."
       };
     }
 
@@ -525,18 +574,27 @@ export const collegeService = {
 
   // Synchronous version for backwards compatibility
   authenticateCollegeAdmin(email: string, password?: string): { success: boolean; college?: College; error?: string } {
-    const cleanEmail = email.toLowerCase().trim();
+    const cleanInput = (email || "").toLowerCase().trim();
     const colleges = this.getColleges();
 
-    let matchedCollege = colleges.find(c => c.adminEmail.toLowerCase() === cleanEmail);
+    let matchedCollege = colleges.find(c => c.adminEmail.toLowerCase() === cleanInput);
 
-    if (!matchedCollege) {
-      const emailDomain = cleanEmail.split("@")[1];
+    if (!matchedCollege && cleanInput.includes("@")) {
+      const emailDomain = cleanInput.split("@")[1];
       if (emailDomain) {
         matchedCollege = colleges.find(c =>
-          c.domains.some(d => emailDomain.toLowerCase() === d.toLowerCase() || emailDomain.toLowerCase().endsWith("." + d.toLowerCase()))
+          c.domains && c.domains.length > 0 && c.domains.some(d => emailDomain.toLowerCase() === d.toLowerCase() || emailDomain.toLowerCase().endsWith("." + d.toLowerCase()))
         );
       }
+    }
+
+    if (!matchedCollege) {
+      matchedCollege = colleges.find(c =>
+        c.id.toLowerCase() === cleanInput ||
+        c.slug.toLowerCase() === cleanInput ||
+        c.shortName?.toLowerCase() === cleanInput ||
+        c.name.toLowerCase() === cleanInput
+      );
     }
 
     if (matchedCollege) {
@@ -548,7 +606,7 @@ export const collegeService = {
 
     return {
       success: false,
-      error: "College admin credentials not recognized. Try signing in with a partner email (e.g. placement@nst.edu.in) or click Quick Demo Sign In."
+      error: "College admin credentials not recognized. Try signing in with your registered admin email or click Quick Demo Sign In."
     };
   },
 
@@ -621,10 +679,10 @@ export const collegeService = {
       .slice(0, 20);
 
     const domains = (collegeData.domains && collegeData.domains.length > 0)
-      ? collegeData.domains.map(d => d.trim().replace(/^@/, "").toLowerCase())
-      : [`${slug}.edu.in`];
+      ? collegeData.domains.map(d => d.trim().replace(/^@/, "").toLowerCase()).filter(Boolean)
+      : [];
 
-    const adminEmail = (collegeData.adminEmail || `admin@${domains[0]}`).toLowerCase().trim();
+    const adminEmail = (collegeData.adminEmail || (domains.length > 0 ? `admin@${domains[0]}` : `admin@${slug || 'college'}.edu`)).toLowerCase().trim();
 
     let adminPasswordHash: string | undefined = undefined;
     if (collegeData.password && collegeData.password.trim()) {
@@ -691,10 +749,10 @@ export const collegeService = {
       .slice(0, 20);
 
     const domains = (collegeData.domains && collegeData.domains.length > 0)
-      ? collegeData.domains.map(d => d.trim().replace(/^@/, "").toLowerCase())
-      : [`${slug}.edu.in`];
+      ? collegeData.domains.map(d => d.trim().replace(/^@/, "").toLowerCase()).filter(Boolean)
+      : [];
 
-    const adminEmail = (collegeData.adminEmail || `admin@${domains[0]}`).toLowerCase().trim();
+    const adminEmail = (collegeData.adminEmail || (domains.length > 0 ? `admin@${domains[0]}` : `admin@${slug || 'college'}.edu`)).toLowerCase().trim();
 
     const newCollege: College = {
       id: `college-${Date.now()}`,
@@ -862,12 +920,12 @@ export const collegeService = {
     batch?: string;
     interviewsCompleted?: number;
     averageScore?: number;
+    enrollmentType?: "manual" | "domain_mapped";
   }): CollegeStudent | null {
     if (!studentInfo.email || !studentInfo.email.includes("@")) return null;
 
     const cleanEmail = studentInfo.email.toLowerCase().trim();
     const college = this.getCollegeByEmail(cleanEmail);
-    // ONLY register students whose email domain strictly matches a partner college
     if (!college) {
       return null;
     }
@@ -875,29 +933,47 @@ export const collegeService = {
     const collegeName = college.name;
     const collegeId = college.id;
 
+    // Check if student already exists in storage to preserve existing attributes
+    let existingStudent: CollegeStudent | undefined;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
+      if (stored) {
+        const parsed: CollegeStudent[] = JSON.parse(stored);
+        existingStudent = parsed.find(s => s.email && s.email.toLowerCase().trim() === cleanEmail);
+      }
+    } catch { }
+
     const newStudent: CollegeStudent = {
-      id: `std-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
-      collegeId,
-      collegeName,
-      fullName: studentInfo.fullName || cleanEmail.split("@")[0].replace(/[._]/g, " "),
+      id: existingStudent?.id || `std-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
+      collegeId: existingStudent?.collegeId || collegeId,
+      collegeName: existingStudent?.collegeName || collegeName,
+      fullName: studentInfo.fullName || existingStudent?.fullName || cleanEmail.split("@")[0].replace(/[._]/g, " "),
       email: cleanEmail,
-      branch: studentInfo.branch || "Computer Science & AI",
-      batch: studentInfo.batch || "2025",
-      targetRole: studentInfo.targetRole || "Software Development Engineer (SDE-1)",
-      interviewsCompleted: studentInfo.interviewsCompleted ?? 0,
-      averageScore: studentInfo.averageScore ?? 0,
-      readinessStatus: (studentInfo.averageScore ?? 0) >= 80 ? "Placement Ready" : (studentInfo.averageScore ?? 0) >= 60 ? "Intermediate" : "Needs Practice",
+      branch: studentInfo.branch || existingStudent?.branch || "Computer Science & AI",
+      batch: studentInfo.batch || existingStudent?.batch || "2025",
+      targetRole: studentInfo.targetRole || existingStudent?.targetRole || "Software Development Engineer (SDE-1)",
+      interviewsCompleted: studentInfo.interviewsCompleted !== undefined
+        ? Math.max(studentInfo.interviewsCompleted, existingStudent?.interviewsCompleted || 0)
+        : (existingStudent?.interviewsCompleted || 0),
+      averageScore: studentInfo.averageScore !== undefined
+        ? studentInfo.averageScore
+        : (existingStudent?.averageScore || 0),
+      readinessStatus: (studentInfo.averageScore || existingStudent?.averageScore || 0) >= 80
+        ? "Placement Ready"
+        : (studentInfo.averageScore || existingStudent?.averageScore || 0) >= 60
+          ? "Intermediate"
+          : "Needs Practice",
       lastActive: "Active today",
-      registeredAt: new Date().toISOString().split("T")[0],
-      codingRating: 1600,
-      skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
+      registeredAt: existingStudent?.registeredAt || new Date().toISOString().split("T")[0],
+      codingRating: existingStudent?.codingRating || 1600,
+      skills: existingStudent?.skills || { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 },
+      enrollmentType: existingStudent?.enrollmentType || studentInfo.enrollmentType || (existingStudent?.collegeId ? "manual" : "domain_mapped")
     };
 
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
       const existing: CollegeStudent[] = stored ? JSON.parse(stored) : [];
-      // Clean up and keep only matching institutional students
-      const filtered = existing.filter(s => s.email.toLowerCase() !== cleanEmail && this.getCollegeByEmail(s.email));
+      const filtered = existing.filter(s => s.email.toLowerCase() !== cleanEmail && (s.collegeId || this.getCollegeByEmail(s.email)));
       const updated = [newStudent, ...filtered];
       localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(updated));
 
@@ -937,6 +1013,7 @@ export const collegeService = {
     batch?: string;
     interviewsCompleted?: number;
     averageScore?: number;
+    enrollmentType?: "manual" | "domain_mapped";
   }): Promise<CollegeStudent | null> {
     await ensureCollegesFromDb();
     const student = this.recordStudentRegistration(studentInfo);
@@ -977,11 +1054,12 @@ export const collegeService = {
       targetRole: studentData.targetRole || "Software Development Engineer (SDE-1)",
       interviewsCompleted: studentData.interviewsCompleted || 0,
       averageScore: studentData.averageScore || 0,
-      readinessStatus: studentData.readinessStatus || "Needs Practice",
+      readinessStatus: studentData.readinessStatus || (studentData.averageScore && studentData.averageScore >= 80 ? "Placement Ready" : "Needs Practice"),
       lastActive: "Enrolled",
       registeredAt: new Date().toISOString().split("T")[0],
       codingRating: 1600,
-      skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
+      skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 },
+      enrollmentType: "manual"
     };
 
     try {
@@ -1011,6 +1089,98 @@ export const collegeService = {
     return newStudent;
   },
 
+  // Add multiple students in bulk to a specific college
+  addStudentsBatchToCollege(collegeId: string, studentsData: Partial<CollegeStudent>[]): CollegeStudent[] {
+    const college = this.getCollegeById(collegeId);
+    if (!studentsData || studentsData.length === 0) return [];
+
+    const addedStudents: CollegeStudent[] = [];
+    const stored = typeof localStorage !== "undefined" && localStorage.getItem ? localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS) : null;
+    let existing: CollegeStudent[] = stored ? JSON.parse(stored) : [];
+
+    for (const data of studentsData) {
+      const cleanEmail = (data.email || "").toLowerCase().trim();
+      if (!cleanEmail || !cleanEmail.includes("@")) continue;
+
+      const newStudent: CollegeStudent = {
+        id: `std-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        collegeId: college?.id || collegeId,
+        collegeName: college?.name || "Partner College",
+        fullName: data.fullName?.trim() || cleanEmail.split("@")[0].replace(/[._]/g, " ") || "Student",
+        email: cleanEmail,
+        branch: data.branch || "Computer Science & AI",
+        batch: data.batch || "2025",
+        targetRole: data.targetRole || "Software Development Engineer (SDE-1)",
+        interviewsCompleted: data.interviewsCompleted || 0,
+        averageScore: data.averageScore || 0,
+        readinessStatus: data.readinessStatus || (data.averageScore && data.averageScore >= 80 ? "Placement Ready" : "Needs Practice"),
+        lastActive: "Enrolled",
+        registeredAt: new Date().toISOString().split("T")[0],
+        codingRating: 1600,
+        skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 },
+        enrollmentType: "manual"
+      };
+
+      existing = existing.filter(s => s.email.toLowerCase() !== cleanEmail);
+      existing.unshift(newStudent);
+      addedStudents.push(newStudent);
+
+      // Async sync to Supabase waitlist
+      supabase.from('waitlist').upsert({
+        email: cleanEmail,
+        college_name: college?.name || "Partner College",
+        phone_number: JSON.stringify(newStudent),
+        status: 'registered_student'
+      }, { onConflict: 'email' }).then(() => { }, () => { });
+    }
+
+    try {
+      if (typeof localStorage !== "undefined" && localStorage.setItem) {
+        localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(existing));
+      }
+      const channel = getCollegeRealtimeChannel();
+      channel.send({
+        type: "broadcast",
+        event: "student_registered",
+        payload: { count: addedStudents.length }
+      }).then(() => { }, () => { });
+    } catch (e) {
+      console.warn("Failed to persist students batch:", e);
+    }
+
+    return addedStudents;
+  },
+
+  // Remove a student manually from a college roster
+  removeStudentFromCollege(collegeId: string, studentEmail: string): boolean {
+    const cleanEmail = studentEmail.toLowerCase().trim();
+    try {
+      if (typeof localStorage !== "undefined" && localStorage.getItem) {
+        const stored = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
+        if (stored) {
+          const list: CollegeStudent[] = JSON.parse(stored);
+          const filtered = list.filter(s => s.email.toLowerCase() !== cleanEmail);
+          localStorage.setItem(STORAGE_KEYS.REGISTERED_STUDENTS, JSON.stringify(filtered));
+        }
+      }
+
+      // Also clean in waitlist table
+      supabase.from('waitlist').delete().eq('email', cleanEmail).eq('status', 'registered_student').then(() => { }, () => { });
+
+      const channel = getCollegeRealtimeChannel();
+      channel.send({
+        type: "broadcast",
+        event: "student_registered",
+        payload: { removed: cleanEmail }
+      }).then(() => { }, () => { });
+
+      return true;
+    } catch (e) {
+      console.warn("Failed to remove student from college:", e);
+      return false;
+    }
+  },
+
   // Get ALL REAL registered students dynamically belonging to a college
   async getCollegeStudents(collegeId: string): Promise<CollegeStudent[]> {
     // Ensure we have all colleges from Supabase (cross-device)
@@ -1020,13 +1190,18 @@ export const collegeService = {
 
     let registeredList: CollegeStudent[] = [];
 
-    // 1. Fetch dynamically registered students from local registry (strictly matching domain)
+    // 1. Fetch dynamically registered students from local registry
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.REGISTERED_STUDENTS);
       if (stored) {
         const allRegistered: CollegeStudent[] = JSON.parse(stored);
         const filtered = allRegistered.filter(s => {
           if (!s.email) return false;
+          // Directly assigned to this college
+          if (s.collegeId === college.id || (s.collegeName && s.collegeName.toLowerCase() === college.name.toLowerCase())) {
+            return true;
+          }
+          // Or matches by email domain
           return this.isEmailMatchingCollege(s.email, college);
         });
         registeredList.push(...filtered);
@@ -1049,16 +1224,20 @@ export const collegeService = {
           const cleanEmail = row.email.toLowerCase().trim();
           if (cleanEmail.includes('@drives.voke.internal')) continue;
 
-          // STRICT ENFORCEMENT: Email domain MUST match this college's official domains
-          if (!this.isEmailMatchingCollege(cleanEmail, college)) {
-            continue;
-          }
-
           let parsedStudent: Partial<CollegeStudent> | null = null;
           if (row.phone_number) {
             try {
               parsedStudent = JSON.parse(row.phone_number);
             } catch { }
+          }
+
+          const matchesDirectly =
+            parsedStudent?.collegeId === college.id ||
+            (row.college_name && (row.college_name.toLowerCase() === college.name.toLowerCase() || row.college_name === college.id));
+          const matchesDomain = this.isEmailMatchingCollege(cleanEmail, college);
+
+          if (!matchesDirectly && !matchesDomain) {
+            continue;
           }
 
           const studentName = parsedStudent?.fullName || cleanEmail.split("@")[0].replace(/[._]/g, " ");
@@ -1076,7 +1255,8 @@ export const collegeService = {
             readinessStatus: parsedStudent?.readinessStatus || ((parsedStudent?.averageScore ?? 0) >= 80 ? "Placement Ready" : "Needs Practice"),
             lastActive: parsedStudent?.lastActive || "Enrolled",
             registeredAt: parsedStudent?.registeredAt || (row.created_at ? row.created_at.split("T")[0] : new Date().toISOString().split("T")[0]),
-            skills: parsedStudent?.skills || { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
+            skills: parsedStudent?.skills || { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 },
+            enrollmentType: parsedStudent?.enrollmentType || (matchesDirectly ? "manual" : "domain_mapped")
           });
         }
       }
@@ -1084,7 +1264,7 @@ export const collegeService = {
       console.warn("Error querying waitlist for students:", e);
     }
 
-    // 3. Query Supabase database profiles & public profiles dynamically (strictly matching domain)
+    // 3. Query Supabase database profiles & public profiles dynamically
     try {
       const { data: dbProfiles } = await supabase
         .from('profiles')
@@ -1096,10 +1276,15 @@ export const collegeService = {
           const profEmail = (prof.email || "").toLowerCase().trim();
           if (!profEmail) continue;
 
-          // STRICT ENFORCEMENT: Email domain MUST match this college's official domains
-          if (!this.isEmailMatchingCollege(profEmail, college)) {
+          const matchesDirectly =
+            prof.college_id === college.id ||
+            (prof.college && (prof.college.toLowerCase() === college.name.toLowerCase() || prof.college === college.id));
+          const matchesDomain = this.isEmailMatchingCollege(profEmail, college);
+
+          if (!matchesDirectly && !matchesDomain) {
             continue;
           }
+
           const profName = prof.full_name || prof.name || profEmail.split("@")[0].replace(/[._]/g, " ");
           registeredList.push({
             id: prof.id,
@@ -1115,7 +1300,8 @@ export const collegeService = {
             readinessStatus: (prof.average_score || 0) >= 80 ? "Placement Ready" : (prof.average_score || 0) >= 60 ? "Intermediate" : "Needs Practice",
             lastActive: "Active recently",
             registeredAt: prof.created_at ? prof.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
-            skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
+            skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 },
+            enrollmentType: matchesDirectly ? "manual" : "domain_mapped"
           });
         }
       }
@@ -1123,7 +1309,7 @@ export const collegeService = {
       console.warn("Error querying database profiles:", e);
     }
 
-    // 4. Include candidates from college drives (strictly matching domain)
+    // 4. Include candidates from college drives
     try {
       const allDrives = await this.getCollegeDrivesAsync(college.id);
       for (const drive of allDrives) {
@@ -1131,7 +1317,6 @@ export const collegeService = {
           for (const cand of drive.candidates) {
             if (cand.studentEmail) {
               const cleanEmail = cand.studentEmail.toLowerCase().trim();
-              if (!this.isEmailMatchingCollege(cleanEmail, college)) continue;
 
               registeredList.push({
                 id: `cand-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
@@ -1147,7 +1332,8 @@ export const collegeService = {
                 readinessStatus: (cand.score || 0) >= 75 ? "Placement Ready" : "Needs Practice",
                 lastActive: cand.completedAt ? "Completed assessment" : "Active recently",
                 registeredAt: drive.createdAt ? drive.createdAt.split("T")[0] : new Date().toISOString().split("T")[0],
-                skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 }
+                skills: { DSA: 0, SystemDesign: 0, Communication: 0, ProblemSolving: 0 },
+                enrollmentType: "manual"
               });
             }
           }
@@ -1160,21 +1346,29 @@ export const collegeService = {
     // Strict deduplication by unique student email
     const uniqueMap = new Map<string, CollegeStudent>();
     for (const student of registeredList) {
-      if (student.email && this.isEmailMatchingCollege(student.email, college)) {
-        const clean = student.email.toLowerCase().trim();
-        if (!uniqueMap.has(clean)) {
-          uniqueMap.set(clean, student);
-        } else {
-          // Merge details (preserve highest score and interviews completed)
-          const prev = uniqueMap.get(clean)!;
-          uniqueMap.set(clean, {
-            ...prev,
-            ...student,
-            fullName: prev.fullName || student.fullName,
-            interviewsCompleted: Math.max(prev.interviewsCompleted, student.interviewsCompleted),
-            averageScore: Math.max(prev.averageScore, student.averageScore),
-            readinessStatus: Math.max(prev.averageScore, student.averageScore) >= 75 ? "Placement Ready" : "Needs Practice"
-          });
+      if (student.email) {
+        const isMatch =
+          student.collegeId === college.id ||
+          (student.collegeName && student.collegeName.toLowerCase() === college.name.toLowerCase()) ||
+          this.isEmailMatchingCollege(student.email, college);
+
+        if (isMatch) {
+          const clean = student.email.toLowerCase().trim();
+          if (!uniqueMap.has(clean)) {
+            uniqueMap.set(clean, student);
+          } else {
+            // Merge details (preserve highest score and interviews completed)
+            const prev = uniqueMap.get(clean)!;
+            uniqueMap.set(clean, {
+              ...prev,
+              ...student,
+              fullName: prev.fullName || student.fullName,
+              interviewsCompleted: Math.max(prev.interviewsCompleted, student.interviewsCompleted),
+              averageScore: Math.max(prev.averageScore, student.averageScore),
+              readinessStatus: Math.max(prev.averageScore, student.averageScore) >= 75 ? "Placement Ready" : "Needs Practice",
+              enrollmentType: prev.enrollmentType === "manual" || student.enrollmentType === "manual" ? "manual" : (prev.enrollmentType || student.enrollmentType || "domain_mapped")
+            });
+          }
         }
       }
     }

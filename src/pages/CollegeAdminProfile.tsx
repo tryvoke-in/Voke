@@ -189,17 +189,17 @@ const CollegeAdminProfile = () => {
                   </div>
                   
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Authorized Email Domains (comma separated)</Label>
+                    <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Authorized Email Domains (Optional, comma separated)</Label>
                     <div className="relative">
                       <Globe className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                       <Input 
                         value={domains} 
                         onChange={(e) => setDomains(e.target.value)} 
                         className="pl-9 bg-[#E3DFD6] dark:bg-zinc-800 border-[#CCC7BC] dark:border-zinc-700 focus:border-zinc-500 focus:ring-zinc-500" 
-                        placeholder="university.edu.in, nst.edu.in"
+                        placeholder="university.edu.in, nst.edu.in (optional)"
                       />
                     </div>
-                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1">Students registering with these domains will automatically appear in your roster.</p>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1">Optional: Students registering with these domains will automatically appear in your roster. You can also manually add students anytime from your dashboard.</p>
                   </div>
                 </div>
               </div>

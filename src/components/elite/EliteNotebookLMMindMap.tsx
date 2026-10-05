@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
   INTERVIEW_TYPES, ELITE_ROLES, TOP_COMPANIES,
   InterviewTypeItem, RoleItem, CompanyItem, InterviewRoundDef, getInterviewRounds
@@ -519,7 +520,7 @@ export const EliteNotebookLMMindMap: React.FC<EliteNotebookLMMindMapProps> = ({
                                   if (roundProgress?.sessionId) {
                                     navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`);
                                   } else {
-                                    toast.info(`Round ${roundDef.roundNumber} Result: ${roundProgress?.reason || (isPassed ? 'Passed' : 'Failed with score ' + (roundProgress?.score || 0) + '%')}`);
+                                    toast.info(`Round ${roundDef.roundNumber} Result: ${roundProgress?.feedback || (roundProgress as any)?.reason || (isPassed ? 'Passed' : 'Failed with score ' + (roundProgress?.score || 0) + '%')}`);
                                   }
                                 }}
                                 className="h-9 px-4 rounded-xl font-bold text-xs flex items-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 hover:text-sky-100 border border-sky-500/30 hover:border-sky-500/50 backdrop-blur-md shadow-sm shadow-sky-500/10 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap shrink-0"

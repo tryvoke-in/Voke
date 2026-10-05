@@ -17,7 +17,7 @@ import {
   Search, Award, Sparkles, LogOut, CheckCircle2, Clock, AlertCircle,
   ChevronRight, ExternalLink, Bot, Video, Code, Layers, Mail, Phone,
   TrendingUp, BarChart3, ShieldCheck, Filter, ArrowUpRight, Trophy, RefreshCw, UserPlus,
-  Copy, Link, Play, BookOpen, Check, X, FileText, User
+  Copy, Link, Play, BookOpen, Check, X, FileText, User, Trash2
 } from "lucide-react";
 import {
   College, CollegeStudent, CollegeScheduledDrive, CollegeAnalytics,
@@ -83,11 +83,28 @@ const CollegeAdminDashboard = () => {
 
   // Add Student Modal State
   const [addStudentOpen, setAddStudentOpen] = useState(false);
+  const [addStudentTab, setAddStudentTab] = useState<"single" | "bulk">("single");
   const [newStudentName, setNewStudentName] = useState("");
   const [newStudentEmail, setNewStudentEmail] = useState("");
   const [newStudentRole, setNewStudentRole] = useState("Full Stack Developer");
   const [newStudentBranch, setNewStudentBranch] = useState("Computer Science & AI");
   const [newStudentBatch, setNewStudentBatch] = useState("2025");
+  const [newStudentReadiness, setNewStudentReadiness] = useState<"Placement Ready" | "Intermediate" | "Needs Practice">("Needs Practice");
+
+  // Bulk Student State
+  const [bulkEmailsText, setBulkEmailsText] = useState("");
+  const [bulkRole, setBulkRole] = useState("Full Stack Developer");
+  const [bulkBranch, setBulkBranch] = useState("Computer Science & AI");
+  const [bulkBatch, setBulkBatch] = useState("2025");
+
+  const parsedBulkEmails = bulkEmailsText
+    .split(/[\n,;]+/)
+    .map(s => {
+      const match = s.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+      return match ? match[0].toLowerCase() : null;
+    })
+    .filter((e): e is string => Boolean(e));
+  const uniqueBulkCount = new Set(parsedBulkEmails).size;
 
   useEffect(() => {
     loadCollegeData();
@@ -245,21 +262,74 @@ const CollegeAdminDashboard = () => {
     if (!currentCollege) return;
 
     collegeService.addStudentToCollege(currentCollege.id, {
-      fullName: newStudentName.trim() || newStudentEmail.split("@")[0],
+      fullName: newStudentName.trim() || newStudentEmail.split("@")[0].replace(/[._]/g, " "),
       email: newStudentEmail.trim().toLowerCase(),
       targetRole: newStudentRole,
       branch: newStudentBranch,
       batch: newStudentBatch,
-      interviewsCompleted: 1,
-      averageScore: 85,
-      readinessStatus: "Placement Ready"
+      interviewsCompleted: 0,
+      averageScore: newStudentReadiness === "Placement Ready" ? 85 : newStudentReadiness === "Intermediate" ? 65 : 45,
+      readinessStatus: newStudentReadiness,
+      enrollmentType: "manual"
     });
 
-    toast.success(`Student ${newStudentEmail} successfully added to ${currentCollege.name} roster!`);
+    toast.success(`Student ${newStudentEmail.trim().toLowerCase()} successfully added to ${currentCollege.name}!`);
     setNewStudentName("");
     setNewStudentEmail("");
     setAddStudentOpen(false);
     loadCollegeData(false);
+  };
+
+  const handleBulkAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentCollege) return;
+
+    const lines = bulkEmailsText.split(/[\n,;]+/);
+    const validMap = new Map<string, string>(); // email -> name
+
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!line) continue;
+      const match = line.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+      if (match) {
+        const email = match[0].toLowerCase();
+        let name = line.replace(match[0], "").replace(/[<>,]/g, "").trim();
+        validMap.set(email, name || email.split("@")[0].replace(/[._]/g, " "));
+      }
+    }
+
+    if (validMap.size === 0) {
+      toast.error("No valid student emails found. Please enter valid email addresses.");
+      return;
+    }
+
+    const studentsToEnroll: Partial<CollegeStudent>[] = Array.from(validMap.entries()).map(([email, name]) => ({
+      email,
+      fullName: name,
+      branch: bulkBranch,
+      batch: bulkBatch,
+      targetRole: bulkRole,
+      interviewsCompleted: 0,
+      averageScore: 0,
+      readinessStatus: "Needs Practice",
+      enrollmentType: "manual"
+    }));
+
+    collegeService.addStudentsBatchToCollege(currentCollege.id, studentsToEnroll);
+    toast.success(`Successfully enrolled ${studentsToEnroll.length} students into ${currentCollege.name}!`);
+    setBulkEmailsText("");
+    setAddStudentOpen(false);
+    loadCollegeData(false);
+  };
+
+  const handleRemoveStudent = (studentEmail: string, studentName?: string) => {
+    if (!currentCollege) return;
+    const name = studentName || studentEmail;
+    if (window.confirm(`Are you sure you want to remove ${name} (${studentEmail}) from ${currentCollege.name}'s roster?`)) {
+      collegeService.removeStudentFromCollege(currentCollege.id, studentEmail);
+      toast.success(`Removed ${studentEmail} from college roster.`);
+      loadCollegeData(false);
+    }
   };
 
   const toggleSelectStudent = (email: string) => {
@@ -416,22 +486,32 @@ const CollegeAdminDashboard = () => {
                 {currentCollege.name}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Placement Admin: <strong className="text-foreground">{currentCollege.adminName}</strong> ({currentCollege.adminEmail}) • Authorized Domains: <span className="font-mono text-blue-600 dark:text-blue-300 text-xs">{(currentCollege.domains || []).map(d => `@${d}`).join(", ")}</span>
+                Placement Admin: <strong className="text-foreground">{currentCollege.adminName}</strong> ({currentCollege.adminEmail}) • Authorized Domains: <span className="font-mono text-blue-600 dark:text-blue-300 text-xs">{(currentCollege.domains && currentCollege.domains.length > 0) ? currentCollege.domains.map(d => `@${d}`).join(", ") : "Manual Roster (Domain Mapping Optional)"}</span>
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border text-center min-w-[100px]">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Button
+                onClick={() => {
+                  setAddStudentTab("single");
+                  setAddStudentOpen(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-10 rounded-xl px-4 shadow-md shadow-blue-500/20 font-semibold cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Manually Add Students
+              </Button>
+              <div className="p-3 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border text-center min-w-[90px]">
                 <div className="text-2xl font-bold text-foreground">{students.length}</div>
                 <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Registered</div>
               </div>
-              <div className="p-3 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border text-center min-w-[100px]">
+              <div className="p-3 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border text-center min-w-[90px]">
                 <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {analytics?.placementReadyPercentage || 0}%
                 </div>
                 <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Ready Rate</div>
               </div>
-              <div className="p-3 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border text-center min-w-[100px]">
+              <div className="p-3 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border text-center min-w-[90px]">
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-300">{drives.length}</div>
                 <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Mock Drives</div>
               </div>
@@ -449,7 +529,7 @@ const CollegeAdminDashboard = () => {
               </div>
               <div className="text-2xl font-bold text-foreground">{students.length}</div>
               <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Auto-mapped via college domain
+                <CheckCircle2 className="w-3 h-3" /> Manually enrolled & domain mapped
               </p>
             </CardContent>
           </Card>
@@ -568,11 +648,14 @@ const CollegeAdminDashboard = () => {
 
               <Button
                 size="sm"
-                onClick={() => setAddStudentOpen(true)}
-                className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8 rounded-full px-4 shadow-sm"
+                onClick={() => {
+                  setAddStudentTab("single");
+                  setAddStudentOpen(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8 rounded-full px-4 shadow-sm cursor-pointer"
               >
                 <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-                Enroll Student
+                Manually Add Student
               </Button>
             </div>
           </div>
@@ -638,9 +721,10 @@ const CollegeAdminDashboard = () => {
                         onCheckedChange={handleSelectAllFilteredStudents}
                       />
                     </TableHead>
-                    <TableHead className="text-xs font-semibold text-foreground/80">Student & College Email</TableHead>
+                    <TableHead className="text-xs font-semibold text-foreground/80">Student & Email</TableHead>
                     <TableHead className="text-xs font-semibold text-foreground/80">Branch & Batch</TableHead>
                     <TableHead className="text-xs font-semibold text-foreground/80">Target Role</TableHead>
+                    <TableHead className="text-xs font-semibold text-foreground/80 text-center">Enrollment</TableHead>
                     <TableHead className="text-xs font-semibold text-foreground/80 text-center">Mocks</TableHead>
                     <TableHead className="text-xs font-semibold text-foreground/80 text-center">Avg AI Score</TableHead>
                     <TableHead className="text-xs font-semibold text-foreground/80">Placement Readiness</TableHead>
@@ -650,13 +734,25 @@ const CollegeAdminDashboard = () => {
                 <TableBody>
                   {filteredStudents.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-16 text-muted-foreground">
-                        <Users className="w-10 h-10 mx-auto mb-3 text-blue-600 dark:text-blue-300" />
-                        <h4 className="font-semibold text-black dark:text-white text-sm mb-1">No Registered Students Yet</h4>
-                        <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
-                          Students with authorized college email domains will automatically appear here once they sign up, or you can enroll them directly.
+                      <TableCell colSpan={9} className="text-center py-16 text-muted-foreground">
+                        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                          <Users className="w-7 h-7" />
+                        </div>
+                        <h4 className="font-bold text-foreground text-base mb-1.5">No Registered Students in {currentCollege.name}</h4>
+                        <p className="text-xs text-muted-foreground max-w-md mx-auto mb-5 leading-relaxed">
+                          You can manually enroll individual students or import a batch list of emails right now. Domain mapping is optional and not required.
                         </p>
-
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setAddStudentTab("single");
+                            setAddStudentOpen(true);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-9 rounded-full px-5 shadow-md shadow-blue-500/20 cursor-pointer"
+                        >
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Manually Add Students Now
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -698,6 +794,17 @@ const CollegeAdminDashboard = () => {
                             <span className="text-xs text-foreground/80">{student.targetRole}</span>
                           </TableCell>
                           <TableCell className="text-center">
+                            {student.enrollmentType === "manual" ? (
+                              <Badge variant="outline" className="bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 text-[10px] font-normal">
+                                Manual
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 text-[10px] font-normal">
+                                Domain
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
                             <Badge variant="outline" className="border-border text-foreground/80 font-mono text-xs">
                               {student.interviewsCompleted}
                             </Badge>
@@ -726,6 +833,7 @@ const CollegeAdminDashboard = () => {
                                 variant="ghost"
                                 onClick={() => setSelectedStudentForReport(student)}
                                 className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                title="View Assessment Report"
                               >
                                 Report
                               </Button>
@@ -733,8 +841,18 @@ const CollegeAdminDashboard = () => {
                                 size="sm"
                                 onClick={() => handleScheduleForSingleStudent(student.email)}
                                 className="h-8 px-2.5 text-xs bg-blue-600/30 hover:bg-blue-600 text-blue-600 dark:text-blue-300 hover:text-white border border-blue-500/30"
+                                title="Schedule Interview"
                               >
                                 Schedule
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleRemoveStudent(student.email, student.fullName)}
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                title="Remove Student from College"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             </div>
                           </TableCell>
@@ -972,91 +1090,237 @@ const CollegeAdminDashboard = () => {
         </Tabs>
       </main>
 
-      {/* Enroll / Add Student Modal */}
+      {/* Manually Add Student Modal */}
       <Dialog open={addStudentOpen} onOpenChange={setAddStudentOpen}>
-        <DialogContent className="max-w-md bg-card border-border text-foreground p-6 shadow-2xl rounded-2xl">
+        <DialogContent className="max-w-lg bg-card border-border text-foreground p-6 shadow-2xl rounded-2xl">
           <DialogHeader className="border-b border-border pb-3">
             <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              Enroll Student to College Roster
+              Manually Add Students to College Roster
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Add a student from <strong className="text-foreground">{college.name}</strong> to your directory.
+              Directly enroll students into <strong className="text-foreground">{college?.name}</strong>. No college domain or domain mapping required.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleAddStudentSubmit} className="py-4 space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-foreground/80 font-medium">Official College Email</Label>
-              <Input
-                type="email"
-                placeholder="e.g. anurag.s25561@nst.rishihood.edu.in"
-                value={newStudentEmail}
-                onChange={e => setNewStudentEmail(e.target.value)}
-                className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs"
-                required
-              />
-            </div>
+          <Tabs value={addStudentTab} onValueChange={(v: any) => setAddStudentTab(v)} className="w-full pt-2">
+            <TabsList className="grid grid-cols-2 bg-muted/50 border border-border p-1 rounded-lg h-auto mb-4">
+              <TabsTrigger value="single" className="text-xs py-1.5 font-medium cursor-pointer">
+                Single Student
+              </TabsTrigger>
+              <TabsTrigger value="bulk" className="text-xs py-1.5 font-medium cursor-pointer">
+                Bulk Add / Paste List
+              </TabsTrigger>
+            </TabsList>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs text-foreground/80 font-medium">Student Full Name</Label>
-              <Input
-                placeholder="e.g. Anurag Sonawane"
-                value={newStudentName}
-                onChange={e => setNewStudentName(e.target.value)}
-                className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs"
-              />
-            </div>
+            <TabsContent value="single" className="mt-0">
+              <form onSubmit={handleAddStudentSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-foreground/80 font-medium">Student Email Address <span className="text-red-500">*</span></Label>
+                    <span className="text-[11px] text-muted-foreground/70">Any email (Gmail, campus, etc.)</span>
+                  </div>
+                  <Input
+                    type="email"
+                    placeholder="e.g. anurag.student@gmail.com or anurag@nst.edu.in"
+                    value={newStudentEmail}
+                    onChange={e => setNewStudentEmail(e.target.value)}
+                    className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs"
+                    required
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-foreground/80 font-medium">Target Role</Label>
-                <Select value={newStudentRole} onValueChange={setNewStudentRole}>
-                  <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-border text-foreground text-xs">
-                    <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
-                    <SelectItem value="Software Engineer / SDE-1">SDE-1 / SWE</SelectItem>
-                    <SelectItem value="Frontend Engineer">Frontend Engineer</SelectItem>
-                    <SelectItem value="Backend Engineer">Backend Engineer</SelectItem>
-                    <SelectItem value="AI / ML Engineer">AI / ML Engineer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-foreground/80 font-medium">Student Full Name</Label>
+                  <Input
+                    placeholder="e.g. Anurag Sonawane"
+                    value={newStudentName}
+                    onChange={e => setNewStudentName(e.target.value)}
+                    className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs"
+                  />
+                </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs text-foreground/80 font-medium">Batch</Label>
-                <Select value={newStudentBatch} onValueChange={setNewStudentBatch}>
-                  <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-border text-foreground text-xs">
-                    <SelectItem value="2025">Batch 2025</SelectItem>
-                    <SelectItem value="2026">Batch 2026</SelectItem>
-                    <SelectItem value="2027">Batch 2027</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-foreground/80 font-medium">Target Role</Label>
+                    <Select value={newStudentRole} onValueChange={setNewStudentRole}>
+                      <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground text-xs">
+                        <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
+                        <SelectItem value="Software Engineer / SDE-1">SDE-1 / SWE</SelectItem>
+                        <SelectItem value="Frontend Engineer">Frontend Engineer</SelectItem>
+                        <SelectItem value="Backend Engineer">Backend Engineer</SelectItem>
+                        <SelectItem value="AI / ML Engineer">AI / ML Engineer</SelectItem>
+                        <SelectItem value="Data Analyst">Data Analyst</SelectItem>
+                        <SelectItem value="DevOps / Cloud Engineer">DevOps / Cloud Engineer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            <DialogFooter className="pt-3 border-t border-border flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setAddStudentOpen(false)}
-                className="border-border text-foreground text-xs"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm"
-              >
-                Enroll Student
-              </Button>
-            </DialogFooter>
-          </form>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-foreground/80 font-medium">Batch</Label>
+                    <Select value={newStudentBatch} onValueChange={setNewStudentBatch}>
+                      <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground text-xs">
+                        <SelectItem value="2024">Batch 2024</SelectItem>
+                        <SelectItem value="2025">Batch 2025</SelectItem>
+                        <SelectItem value="2026">Batch 2026</SelectItem>
+                        <SelectItem value="2027">Batch 2027</SelectItem>
+                        <SelectItem value="2028">Batch 2028</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-foreground/80 font-medium">Branch / Department</Label>
+                    <Select value={newStudentBranch} onValueChange={setNewStudentBranch}>
+                      <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground text-xs">
+                        <SelectItem value="Computer Science & AI">Computer Science & AI</SelectItem>
+                        <SelectItem value="Computer Science & Engineering">CSE</SelectItem>
+                        <SelectItem value="Information Technology">Information Technology</SelectItem>
+                        <SelectItem value="Electronics & Communication">ECE</SelectItem>
+                        <SelectItem value="Data Science">Data Science</SelectItem>
+                        <SelectItem value="Mechanical & Mechatronics">Mechanical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-foreground/80 font-medium">Readiness Status</Label>
+                    <Select value={newStudentReadiness} onValueChange={(v: any) => setNewStudentReadiness(v)}>
+                      <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground text-xs">
+                        <SelectItem value="Needs Practice">Needs Practice</SelectItem>
+                        <SelectItem value="Intermediate">Intermediate</SelectItem>
+                        <SelectItem value="Placement Ready">Placement Ready</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <DialogFooter className="pt-3 border-t border-border flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAddStudentOpen(false)}
+                    className="border-border text-foreground text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm cursor-pointer"
+                  >
+                    <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                    Manually Add Student
+                  </Button>
+                </DialogFooter>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="bulk" className="mt-0">
+              <form onSubmit={handleBulkAddSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-foreground/80 font-medium">Paste Student Emails</Label>
+                    <span className="text-[11px] text-blue-600 dark:text-blue-400 font-mono font-medium">
+                      {uniqueBulkCount} valid {uniqueBulkCount === 1 ? 'student' : 'students'} detected
+                    </span>
+                  </div>
+                  <textarea
+                    rows={4}
+                    placeholder="Enter emails separated by commas or new lines, e.g.:&#10;aarav.sharma@gmail.com&#10;Priya Patel <priya.patel@yahoo.com>&#10;rohit@college.edu.in"
+                    value={bulkEmailsText}
+                    onChange={e => setBulkEmailsText(e.target.value)}
+                    className="w-full rounded-md border border-border bg-muted/40 dark:bg-muted/30 p-2.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    required
+                  />
+                  <p className="text-[11px] text-muted-foreground/70">
+                    Accepts comma or newline separated emails. Format "Name &lt;email&gt;" also supported.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-foreground/80 font-medium">Target Role</Label>
+                    <Select value={bulkRole} onValueChange={setBulkRole}>
+                      <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground text-xs">
+                        <SelectItem value="Full Stack Developer">Full Stack</SelectItem>
+                        <SelectItem value="Software Engineer / SDE-1">SDE-1</SelectItem>
+                        <SelectItem value="Frontend Engineer">Frontend</SelectItem>
+                        <SelectItem value="Backend Engineer">Backend</SelectItem>
+                        <SelectItem value="AI / ML Engineer">AI/ML</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-foreground/80 font-medium">Batch</Label>
+                    <Select value={bulkBatch} onValueChange={setBulkBatch}>
+                      <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground text-xs">
+                        <SelectItem value="2024">2024</SelectItem>
+                        <SelectItem value="2025">2025</SelectItem>
+                        <SelectItem value="2026">2026</SelectItem>
+                        <SelectItem value="2027">2027</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-foreground/80 font-medium">Branch</Label>
+                    <Select value={bulkBranch} onValueChange={setBulkBranch}>
+                      <SelectTrigger className="bg-muted/40 dark:bg-muted/30 border-border text-foreground text-xs h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground text-xs">
+                        <SelectItem value="Computer Science & AI">CS & AI</SelectItem>
+                        <SelectItem value="Computer Science & Engineering">CSE</SelectItem>
+                        <SelectItem value="Information Technology">IT</SelectItem>
+                        <SelectItem value="Electronics & Communication">ECE</SelectItem>
+                        <SelectItem value="Data Science">Data Science</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <DialogFooter className="pt-3 border-t border-border flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAddStudentOpen(false)}
+                    className="border-border text-foreground text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={uniqueBulkCount === 0}
+                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm cursor-pointer"
+                  >
+                    <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                    Enroll {uniqueBulkCount > 0 ? `${uniqueBulkCount} Students` : 'Students'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 

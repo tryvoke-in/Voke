@@ -1,4 +1,4 @@
- import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -13,14 +13,22 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, Send, CheckCircle, Sparkles, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
+import { Star, Send, CheckCircle, Sparkles, Loader2, ArrowLeft, ArrowRight, GraduationCap, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-interface FeedbackFormDialogProps {
+export interface FeedbackFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   grantFeedbackCredits?: () => Promise<boolean>;
+  compulsory?: boolean;
+  collegeContext?: {
+    collegeName?: string;
+    driveTitle?: string;
+    studentEmail?: string;
+    driveId?: string;
+  };
 }
 
 export const FeedbackFormDialog = ({
@@ -28,6 +36,8 @@ export const FeedbackFormDialog = ({
   onOpenChange,
   onSuccess,
   grantFeedbackCredits,
+  compulsory = false,
+  collegeContext,
 }: FeedbackFormDialogProps) => {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
@@ -70,7 +80,31 @@ export const FeedbackFormDialog = ({
     setSubmitted(false);
   };
 
+  // Prevent closing window / reloading before mandatory feedback is submitted
+  useEffect(() => {
+    if (!open || !compulsory || submitted) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "Please submit your mandatory interview feedback before closing this page.";
+      return "Please submit your mandatory interview feedback before closing this page.";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [open, compulsory, submitted]);
+
   const handleClose = (newOpen: boolean) => {
+    if (!newOpen && compulsory && !submitted) {
+      toast({
+        title: "Mandatory Feedback",
+        description: "Please complete and submit your interview feedback to finish.",
+        variant: "destructive",
+      });
+      return;
+    }
     onOpenChange(newOpen);
     if (!newOpen) {
       setTimeout(resetForm, 300);
@@ -206,13 +240,21 @@ export const FeedbackFormDialog = ({
       }
 
       // Insert extended feedback into Supabase
+      const feedbackLiked = collegeContext
+        ? `[College Assessment: ${collegeContext.collegeName || 'Placement Drive'}${collegeContext.driveTitle ? ` - ${collegeContext.driveTitle}` : ''}] ${liked.trim()}`
+        : (liked.trim() || null);
+
+      const effectiveModes = modesPracticed.length > 0
+        ? modesPracticed
+        : (collegeContext ? ["Voice & Video Call", "Coding Assessment"] : []);
+
       const { error } = await supabase.from("user_feedback").insert([
         {
           user_id: user.id,
           rating,
-          liked: liked.trim() || null,
+          liked: feedbackLiked,
           improvements: improvements.trim() || null,
-          modes_practiced: modesPracticed,
+          modes_practiced: effectiveModes,
           technical_performance: technicalPerformance || null,
           difficulty_level: difficultyLevel || null,
           feedback_helpfulness: feedbackHelpfulness || null,
@@ -223,14 +265,23 @@ export const FeedbackFormDialog = ({
         },
       ]);
 
+      if (collegeContext?.driveId) {
+        try {
+          localStorage.setItem(`voke_feedback_submitted_${collegeContext.driveId}`, "true");
+          if (collegeContext.studentEmail) {
+            localStorage.setItem(`voke_feedback_submitted_${collegeContext.driveId}_${collegeContext.studentEmail.toLowerCase()}`, "true");
+          }
+        } catch (e) { }
+      }
+
       if (error) {
         console.error("Supabase feedback insert error:", error);
         // Fallback to local backup in case table is not modified / error occurs
         const backupFeedback = {
           rating,
-          liked,
+          liked: feedbackLiked,
           improvements,
-          modes_practiced: modesPracticed,
+          modes_practiced: effectiveModes,
           technical_performance: technicalPerformance,
           difficulty_level: difficultyLevel,
           feedback_helpfulness: feedbackHelpfulness,
@@ -238,6 +289,7 @@ export const FeedbackFormDialog = ({
           input_issues: inputIssues,
           recommended,
           bugs_faced: bugsFaced,
+          collegeContext: collegeContext || null,
           timestamp: new Date().toISOString(),
         };
         const existingBackup = JSON.parse(localStorage.getItem("voke_feedback_backup") || "[]");
@@ -274,7 +326,22 @@ export const FeedbackFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-zinc-950 border-white/10 text-white max-w-md overflow-hidden rounded-3xl p-6 md:p-8">
+      <DialogContent 
+        className={cn(
+          "bg-zinc-950 border-white/10 text-white max-w-md overflow-hidden rounded-3xl p-6 md:p-8",
+          compulsory && "[&>button]:hidden"
+        )}
+        onPointerDownOutside={(e) => {
+          if (compulsory && !submitted) {
+            e.preventDefault();
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          if (compulsory && !submitted) {
+            e.preventDefault();
+          }
+        }}
+      >
         <AnimatePresence mode="wait">
           {!submitted ? (
             <motion.div
@@ -287,15 +354,30 @@ export const FeedbackFormDialog = ({
             >
               <DialogHeader>
                 <div className="mx-auto w-12 h-12 rounded-2xl bg-sky-600/10 border border-sky-500/20 flex items-center justify-center mb-2">
-                  <Sparkles className="w-6 h-6 text-sky-400 animate-pulse" />
+                  {collegeContext ? (
+                    <GraduationCap className="w-6 h-6 text-blue-400 animate-pulse" />
+                  ) : (
+                    <Sparkles className="w-6 h-6 text-sky-400 animate-pulse" />
+                  )}
                 </div>
                 <DialogTitle className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-                  Help Us Improve
+                  {collegeContext?.collegeName
+                    ? `${collegeContext.collegeName} Interview Feedback`
+                    : "Help Us Improve"}
                 </DialogTitle>
                 <DialogDescription className="text-zinc-400 text-xs text-center">
-                  Step {step} of 3 • Sharing feedback unlocks <strong className="text-sky-400">2 bonus mock interviews</strong> for free!
+                  {collegeContext
+                    ? `Step ${step} of 3 • Mandatory placement interview feedback for ${collegeContext.driveTitle || collegeContext.collegeName || "your assessment"}. Submission required.`
+                    : `Step ${step} of 3 • Sharing feedback unlocks 2 bonus mock interviews for free!`}
                 </DialogDescription>
               </DialogHeader>
+
+              {compulsory && (
+                <div className="flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] font-medium w-fit mx-auto">
+                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                  <span>Mandatory Feedback • Submission required to finalize</span>
+                </div>
+              )}
 
               {/* Step Progress Dots */}
               <div className="flex items-center justify-center gap-1.5 py-1">
@@ -558,7 +640,7 @@ export const FeedbackFormDialog = ({
                       <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
                       <>
-                        Submit & Unlock
+                        {collegeContext ? "Submit Mandatory Feedback" : "Submit & Unlock"}
                         <Send className="w-3.5 h-3.5" />
                       </>
                     )}
@@ -582,25 +664,42 @@ export const FeedbackFormDialog = ({
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold">Feedback Submitted!</h3>
                 <p className="text-zinc-400 text-sm leading-relaxed px-4">
-                  Thank you for helping us make Voke better! Your insights are incredibly valuable.
+                  {collegeContext
+                    ? "Thank you for completing your institutional placement feedback. Your interview evaluation is now finalized."
+                    : "Thank you for helping us make Voke better! Your insights are incredibly valuable."}
                 </p>
               </div>
 
-              <div className="bg-sky-500/10 border border-sky-500/20 rounded-2xl p-4 mx-4">
-                <p className="text-sky-300 font-bold text-lg flex items-center justify-center gap-2">
-                  <Sparkles className="w-5 h-5 fill-sky-300" />
-                  +2 Free Mock Interviews
-                </p>
-                <p className="text-zinc-500 text-xs mt-1">
-                  You can now practice two more sessions of any interview type.
-                </p>
-              </div>
+              {collegeContext ? (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mx-4">
+                  <p className="text-blue-300 font-bold text-base flex items-center justify-center gap-2">
+                    <Sparkles className="w-5 h-5 fill-blue-300" />
+                    Interview Feedback Recorded
+                  </p>
+                  <p className="text-zinc-400 text-xs mt-1">
+                    Your assessment feedback and performance scorecard have been synchronized to {collegeContext.collegeName || "your college placement cell"}.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-sky-500/10 border border-sky-500/20 rounded-2xl p-4 mx-4">
+                  <p className="text-sky-300 font-bold text-lg flex items-center justify-center gap-2">
+                    <Sparkles className="w-5 h-5 fill-sky-300" />
+                    +2 Free Mock Interviews
+                  </p>
+                  <p className="text-zinc-500 text-xs mt-1">
+                    You can now practice two more sessions of any interview type.
+                  </p>
+                </div>
+              )}
 
               <Button
-                onClick={() => handleClose(false)}
-                className="w-full bg-white hover:bg-zinc-200 text-black font-semibold rounded-xl h-11 transition-all duration-300"
+                onClick={() => {
+                  onOpenChange(false);
+                  if (onSuccess) onSuccess();
+                }}
+                className="w-full bg-white hover:bg-zinc-200 text-black font-semibold rounded-xl h-11 transition-all duration-300 cursor-pointer"
               >
-                Awesome, Let's Go
+                {collegeContext ? "View Interview Scorecard & Results →" : "Awesome, Let's Go"}
               </Button>
             </motion.div>
           )}

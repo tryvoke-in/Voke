@@ -21,6 +21,7 @@ import {
 } from "@/services/collegeService";
 import { useVoiceChat } from "@/hooks/useVoiceChat";
 import { executeCode } from "@/utils/codeExecutor";
+import { FeedbackFormDialog } from "@/components/FeedbackFormDialog";
 
 const MANDATORY_INTRO_QUESTION: CollegeCustomQuestion = {
   id: "mandatory-intro-q1",
@@ -68,6 +69,10 @@ export default function CollegeAssessmentSession() {
   const [isPassed, setIsPassed] = useState(false);
   const [sessionStartTime] = useState<number>(Date.now());
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(45 * 60);
+
+  // Mandatory Feedback state
+  const [showMandatoryFeedback, setShowMandatoryFeedback] = useState(false);
+  const [hasCompletedFeedback, setHasCompletedFeedback] = useState(false);
 
   // Voice Chat Hook for microphone speech-to-text
   const { isListening, startListening, stopListening, isSupported } = useVoiceChat({
@@ -353,6 +358,9 @@ export default function CollegeAssessmentSession() {
     const passed = calculatedAvg >= benchmark;
     setIsPassed(passed);
 
+    // Trigger mandatory interview feedback dialog
+    setShowMandatoryFeedback(true);
+
     // Save to college service and broadcast candidate result
     if (drive) {
       collegeService.recordStudentDriveResult({
@@ -430,7 +438,13 @@ export default function CollegeAssessmentSession() {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => navigate("/dashboard")}
+            onClick={() => {
+              if (showMandatoryFeedback && !hasCompletedFeedback) {
+                toast.error("Please complete the compulsory interview feedback before exiting.");
+                return;
+              }
+              navigate("/dashboard");
+            }}
             className="text-xs text-gray-400 hover:text-white hover:bg-muted/40 dark:bg-muted/30 h-8 px-2.5"
           >
             Exit
@@ -856,7 +870,13 @@ export default function CollegeAssessmentSession() {
             {/* Action buttons */}
             <div className="flex items-center justify-center gap-3 pt-2">
               <Button
-                onClick={() => navigate("/dashboard")}
+                onClick={() => {
+                  if (showMandatoryFeedback && !hasCompletedFeedback) {
+                    toast.error("Please complete the compulsory interview feedback before exiting.");
+                    return;
+                  }
+                  navigate("/dashboard");
+                }}
                 className="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs h-9 px-6 shadow-lg shadow-blue-600/30"
               >
                 <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Dashboard
@@ -865,6 +885,26 @@ export default function CollegeAssessmentSession() {
           </motion.div>
         )}
       </main>
+
+      {/* Mandatory Feedback Form Dialog */}
+      <FeedbackFormDialog
+        open={showMandatoryFeedback}
+        onOpenChange={(open) => {
+          if (!open && hasCompletedFeedback) {
+            setShowMandatoryFeedback(false);
+          }
+        }}
+        compulsory={true}
+        collegeContext={{
+          collegeName: drive?.collegeName || "Partner College",
+          driveTitle: drive?.title || roleParam || "Campus Placement Drive",
+          studentEmail: studentEmail || "student@voke.in",
+          driveId: drive?.id || driveId || undefined,
+        }}
+        onSuccess={() => {
+          setHasCompletedFeedback(true);
+        }}
+      />
     </div>
   );
 }
