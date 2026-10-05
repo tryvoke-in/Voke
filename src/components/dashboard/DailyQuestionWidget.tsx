@@ -175,13 +175,14 @@ export const DailyQuestionWidget: React.FC<DailyQuestionWidgetProps> = ({ questi
 
           {/* Action Button */}
           <div className="pt-2">
-            <Button
+            <button
+              type="button"
               onClick={() => navigate("/daily-challenge/solve")}
-              className="w-full relative overflow-hidden bg-[#0F6B38] hover:bg-[#0B572D] text-white font-semibold text-xs sm:text-sm h-10 rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-[#0F6B38]/25 hover:shadow-md hover:shadow-[#0F6B38]/35 transition-all duration-200 active:scale-[0.99] group/btn cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl border border-emerald-500/30 text-[#0F6B38] dark:text-emerald-400 bg-[#EAF3ED]/80 hover:bg-[#0F6B38] hover:text-white dark:bg-emerald-500/10 dark:hover:bg-[#0F6B38] dark:hover:text-white font-semibold text-sm active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer shadow-xs"
             >
               <span>Solve Today's Practice</span>
-              <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />
-            </Button>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </CardContent>
       </Card>

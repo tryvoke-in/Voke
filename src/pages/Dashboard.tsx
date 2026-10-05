@@ -579,8 +579,10 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden">
-      {/* Subtle Ambient Background Effects */}
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(120,119,198,0.04),transparent)] dark:bg-[radial-gradient(ellipse_70%_40%_at_50%_-10%,rgba(255,255,255,0.015),transparent)] pointer-events-none z-0" />
+      {/* Subtle Dark Dot Matrix Background (Entire Page) */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(rgba(148,163,184,0.07)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      </div>
 
       {/* Header */}
       <header className={`fixed z-[100] backdrop-blur-xl transition-all duration-500 ${isScrolled ? "top-1 left-4 right-4 md:left-8 md:right-8 bg-white/70 dark:bg-background/85 border border-gray-200/50 dark:border-border/60 rounded-full shadow-lg shadow-black/5 dark:shadow-black/20" : "top-0 left-0 right-0 bg-white/50 dark:bg-background/85 border-b border-gray-200/50 dark:border-border/60"}`}>
@@ -831,7 +833,7 @@ const Dashboard = () => {
                     <div
                       id="tour-text-interview"
                       onClick={() => navigate("/interview/new")}
-                      className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                      className="group rounded-2xl border border-slate-200/80 dark:border-border/80 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600/80 dark:hover:bg-muted/40 transition-colors duration-200 cursor-pointer shadow-xs"
                     >
                       <div className="w-11 h-11 rounded-full bg-blue-50 dark:bg-blue-500/15 dark:border dark:border-blue-400/30 flex items-center justify-center text-blue-600 dark:text-blue-300 group-hover:scale-105 transition-transform mb-4">
                         <Briefcase className="w-5 h-5" />
@@ -848,7 +850,7 @@ const Dashboard = () => {
                     <div
                       id="tour-pro-interview"
                       onClick={() => navigate("/voice-assistant")}
-                      className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                      className="group rounded-2xl border border-slate-200/80 dark:border-border/80 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600/80 dark:hover:bg-muted/40 transition-colors duration-200 cursor-pointer shadow-xs"
                     >
                       <div className="w-11 h-11 rounded-full bg-rose-50 dark:bg-rose-500/15 dark:border dark:border-rose-400/30 flex items-center justify-center text-rose-500 dark:text-rose-300 group-hover:scale-105 transition-transform mb-4">
                         <Video className="w-5 h-5" />
@@ -865,7 +867,7 @@ const Dashboard = () => {
                     <div
                       id="tour-job-matches"
                       onClick={() => navigate("/job-recommendations")}
-                      className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                      className="group rounded-2xl border border-slate-200/80 dark:border-border/80 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600/80 dark:hover:bg-muted/40 transition-colors duration-200 cursor-pointer shadow-xs"
                     >
                       <div className="w-11 h-11 rounded-full bg-purple-50 dark:bg-purple-500/15 dark:border dark:border-purple-400/30 flex items-center justify-center text-purple-600 dark:text-purple-300 group-hover:scale-105 transition-transform mb-4">
                         <CalendarDays className="w-5 h-5" />
@@ -882,7 +884,7 @@ const Dashboard = () => {
                     <div
                       id="tour-elite-prep"
                       onClick={() => navigate("/elite-prep")}
-                      className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                      className="group rounded-2xl border border-slate-200/80 dark:border-border/80 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600/80 dark:hover:bg-muted/40 transition-colors duration-200 cursor-pointer shadow-xs"
                     >
                       <div className="w-11 h-11 rounded-full bg-amber-50 dark:bg-amber-500/15 dark:border dark:border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300 group-hover:scale-105 transition-transform mb-4">
                         <Crown className="w-5 h-5" />
@@ -908,10 +910,11 @@ const Dashboard = () => {
                         className="overflow-hidden"
                       >
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                          {/* Resume Builder */}
                           <div
                             id="tour-resume-builder"
                             onClick={() => navigate("/resume-builder")}
-                            className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                            className="group rounded-2xl border border-slate-200/80 dark:border-border/80 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600/80 dark:hover:bg-muted/40 transition-colors duration-200 cursor-pointer shadow-xs"
                           >
                             <div className="w-11 h-11 rounded-full bg-emerald-50 dark:bg-emerald-500/15 dark:border dark:border-emerald-400/30 flex items-center justify-center text-emerald-600 dark:text-emerald-300 group-hover:scale-105 transition-transform mb-4">
                               <FileText className="w-5 h-5" />
@@ -925,10 +928,11 @@ const Dashboard = () => {
                             </div>
                           </div>
 
+                          {/* Playground */}
                           <div
                             id="tour-playground"
                             onClick={() => navigate("/playground")}
-                            className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                            className="group rounded-2xl border border-slate-200/80 dark:border-border/80 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600/80 dark:hover:bg-muted/40 transition-colors duration-200 cursor-pointer shadow-xs"
                           >
                             <div className="w-11 h-11 rounded-full bg-indigo-50 dark:bg-indigo-500/15 dark:border dark:border-indigo-400/30 flex items-center justify-center text-indigo-600 dark:text-indigo-300 group-hover:scale-105 transition-transform mb-4">
                               <Terminal className="w-5 h-5" />
@@ -942,10 +946,11 @@ const Dashboard = () => {
                             </div>
                           </div>
 
+                          {/* Question Practice */}
                           <div
                             id="tour-question-practice"
                             onClick={() => navigate("/question-practice")}
-                            className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                            className="group rounded-2xl border border-slate-200/80 dark:border-border/80 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600/80 dark:hover:bg-muted/40 transition-colors duration-200 cursor-pointer shadow-xs"
                           >
                             <div className="w-11 h-11 rounded-full bg-orange-50 dark:bg-orange-500/15 dark:border dark:border-orange-400/30 flex items-center justify-center text-orange-600 dark:text-orange-300 group-hover:scale-105 transition-transform mb-4">
                               <Brain className="w-5 h-5" />
@@ -959,10 +964,11 @@ const Dashboard = () => {
                             </div>
                           </div>
 
+                          {/* Community */}
                           <div
                             id="tour-community"
                             onClick={() => navigate("/community")}
-                            className="rounded-2xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:shadow-md hover:border-slate-300 dark:hover:border-slate-500/60 dark:hover:bg-muted/30 transition-all cursor-pointer group dark:shadow-md"
+                            className="group rounded-2xl border border-slate-200/80 dark:border-border/80 bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600/80 dark:hover:bg-muted/40 transition-colors duration-200 cursor-pointer shadow-xs"
                           >
                             <div className="w-11 h-11 rounded-full bg-pink-50 dark:bg-pink-500/15 dark:border dark:border-pink-400/30 flex items-center justify-center text-pink-600 dark:text-pink-300 group-hover:scale-105 transition-transform mb-4">
                               <Users className="w-5 h-5" />

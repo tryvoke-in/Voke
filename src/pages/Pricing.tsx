@@ -466,7 +466,7 @@ export const Pricing = () => {
           </motion.div>
 
           {/* ─── Clean Centered Hero ────────────────── */}
-          <div className="text-center max-w-2xl mx-auto space-y-4 mb-12 sm:mb-14">
+          <div className="text-center max-w-2xl mx-auto space-y-4 mb-10 sm:mb-12">
             {/* Pill Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/25 shadow-2xs text-xs font-semibold text-foreground backdrop-blur-xs">
               <span className="relative flex h-2 w-2">

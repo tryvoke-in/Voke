@@ -59,7 +59,7 @@ All colors MUST be HSL.
     --shadow-soft: 0 4px 20px -2px hsl(30, 30%, 25%, 0.06);
     --shadow-medium: 0 10px 40px -5px hsl(30, 30%, 25%, 0.10);
     --shadow-strong: 0 20px 60px -10px hsl(30, 30%, 25%, 0.15);
-    
+
     --sidebar-background: 38 35% 92%;
     --sidebar-foreground: 28 20% 14%;
     --sidebar-primary: 215 85% 28%;
@@ -138,12 +138,12 @@ All colors MUST be HSL.
   .theme-transition {
     @apply transition-colors duration-300;
   }
-  
+
   /* Glassmorphism utilities */
   .glass {
     @apply bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl;
   }
-  
+
   .glass-card {
     @apply bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm;
   }
@@ -152,7 +152,7 @@ All colors MUST be HSL.
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  
+
   .no-scrollbar,
   .hide-scrollbar {
     -ms-overflow-style: none;
@@ -211,7 +211,8 @@ All colors MUST be HSL.
 }
 
 /* Lenis smooth scroll setup */
-html.lenis, html.lenis body {
+html.lenis,
+html.lenis body {
   height: auto;
 }
 
@@ -246,6 +247,7 @@ html.lenis, html.lenis body {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -259,6 +261,7 @@ html.lenis, html.lenis body {
   from {
     transform: rotate(360deg);
   }
+
   to {
     transform: rotate(0deg);
   }
@@ -269,8 +272,15 @@ html.lenis, html.lenis body {
 }
 
 @keyframes wiggle {
-  0%, 100% { transform: rotate(-4deg); }
-  50% { transform: rotate(4deg); }
+
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+
+  50% {
+    transform: rotate(4deg);
+  }
 }
 
 .animate-wiggle {
@@ -278,8 +288,15 @@ html.lenis, html.lenis body {
 }
 
 @keyframes bounce-subtle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .animate-bounce-subtle {
@@ -287,8 +304,15 @@ html.lenis, html.lenis body {
 }
 
 @keyframes pulse-subtle {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.04);
+  }
 }
 
 .animate-pulse-subtle {
@@ -296,10 +320,23 @@ html.lenis, html.lenis body {
 }
 
 @keyframes flag-wave {
-  0%, 100% { transform: skewY(0deg) scaleX(1); }
-  25% { transform: skewY(3.5deg) scaleX(0.96) rotate(-1deg); }
-  50% { transform: skewY(-2.5deg) scaleX(1.03) rotate(1deg); }
-  75% { transform: skewY(2deg) scaleX(0.98); }
+
+  0%,
+  100% {
+    transform: skewY(0deg) scaleX(1);
+  }
+
+  25% {
+    transform: skewY(3.5deg) scaleX(0.96) rotate(-1deg);
+  }
+
+  50% {
+    transform: skewY(-2.5deg) scaleX(1.03) rotate(1deg);
+  }
+
+  75% {
+    transform: skewY(2deg) scaleX(0.98);
+  }
 }
 
 .animate-flag-wave {
@@ -308,9 +345,17 @@ html.lenis, html.lenis body {
 }
 
 @keyframes cloud-drift {
-  0% { transform: translateX(0); }
-  50% { transform: translateX(35px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(35px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .animate-cloud-drift {
@@ -318,9 +363,17 @@ html.lenis, html.lenis body {
 }
 
 @keyframes cloud-drift-reverse {
-  0% { transform: translateX(0); }
-  50% { transform: translateX(-30px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(-30px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .animate-cloud-drift-reverse {
