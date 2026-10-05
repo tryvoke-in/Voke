@@ -59,6 +59,8 @@ const VoiceAssistant: React.FC = () => {
   const [searchParams] = useSearchParams();
   const driveId = searchParams.get("driveId") || searchParams.get("drive") || "";
   const [collegeDrive, setCollegeDrive] = useState<CollegeScheduledDrive | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   const standardBrainRef = useRef(new StandardVoiceBrain());
 
@@ -359,6 +361,11 @@ const VoiceAssistant: React.FC = () => {
         return;
       }
 
+      setCurrentUser(user);
+      if (user.email) {
+        setUserEmail(user.email);
+      }
+
       const profileCtx = await loadUserProfileContext();
       if (profileCtx) {
         setCandidateProfileName(profileCtx.fullName || user.email?.split("@")[0] || 'Candidate');
@@ -374,8 +381,11 @@ const VoiceAssistant: React.FC = () => {
       if (driveId) {
         let drive = collegeService.getDriveById(driveId);
         if (!drive) {
+          drive = await collegeService.getDriveByIdAsync(driveId);
+        }
+        if (!drive) {
           const drives = await collegeService.getCollegeDrivesAsync("college-nst");
-          drive = drives.find(d => d.id === driveId) || drives[0];
+          drive = drives.find(d => d.id === driveId);
         }
         if (drive) {
           setCollegeDrive(drive);
@@ -412,7 +422,8 @@ const VoiceAssistant: React.FC = () => {
     }
 
     if (collegeDrive) {
-      const sampledCustom = collegeService.sampleQuestionsForCandidate(collegeDrive, userEmail);
+      const activeUserEmail = userEmail || currentUser?.email || (collegeDrive?.targetEmails && collegeDrive.targetEmails[0]) || "student@voke.in";
+      const sampledCustom = collegeService.sampleQuestionsForCandidate(collegeDrive, activeUserEmail);
 
       const fixedQuestions = [
         `Welcome ${candidateProfileName} to your official placement assessment for ${collegeDrive.collegeName}! To get started, please introduce yourself, your academic background, core technical skills, and key projects you have built.`,
@@ -1312,7 +1323,7 @@ CRITICAL INTERVIEW GUIDELINES:
         collegeContext={{
           collegeName: collegeDrive?.collegeName || "College Placement Cell",
           driveTitle: collegeDrive?.title || customRole || targetRole,
-          studentEmail: user?.email || (collegeDrive?.targetEmails && collegeDrive.targetEmails[0]) || "student@voke.in",
+          studentEmail: userEmail || currentUser?.email || (collegeDrive?.targetEmails && collegeDrive.targetEmails[0]) || "student@voke.in",
           driveId: collegeDrive?.id || driveId || undefined,
         }}
         onSuccess={() => {

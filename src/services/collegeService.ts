@@ -1622,6 +1622,68 @@ export const collegeService = {
     return undefined;
   },
 
+  // Async drive retrieval checking localStorage, Supabase DB, and API
+  async getDriveByIdAsync(driveId: string): Promise<CollegeScheduledDrive | undefined> {
+    const local = this.getDriveById(driveId);
+    if (local) return local;
+
+    // 1. Check Supabase DB waitlist records
+    try {
+      const { data: dbDrives } = await supabase
+        .from('waitlist')
+        .select('*')
+        .eq('status', 'college_drive_record');
+
+      if (dbDrives && dbDrives.length > 0) {
+        for (const row of dbDrives) {
+          if (row.phone_number) {
+            try {
+              const drive: CollegeScheduledDrive = JSON.parse(row.phone_number);
+              if (drive && drive.id === driveId) {
+                // Cache into localStorage so subsequent lookups are instant
+                try {
+                  const stored = localStorage.getItem(STORAGE_KEYS.COLLEGE_DRIVES);
+                  const existing: CollegeScheduledDrive[] = stored ? JSON.parse(stored) : [];
+                  if (!existing.some(d => d.id === drive.id)) {
+                    existing.push(drive);
+                    localStorage.setItem(STORAGE_KEYS.COLLEGE_DRIVES, JSON.stringify(existing));
+                  }
+                } catch (ce) {}
+                return drive;
+              }
+            } catch (pe) {}
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("getDriveByIdAsync Supabase lookup error:", e);
+    }
+
+    // 2. Check /api/college-drives
+    try {
+      const res = await fetch("/api/college-drives").catch(() => null);
+      if (res && res.ok) {
+        const parsedDrives: CollegeScheduledDrive[] = await res.json().catch(() => []);
+        if (Array.isArray(parsedDrives)) {
+          const match = parsedDrives.find(d => d && d.id === driveId);
+          if (match) return match;
+        }
+      }
+    } catch (e) {}
+
+    // 3. Check all partner colleges async
+    try {
+      const colleges = this.getColleges();
+      for (const c of colleges) {
+        const drives = await this.getCollegeDrivesAsync(c.id);
+        const match = drives.find(d => d.id === driveId);
+        if (match) return match;
+      }
+    } catch (e) {}
+
+    return undefined;
+  },
+
   // Sample randomized questions for candidate (e.g. 8 random theoretical + 1 random coding question)
   sampleQuestionsForCandidate(drive: CollegeScheduledDrive, candidateEmail?: string): CollegeCustomQuestion[] {
     if (!drive || !drive.customQuestions || drive.customQuestions.length === 0) {

@@ -13,32 +13,37 @@ import AnalyticsTracker from "./components/AnalyticsTracker";
 import SEO from "./components/SEO";
 import { TokenProvider } from "./contexts/TokenContext";
 import { TokenCounterWidget } from "./components/TokenCounterWidget";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <TokenProvider>
-        <OnlinePresenceProvider>
-          <BrowserRouter>
-            <SEO />
-            <AnalyticsTracker />
-            <WaitlistGuard>
-              <ProfileCompletionGuard>
-                <AppRoutes />
-              </ProfileCompletionGuard>
-            </WaitlistGuard>
-            <DevResetWidget />
-            <SessionRequestNotifier />
-            <TokenCounterWidget />
-          </BrowserRouter>
-        </OnlinePresenceProvider>
-      </TokenProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <TokenProvider>
+          <OnlinePresenceProvider>
+            <BrowserRouter>
+              <SEO />
+              <AnalyticsTracker />
+              <WaitlistGuard>
+                <ProfileCompletionGuard>
+                  <ErrorBoundary fallbackTitle="Page Load Error" fallbackMessage="An issue occurred while loading this page. You can reload or return to the dashboard.">
+                    <AppRoutes />
+                  </ErrorBoundary>
+                </ProfileCompletionGuard>
+              </WaitlistGuard>
+              <DevResetWidget />
+              <SessionRequestNotifier />
+              <TokenCounterWidget />
+            </BrowserRouter>
+          </OnlinePresenceProvider>
+        </TokenProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
