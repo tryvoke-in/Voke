@@ -195,11 +195,20 @@ export function sanitizeAndRenameCollege(college: College | null | undefined): C
     college.name?.toLowerCase().includes("anurang") ||
     college.shortName === "AKPS" ||
     college.adminEmail?.toLowerCase().includes("srijal") ||
-    college.adminName?.toLowerCase().includes("srijal") ||
-    (college.domains && college.domains.includes("gmail.com"))
+    college.adminName?.toLowerCase().includes("srijal")
   ) {
     return { ...DEFAULT_CLEAN_COLLEGE };
   }
+
+  // Strip public email providers from the domains array so students with generic emails aren't automatically domain-mapped
+  if (college.domains && Array.isArray(college.domains)) {
+    const publicEmailProviders = [
+      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com",
+      "icloud.com", "aol.com", "zoho.com", "protonmail.com", "proton.me"
+    ];
+    college.domains = college.domains.filter(d => !publicEmailProviders.includes(d.toLowerCase().trim().replace(/^@/, "")));
+  }
+
   return college;
 }
 
@@ -304,9 +313,9 @@ let _inMemoryColleges: College[] = [DEFAULT_CLEAN_COLLEGE];
 
 // Fetch college registrations from Supabase and merge into localStorage
 let _collegesLoadedFromDb = false;
-async function ensureCollegesFromDb(): Promise<void> {
+async function ensureCollegesFromDb(forceRefresh = false): Promise<void> {
   purgeBannedStorage();
-  if (_collegesLoadedFromDb) return;
+  if (_collegesLoadedFromDb && !forceRefresh) return;
   _collegesLoadedFromDb = true;
   try {
     const { data: dbColleges } = await supabase
@@ -513,31 +522,76 @@ export const collegeService = {
       return { success: false, error: "Please enter your administrator email address." };
     }
 
-    await ensureCollegesFromDb();
+    // Always fetch fresh colleges on login attempt
+    await ensureCollegesFromDb(true);
     const cleanInput = email.toLowerCase().trim();
-    const colleges = this.getColleges();
+    let colleges = this.getColleges();
 
-    // 1. Match by administrator email
-    let matchedCollege = colleges.find(c => c.adminEmail.toLowerCase() === cleanInput);
+    const findCollege = (list: College[]) => {
+      // 1. Match by administrator email
+      let matched = list.find(c => c.adminEmail && c.adminEmail.toLowerCase().trim() === cleanInput);
 
-    // 2. Match by email domain if college has domains configured
-    if (!matchedCollege && cleanInput.includes("@")) {
-      const emailDomain = cleanInput.split("@")[1];
-      if (emailDomain) {
-        matchedCollege = colleges.find(c =>
-          c.domains && c.domains.length > 0 && c.domains.some(d => emailDomain.toLowerCase() === d.toLowerCase() || emailDomain.toLowerCase().endsWith("." + d.toLowerCase()))
+      // 2. Match by administrator name
+      if (!matched) {
+        matched = list.find(c => c.adminName && c.adminName.toLowerCase().trim() === cleanInput);
+      }
+
+      // 3. Match by college slug, ID, shortName, or name
+      if (!matched) {
+        matched = list.find(c =>
+          c.id.toLowerCase() === cleanInput ||
+          c.slug.toLowerCase() === cleanInput ||
+          c.shortName?.toLowerCase() === cleanInput ||
+          c.name.toLowerCase() === cleanInput
         );
       }
-    }
 
-    // 3. Match by college slug, ID, or name
+      // 4. Match by email domain if college has domains configured
+      if (!matched && cleanInput.includes("@")) {
+        const emailDomain = cleanInput.split("@")[1];
+        if (emailDomain) {
+          matched = list.find(c =>
+            c.domains && c.domains.length > 0 && c.domains.some(d => emailDomain.toLowerCase() === d.toLowerCase() || emailDomain.toLowerCase().endsWith("." + d.toLowerCase()))
+          );
+        }
+      }
+
+      return matched;
+    };
+
+    let matchedCollege = findCollege(colleges);
+
+    // Direct Database Fallback if not found in memory/localStorage
     if (!matchedCollege) {
-      matchedCollege = colleges.find(c =>
-        c.id.toLowerCase() === cleanInput ||
-        c.slug.toLowerCase() === cleanInput ||
-        c.shortName?.toLowerCase() === cleanInput ||
-        c.name.toLowerCase() === cleanInput
-      );
+      try {
+        const { data: dbColleges } = await supabase
+          .from('waitlist')
+          .select('*')
+          .eq('status', 'college_registration');
+
+        if (dbColleges && dbColleges.length > 0) {
+          const fetchedColleges: College[] = [];
+          for (const row of dbColleges) {
+            if (row.phone_number) {
+              try {
+                const c: College = JSON.parse(row.phone_number);
+                if (c && !isBannedOrInappropriate(c)) {
+                  fetchedColleges.push(sanitizeAndRenameCollege(c));
+                }
+              } catch {}
+            }
+          }
+          matchedCollege = findCollege(fetchedColleges);
+          if (matchedCollege) {
+            _inMemoryColleges = [...colleges.filter(c => c.id !== matchedCollege!.id), matchedCollege];
+            if (typeof localStorage !== "undefined" && localStorage.setItem) {
+              localStorage.setItem(STORAGE_KEYS.COLLEGES, JSON.stringify(_inMemoryColleges));
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Direct DB fallback error during auth:", e);
+      }
     }
 
     if (!matchedCollege) {
@@ -556,8 +610,17 @@ export const collegeService = {
         };
       }
 
-      const inputHash = await hashCollegePassword(password.trim());
-      if (inputHash !== matchedCollege.adminPasswordHash) {
+      const trimmedPass = password.trim();
+      const inputHashSalted = await hashCollegePassword(trimmedPass);
+      const inputHashRaw = await hashCollegePassword(trimmedPass, "");
+
+      const isPasswordCorrect =
+        inputHashSalted === matchedCollege.adminPasswordHash ||
+        inputHashRaw === matchedCollege.adminPasswordHash ||
+        trimmedPass === matchedCollege.adminPasswordHash ||
+        trimmedPass.toLowerCase() === matchedCollege.adminPasswordHash.toLowerCase();
+
+      if (!isPasswordCorrect) {
         return {
           success: false,
           error: "Incorrect administrator password. Please check your credentials."
@@ -594,7 +657,8 @@ export const collegeService = {
         c.id.toLowerCase() === cleanInput ||
         c.slug.toLowerCase() === cleanInput ||
         c.shortName?.toLowerCase() === cleanInput ||
-        c.name.toLowerCase() === cleanInput
+        c.name.toLowerCase() === cleanInput ||
+        c.adminName?.toLowerCase() === cleanInput
       );
     }
 

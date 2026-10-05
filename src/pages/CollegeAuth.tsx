@@ -86,7 +86,7 @@ const CollegeAuth = () => {
       const res = await collegeService.authenticateCollegeAdminAsync(email, password);
       if (res.success && res.college) {
         toast.success(`Welcome back, ${res.college.name} Placement Cell!`);
-        navigate("/college/dashboard");
+        navigate(`/college/dashboard?college=${res.college.id}`);
       } else {
         toast.error(res.error || "Authentication failed. Please verify your credentials.");
       }
@@ -100,7 +100,7 @@ const CollegeAuth = () => {
   const handleQuickDemoSignIn = (college: College) => {
     collegeService.setCollegeSession(college);
     toast.success(`Logged in as ${college.name} Admin!`);
-    navigate("/college/dashboard");
+    navigate(`/college/dashboard?college=${college.id}`);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -115,7 +115,7 @@ const CollegeAuth = () => {
       return;
     }
 
-    if (regPassword !== regConfirmPassword) {
+    if (!regPassword !== !regConfirmPassword || regPassword !== regConfirmPassword) {
       toast.error("Passwords do not match. Please re-enter your password.");
       return;
     }
@@ -141,7 +141,7 @@ const CollegeAuth = () => {
       });
 
       toast.success(`Institutional partnership registered for ${newCollege.name}! Welcome to Voke.`);
-      navigate("/college/dashboard");
+      navigate(`/college/dashboard?college=${newCollege.id}`);
     } catch (err: any) {
       toast.error(err.message || "Failed to register institution.");
     } finally {
