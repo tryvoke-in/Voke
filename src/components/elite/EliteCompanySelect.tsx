@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, ChevronRight, ArrowLeft, Check, Sparkles, Building, ArrowRight } from 'lucide-react';
+import { Search, ChevronRight, ArrowLeft, Check, Building, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface EliteCompanySelectProps {

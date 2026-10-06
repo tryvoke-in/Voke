@@ -6,11 +6,11 @@ import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { LiveStatus } from '@/types/voice';
-import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
+import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem, DifficultyItem } from '@/data/eliteInterviewData';
 import { updateRoundResultAsync, saveSelectedGithubRepo, fetchSelectedGithubRepo } from '@/utils/eliteInterviewStorage';
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff, CheckCircle2, XCircle,
-  Sparkles, HelpCircle, ShieldCheck, ChevronRight, User, Award, Clock,
+  Building, HelpCircle, ShieldCheck, ChevronRight, User, Award, Clock,
   Volume2, Maximize2, Zap, Radio, MessageSquare, FileText, Subtitles,
   GitBranch, FolderCode, Check, Github, Plus, RefreshCw, AlertCircle, Link2, ExternalLink, ArrowLeft
 } from 'lucide-react';
@@ -32,6 +32,7 @@ interface EliteVoiceRoomProps {
   company: CompanyItem;
   role: RoleItem;
   round: InterviewRoundDef;
+  difficulty?: DifficultyItem | string | null;
   candidateProfileContext?: string;
   githubRepos?: { name: string; description: string; language?: string; summary?: string }[];
   isLoadingRepos?: boolean;
@@ -1180,7 +1181,7 @@ ${isJobMode ? jobInterviewCategoryFlow : (isRound1 ? round1CategoryFlow : '')}
                 <div className="p-8 rounded-2xl bg-[#121422]/60 border border-white/10 text-center space-y-4 my-auto flex flex-col items-center justify-center min-h-[180px]">
                   <div className="relative">
                     <div className="w-10 h-10 rounded-full border-2 border-sky-500/30 border-t-sky-500 animate-spin" />
-                    <Sparkles className="w-4 h-4 text-sky-400 absolute inset-0 m-auto" />
+                    <Github className="w-4 h-4 text-sky-400 absolute inset-0 m-auto" />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white tracking-wide">Fetching Your GitHub Repositories...</h4>
@@ -1514,7 +1515,7 @@ ${isJobMode ? jobInterviewCategoryFlow : (isRound1 ? round1CategoryFlow : '')}
             <ScrollArea className="flex-1 p-4 space-y-4">
               {logs.length === 0 ? (
                 <div className="text-center py-24 text-zinc-600 space-y-2">
-                  <Sparkles className="w-6 h-6 mx-auto text-amber-500/40 animate-pulse" />
+                  <MessageSquare className="w-6 h-6 mx-auto text-amber-500/40 animate-pulse" />
                   <p className="text-xs font-semibold text-zinc-500">Live speech transcript will appear here as the interview progresses...</p>
                 </div>
               ) : (
@@ -1527,7 +1528,7 @@ ${isJobMode ? jobInterviewCategoryFlow : (isRound1 ? round1CategoryFlow : '')}
                       <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
                         log.role === 'assistant' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                       }`}>
-                        {log.role === 'assistant' ? <Sparkles className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                        {log.role === 'assistant' ? <Building className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                       </div>
 
                       <div className={`p-3.5 rounded-2xl text-xs leading-relaxed max-w-[85%] border shadow-md ${

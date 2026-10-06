@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  GraduationCap, Building, Code, Sparkles, Check, ArrowRight, Search,
+  GraduationCap, Building, Code, FileText, Check, ArrowRight, Search,
   Lock, CheckCircle2, XCircle, Play, RefreshCw, Layers, ShieldCheck, Zap, Award, ChevronRight, Sliders
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -341,7 +341,7 @@ export const EliteCommandStudio: React.FC<EliteCommandStudioProps> = ({
                             onClick={() => navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`)}
                             className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-black text-xs px-5 h-10 rounded-xl shadow-lg shadow-blue-600/20"
                           >
-                            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-300" /> View Analysis
+                            <FileText className="w-3.5 h-3.5 mr-1.5 text-amber-300" /> View Analysis
                           </Button>
                         )}
 

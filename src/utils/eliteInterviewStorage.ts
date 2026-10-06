@@ -38,6 +38,7 @@ const STORAGE_KEY_PREFIX = 'voke_elite_progress_';
 const SELECTED_TYPE_KEY = 'voke_elite_selected_type';
 const SELECTED_ROLE_KEY = 'voke_elite_selected_role';
 const SELECTED_COMPANY_KEY = 'voke_elite_selected_company';
+const SELECTED_DIFFICULTY_KEY = 'voke_elite_selected_difficulty';
 
 export const saveSelectedType = (typeId: string | null) => {
   if (typeId) {
@@ -75,10 +76,23 @@ export const getSelectedCompany = (): string | null => {
   return localStorage.getItem(SELECTED_COMPANY_KEY);
 };
 
+export const saveSelectedDifficulty = (difficultyId: string | null) => {
+  if (difficultyId) {
+    localStorage.setItem(SELECTED_DIFFICULTY_KEY, difficultyId);
+  } else {
+    localStorage.removeItem(SELECTED_DIFFICULTY_KEY);
+  }
+};
+
+export const getSelectedDifficulty = (): string | null => {
+  return localStorage.getItem(SELECTED_DIFFICULTY_KEY);
+};
+
 export const clearEliteSelections = () => {
   localStorage.removeItem(SELECTED_TYPE_KEY);
   localStorage.removeItem(SELECTED_ROLE_KEY);
   localStorage.removeItem(SELECTED_COMPANY_KEY);
+  localStorage.removeItem(SELECTED_DIFFICULTY_KEY);
 };
 
 // --- DATABASE PERSISTENCE METHODS ---

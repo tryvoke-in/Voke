@@ -89,8 +89,8 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
   }, [allSessions]);
 
   const systemDesignCount = useMemo(() => {
-    return allSessions.filter((s: any) => 
-      s.category?.toLowerCase()?.includes('system') || 
+    return allSessions.filter((s: any) =>
+      s.category?.toLowerCase()?.includes('system') ||
       s.role?.toLowerCase()?.includes('system') ||
       s.title?.toLowerCase()?.includes('system')
     ).length;
@@ -179,15 +179,15 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
       description: "Data Structures & Algorithms problem-solving patterns, time/space complexity analysis, and core interview questions.",
       questTasks: isDsaCompleted
         ? [
-            "Master High-Yield Algorithmic Patterns (Mastered)",
-            "Optimize Time & Space Complexities (Mastered)",
-            `${solvedCount} Curated Problems Solved on Platform`
-          ]
+          "Master High-Yield Algorithmic Patterns (Mastered)",
+          "Optimize Time & Space Complexities (Mastered)",
+          `${solvedCount} Curated Problems Solved on Platform`
+        ]
         : [
-            `${solvedCount}/5 Problems Solved to Clear Stage`,
-            "Review Core Algorithmic Patterns",
-            "Complete Daily Coding Practice"
-          ],
+          `${solvedCount}/5 Problems Solved to Clear Stage`,
+          "Review Core Algorithmic Patterns",
+          "Complete Daily Coding Practice"
+        ],
       ctaText: isDsaCompleted ? "Review DSA Sheet" : "Solve Questions",
       ctaPath: "/dsa-sheet"
     },
@@ -205,15 +205,15 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
       description: "Interactive AI voice & video technical interview simulations with real-time scoring, live coding, and diagnostic feedback.",
       questTasks: isInterviewCompleted
         ? [
-            "3 Technical Coding Mocks (Completed)",
-            "Achieve 80%+ Evaluation Score (Mastered)",
-            "AI Diagnostic Feedback Reviewed"
-          ]
+          "3 Technical Coding Mocks (Completed)",
+          "Achieve 80%+ Evaluation Score (Mastered)",
+          "AI Diagnostic Feedback Reviewed"
+        ]
         : [
-            `${interviewCount}/3 Technical Coding Mocks (${interviewCount > 0 ? `${interviewCount} Done` : "Pending"})`,
-            "Achieve 80%+ Evaluation Score",
-            isDsaCompleted ? "Active AI Interview Simulation" : "Unlock by Completing DSA Preparation"
-          ],
+          `${interviewCount}/3 Technical Coding Mocks (${interviewCount > 0 ? `${interviewCount} Done` : "Pending"})`,
+          "Achieve 80%+ Evaluation Score",
+          isDsaCompleted ? "Active AI Interview Simulation" : "Unlock by Completing DSA Preparation"
+        ],
       ctaText: "Start AI Interview",
       ctaPath: "/interview/new"
     },
@@ -327,8 +327,8 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
   const completedPathD = isInterviewCompleted
     ? "M 75 130 C 130 130, 180 65, 235 65 C 290 65, 340 140, 395 140"
     : isDsaCompleted
-    ? "M 75 130 C 130 130, 180 65, 235 65"
-    : "";
+      ? "M 75 130 C 130 130, 180 65, 235 65"
+      : "";
 
   return (
     <div className="relative w-full rounded-3xl border border-slate-200/80 dark:border-border/90 bg-white dark:bg-card shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden select-none">
@@ -394,11 +394,10 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
               className="bg-white dark:bg-[#18181b] border border-slate-200/90 dark:border-zinc-800 rounded-2xl px-3.5 py-2 flex items-center gap-2.5 shadow-2xs hover:shadow-xs transition-all cursor-pointer select-none"
             >
               {/* Flame Badge (Lit if streak > 0, unlit/dormant if 0) */}
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
-                userStreak > 0
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${userStreak > 0
                   ? "bg-gradient-to-tr from-amber-500 via-orange-500 to-red-500 shadow-xs shadow-orange-500/30"
                   : "bg-slate-100 dark:bg-zinc-800/80 border border-slate-200/60 dark:border-zinc-700/50"
-              }`}>
+                }`}>
                 <Flame className={`w-4 h-4 ${userStreak > 0 ? "fill-white text-white animate-pulse" : "text-slate-400 dark:text-zinc-500"}`} />
               </div>
               <div className="leading-none">
@@ -420,11 +419,10 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.94 }}
                   onClick={handleClaimChest}
-                  className={`px-3 py-1.5 rounded-2xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-2xs cursor-pointer ${
-                    chestClaimed
+                  className={`px-3 py-1.5 rounded-2xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-2xs cursor-pointer ${chestClaimed
                       ? "bg-slate-100 dark:bg-muted/50 text-slate-400 dark:text-slate-500 border border-slate-200/60 dark:border-border/60"
                       : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-amber-500/25 animate-bounce-subtle"
-                  }`}
+                    }`}
                 >
                   <Gift className={`w-4 h-4 ${chestClaimed ? "" : "animate-wiggle"}`} />
                   <span>{chestClaimed ? "Loot Claimed" : "Daily Mystery Loot"}</span>
@@ -536,11 +534,10 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
             <div
               key={`dot-${idx}`}
               style={{ left: `${(dot.x / 1080) * 100}%`, top: `${(dot.y / 210) * 100}%` }}
-              className={`absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full pointer-events-none transition-all ${
-                dot.completed
+              className={`absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full pointer-events-none transition-all ${dot.completed
                   ? "bg-[#0F6B38] shadow-sm shadow-[#0F6B38]/50 ring-2 ring-emerald-200 dark:ring-emerald-900/60"
                   : "bg-slate-300 dark:bg-slate-700"
-              }`}
+                }`}
             />
           ))}
 
@@ -592,19 +589,18 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                   whileHover={{ scale: 1.15, y: -2 }}
                   whileTap={{ scale: 0.94 }}
                   onClick={() => setSelectedNode(node)}
-                  className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all cursor-pointer shadow-md ${
-                    node.status === "completed"
+                  className={`relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all cursor-pointer shadow-md ${node.status === "completed"
                       ? "bg-emerald-600 text-white shadow-emerald-600/25 ring-3 ring-emerald-500/20"
                       : node.status === "active"
-                      ? "bg-[#0F6B38] text-white ring-4 ring-[#0F6B38]/30 shadow-[#0F6B38]/40 animate-pulse-subtle"
-                      : node.status === "unlocked"
-                      ? "bg-white dark:bg-card border-2 border-[#0F6B38] text-[#0F6B38] dark:text-emerald-400 hover:bg-[#EAF3ED] dark:hover:bg-emerald-500/15 shadow-[#0F6B38]/20"
-                      : node.boss
-                      ? "bg-gradient-to-tr from-amber-600 to-orange-500 text-white shadow-orange-500/30 ring-3 ring-orange-500/25"
-                      : node.status === "summit"
-                      ? "bg-gradient-to-tr from-amber-400 via-amber-500 to-yellow-400 text-white shadow-amber-500/40 ring-4 ring-amber-400/30"
-                      : "bg-slate-100 dark:bg-card border border-slate-200 dark:border-border text-slate-400 dark:text-slate-500"
-                  }`}
+                        ? "bg-[#0F6B38] text-white ring-4 ring-[#0F6B38]/30 shadow-[#0F6B38]/40 animate-pulse-subtle"
+                        : node.status === "unlocked"
+                          ? "bg-white dark:bg-card border-2 border-[#0F6B38] text-[#0F6B38] dark:text-emerald-400 hover:bg-[#EAF3ED] dark:hover:bg-emerald-500/15 shadow-[#0F6B38]/20"
+                          : node.boss
+                            ? "bg-gradient-to-tr from-amber-600 to-orange-500 text-white shadow-orange-500/30 ring-3 ring-orange-500/25"
+                            : node.status === "summit"
+                              ? "bg-gradient-to-tr from-amber-400 via-amber-500 to-yellow-400 text-white shadow-amber-500/40 ring-4 ring-amber-400/30"
+                              : "bg-slate-100 dark:bg-card border border-slate-200 dark:border-border text-slate-400 dark:text-slate-500"
+                    }`}
                 >
                   {/* Radar beacon for active node */}
                   {node.status === "active" && (
@@ -625,19 +621,18 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                     {node.title}
                   </p>
                   <p
-                    className={`text-[10px] font-semibold mt-0.5 ${
-                      node.status === "completed"
+                    className={`text-[10px] font-semibold mt-0.5 ${node.status === "completed"
                         ? "text-emerald-600 dark:text-emerald-400"
                         : node.status === "active"
-                        ? "text-[#0F6B38] dark:text-emerald-400 font-extrabold"
-                        : node.status === "unlocked"
-                        ? "text-[#0F6B38] dark:text-emerald-400"
-                        : node.boss
-                        ? "text-orange-600 dark:text-orange-400 font-bold"
-                        : node.status === "summit"
-                        ? "text-amber-600 dark:text-amber-400 font-extrabold"
-                        : "text-slate-400 dark:text-slate-500"
-                    }`}
+                          ? "text-[#0F6B38] dark:text-emerald-400 font-extrabold"
+                          : node.status === "unlocked"
+                            ? "text-[#0F6B38] dark:text-emerald-400"
+                            : node.boss
+                              ? "text-orange-600 dark:text-orange-400 font-bold"
+                              : node.status === "summit"
+                                ? "text-amber-600 dark:text-amber-400 font-extrabold"
+                                : "text-slate-400 dark:text-slate-500"
+                      }`}
                   >
                     {node.badge}
                   </p>
@@ -694,17 +689,16 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
               {/* Node Header */}
               <div className="relative z-10 flex items-start gap-3.5">
                 <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-md ${
-                    selectedNode.status === "completed"
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-md ${selectedNode.status === "completed"
                       ? "bg-emerald-600 shadow-emerald-600/30"
                       : selectedNode.status === "active"
-                      ? "bg-[#0F6B38] shadow-[#0F6B38]/40"
-                      : selectedNode.boss
-                      ? "bg-orange-600 shadow-orange-600/40"
-                      : selectedNode.status === "summit"
-                      ? "bg-amber-500 shadow-amber-500/40"
-                      : "bg-[#0F6B38] shadow-[#0F6B38]/30"
-                  }`}
+                        ? "bg-[#0F6B38] shadow-[#0F6B38]/40"
+                        : selectedNode.boss
+                          ? "bg-orange-600 shadow-orange-600/40"
+                          : selectedNode.status === "summit"
+                            ? "bg-amber-500 shadow-amber-500/40"
+                            : "bg-[#0F6B38] shadow-[#0F6B38]/30"
+                    }`}
                 >
                   <selectedNode.icon className="w-6 h-6" />
                 </div>
@@ -740,11 +734,10 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                       className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-muted/40 p-2 rounded-xl border border-slate-200/50 dark:border-border/50"
                     >
                       <div
-                        className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                          selectedNode.status === "completed" || task.includes("Completed") || task.includes("Mastered")
+                        className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${selectedNode.status === "completed" || task.includes("Completed") || task.includes("Mastered")
                             ? "bg-emerald-500 text-white"
                             : "border border-slate-400 text-transparent"
-                        }`}
+                          }`}
                       >
                         <Check className="w-2.5 h-2.5 stroke-[3]" />
                       </div>
@@ -810,36 +803,31 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
               {/* Grid of the 2 Featured Reference Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* 1. Large Streak Days Card */}
-                <div className={`rounded-2xl p-5 text-white border shadow-md flex flex-col justify-between relative overflow-hidden min-h-[160px] ${
-                  userStreak > 0
+                <div className={`rounded-2xl p-5 text-white border shadow-md flex flex-col justify-between relative overflow-hidden min-h-[160px] ${userStreak > 0
                     ? "bg-gradient-to-b from-amber-400 to-amber-500 dark:from-[#202024] dark:to-[#18181b] border-amber-300 dark:border-zinc-800"
                     : "bg-slate-100 dark:bg-[#1c1c1f] text-slate-900 dark:text-white border-slate-200 dark:border-zinc-800"
-                }`}>
+                  }`}>
                   <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-1">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        userStreak > 0 ? "bg-white/20 dark:bg-orange-500/20" : "bg-slate-200 dark:bg-zinc-700/50"
-                      }`}>
-                        <Flame className={`w-5 h-5 ${
-                          userStreak > 0
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${userStreak > 0 ? "bg-white/20 dark:bg-orange-500/20" : "bg-slate-200 dark:bg-zinc-700/50"
+                        }`}>
+                        <Flame className={`w-5 h-5 ${userStreak > 0
                             ? "fill-white text-white dark:text-orange-500 dark:fill-orange-500"
                             : "text-slate-400 dark:text-zinc-400"
-                        }`} />
+                          }`} />
                       </div>
                       <span className="text-3xl font-black tracking-tight">{userStreak}</span>
                     </div>
-                    <span className={`text-xs font-black uppercase tracking-wider ${
-                      userStreak > 0 ? "text-white/90 dark:text-zinc-400" : "text-slate-500 dark:text-zinc-400"
-                    }`}>
+                    <span className={`text-xs font-black uppercase tracking-wider ${userStreak > 0 ? "text-white/90 dark:text-zinc-400" : "text-slate-500 dark:text-zinc-400"
+                      }`}>
                       {userStreak === 1 ? "Streak Day" : "Streak Days"}
                     </span>
                   </div>
 
                   {/* Motivational Mascot Note */}
                   <div className="relative z-10 mt-4 pt-3 border-t border-slate-200/60 dark:border-zinc-800/80">
-                    <p className={`text-xs font-medium leading-snug ${
-                      userStreak > 0 ? "text-white/90 dark:text-zinc-300" : "text-slate-600 dark:text-zinc-400"
-                    }`}>
+                    <p className={`text-xs font-medium leading-snug ${userStreak > 0 ? "text-white/90 dark:text-zinc-300" : "text-slate-600 dark:text-zinc-400"
+                      }`}>
                       {userStreak > 0
                         ? `Consistent practice gets you to ${company || "Google"}! Keep your momentum blazing.`
                         : `Complete your first practice session today to ignite your streak towards ${company || "Google"}!`}
@@ -847,9 +835,8 @@ export const CareerJourneyMap: React.FC<CareerJourneyMapProps> = ({
                   </div>
 
                   {/* Background flame artwork silhouette */}
-                  <Flame className={`absolute -bottom-6 -right-6 w-32 h-32 fill-current pointer-events-none ${
-                    userStreak > 0 ? "text-white/15 dark:text-orange-500/10" : "text-slate-300/30 dark:text-zinc-700/15"
-                  }`} />
+                  <Flame className={`absolute -bottom-6 -right-6 w-32 h-32 fill-current pointer-events-none ${userStreak > 0 ? "text-white/15 dark:text-orange-500/10" : "text-slate-300/30 dark:text-zinc-700/15"
+                    }`} />
                 </div>
 
                 {/* 2. Concentric Dual-Ring Daily Goal Card */}

@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  INTERVIEW_TYPES, ELITE_ROLES, TOP_COMPANIES,
-  InterviewTypeItem, RoleItem, CompanyItem, InterviewRoundDef, getInterviewRounds
+  INTERVIEW_TYPES, ELITE_ROLES, TOP_COMPANIES, DIFFICULTY_LEVELS,
+  InterviewTypeItem, RoleItem, CompanyItem, DifficultyItem, InterviewRoundDef, getInterviewRounds
 } from '@/data/eliteInterviewData';
 import { JobInterviewContext } from '@/types/jobInterview';
 import {
   saveSelectedType, getSelectedType,
   saveSelectedRole, getSelectedRole,
   saveSelectedCompany, getSelectedCompany,
+  saveSelectedDifficulty, getSelectedDifficulty,
   initializeCompanyRoleProgressAsync, getCompanyRoleProgress, CompanyRoleProgress,
   isDevUnlockAllActive, fetchCompanyRoleProgress, clearEliteSelections
 } from '@/utils/eliteInterviewStorage';
@@ -19,7 +20,7 @@ import { EliteCodingAssessment } from '@/components/elite/EliteCodingAssessment'
 import { EliteHRRound } from '@/components/elite/EliteHRRound';
 import { useInterviewCredits } from '@/hooks/useInterviewCredits';
 import { loadUserProfileContext, ProfileContext } from '@/utils/profileContext';
-import { Crown, AlertTriangle, Sparkles, Wrench, Loader2 } from 'lucide-react';
+import { Crown, AlertTriangle, Activity, Wrench, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePrewarmInterviewChat } from '@/hooks/usePrewarmInterviewChat';
@@ -68,6 +69,7 @@ const ElitePrep: React.FC = () => {
   const [selectedType, setSelectedType] = useState<InterviewTypeItem | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<CompanyItem | null>(null);
   const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyItem | null>(null);
   const [activeRound, setActiveRound] = useState<InterviewRoundDef | null>(null);
 
   const [rounds, setRounds] = useState<InterviewRoundDef[]>([]);
@@ -82,8 +84,14 @@ const ElitePrep: React.FC = () => {
   // Final Recommendation Engine State
   const [showFinalVerdictModal, setShowFinalVerdictModal] = useState(false);
 
-  const setupRoundsHub = async (typeItem: InterviewTypeItem, company: CompanyItem, role: RoleItem, uidOverride?: string | null) => {
-    const generatedRounds = getInterviewRounds(typeItem.id, company.id, role.id);
+  const setupRoundsHub = async (
+    typeItem: InterviewTypeItem,
+    company: CompanyItem,
+    role: RoleItem,
+    difficulty?: DifficultyItem | null,
+    uidOverride?: string | null
+  ) => {
+    const generatedRounds = getInterviewRounds(typeItem.id, company.id, role.id, difficulty?.id);
     setRounds(generatedRounds);
     const activeUid = uidOverride ?? userId ?? 'guest_user';
     const prog = await initializeCompanyRoleProgressAsync(activeUid, typeItem.id, company.id, role.id, generatedRounds);
@@ -184,9 +192,12 @@ const ElitePrep: React.FC = () => {
       description: `Role interview for ${jobContext.jobTitle} at ${jobContext.companyName} targeting resume, GitHub, and skill gaps.`,
     };
 
+    const defaultDiff = DIFFICULTY_LEVELS.find(d => d.id === 'medium') || DIFFICULTY_LEVELS[1];
+
     setSelectedType(customType);
     setSelectedCompany(customCompany);
     setSelectedRole(customRole);
+    setSelectedDifficulty(defaultDiff);
     setActiveRound(customRound);
     setRounds([customRound]);
     setViewMode('in_interview');
@@ -215,6 +226,7 @@ const ElitePrep: React.FC = () => {
       setSelectedType(null);
       setSelectedCompany(null);
       setSelectedRole(null);
+      setSelectedDifficulty(null);
       setRounds([]);
       setProgress(null);
       return;
@@ -223,19 +235,23 @@ const ElitePrep: React.FC = () => {
     saveSelectedType(typeItem.id);
     saveSelectedCompany(null);
     saveSelectedRole(null);
+    saveSelectedDifficulty(null);
     setSelectedCompany(null);
     setSelectedRole(null);
+    setSelectedDifficulty(null);
     setRounds([]);
     setProgress(null);
   };
 
-  // Clicking Step 2 Company: Toggle off or switch company (collapsing role/pipeline choices)
+  // Clicking Step 2 Company: Toggle off or switch company (collapsing role/difficulty/pipeline choices)
   const handleSelectCompany = (company: CompanyItem) => {
     if (selectedCompany?.id === company.id) {
       saveSelectedCompany(null);
       saveSelectedRole(null);
+      saveSelectedDifficulty(null);
       setSelectedCompany(null);
       setSelectedRole(null);
+      setSelectedDifficulty(null);
       setRounds([]);
       setProgress(null);
       return;
@@ -243,24 +259,45 @@ const ElitePrep: React.FC = () => {
     setSelectedCompany(company);
     saveSelectedCompany(company.id);
     saveSelectedRole(null);
+    saveSelectedDifficulty(null);
     setSelectedRole(null);
+    setSelectedDifficulty(null);
     setRounds([]);
     setProgress(null);
   };
 
-  // Clicking Step 3 Role: Toggle off (collapses pipeline) or switch role (unfolds pipeline)
+  // Clicking Step 3 Role: Toggle off (collapses difficulty/pipeline) or switch role (unfolds difficulty)
   const handleSelectRole = (role: RoleItem) => {
     if (selectedRole?.id === role.id) {
       saveSelectedRole(null);
+      saveSelectedDifficulty(null);
       setSelectedRole(null);
+      setSelectedDifficulty(null);
       setRounds([]);
       setProgress(null);
       return;
     }
     setSelectedRole(role);
     saveSelectedRole(role.id);
-    if (selectedType && selectedCompany) {
-      setupRoundsHub(selectedType, selectedCompany, role);
+    saveSelectedDifficulty(null);
+    setSelectedDifficulty(null);
+    setRounds([]);
+    setProgress(null);
+  };
+
+  // Clicking Step 4 Difficulty: Toggle off (collapses pipeline) or switch difficulty (unfolds pipeline)
+  const handleSelectDifficulty = (difficulty: DifficultyItem) => {
+    if (selectedDifficulty?.id === difficulty.id) {
+      saveSelectedDifficulty(null);
+      setSelectedDifficulty(null);
+      setRounds([]);
+      setProgress(null);
+      return;
+    }
+    setSelectedDifficulty(difficulty);
+    saveSelectedDifficulty(difficulty.id);
+    if (selectedType && selectedCompany && selectedRole) {
+      setupRoundsHub(selectedType, selectedCompany, selectedRole, difficulty);
     }
   };
 
@@ -269,6 +306,7 @@ const ElitePrep: React.FC = () => {
     setSelectedType(null);
     setSelectedCompany(null);
     setSelectedRole(null);
+    setSelectedDifficulty(null);
     setRounds([]);
     setProgress(null);
   };
@@ -361,8 +399,8 @@ const ElitePrep: React.FC = () => {
             {/* Feature Chips */}
             <div className="grid grid-cols-2 gap-2 text-left pt-1">
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="text-[11px] font-medium text-zinc-300">Live AI Engine</span>
+                <Activity className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="text-[11px] font-medium text-zinc-300">Live Interview Engine</span>
               </div>
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-2">
                 <Wrench className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -443,11 +481,13 @@ const ElitePrep: React.FC = () => {
             selectedType={selectedType}
             selectedCompany={selectedCompany}
             selectedRole={selectedRole}
+            selectedDifficulty={selectedDifficulty}
             rounds={rounds}
             progress={progress}
             onSelectType={handleSelectType}
             onSelectCompany={handleSelectCompany}
             onSelectRole={handleSelectRole}
+            onSelectDifficulty={handleSelectDifficulty}
             onStartRound={handleStartRound}
             onResetSelection={handleResetSelection}
             onNavigateDashboard={() => navigate('/dashboard')}
@@ -460,6 +500,7 @@ const ElitePrep: React.FC = () => {
             company={selectedCompany}
             role={selectedRole}
             round={activeRound}
+            difficulty={selectedDifficulty}
             candidateProfileContext={profileContext?.context}
             githubRepos={profileContext?.githubRepos}
             isLoadingRepos={loadingProfile}
@@ -488,6 +529,7 @@ const ElitePrep: React.FC = () => {
             company={selectedCompany}
             role={selectedRole}
             round={activeRound}
+            difficulty={selectedDifficulty}
             candidateProfileContext={profileContext?.context}
             githubRepos={profileContext?.githubRepos}
             isLoadingRepos={loadingProfile}
@@ -503,6 +545,7 @@ const ElitePrep: React.FC = () => {
             company={selectedCompany}
             role={selectedRole}
             round={activeRound}
+            difficulty={selectedDifficulty}
             candidateProfileContext={profileContext?.context}
             userId={userId || 'guest_user'}
             onCompleteRound={handleCompleteRound}
@@ -516,6 +559,7 @@ const ElitePrep: React.FC = () => {
             company={selectedCompany}
             role={selectedRole}
             round={activeRound}
+            difficulty={selectedDifficulty}
             candidateProfileContext={profileContext?.context}
             userId={userId || 'guest_user'}
             onCompleteRound={handleCompleteRound}

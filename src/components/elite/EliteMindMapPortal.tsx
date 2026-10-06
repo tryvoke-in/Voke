@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  GraduationCap, Building, Code, Sparkles, Check, ArrowRight, ArrowDown,
+  GraduationCap, Building, Code, FileText, Check, ArrowRight, ArrowDown,
   ChevronDown, Search, Lock, CheckCircle2, XCircle, Play, RefreshCw, Layers, ShieldCheck, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -55,7 +55,7 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
       {/* MIND MAP CANVAS HEADER */}
       <div className="text-center space-y-3">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-wider shadow-xl">
-          <Sparkles className="w-4 h-4 text-amber-400" />
+          <Layers className="w-4 h-4 text-amber-400" />
           Interactive Mind Map Configurator
         </div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent">
@@ -358,7 +358,7 @@ export const EliteMindMapPortal: React.FC<EliteMindMapPortalProps> = ({
                             onClick={() => navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`)}
                             className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl px-3"
                           >
-                            <Sparkles className="w-3.5 h-3.5 mr-1 text-amber-300" /> View Analysis
+                            <FileText className="w-3.5 h-3.5 mr-1 text-amber-300" /> View Analysis
                           </Button>
                         )}
 

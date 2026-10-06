@@ -109,10 +109,10 @@ function CompanyLogo({ company, size = "md" }: { company: string; size?: "sm" | 
     `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
   ];
 
-  const dims = size === "lg" 
-    ? "w-12 h-12 text-base rounded-xl" 
-    : size === "md" 
-      ? "w-10 h-10 text-sm rounded-lg" 
+  const dims = size === "lg"
+    ? "w-12 h-12 text-base rounded-xl"
+    : size === "md"
+      ? "w-10 h-10 text-sm rounded-lg"
       : "w-8 h-8 text-xs rounded-md";
 
   if (imgIndex >= sources.length) {
@@ -273,7 +273,7 @@ export default function JobRecommendations() {
       }
 
       toast({ title: "Scouting Complete", description: `Found ${data?.count || 0} live role matches.` });
-      
+
       const { data: freshRecs } = await supabase
         .from("job_recommendations")
         .select("*, job_postings (*)")
@@ -298,7 +298,7 @@ export default function JobRecommendations() {
       setRecommendations((p) => p.map((r) => (r.id === recId ? { ...r, status } : r)));
       if (selectedRec?.id === recId) setSelectedRec((p) => p ? { ...p, status } : null);
       toast({ title: "Updated", description: status === "saved" ? "Saved to your list" : "Job status updated" });
-    } catch {}
+    } catch { }
   };
 
   const openRoadmapModal = (rec: JobRecommendation) => {
@@ -580,7 +580,7 @@ export default function JobRecommendations() {
                   onClick={() => generateRecommendations(undefined, true)}
                   disabled={generating}
                   size="sm"
-                  className="rounded-xl text-xs font-semibold h-9 px-4 bg-sky-600 hover:bg-sky-700 text-white shadow-xs transition-all border-0"
+                  className="rounded-xl text-xs font-semibold h-9 px-4 bg-green-600 hover:bg-green-700 text-white shadow-xs transition-all border-0"
                 >
                   {generating ? (
                     <>
@@ -601,7 +601,7 @@ export default function JobRecommendations() {
                 2. COMPACT STATS & INTELLIGENCE SUMMARY BAR (4 Cards)
             ══════════════════════════════════════════════════════════════════ */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
-              
+
               {/* Stat 1: Match Score */}
               <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-3 transition-transform hover:scale-[1.01]">
                 <div className="min-w-0">
@@ -624,7 +624,7 @@ export default function JobRecommendations() {
               </div>
 
               {/* Stat 2: Total Opportunities */}
-              <div 
+              <div
                 onClick={() => setActiveTab("all")}
                 className={cn(
                   "bg-card border border-border/80 rounded-2xl p-4 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-blue-500/40",
@@ -651,7 +651,7 @@ export default function JobRecommendations() {
               </div>
 
               {/* Stat 3: High Fit (80%+) */}
-              <div 
+              <div
                 onClick={() => setActiveTab("high")}
                 className={cn(
                   "bg-card border border-border/80 rounded-2xl p-4 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-emerald-500/40",
@@ -678,7 +678,7 @@ export default function JobRecommendations() {
               </div>
 
               {/* Stat 4: Remote Openings */}
-              <div 
+              <div
                 onClick={() => setActiveTab("remote")}
                 className={cn(
                   "bg-card border border-border/80 rounded-2xl p-4 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-purple-500/40",
@@ -710,10 +710,10 @@ export default function JobRecommendations() {
                 3. INTEGRATED SEARCH & SMART FILTER TOOLBAR
             ══════════════════════════════════════════════════════════════════ */}
             <div className="bg-card border border-border/80 rounded-2xl p-3 sm:p-3.5 shadow-xs mb-6 space-y-3">
-              
+
               {/* Row 1: Search Box & Dropdown Selects */}
               <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
-                
+
                 {/* Search Input */}
                 <div className="relative flex-1">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -735,7 +735,7 @@ export default function JobRecommendations() {
 
                 {/* Filter Dropdowns */}
                 <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                  
+
                   {/* Location Filter */}
                   <Select value={filterLocation} onValueChange={setFilterLocation}>
                     <SelectTrigger className="h-9 w-[125px] text-xs font-semibold rounded-xl bg-muted/40 border-border/70 hover:bg-muted/70 transition-colors">
@@ -909,10 +909,10 @@ export default function JobRecommendations() {
                         >
                           <Card className="group bg-card hover:bg-card/90 border border-border/80 hover:border-sky-500/40 transition-all duration-150 rounded-2xl shadow-xs hover:shadow-md overflow-hidden">
                             <CardContent className="p-4 sm:p-5 space-y-3.5">
-                              
+
                               {/* Card Header Row: Logo, Title, Meta, Match Badge & Bookmark */}
                               <div className="flex items-start justify-between gap-3">
-                                
+
                                 <div className="flex items-start gap-3.5 min-w-0">
                                   <CompanyLogo company={company} size="md" />
 
@@ -997,7 +997,7 @@ export default function JobRecommendations() {
                                     );
                                   })}
                                   {job.skills_required.length > 6 && (
-                                    <span 
+                                    <span
                                       onClick={() => setSelectedRec(rec)}
                                       className="text-[11px] text-muted-foreground font-semibold cursor-pointer hover:text-foreground pl-1"
                                     >
@@ -1019,7 +1019,7 @@ export default function JobRecommendations() {
 
                               {/* Card Action Controls Footer */}
                               <div className="pt-2 border-t border-border/50 flex flex-wrap items-center justify-between gap-2.5">
-                                
+
                                 <div className="flex flex-wrap items-center gap-2">
                                   {/* Start Mock Interview Button */}
                                   <Button
@@ -1218,7 +1218,7 @@ export default function JobRecommendations() {
 
             return (
               <div className="space-y-5">
-                
+
                 {/* Modal Header */}
                 <DialogHeader>
                   <div className="flex items-start justify-between gap-4 pr-6">
@@ -1256,7 +1256,7 @@ export default function JobRecommendations() {
                 {selectedRec.match_reasons && selectedRec.match_reasons.length > 0 && (
                   <div className="p-4 rounded-2xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 space-y-2">
                     <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> 
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       AI Match Assessment
                     </h4>
                     <ul className="space-y-1.5 pl-5 list-disc text-xs text-muted-foreground">

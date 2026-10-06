@@ -3,7 +3,7 @@ import { INTERVIEW_TYPES, InterviewTypeItem } from '@/data/eliteInterviewData';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Briefcase, Award, ChevronRight, Check, Sparkles, Lock } from 'lucide-react';
+import { GraduationCap, Briefcase, Award, ChevronRight, Check, Target, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface EliteTypeSelectProps {
@@ -26,7 +26,7 @@ export const EliteTypeSelect: React.FC<EliteTypeSelectProps> = ({
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto space-y-3">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-wider shadow-xl">
-          <Sparkles className="w-4 h-4 text-amber-400" />
+          <Target className="w-4 h-4 text-amber-400" />
           Step 1 of 4 • Select Interview Track
         </div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent">

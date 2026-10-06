@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
-  Sparkles, PhoneOff, Mic, MicOff, Volume2, VolumeX, ArrowRight, CheckCircle2, Zap
+  PhoneOff, Mic, MicOff, Volume2, VolumeX, ArrowRight, CheckCircle2, Zap
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 

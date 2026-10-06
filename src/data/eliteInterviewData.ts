@@ -28,6 +28,20 @@ export interface CompanyItem {
   description: string;
 }
 
+export type DifficultyLevel = 'easy' | 'medium' | 'hard';
+
+export interface DifficultyItem {
+  id: DifficultyLevel;
+  title: string;
+  subtitle: string;
+  description: string;
+  badge?: string;
+  levelBadge?: string;
+  color: 'emerald' | 'amber' | 'rose';
+  accentColor: string;
+  iconName: string;
+}
+
 export interface InterviewRoundDef {
   roundId: string;
   roundNumber: number;
@@ -37,7 +51,38 @@ export interface InterviewRoundDef {
   durationMins: number;
   focusAreas: string[];
   description: string;
+  difficulty?: string;
 }
+
+export const DIFFICULTY_LEVELS: DifficultyItem[] = [
+  {
+    id: 'easy',
+    title: 'Easy',
+    subtitle: 'Core & Fundamental Concepts',
+    description: 'Foundational syntax, standard data structures, straightforward logic, and core role concepts.',
+    color: 'emerald',
+    accentColor: '#10b981',
+    iconName: 'Target'
+  },
+  {
+    id: 'medium',
+    title: 'Medium',
+    subtitle: 'Standard FAANG Benchmark',
+    description: 'Practical engineering problems, optimization tradeoffs, multi-part scenarios, and edge cases.',
+    color: 'amber',
+    accentColor: '#f59e0b',
+    iconName: 'Sliders'
+  },
+  {
+    id: 'hard',
+    title: 'Hard',
+    subtitle: 'Bar Raiser & Staff Level',
+    description: 'Complex architecture constraints, concurrency, deep performance profiling, and tricky system design.',
+    color: 'rose',
+    accentColor: '#f43f5e',
+    iconName: 'Flame'
+  }
+];
 
 export const INTERVIEW_TYPES: InterviewTypeItem[] = [
   {
@@ -191,27 +236,30 @@ export const TOP_COMPANIES: CompanyItem[] = [
   }
 ];
 
-export const getInterviewRounds = (typeId: string, companyId: string, roleId: string): InterviewRoundDef[] => {
+export const getInterviewRounds = (typeId: string, companyId: string, roleId: string, difficultyId?: string): InterviewRoundDef[] => {
   const company = TOP_COMPANIES.find(c => c.id === companyId) || { name: companyId.toUpperCase() };
   const role = ELITE_ROLES.find(r => r.id === roleId) || { title: roleId.replace('-', ' ').toUpperCase() };
   const typeItem = INTERVIEW_TYPES.find(t => t.id === typeId) || { title: 'Internship' };
+  const difficulty = DIFFICULTY_LEVELS.find(d => d.id === difficultyId);
+  const diffLabel = difficulty ? ` • ${difficulty.title} Track` : '';
 
   return [
     {
       roundId: `${typeId}_${companyId}_${roleId}_r1`,
       roundNumber: 1,
       title: 'Round 1 — Introduction & Resume Screening',
-      subtitle: '10 Questions (15 Mins) • Resume Walkthrough & Foundational Validation',
+      subtitle: `10 Questions (15 Mins) • Resume Walkthrough & Foundational Validation${diffLabel}`,
       questionCount: 10,
       durationMins: 15,
       focusAreas: ['Self Introduction', 'Resume Walkthrough & Strongest Project', 'Skills Verification & Confidence', 'Motivation & Career Goals'],
-      description: `Resume walkthrough, technical background screening, and core skills validation for ${company.name}.`
+      description: `Resume walkthrough, technical background screening, and core skills validation for ${company.name}.`,
+      difficulty: difficultyId || 'medium'
     },
     {
       roundId: `${typeId}_${companyId}_${roleId}_r2`,
       roundNumber: 2,
       title: 'Round 2 — Technical & Project Deep Dive',
-      subtitle: '12–15 Questions (20–30 Mins) • Adaptive Difficulty • Voice Only',
+      subtitle: `12–15 Questions (20–30 Mins) • Adaptive Difficulty • Voice Only${diffLabel}`,
       questionCount: 12,
       durationMins: 25,
       focusAreas: [
@@ -221,13 +269,14 @@ export const getInterviewRounds = (typeId: string, companyId: string, roleId: st
         'Edge Cases & Debugging',
         'Scalability Thinking'
       ],
-      description: `Deep technical interrogation on your chosen GitHub projects, architecture, and tradeoffs.`
+      description: `Deep technical interrogation on your chosen GitHub projects, architecture, and tradeoffs.`,
+      difficulty: difficultyId || 'medium'
     },
     {
       roundId: `${typeId}_${companyId}_${roleId}_r3`,
       roundNumber: 3,
       title: 'Round 3 — Coding Assessment',
-      subtitle: '30–45 Mins • Live Coding, Debugging & Practical System Design',
+      subtitle: `30–45 Mins • Live Coding, Debugging & Practical System Design${diffLabel}`,
       questionCount: 5,
       durationMins: 35,
       focusAreas: [
@@ -237,17 +286,19 @@ export const getInterviewRounds = (typeId: string, companyId: string, roleId: st
         'Code Quality & Execution Correctness',
         'Real-time Technical Communication'
       ],
-      description: `Live coding evaluation covering DSA problem-solving, bug fixing, and algorithmic design.`
+      description: `Live coding evaluation covering DSA problem-solving, bug fixing, and algorithmic design.`,
+      difficulty: difficultyId || 'medium'
     },
     {
       roundId: `${typeId}_${companyId}_${roleId}_r4`,
       roundNumber: 4,
       title: 'Round 4: Engineering Manager & Team Fit',
-      subtitle: '8-9 Questions • Behavioral, Conflict & Bar Raiser',
+      subtitle: `8-9 Questions • Behavioral, Conflict & Bar Raiser${diffLabel}`,
       questionCount: 8,
       durationMins: 20,
       focusAreas: [`${company.name} Core Values`, 'Project Ownership', 'Team Collaboration', 'Career Goals'],
-      description: `Behavioral leadership, culture alignment, and situational problem-solving assessment.`
+      description: `Behavioral leadership, culture alignment, and situational problem-solving assessment.`,
+      difficulty: difficultyId || 'medium'
     }
   ];
 };

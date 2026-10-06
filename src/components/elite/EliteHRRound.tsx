@@ -6,11 +6,11 @@ import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { LiveStatus } from '@/types/voice';
-import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
+import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem, DifficultyItem } from '@/data/eliteInterviewData';
 import { updateRoundResultAsync, saveSelectedGithubRepo, fetchSelectedGithubRepo } from '@/utils/eliteInterviewStorage';
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff, CheckCircle2, XCircle,
-  Sparkles, HelpCircle, ShieldCheck, ChevronRight, User, Award, Clock,
+  Building, HelpCircle, ShieldCheck, ChevronRight, User, Award, Clock,
   Volume2, Maximize2, Zap, Radio, MessageSquare, FileText, Subtitles,
   GitBranch, FolderCode, Check, Github
 } from 'lucide-react';
@@ -24,6 +24,7 @@ interface EliteHRRoundProps {
   company: CompanyItem;
   role: RoleItem;
   round: InterviewRoundDef;
+  difficulty?: DifficultyItem | string | null;
   candidateProfileContext?: string;
   userId: string;
   onCompleteRound: (verdict: 'PASSED' | 'FAILED') => void;
@@ -750,7 +751,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
                 <div className="p-8 rounded-2xl bg-[#121422]/60 border border-white/10 text-center space-y-4 my-auto flex flex-col items-center justify-center min-h-[220px]">
                   <div className="relative">
                     <div className="w-10 h-10 rounded-full border-2 border-sky-500/30 border-t-sky-500 animate-spin" />
-                    <Sparkles className="w-4 h-4 text-sky-400 absolute inset-0 m-auto" />
+                    <Github className="w-4 h-4 text-sky-400 absolute inset-0 m-auto" />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white tracking-wide">Fetching Your GitHub Repositories...</h4>
@@ -979,7 +980,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
             {/* AI Badge Overlay (Top-Left) */}
             <div className="absolute top-5 left-5 z-20 flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-zinc-900/90 backdrop-blur-md border border-white/15 shadow-xl">
               <div className="w-7 h-7 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                <Sparkles className="w-4 h-4" />
+                <Building className="w-4 h-4" />
               </div>
               <div>
                 <div className="text-xs font-extrabold text-white flex items-center gap-2">
@@ -1104,7 +1105,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
             <ScrollArea className="flex-1 p-4 space-y-4">
               {logs.length === 0 ? (
                 <div className="text-center py-24 text-zinc-600 space-y-2">
-                  <Sparkles className="w-6 h-6 mx-auto text-amber-500/40 animate-pulse" />
+                  <MessageSquare className="w-6 h-6 mx-auto text-amber-500/40 animate-pulse" />
                   <p className="text-xs font-semibold text-zinc-500">Live speech transcript will appear here as the interview progresses...</p>
                 </div>
               ) : (
@@ -1117,7 +1118,7 @@ EXACT 8-QUESTION ALLOCATION (FOLLOW THIS PATTERN STRICTLY):
                       <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
                         log.role === 'assistant' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                       }`}>
-                        {log.role === 'assistant' ? <Sparkles className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                        {log.role === 'assistant' ? <Building className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                       </div>
 
                       <div className={`p-3.5 rounded-2xl text-xs leading-relaxed max-w-[85%] border shadow-md ${

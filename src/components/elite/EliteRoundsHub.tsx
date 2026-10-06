@@ -5,7 +5,7 @@ import { CompanyRoleProgress } from '@/utils/eliteInterviewStorage';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Lock, CheckCircle2, XCircle, Play, RefreshCw, Award, ShieldCheck, Sparkles, ArrowLeft, Layers, Building, HelpCircle } from 'lucide-react';
+import { Lock, CheckCircle2, XCircle, Play, RefreshCw, Award, ShieldCheck, FileText, ArrowLeft, Layers, Building, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface EliteRoundsHubProps {
@@ -247,8 +247,8 @@ export const EliteRoundsHub: React.FC<EliteRoundsHubProps> = ({
                             <div className="mt-4 p-4 rounded-2xl bg-zinc-900/90 border border-white/15 space-y-3 shadow-inner">
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                                  <Sparkles className="w-4 h-4 text-amber-400" />
-                                  AI Round Performance & Feedback Report
+                                  <FileText className="w-4 h-4 text-amber-400" />
+                                  Round Performance & Feedback Report
                                 </span>
                                 {roundProgress.score && (
                                   <span className={`text-xs font-black font-mono px-2 py-0.5 rounded-md ${
@@ -352,7 +352,7 @@ export const EliteRoundsHub: React.FC<EliteRoundsHubProps> = ({
                             onClick={() => navigate(`/voice-interview/results/${roundProgress.sessionId}?from=elite`)}
                             className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-black text-sm px-7 h-12 rounded-2xl shadow-xl shadow-blue-600/25 hover:scale-[1.03] active:scale-[0.97] transition-all"
                           >
-                            <Sparkles className="w-4 h-4 mr-2 text-amber-300" />
+                            <FileText className="w-4 h-4 mr-2 text-amber-300" />
                             View Score & Analysis
                           </Button>
                         )}

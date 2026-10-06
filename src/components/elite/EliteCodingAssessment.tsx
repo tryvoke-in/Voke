@@ -1,7 +1,7 @@
 import { ElitePrepBrain } from '@/services/voice/ElitePrepBrain';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem } from '@/data/eliteInterviewData';
+import { CompanyItem, RoleItem, InterviewRoundDef, InterviewTypeItem, DifficultyItem } from '@/data/eliteInterviewData';
 import { useGroqVoice } from '@/hooks/useGroqVoice';
 import { useAntiCheat } from '@/hooks/useAntiCheat';
 import { LiveStatus } from '@/types/voice';
@@ -24,7 +24,7 @@ import {
   Bug,
   Cpu,
   Layers,
-  Sparkles,
+  FileText,
   ArrowRight,
   AlertTriangle,
   RotateCcw,
@@ -50,6 +50,7 @@ interface EliteCodingAssessmentProps {
   company: CompanyItem;
   role: RoleItem;
   round: InterviewRoundDef;
+  difficulty?: DifficultyItem | string | null;
   candidateProfileContext?: string;
   userId: string;
   onCompleteRound: () => void;
@@ -630,7 +631,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
       if (res.passed) {
         toast.success(
           currentSection === 'C_SYSTEM_DESIGN'
-            ? '✨ System design execution verified!'
+            ? '✅ System design execution verified!'
             : isSubmit ? 'All test cases passed!' : 'Sample test cases passed! Ready to submit?'
         );
         
@@ -866,7 +867,7 @@ Section C: ${currentSystemDesignQuestion?.title}`;
             <div className="space-y-3 bg-zinc-950/60 border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 leading-relaxed">
               <div className="font-extrabold text-white flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <FileText className="w-4 h-4 text-amber-400" />
                   <span>Assessment Structure & Rules:</span>
                 </div>
                 <Badge variant="outline" className="bg-rose-500/10 border-rose-500/30 text-rose-300 text-[10px] font-bold">
